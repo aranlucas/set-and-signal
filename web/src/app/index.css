@@ -473,6 +473,10 @@
     text-transform: uppercase;
   }
 
+  .proof-record-block--recovery[data-proof-label]::before {
+    left: calc(var(--spacing) * 8);
+  }
+
   .proof-signature--primary .proof-action {
     min-height: 3.25rem;
     border-radius: 2px;

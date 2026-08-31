@@ -105,9 +105,9 @@ export default function Home() {
   };
 
   return (
-    <div className="proof-page mx-auto w-full max-w-160 lg:max-w-none">
+    <div className="proof-page mx-auto w-full max-w-xl md:max-w-none">
       <HomeHeader today={today} user={user} onSettings={() => nav({ to: "/settings" })} />
-      <div className="lg:grid lg:grid-cols-5 lg:items-start lg:gap-5">
+      <div className="space-y-4 lg:grid lg:grid-cols-2 lg:items-stretch lg:gap-6 lg:space-y-0">
         <HomeSchedule
           state={state}
           user={user}
@@ -125,7 +125,7 @@ export default function Home() {
           onNextWeek={() => setWeekOffset((week) => week + 1)}
           routineMinutes={routineMinutes}
         />
-        <div className="lg:col-span-2">
+        <div className="min-w-0 lg:h-full">
           {state.routines.length === 0 && !state.active && (
             <HomeWelcome
               onStart={() => void nav({ to: "/home/get-started", resetScroll: false })}
@@ -168,7 +168,7 @@ function HomeHeader({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="proof-header mt-2 mb-4.5 flex items-end justify-between gap-3">
+    <div className="proof-header mt-2 mb-4 flex items-end justify-between gap-3 lg:mt-0 lg:mb-6">
       <div>
         <h1 className="proof-wordmark flex items-center gap-2.5 text-4xl leading-none font-bold tracking-tight">
           <BrandMark className="size-9 text-primary" />
@@ -227,7 +227,7 @@ function HomeSchedule({
   const { t } = useTranslation();
   return (
     <section
-      className="proof-signature proof-signature--primary mb-3 overflow-hidden rounded-xl bg-card lg:col-span-3"
+      className="proof-signature proof-signature--primary overflow-hidden rounded-xl bg-card lg:flex lg:h-full lg:flex-col"
       data-proof="01 / session"
     >
       <div className="flex items-center justify-between gap-3 px-4 pt-3">
@@ -255,7 +255,7 @@ function HomeSchedule({
         />
       </div>
 
-      <div className="border-t border-border/60 p-4">
+      <div className="border-t border-border/60 p-4 lg:flex lg:flex-1 lg:flex-col">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h2 className="text-2xl leading-tight font-semibold tracking-tight capitalize sm:text-3xl">
@@ -307,7 +307,7 @@ function HomeSchedule({
           </span>
         </div>
 
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 flex gap-2 lg:mt-auto lg:pt-6">
           <Button className="proof-action flex-1" onClick={onToday}>
             <Icon name={state.active ? "play" : routine ? "play" : "plus"} />
             {state.active
@@ -450,7 +450,7 @@ function HomeInsights({
 
   return (
     <section
-      className="proof-signature proof-signature--insights mb-3 overflow-hidden rounded-xl bg-card"
+      className="proof-signature proof-signature--insights overflow-hidden rounded-xl bg-card lg:h-full"
       data-proof="record"
     >
       <div
