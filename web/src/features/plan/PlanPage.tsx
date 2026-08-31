@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { useStore } from "@/app/store/useStore";
@@ -6,13 +6,13 @@ import { uid, exCount } from "@/shared/lib/format";
 import { useDateLabels } from "@/shared/hooks/use-date-labels";
 import { CuratedPlans } from "@/features/plan/CuratedPlanSheet";
 import { DayAssign, PlanImport, PlanTools, type ParsedBundle } from "@/features/plan/PlansSheet";
+import { Header } from "@/shared/components/Header";
 import Icon from "@/shared/components/Icon";
 import { Grid } from "@/shared/components/Grid";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { Button } from "@/shared/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 import { glyphOf, DEFAULT_GLYPH } from "@/domain/exercises/glyphs";
-import { cn } from "@/shared/lib/utils";
 import type { SheetClose, Weekday } from "@/shared/lib/types";
 
 type PlanSheet =
@@ -20,25 +20,6 @@ type PlanSheet =
   | { kind: "import"; bundle: ParsedBundle }
   | { kind: "assign"; day: Weekday }
   | { kind: "curated" };
-
-function PlanSectionHeader({
-  children,
-  action,
-  className,
-}: {
-  children: ReactNode;
-  action?: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={cn("mb-2 flex min-h-9 items-center justify-between gap-3 px-1", className)}>
-      <h2 className="m-0 font-sans text-sm leading-none font-medium tracking-tight text-foreground/60">
-        {children}
-      </h2>
-      {action}
-    </div>
-  );
-}
 
 export default function Plan() {
   const { t } = useTranslation();
@@ -67,27 +48,26 @@ export default function Plan() {
 
   return (
     <>
-      <div className="mt-2 mb-4.5 flex items-end justify-between gap-3">
-        <div>
-          <h1 className="text-4xl leading-none font-bold tracking-tight">
-            {t("navigation.plan", "Plan")}
-          </h1>
-          <div className="mt-1 text-base tracking-tight text-foreground/60">
-            {t("plan.weeklyRoutine", "Your weekly routine")}
-          </div>
-        </div>
-        <button
-          className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
-          onClick={() => setSheet({ kind: "tools" })}
-          aria-label={t("sharing.sharePlan", "Share your plan")}
-          title={t("sharing.sharePlan", "Share your plan")}
-        >
-          <Icon name="upload" />
-        </button>
-      </div>
+      <Header
+        variant="h1"
+        className="mt-2 mb-4.5"
+        description={t("plan.weeklyRoutine", "Your weekly routine")}
+        actions={
+          <button
+            className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
+            onClick={() => setSheet({ kind: "tools" })}
+            aria-label={t("sharing.sharePlan", "Share your plan")}
+            title={t("sharing.sharePlan", "Share your plan")}
+          >
+            <Icon name="upload" />
+          </button>
+        }
+      >
+        {t("navigation.plan", "Plan")}
+      </Header>
       <Grid columns={{ default: 1, lg: 2 }} gap="s" alignItems="start">
         <div>
-          <PlanSectionHeader>{t("plan.weekSchedule", "Week schedule")}</PlanSectionHeader>
+          <Header className="mb-2 px-1">{t("plan.weekSchedule", "Week schedule")}</Header>
           <SpaceBetween size="xs">
             {([1, 2, 3, 4, 5, 6, 0] as Weekday[]).map((d) => {
               const routine = state.routines.find((candidate) => candidate.id === state.week[d]);
@@ -120,9 +100,9 @@ export default function Plan() {
           </SpaceBetween>
         </div>
         <div>
-          <PlanSectionHeader
-            className="mt-6 lg:mt-0"
-            action={
+          <Header
+            className="mt-6 mb-2 px-1 lg:mt-0"
+            actions={
               <Button size="xs" variant="secondary" onClick={addRoutine}>
                 <Icon name="plus" />
                 {t("common.new", "New")}
@@ -130,7 +110,7 @@ export default function Plan() {
             }
           >
             {t("plan.routines", "Routines")}
-          </PlanSectionHeader>
+          </Header>
           {state.routines.length > 0 ? (
             <SpaceBetween size="xs">
               {state.routines.map((routine) => (
