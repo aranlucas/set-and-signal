@@ -3,133 +3,69 @@
 [![CI](https://github.com/aranlucas/set-and-signal/actions/workflows/go.yml/badge.svg)](https://github.com/aranlucas/set-and-signal/actions/workflows/go.yml)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-2855D9.svg)](LICENSE)
 
-Set & Signal is a privacy-first, self-hostable workout planner and set-by-set training
-log. It keeps the next session obvious on a phone while giving the same data a
-durable home: a Go API, SQLite storage, a React web app, and an OAuth-protected
-MCP endpoint for coaching agents.
+A simple workout planner and training log.
 
-The product identity is new; the storage and protocol identifiers are deliberately
-stable. Existing `opengym.db` files, `gym_state_v1` browser state, `opengym_plan`
-exports, and native app data continue to work after the visual rebrand.
+## Features
 
-## What it does
-
-- Build weekly plans, edit routines, and start a workout in one tap.
-- Log sets, rest timers, notes, bodyweight, and measurements with offline-friendly
-  browser or mobile storage.
-- See adherence, estimated 1RM progress, history, and muscle recovery.
-- Import/export plans and backups without sending data to a third party.
-- Connect Grok, Cursor, or another MCP client through the server's OAuth 2.1 + PKCE
-  flow. Preview program changes before applying them.
+- Build weekly plans and reusable routines.
+- Log sets, rest timers, notes, bodyweight, and measurements.
+- Track adherence, estimated 1RM progress, workout history, and muscle recovery.
+- Import and export plans and backups.
+- Preview and apply program changes from MCP clients.
 
 ## Run locally
 
-Requirements: Go 1.27+, Node 24+, and pnpm 11+.
+Requires Go 1.27+, Node.js 24+, and pnpm 11+.
 
 ```bash
-go run ./cmd/opengym-api
+pnpm install --frozen-lockfile
 
-# In a second terminal, during frontend work:
-pnpm install
+# Terminal 1: API
+DATA_DIR="$PWD/.data" ORIGIN=http://localhost:5173 go run ./cmd/opengym-api
+
+# Terminal 2: web app
 pnpm --dir web dev
 ```
 
-For a production-shaped build, the Dockerfile builds the SPA and embeds it in the
-single Go binary:
+Runtime configuration is documented in [`.env.example`](.env.example). Set
+`PUBLIC_URL` to the public HTTPS origin when exposing OAuth or MCP, and configure
+Google, GitHub, or Apple credentials to enable sign-in. OpenRouter-powered
+workout suggestions are optional.
+
+## Deploy
+
+The Docker image builds the web app and embeds it in the Go server:
 
 ```bash
 docker build -t set-and-signal .
 docker run --rm -p 3000:3000 -v set-and-signal-data:/data set-and-signal
 ```
 
-Copy `.env.example` to `.env` for local overrides. At minimum, set `PUBLIC_URL` to
-the public HTTPS origin when enabling OAuth or MCP clients. Configure one or more
-of `GOOGLE_*`, `GITHUB_*`, or `APPLE_*` credentials for sign-in.
-
-## Deploy on Railway
-
-The production topology is declared in
-[`/.railway/railway.ts`](.railway/railway.ts): a Dockerfile-built application,
-health and restart policy, environment contract, and a persistent 5 GB volume at
-`/data`. Railway secrets remain stored in Railway; the source declaration only
-preserves them.
-
-```bash
-pnpm install --frozen-lockfile
-pnpm infra:check
-railway link
-railway environment production
-pnpm infra:plan
-pnpm infra:apply
-```
-
-Read [`.railway/README.md`](.railway/README.md) before changing resource names,
-the volume mount, domain, or relying-party settings. A plan is mandatory before
-every apply.
-
-## Architecture
-
-- `cmd/opengym-api` — HTTP server binary
-- `cmd/opengym-import` — one-shot migration from a legacy `./data` directory
-- `internal/config` — environment parsing and runtime defaults
-- `internal/store` — SQLite connection, goose migrations, and typed queries
-- `internal/auth` — signed sessions, bearer tokens, and WebAuthn
-- `internal/oauth` — OAuth 2.1 authorization server with DCR + PKCE
-- `internal/httpapi` — chi handlers, static SPA delivery, and the HTTP-mounted MCP transport
-- `internal/training` — training state, persistence, analytics, prescriptions, and MCP data contracts
-- `internal/exercises` — embedded exercise catalogue and instruction shards
-- `web/catalog` — source exercise catalogue and translated instruction shards
-- `web/src/app` — React bootstrap, routing, global styles, and client store
-- `web/src/domain` — framework-light exercise and training rules
-- `web/src/features` — route and sheet modules grouped by user flow
-- `web/src/shared` — reusable components, hooks, utilities, and UI primitives
-- `web/src/generated` — checked-in generated exercise data consumed by the app
-
-See [the architecture guide](docs/architecture.md) for the complete dependency
-direction and where new code belongs.
-
-The frontend routes are unchanged: `/home`, `/plan`, `/plan/r/$id`, `/workout`,
-`/stats`, `/history`, `/library`, `/settings`, and `/admin`, plus the existing
-home sheets. The identity and visual system changed; those flows did not.
-
-## Exercise media
-
-The catalogue is embedded, but the large exercise image and animation files are
-not part of the public source snapshot. The web build resolves them from a pinned
-commit of `hasaneyldrm/exercises-dataset` through jsDelivr; deployments can set
-`VITE_IMG_BASE` and `VITE_GIF_BASE` to an approved media host. This keeps clones
-and container layers small and makes the media attribution boundary explicit.
-See [NOTICE.md](NOTICE.md) before mirroring or redistributing that media.
-
-## Clean public history
-
-This public repository starts from a reviewed, source-only root commit. The
-private development history and its media-bearing legacy refs were deliberately
-not imported. Keep `web/public/img`, `web/public/gif`, generated builds, local
-training data, design-review artifacts, and credentials out of future commits.
-
-## Data and privacy
-
-Guest and mobile state stays on the device. A self-hosted server stores each
-authenticated profile in its own SQLite-backed state record under `DATA_DIR`.
-`/data`, `.env`, OAuth credentials, VAPID keys, and OpenRouter keys are deployment
-secrets and must never be committed. The optional OpenRouter-powered suggestions
-feature sends the prompt you choose to that provider; leave `OPENROUTER_API_KEY`
-unset to disable it.
+For Railway deployments, follow [the infrastructure guide](.railway/README.md).
 
 ## MCP
 
-Point an MCP client at `https://your-host.example/mcp`. The server advertises its
-OAuth protected-resource metadata, registers clients dynamically, and uses
-Authorization Code + PKCE. Planning writes are revision-checked: call
-`preview_program` first, then pass its `expectedRevision` to `set_program`.
+Connect an MCP client to `https://your-host.example/mcp`. The server supports
+OAuth 2.1 with dynamic client registration and PKCE. Program changes are
+revision-checked: call `preview_program` before `set_program` and pass the
+returned `expectedRevision`.
 
-## Development checks
+## Privacy
+
+Guest and mobile data stays on the device. Self-hosted accounts are stored in
+SQLite under `DATA_DIR`. Keep data files, credentials, and API keys out of
+version control. If enabled, workout suggestions send the selected prompt to
+OpenRouter.
+
+Exercise media is loaded from a pinned third-party dataset and is not included
+in this repository. See [NOTICE.md](NOTICE.md) before mirroring or redistributing
+it.
+
+## Development
 
 ```bash
-go test ./...
+go test -race ./...
 go vet ./...
-pnpm install --frozen-lockfile
 pnpm infra:check
 pnpm --dir web format
 pnpm --dir web lint:tailwind
@@ -138,14 +74,11 @@ pnpm --dir web test
 pnpm --dir web build
 ```
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request and
-see [SECURITY.md](SECURITY.md) for private vulnerability reports. Product,
-design, internationalization, and architecture references live under
-[`docs/`](docs/architecture.md).
+See [the documentation index](docs/README.md) for architecture, product, design,
+and internationalization guides. Read [CONTRIBUTING.md](CONTRIBUTING.md) before
+opening a pull request and [SECURITY.md](SECURITY.md) to report a vulnerability.
 
-## License and attribution
+## License
 
-Set & Signal is released under the GNU Affero General Public License, version 3
-or later. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for the upstream code,
-body-map, exercise catalogue, instruction, and media attributions that travel with
-the project.
+Set & Signal is licensed under the [GNU AGPL v3 or later](LICENSE). Third-party
+attributions are listed in [NOTICE.md](NOTICE.md).
