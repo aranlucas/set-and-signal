@@ -416,21 +416,24 @@ function SettingsPreferences({ onEffortHelp }: { onEffortHelp: () => void }) {
             <Row
               icon="weight"
               iconTint="var(--system-orange)"
+              className="flex-wrap sm:flex-nowrap"
               title={t("settings.barbell.barWeight", "Bar weight ({{unit}})", {
                 unit: appState.unit,
               })}
             >
-              <Stepper
-                className="min-w-33 [&_button]:size-9"
-                value={barWeightFor(appState.unit, appState.plates)}
-                step={appState.unit === "lb" ? 5 : 2.5}
-                onChange={(bar) =>
-                  update((state) => {
-                    if (!state.plates) state.plates = defaultPlateSetup(state.unit);
-                    state.plates.bar = bar ?? 0;
-                  })
-                }
-              />
+              <div className="w-full pl-10 sm:w-40 sm:shrink-0 sm:pl-0">
+                <Stepper
+                  className="w-full [&_button]:size-9"
+                  value={barWeightFor(appState.unit, appState.plates)}
+                  step={appState.unit === "lb" ? 5 : 2.5}
+                  onChange={(bar) =>
+                    update((state) => {
+                      if (!state.plates) state.plates = defaultPlateSetup(state.unit);
+                      state.plates.bar = bar ?? 0;
+                    })
+                  }
+                />
+              </div>
             </Row>
             <div className="w-full px-3.5 pt-1 pb-3.5">
               <div className="mb-2 text-sm leading-snug text-foreground/60">
