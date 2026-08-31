@@ -6,6 +6,7 @@ import { valibotResolver } from "@hookform/resolvers/valibot";
 import Icon from "@/shared/components/Icon";
 import { NumberField } from "@/shared/components/NumField";
 import { Button } from "@/shared/ui/button";
+import { Label } from "@/shared/ui/label";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 import { todayISO } from "@/shared/lib/format";
 import { createStartingStrengthFormSchema } from "@/shared/lib/form-schemas";
@@ -207,7 +208,8 @@ export default function HomeStrengthSetupSheet() {
           )}
         >
           <div className="mb-5 flex items-center justify-between gap-3">
-            <button
+            <Button
+              variant="plain"
               type="button"
               className="flex size-9 items-center justify-center rounded-full text-lg transition-colors hover:bg-muted active:bg-muted"
               onClick={() => {
@@ -217,7 +219,7 @@ export default function HomeStrengthSetupSheet() {
               aria-label={step === 0 ? t("common.close", "Close") : t("common.previous", "Prev")}
             >
               <Icon name={step === 0 ? "xmark" : "chevronLeft"} />
-            </button>
+            </Button>
             <div className="text-sm font-medium text-foreground/60">{stepLabel}</div>
             <span className="size-9" />
           </div>
@@ -242,7 +244,8 @@ export default function HomeStrengthSetupSheet() {
                   {experienceOptions.map((option) => {
                     const selected = experience === option.value;
                     return (
-                      <button
+                      <Button
+                        variant="plain"
                         type="button"
                         key={option.value}
                         aria-pressed={selected}
@@ -268,7 +271,7 @@ export default function HomeStrengthSetupSheet() {
                             {option.description}
                           </span>
                         </span>
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
@@ -294,7 +297,8 @@ export default function HomeStrengthSetupSheet() {
 
                 <div className="my-5 grid grid-cols-2 rounded-lg bg-card p-1">
                   {(["lb", "kg"] as const).map((candidate) => (
-                    <button
+                    <Button
+                      variant="plain"
                       type="button"
                       key={candidate}
                       aria-pressed={unit === candidate}
@@ -307,16 +311,16 @@ export default function HomeStrengthSetupSheet() {
                       onClick={() => chooseUnit(candidate)}
                     >
                       {candidate}
-                    </button>
+                    </Button>
                   ))}
                 </div>
 
                 <div className="overflow-hidden rounded-xl bg-card">
                   {liftRows.map((lift, index) => (
-                    <label
+                    <Label
                       key={lift.id}
                       className={cn(
-                        "flex min-h-15 items-center gap-3 px-4 py-2",
+                        "min-h-15 px-4 py-2 leading-normal",
                         index > 0 && "border-t border-border/60",
                       )}
                     >
@@ -343,7 +347,7 @@ export default function HomeStrengthSetupSheet() {
                         />
                         <span className="text-sm font-medium text-foreground/60">{unit}</span>
                       </span>
-                    </label>
+                    </Label>
                   ))}
                 </div>
                 <p className="mt-3 flex gap-2 text-sm leading-snug text-foreground/60">

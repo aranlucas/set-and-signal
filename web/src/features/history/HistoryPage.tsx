@@ -6,6 +6,7 @@ import { WorkoutDetail, WorkoutRow } from "@/features/history/HistorySheet";
 import type { Workout } from "@/shared/lib/types";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 import Icon from "@/shared/components/Icon";
+import { Button } from "@/shared/ui/button";
 
 export default function History() {
   const { t } = useTranslation();
@@ -19,13 +20,14 @@ export default function History() {
   return (
     <>
       <div className="mt-2 mb-4.5 flex items-end justify-between gap-3">
-        <button
+        <Button
+          variant="plain"
           className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
           onClick={() => nav({ to: "/stats" })}
           aria-label={t("navigation.stats", "Stats")}
         >
           <Icon name="chevronLeft" />
-        </button>
+        </Button>
         <div className="ml-3 min-w-0 flex-1">
           <h1 className="text-4xl leading-none font-bold tracking-tight">
             {t("navigation.history", "History")}

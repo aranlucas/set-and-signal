@@ -109,7 +109,8 @@ export function AddToRoutine({
       </div>
       <SpaceBetween size="xs">
         {appState.routines.map((routine) => (
-          <button
+          <Button
+            variant="plain"
             type="button"
             key={routine.id}
             className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
@@ -130,9 +131,10 @@ export function AddToRoutine({
               </span>
             )}
             <Icon name="plus" className="shrink-0 text-base text-foreground" />
-          </button>
+          </Button>
         ))}
-        <button
+        <Button
+          variant="plain"
           type="button"
           className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
           onClick={() => chooseRoutine("_new")}
@@ -149,7 +151,7 @@ export function AddToRoutine({
             </span>
           </span>
           <Icon name="plus" className="shrink-0 text-base text-foreground" />
-        </button>
+        </Button>
       </SpaceBetween>
     </>
   );
@@ -234,7 +236,8 @@ export function ExercisePicker({
         }
       >
         {chosenExerciseCount > 0 && (
-          <button
+          <Button
+            variant="plain"
             type="button"
             aria-pressed={bodyPart === "★"}
             className={cn(
@@ -249,9 +252,10 @@ export function ExercisePicker({
           >
             <Icon name="starFill" />
             {t("exercise.chosen", "Chosen")} ({chosenExerciseCount})
-          </button>
+          </Button>
         )}
-        <button
+        <Button
+          variant="plain"
           type="button"
           aria-pressed={!bodyPart}
           className={cn(
@@ -265,9 +269,10 @@ export function ExercisePicker({
           }}
         >
           {t("common.all", "All")}
-        </button>
+        </Button>
         {BODYPARTS.map((option) => (
-          <button
+          <Button
+            variant="plain"
             type="button"
             key={option}
             aria-pressed={bodyPart === option}
@@ -282,12 +287,13 @@ export function ExercisePicker({
             }}
           >
             {metadata.bodyPart(option)}
-          </button>
+          </Button>
         ))}
       </div>
       {equipmentOptions.length > 1 && (
         <div className="mb-2.5 flex shrink-0 scrollbar-none gap-2 overflow-x-auto pb-0.5">
-          <button
+          <Button
+            variant="plain"
             type="button"
             aria-pressed={!activeEquipment}
             className={cn(
@@ -300,9 +306,10 @@ export function ExercisePicker({
             }}
           >
             {t("exercise.equipment.anyEquipment", "Any equipment")}
-          </button>
+          </Button>
           {equipmentOptions.map((option) => (
-            <button
+            <Button
+              variant="plain"
               type="button"
               key={option}
               aria-pressed={activeEquipment === option}
@@ -316,14 +323,15 @@ export function ExercisePicker({
               }}
             >
               {metadata.equipment(option)}
-            </button>
+            </Button>
           ))}
         </div>
       )}
       <SpaceBetween size="xs">
         <SpaceBetween size="xs">
           {bodyPart !== "★" && (
-            <button
+            <Button
+              variant="plain"
               type="button"
               className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
               onClick={() =>
@@ -348,10 +356,11 @@ export function ExercisePicker({
                 </span>
               </span>
               <Icon name="plus" className="shrink-0 text-base text-foreground" />
-            </button>
+            </Button>
           )}
           {filteredExercises.slice(0, visibleCount).map((exercise) => (
-            <button
+            <Button
+              variant="plain"
               type="button"
               key={exercise.id}
               className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
@@ -373,7 +382,7 @@ export function ExercisePicker({
                 </span>
               ) : null}
               <Icon name="plus" className="shrink-0 text-base text-foreground" />
-            </button>
+            </Button>
           ))}
           {filteredExercises.length === 0 && bodyPart === "★" && (
             <div className="px-5 py-11 text-center text-base leading-normal text-foreground/60">

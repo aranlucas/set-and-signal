@@ -4,6 +4,7 @@ import Icon from "@/shared/components/Icon";
 import type { IconName } from "@/shared/components/Icon";
 import { glyphOf } from "@/domain/exercises/glyphs";
 import type { SheetClose } from "@/shared/lib/types";
+import { Button } from "@/shared/ui/button";
 
 export function GlyphPicker({
   current,
@@ -27,7 +28,8 @@ export function GlyphPicker({
           </div>
           <div className="grid grid-cols-5 gap-2.5">
             {group.items.map((iconName) => (
-              <button
+              <Button
+                variant="plain"
                 type="button"
                 key={iconName}
                 className={
@@ -42,7 +44,7 @@ export function GlyphPicker({
                 aria-label={iconName}
               >
                 <Icon name={iconName} />
-              </button>
+              </Button>
             ))}
           </div>
         </div>

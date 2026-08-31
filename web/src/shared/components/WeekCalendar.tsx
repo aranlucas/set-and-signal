@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import { formatDate, isoOf } from "@/shared/lib/format";
 import { cn } from "@/shared/lib/utils";
 import Icon from "@/shared/components/Icon";
+import { Button } from "@/shared/ui/button";
+import { FieldSet } from "@/shared/ui/field";
 
 export type WeekCalendarDayStatus = "completed" | "rescheduled" | "planned";
 
@@ -50,8 +52,8 @@ export function WeekCalendar({ weekStart, dayStatuses, onSelect }: WeekCalendarP
 
   return (
     <div>
-      <fieldset
-        className="grid grid-cols-7 border-0 border-t border-border p-0 pt-2"
+      <FieldSet
+        className="grid grid-cols-7 gap-0 border-0 border-t border-border p-0 pt-2"
         aria-label={`${formatAccessibleDate(t, weekStart)} – ${formatAccessibleDate(t, weekEnd)}`}
       >
         {days.map((date) => {
@@ -75,7 +77,8 @@ export function WeekCalendar({ weekStart, dayStatuses, onSelect }: WeekCalendarP
             .join(", ");
 
           return (
-            <button
+            <Button
+              variant="plain"
               key={iso}
               type="button"
               className="flex h-16 min-w-0 flex-col items-center justify-center gap-0 rounded-md bg-transparent p-0 font-normal transition hover:bg-muted active:scale-95"
@@ -95,10 +98,10 @@ export function WeekCalendar({ weekStart, dayStatuses, onSelect }: WeekCalendarP
                 {date.getDate()}
               </span>
               {status ? <WeekStatusMark status={status} /> : <span className="h-3" />}
-            </button>
+            </Button>
           );
         })}
-      </fieldset>
+      </FieldSet>
       <div className="mt-1 flex items-center justify-center gap-4 border-t border-border/40 pt-2 text-xs text-foreground/60">
         {(["completed", "planned", "rescheduled"] as const).map((status) => (
           <span key={status} className="flex items-center gap-1.5">

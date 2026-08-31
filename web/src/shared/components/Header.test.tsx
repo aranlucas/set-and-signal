@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { Header } from "@/shared/components/Header";
+import { Button } from "@/shared/ui/button";
 
 describe("Header", () => {
   it("renders the Cloudscape-inspired content slots", () => {
@@ -9,7 +10,7 @@ describe("Header", () => {
       <Header
         variant="h1"
         description="Progress and history"
-        actions={<button>History</button>}
+        actions={<Button variant="plain">History</Button>}
         counter="(12)"
         info={<a href="#help">Info</a>}
       >

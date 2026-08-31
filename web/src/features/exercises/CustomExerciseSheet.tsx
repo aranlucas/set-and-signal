@@ -6,7 +6,7 @@ import { EXIDX, BODYPARTS, allExercises } from "@/domain/exercises/exercises";
 import { uid } from "@/shared/lib/format";
 import { toast } from "@/shared/lib/toast";
 import { Button } from "@/shared/ui/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/shared/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
 import { Textarea } from "@/shared/ui/textarea";
 import Icon from "@/shared/components/Icon";
@@ -128,12 +128,13 @@ export function CustomExerciseForm({
           <FieldLabel id="custom-exercise-body-part">
             {t("customExercise.pickBodyPart", "Pick a body part")}
           </FieldLabel>
-          <fieldset
+          <FieldSet
             aria-labelledby="custom-exercise-body-part"
-            className="flex scrollbar-none gap-2 overflow-x-auto pb-0.5"
+            className="scrollbar-none flex-row gap-2 overflow-x-auto pb-0.5"
           >
             {BODYPARTS.map((option) => (
-              <button
+              <Button
+                variant="plain"
                 key={option}
                 type="button"
                 aria-pressed={bodyPart === option}
@@ -147,9 +148,9 @@ export function CustomExerciseForm({
                 }
               >
                 {metadata.bodyPart(option)}
-              </button>
+              </Button>
             ))}
-          </fieldset>
+          </FieldSet>
           {bodyPart === "cardio" && (
             <div className="flex items-center gap-1.5 text-sm leading-snug text-muted-foreground">
               <Icon name="figureRun" className="text-sm" />

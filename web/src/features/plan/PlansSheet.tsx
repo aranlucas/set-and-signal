@@ -11,6 +11,7 @@ import { effectiveRoutineId } from "@/domain/training/history";
 import { toast } from "@/shared/lib/toast";
 import { Button } from "@/shared/ui/button";
 import { Field } from "@/shared/ui/field";
+import { Input } from "@/shared/ui/input";
 import { Switch } from "@/shared/ui/switch";
 import Icon from "@/shared/components/Icon";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
@@ -148,7 +149,7 @@ export function PlanTools({
         <Icon name="folder" />
         {t("sharing.importPlanFile", "Import a plan file")}
       </Button>
-      <input ref={fileRef} type="file" accept="application/json,.json" onChange={pickFile} hidden />
+      <Input ref={fileRef} type="file" accept="application/json,.json" onChange={pickFile} hidden />
     </>
   );
 }
@@ -286,7 +287,8 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
       </div>
       <div className="flex flex-col gap-2">
         {st.routines.map((r) => (
-          <button
+          <Button
+            variant="plain"
             type="button"
             key={r.id}
             className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
@@ -302,9 +304,10 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
               </span>
             </span>
             {effId === r.id && <Icon name="check" className="text-primary" />}
-          </button>
+          </Button>
         ))}
-        <button
+        <Button
+          variant="plain"
           type="button"
           className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
           onClick={() => set("rest")}
@@ -318,9 +321,10 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
             </span>
           </span>
           {effId === null && <Icon name="check" className="text-primary" />}
-        </button>
+        </Button>
         {hasOvr && (
-          <button
+          <Button
+            variant="plain"
             type="button"
             className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
             onClick={() => set("")}
@@ -333,7 +337,7 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
                 {t("calendar.backWeeklyPlan", "Back to weekly plan")}
               </span>
             </span>
-          </button>
+          </Button>
         )}
       </div>
     </>
@@ -354,7 +358,8 @@ export function DayAssign({ day, close }: { day: Weekday; close: SheetClose }) {
     <>
       <h3>{weekdays[day]}</h3>
       <div className="flex flex-col gap-2">
-        <button
+        <Button
+          variant="plain"
           type="button"
           className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
           onClick={() => setRoutine("")}
@@ -368,9 +373,10 @@ export function DayAssign({ day, close }: { day: Weekday; close: SheetClose }) {
             </span>
           </span>
           {!appState.week[day] && <Icon name="check" className="text-primary" />}
-        </button>
+        </Button>
         {appState.routines.map((routine) => (
-          <button
+          <Button
+            variant="plain"
             type="button"
             key={routine.id}
             className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
@@ -386,7 +392,7 @@ export function DayAssign({ day, close }: { day: Weekday; close: SheetClose }) {
               </span>
             </span>
             {appState.week[day] === routine.id && <Icon name="check" className="text-primary" />}
-          </button>
+          </Button>
         ))}
       </div>
     </>

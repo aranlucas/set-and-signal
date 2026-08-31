@@ -6,6 +6,7 @@ import { useStore } from "@/app/store/useStore";
 import Icon from "@/shared/components/Icon";
 import type { CatalogExercise } from "@/shared/lib/types";
 import { cn } from "@/shared/lib/utils";
+import { Button } from "@/shared/ui/button";
 
 // Big autoplaying animation; tap toggles to the still frame. `compact` shrinks it (superset cards).
 // Custom exercises have no media — the animation stays blank by design (issue #11).
@@ -38,7 +39,8 @@ export default function Media({
   const togglePlayback = () => setPlaying((currentlyPlaying) => !currentlyPlaying);
   return (
     <div className="relative mb-3 shrink-0 overflow-hidden rounded-xl bg-white" id={id}>
-      <button
+      <Button
+        variant="plain"
         type="button"
         className="block w-full cursor-pointer bg-transparent p-0 text-left"
         aria-label={
@@ -58,9 +60,10 @@ export default function Media({
           src={playing ? gifSrc(exercise) : imgSrc(exercise)}
           alt={exercise.n}
         />
-      </button>
+      </Button>
       {minimizable && (
-        <button
+        <Button
+          variant="plain"
           type="button"
           className="absolute bottom-2.5 left-2.5 inline-flex min-h-11 items-center gap-1 rounded-full bg-black/45 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-md"
           onClick={toggleSize}
@@ -74,7 +77,7 @@ export default function Media({
           {isMinimized
             ? t("customExercise.expand", "Expand")
             : t("customExercise.minimize", "Minimize")}
-        </button>
+        </Button>
       )}
       {!isMinimized && (
         <span className="absolute right-2.5 bottom-2.5 inline-flex items-center gap-1 rounded-full bg-black/45 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-md">

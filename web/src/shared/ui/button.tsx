@@ -8,7 +8,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        plain: "bg-transparent font-normal text-primary active:bg-muted",
+        plain:
+          "shrink rounded-none border-0 bg-transparent p-0 text-base font-normal tracking-normal whitespace-normal text-foreground hover:bg-transparent active:not-aria-[haspopup]:scale-100",
         primary: "bg-primary text-primary-foreground active:bg-primary",
         tinted: "bg-primary/15 text-primary",
         danger: "bg-destructive/15 text-destructive",

@@ -129,7 +129,8 @@ export default function Library() {
           equipmentOptions.length > 1 ? "mb-2" : "mb-3",
         )}
       >
-        <button
+        <Button
+          variant="plain"
           type="button"
           aria-pressed={!bodyPart}
           className={cn(
@@ -143,9 +144,10 @@ export default function Library() {
           }}
         >
           {t("common.all", "All")}
-        </button>
+        </Button>
         {BODYPARTS.map((b) => (
-          <button
+          <Button
+            variant="plain"
             key={b}
             type="button"
             aria-pressed={bodyPart === b}
@@ -161,12 +163,13 @@ export default function Library() {
             }}
           >
             {metadata.bodyPart(b)}
-          </button>
+          </Button>
         ))}
       </div>
       {equipmentOptions.length > 1 && (
         <div className="mb-3 flex scrollbar-none gap-2 overflow-x-auto pb-0.5 [&::-webkit-scrollbar]:hidden">
-          <button
+          <Button
+            variant="plain"
             type="button"
             aria-pressed={!selectedEquipment}
             className={cn(
@@ -179,9 +182,10 @@ export default function Library() {
             }}
           >
             {t("exercise.equipment.anyEquipment", "Any equipment")}
-          </button>
+          </Button>
           {equipmentOptions.map((equipmentOption) => (
-            <button
+            <Button
+              variant="plain"
               key={equipmentOption}
               type="button"
               aria-pressed={selectedEquipment === equipmentOption}
@@ -197,12 +201,13 @@ export default function Library() {
               }}
             >
               {metadata.equipment(equipmentOption)}
-            </button>
+            </Button>
           ))}
         </div>
       )}
       <SpaceBetween size="xs">
-        <button
+        <Button
+          variant="plain"
           type="button"
           className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2 text-left transition-colors duration-140 active:bg-muted"
           onClick={() =>
@@ -228,7 +233,7 @@ export default function Library() {
             </span>
           </span>
           <Icon name="plus" className="flex-none text-base text-foreground" />
-        </button>
+        </Button>
         {visibleExercises.slice(0, visibleCount).map((exercise) => {
           const bestWeight = bestWeightFor(state, exercise.id);
           return (
@@ -236,7 +241,8 @@ export default function Library() {
               key={exercise.id}
               className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2 text-left transition-colors duration-140 active:bg-muted"
             >
-              <button
+              <Button
+                variant="plain"
                 type="button"
                 className="flex min-w-0 flex-1 items-center gap-3 border-0 bg-transparent p-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 onPointerEnter={() => {
@@ -280,7 +286,7 @@ export default function Library() {
                     {fmtNum(bestWeight)}
                   </span>
                 )}
-              </button>
+              </Button>
               <Button
                 size="sm"
                 variant="secondary"

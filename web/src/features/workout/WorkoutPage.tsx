@@ -146,7 +146,8 @@ function StartChooser() {
           </h2>
           <SpaceBetween size="xs">
             {others.map((routine) => (
-              <button
+              <Button
+                variant="plain"
                 type="button"
                 key={routine.id}
                 className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors duration-140 active:bg-muted"
@@ -166,7 +167,7 @@ function StartChooser() {
                 <span className="inline-flex items-center gap-1 rounded-sm bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
                   {t("common.start", "Start")}
                 </span>
-              </button>
+              </Button>
             ))}
           </SpaceBetween>
         </>
@@ -435,14 +436,15 @@ function ExerciseBlock({
         {col.hd}
       </span>
       <div className="flex min-w-0 items-center overflow-hidden rounded-md bg-muted">
-        <button
+        <Button
+          variant="plain"
           type="button"
           className={`${col3 ? (cls === "eff" ? "sm:w-5" : "sm:w-6") : "sm:w-8"} flex size-11 flex-none items-center justify-center text-foreground transition-colors duration-140 active:bg-input sm:h-10`}
           aria-label={`Decrease ${ex.n}, ${t("exercise.sets", "Sets")} ${i + 1}, ${col.hd}`}
           onClick={() => bump(s, i, col, -1)}
         >
           <Icon name="minus" />
-        </button>
+        </Button>
         <span className="flex min-w-10 flex-1 items-baseline justify-center gap-1 px-0.5 sm:min-w-0">
           <NumberField
             aria-label={`${ex.n}, ${t("exercise.sets", "Sets")} ${i + 1}, ${col.hd}`}
@@ -459,14 +461,15 @@ function ExerciseBlock({
             }
           />
         </span>
-        <button
+        <Button
+          variant="plain"
           type="button"
           className={`${col3 ? (cls === "eff" ? "sm:w-5" : "sm:w-6") : "sm:w-8"} flex size-11 flex-none items-center justify-center text-foreground transition-colors duration-140 active:bg-input sm:h-10`}
           aria-label={`Increase ${ex.n}, ${t("exercise.sets", "Sets")} ${i + 1}, ${col.hd}`}
           onClick={() => bump(s, i, col, 1)}
         >
           <Icon name="plus" />
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -479,13 +482,14 @@ function ExerciseBlock({
         >
           {ex.n}
         </div>
-        <button
+        <Button
+          variant="plain"
           className="flex size-11 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted sm:size-9"
           aria-label={t("common.details", "Details")}
           onClick={() => setWorkoutSheet({ type: "detail", exercise: ex })}
         >
           <Icon name="info" />
-        </button>
+        </Button>
       </div>
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
         {cardio && (
@@ -576,14 +580,15 @@ function ExerciseBlock({
             {/* A timed set is started, not typed: the timer counts the hold down and checks the
             set off itself. The checkbox stays for anyone who timed it on their own watch. */}
             {timed && (
-              <button
+              <Button
+                variant="plain"
                 className="absolute top-2.5 right-10 flex size-11 flex-none items-center justify-center rounded-full bg-muted text-sm text-primary transition duration-140 active:bg-input disabled:cursor-default disabled:opacity-30 sm:static sm:size-7.5"
                 aria-label={t("progression.startSet", "Start set")}
                 disabled={s.done || !!working}
                 onClick={() => onStartTimed(index)}
               >
                 <Icon name="play" />
-              </button>
+              </Button>
             )}
             <Checkbox
               aria-label={`${ex.n}, ${t("exercise.sets", "Sets")} ${index + 1}, ${t("common.done", "Done")}`}
@@ -642,13 +647,14 @@ function WorkoutSessionHeader({
   const { t } = useTranslation();
   return (
     <div className="mt-2 mb-4.5 flex items-end justify-between gap-3">
-      <button
+      <Button
+        variant="plain"
         className="flex size-11 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted sm:size-9"
         aria-label={t("common.discard", "Discard")}
         onClick={onDiscard}
       >
         <Icon name="xmark" />
-      </button>
+      </Button>
       <div className="text-center">
         <h1 className="font-semibold">{name}</h1>
         <div className="mt-1 text-base tracking-tight text-foreground/60">
@@ -658,13 +664,14 @@ function WorkoutSessionHeader({
           })}
         </div>
       </div>
-      <button
+      <Button
+        variant="plain"
         className="flex size-11 flex-none items-center justify-center rounded-full bg-card text-lg text-primary transition duration-140 active:scale-95 active:bg-muted sm:size-9"
         aria-label={t("common.finish", "Finish")}
         onClick={onFinish}
       >
         <Icon name="check" />
-      </button>
+      </Button>
     </div>
   );
 }

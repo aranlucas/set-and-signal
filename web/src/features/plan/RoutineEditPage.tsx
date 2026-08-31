@@ -136,14 +136,15 @@ export default function RoutineEdit() {
     <div className="mx-auto w-full max-w-160">
       <h1 className="sr-only">{routine.name}</h1>
       <div className="mt-2 mb-4.5 flex items-end justify-between gap-3">
-        <button
+        <Button
+          variant="plain"
           type="button"
           className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
           onClick={() => nav({ to: "/plan" })}
           aria-label={t("navigation.plan", "Plan")}
         >
           <Icon name="chevronLeft" />
-        </button>
+        </Button>
         <form className="mx-3 min-w-0 flex-1" onSubmit={handleSubmit(saveName)}>
           <Input
             aria-label={t("routine.name", "Routine name")}
@@ -158,7 +159,8 @@ export default function RoutineEdit() {
             }}
           />
         </form>
-        <button
+        <Button
+          variant="plain"
           type="button"
           className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
           aria-label={t("exercise.pickIcon", "Pick an icon")}
@@ -174,7 +176,7 @@ export default function RoutineEdit() {
           }
         >
           <Icon name={glyphOf(routine.emoji)} />
-        </button>
+        </Button>
       </div>
 
       <div className="mb-4 overflow-hidden rounded-lg bg-card">
@@ -389,7 +391,8 @@ function RoutineExerciseList({
                 inSS.has(index) && "border-l-2 border-primary",
               )}
             >
-              <button
+              <Button
+                variant="plain"
                 type="button"
                 className="flex min-w-0 flex-1 items-center gap-3 bg-transparent p-0 text-left"
                 onClick={openExerciseEditor}
@@ -403,10 +406,11 @@ function RoutineExerciseList({
                     {exLine(exerciseConfig, unit)}
                   </div>
                 </div>
-              </button>
+              </Button>
               <div className="flex flex-none flex-col items-center gap-0.5">
                 {index > 0 && (
-                  <button
+                  <Button
+                    variant="plain"
                     type="button"
                     className={cn(
                       "flex h-7 w-8 flex-none items-center justify-center rounded-sm bg-card text-base text-foreground transition duration-140 active:scale-95 active:bg-muted",
@@ -419,10 +423,11 @@ function RoutineExerciseList({
                     }}
                   >
                     <Icon name="link" />
-                  </button>
+                  </Button>
                 )}
                 <div className="flex gap-0.5">
-                  <button
+                  <Button
+                    variant="plain"
                     type="button"
                     className="flex h-6 w-7 flex-none items-center justify-center rounded-sm bg-card text-xs text-foreground transition duration-140 active:scale-95 active:bg-muted"
                     aria-label="Move up"
@@ -432,8 +437,9 @@ function RoutineExerciseList({
                     }}
                   >
                     <Icon name="chevronUp" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="plain"
                     type="button"
                     className="flex h-6 w-7 flex-none items-center justify-center rounded-sm bg-card text-xs text-foreground transition duration-140 active:scale-95 active:bg-muted"
                     aria-label="Move down"
@@ -443,7 +449,7 @@ function RoutineExerciseList({
                     }}
                   >
                     <Icon name="chevronDown" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

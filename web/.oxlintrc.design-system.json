@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [],
+  "jsPlugins": ["./lint/design-system.mjs"],
+  "categories": {
+    "correctness": "off",
+    "suspicious": "off",
+    "pedantic": "off",
+    "perf": "off"
+  },
+  "rules": {
+    "design-system/prefer-components": "error"
+  },
+  "ignorePatterns": ["dist/**", "node_modules/**"]
+}

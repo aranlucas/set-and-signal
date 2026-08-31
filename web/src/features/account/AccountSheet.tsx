@@ -52,30 +52,33 @@ export function WeightInput({
   return (
     <>
       <div className="my-3.5 mb-1.5 flex items-center justify-center gap-4.5">
-        <button
+        <Button
+          variant="plain"
           type="button"
           className="flex size-11.5 shrink-0 items-center justify-center rounded-full bg-card text-xl text-foreground transition active:scale-95 active:bg-muted"
           onClick={() => onSlide(value - step)}
           aria-label={`minus ${step} ${unit}`}
         >
           <Icon name="minus" />
-        </button>
+        </Button>
         <div className="min-w-39.5 text-center text-6xl leading-none font-semibold tracking-tight tabular-nums">
           {fmtNum(value)}
           <span className="text-xl font-normal tracking-tight text-foreground/60"> {unit}</span>
         </div>
-        <button
+        <Button
+          variant="plain"
           type="button"
           className="flex size-11.5 shrink-0 items-center justify-center rounded-full bg-card text-xl text-foreground transition active:scale-95 active:bg-muted"
           onClick={() => onSlide(value + step)}
           aria-label={`plus ${step} ${unit}`}
         >
           <Icon name="plus" />
-        </button>
+        </Button>
       </div>
       <div className="my-2 flex scrollbar-none justify-center gap-2 overflow-x-auto pb-0.5">
         {weightJumps(unit).map((increment) => (
-          <button
+          <Button
+            variant="plain"
             type="button"
             key={increment}
             className="shrink-0 rounded-full bg-card px-3 py-1.5 text-sm tracking-tight text-foreground transition-colors active:bg-muted"
@@ -83,7 +86,7 @@ export function WeightInput({
           >
             {increment > 0 ? "+" : "−"}
             {Math.abs(increment)}
-          </button>
+          </Button>
         ))}
       </div>
       <Slider
@@ -243,13 +246,14 @@ export function BodyweightLogSheet({ close }: { close: SheetClose }) {
                   <b>
                     {fmtNum(b.w)} {state.unit}
                   </b>
-                  <button
+                  <Button
+                    variant="plain"
                     className="flex h-7.5 w-8 shrink-0 items-center justify-center rounded-lg bg-card text-base text-destructive"
                     onClick={() => delEntry(b.d)}
                     aria-label="delete"
                   >
                     <Icon name="trash" />
-                  </button>
+                  </Button>
                 </span>
               </div>
             ))}

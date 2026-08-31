@@ -44,7 +44,8 @@ export function CuratedPlans({ close }: { close: SheetClose }) {
           {CURATED.map((p) => {
             const n = p.routines.reduce((a, r) => a + r[2].length, 0);
             return (
-              <button
+              <Button
+                variant="plain"
                 type="button"
                 key={p.key}
                 className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
@@ -82,7 +83,7 @@ export function CuratedPlans({ close }: { close: SheetClose }) {
                   </div>
                 </div>
                 <Icon name="chevronRight" className="shrink-0 text-base text-foreground" />
-              </button>
+              </Button>
             );
           })}
         </SpaceBetween>
