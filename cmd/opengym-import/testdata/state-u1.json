@@ -1,0 +1,9 @@
+{
+  "settings": {
+    "units": "kg",
+    "reminder": { "on": true, "tz": "Europe/Lisbon", "time": "07:30" }
+  },
+  "routines": [{ "id": "r-push", "name": "Push day", "emoji": "🏋️" }],
+  "week": { "1": "r-push" },
+  "_ts": 1735689600000
+}

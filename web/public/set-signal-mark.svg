@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Set &amp; Signal mark</title>
+  <rect width="512" height="512" rx="72" fill="#f3ecdd"/>
+  <g fill="#171713">
+    <rect x="114" y="80" width="32" height="352"/>
+    <rect x="176" y="128" width="248" height="32"/>
+    <rect x="176" y="240" width="168" height="32"/>
+    <rect x="176" y="352" width="248" height="32"/>
+  </g>
+  <g fill="#e84a35">
+    <rect x="80" y="112" width="68" height="16"/>
+    <rect x="80" y="384" width="68" height="16"/>
+  </g>
+  <g fill="#2855d9">
+    <rect x="392" y="80" width="32" height="16"/>
+    <rect x="408" y="80" width="16" height="32"/>
+    <rect x="392" y="416" width="32" height="16"/>
+    <rect x="408" y="400" width="16" height="32"/>
+  </g>
+</svg>

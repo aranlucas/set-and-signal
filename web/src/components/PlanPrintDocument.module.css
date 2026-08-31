@@ -1,0 +1,200 @@
+@page {
+  margin: 16mm 15mm;
+}
+
+.root,
+.root * {
+  box-sizing: border-box;
+}
+
+.root {
+  max-width: 720px;
+  margin: 0 auto;
+  color: #171713;
+  background: #f3ecdd;
+  font:
+    14px/1.5 -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.header {
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #171713;
+}
+
+.kicker {
+  color: #e84a35;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.header h1 {
+  margin: 3px 0 0;
+  font-size: 27px;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin-top: 4px;
+  color: #5e5a50;
+  font-size: 13px;
+}
+
+.blockTitle {
+  margin: 0 0 8px;
+  color: #5e5a50;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.week {
+  margin-bottom: 26px;
+  overflow: hidden;
+  border: 1px solid rgb(23 23 19 / 26%);
+  border-radius: 3px;
+  break-inside: avoid;
+}
+
+.weekRow {
+  display: flex;
+  align-items: baseline;
+  padding: 8px 14px;
+  border-top: 1px solid rgb(23 23 19 / 16%);
+}
+
+.weekRow:first-child {
+  border-top: 0;
+}
+
+.weekday {
+  flex: none;
+  width: 116px;
+  color: #171713;
+  font-weight: 600;
+}
+
+.scheduledRoutine {
+  text-transform: capitalize;
+}
+
+.scheduledRoutine span {
+  color: #6a655b;
+  text-transform: none;
+}
+
+.routine {
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  border: 1px solid rgb(23 23 19 / 26%);
+  border-radius: 3px;
+  break-inside: avoid;
+}
+
+.routineHeader {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgb(23 23 19 / 16%);
+  break-after: avoid;
+}
+
+.routineHeader h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  text-transform: capitalize;
+}
+
+.routineCount {
+  color: #5e5a50;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.exerciseList {
+  display: flex;
+  flex-direction: column;
+}
+
+.exercise {
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 6px 0;
+  break-inside: avoid;
+}
+
+.exercise + .exercise,
+.superset + .exercise,
+.exercise + .superset {
+  border-top: 1px solid rgb(23 23 19 / 14%);
+}
+
+.exerciseName {
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.bodyPart {
+  margin-left: 8px;
+  color: #6a655b;
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: capitalize;
+}
+
+.scheme {
+  color: #2855d9;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.superset {
+  padding-left: 12px;
+  margin: 4px 0;
+  border-left: 3px solid #e84a35;
+  break-inside: avoid;
+}
+
+.supersetLabel {
+  padding-top: 4px;
+  color: #e84a35;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.superset .exercise:first-of-type {
+  padding-top: 2px;
+}
+
+.none {
+  color: #6a655b;
+}
+
+.footer {
+  padding-top: 10px;
+  margin-top: 26px;
+  color: #6a655b;
+  font-size: 11px;
+  text-align: center;
+  border-top: 1px solid rgb(23 23 19 / 16%);
+}

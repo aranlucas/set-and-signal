@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en" data-accent="orange">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="theme-color" content="#f3ecdd" />
+    <script>
+      try {
+        const state = JSON.parse(localStorage.getItem("gym_state_v1") || "null");
+        const isDark = state?.theme === "dark";
+        document.documentElement.classList.toggle("dark", isDark);
+        if (typeof state?.accent === "string") {
+          document.documentElement.dataset.accent = state.accent;
+        }
+        document
+          .querySelector('meta[name="theme-color"]')
+          ?.setAttribute("content", isDark ? "#171713" : "#f3ecdd");
+      } catch {
+        document.documentElement.classList.remove("dark");
+      }
+    </script>
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>Set &amp; Signal — training, recorded</title>
+    <meta
+      name="description"
+      content="A privacy-first, self-hostable workout planner and training log."
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Set &amp; Signal" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="icon-180.png" />
+    <link rel="icon" type="image/png" href="icon-180.png" />
+  </head>
+  <body>
+    <!--
+    IDENTITY: Set & Signal / Working Proof / Press Signatures
+    AUDIENCE + JOB: A private training log for finding and resuming today's session in seconds.
+    HIERARCHY: Header → seven-day galley → session proof → recovery and weekly record → tab index.
+    VISUAL RULES: Bone paper, near-black ink, vermilion action, registry-blue progress, print rules, crop marks, square fields.
+    MUST NOT CHANGE: Routes, data, auth, workout flow, accessibility, and status semantics. FINISH: verify desktop + mobile and preserve every route.
+    -->
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

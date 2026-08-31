@@ -1,0 +1,126 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "oxc", "unicorn", "react", "import", "jsx-a11y", "vitest"],
+  "jsPlugins": ["oxlint-tailwindcss"],
+  "env": {
+    "browser": true,
+    "es2022": true
+  },
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "pedantic": "error",
+    "perf": "error"
+  },
+  "settings": {
+    "tailwindcss": {
+      "entryPoint": "src/index.css",
+      "rootFontSize": 16
+    }
+  },
+  "rules": {
+    "eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "caughtErrors": "none"
+      }
+    ],
+    "eslint/no-unused-expressions": [
+      "error",
+      {
+        "allowShortCircuit": true,
+        "allowTernary": true
+      }
+    ],
+    "eslint/no-irregular-whitespace": [
+      "error",
+      {
+        "skipStrings": true,
+        "skipComments": true
+      }
+    ],
+    "eslint/no-useless-assignment": "off",
+    "eslint/eqeqeq": ["error", "smart"],
+    "eslint/one-var": ["error", "never"],
+    "eslint/max-lines-per-function": "off",
+    "eslint/max-lines": "off",
+    "eslint/no-inline-comments": "off",
+    "eslint/require-unicode-regexp": "off",
+    "eslint/no-underscore-dangle": ["error", { "allow": ["_ts"] }],
+    "typescript/prefer-readonly-parameter-types": "off",
+    "typescript/strict-boolean-expressions": "off",
+    "typescript/prefer-nullish-coalescing": "off",
+    "typescript/no-confusing-void-expression": "off",
+    "typescript/strict-void-return": "off",
+    "typescript/no-unsafe-type-assertion": "error",
+    "typescript/no-misused-promises": "off",
+    "typescript/no-unnecessary-type-assertion": "off",
+    "typescript/no-unnecessary-type-conversion": "off",
+    "typescript/no-unsafe-argument": "error",
+    "typescript/no-unsafe-assignment": "error",
+    "typescript/consistent-return": "off",
+    "typescript/no-unsafe-member-access": "error",
+    "typescript/no-unnecessary-boolean-literal-compare": "off",
+    "typescript/no-unnecessary-type-parameters": "off",
+    "typescript/no-unsafe-return": "error",
+    "typescript/no-unsafe-call": "error",
+    "typescript/no-deprecated": "off",
+    "import/max-dependencies": "off",
+    "vitest/no-conditional-in-test": "off",
+    "unicorn/no-array-sort": "off",
+    "unicorn/no-array-reverse": "off",
+    "unicorn/no-array-callback-reference": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "unicorn/prefer-number-coercion": "off",
+    "unicorn/no-negated-condition": "off",
+    "eslint/no-negated-condition": "off",
+    "unicorn/explicit-length-check": "off",
+    "eslint/sort-vars": "off",
+    "react/react-in-jsx-scope": "off",
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "error",
+    "react/only-export-components": ["error", { "allowConstantExport": true }],
+    "tailwindcss/no-unknown-classes": [
+      "error",
+      { "allowlist": ["plain", "metric-name", "metric-bar", "metric-value"] }
+    ],
+    "tailwindcss/no-duplicate-classes": "error",
+    "tailwindcss/no-conflicting-classes": "error",
+    "tailwindcss/no-deprecated-classes": "error",
+    "tailwindcss/no-unnecessary-whitespace": "error",
+    "tailwindcss/no-dark-without-light": "error",
+    "tailwindcss/no-contradicting-variants": "error",
+    "tailwindcss/enforce-canonical": "error",
+    "tailwindcss/prefer-scale-token": "error",
+    "tailwindcss/enforce-sort-order": "error",
+    "tailwindcss/enforce-shorthand": "error",
+    "tailwindcss/enforce-consistent-important-position": "error",
+    "tailwindcss/enforce-negative-arbitrary-values": "error",
+    "tailwindcss/enforce-consistent-variable-syntax": "error",
+    "tailwindcss/consistent-variant-order": "error",
+    "tailwindcss/no-hardcoded-colors": "error",
+    "tailwindcss/no-unnecessary-arbitrary-value": "error",
+    "tailwindcss/max-class-count": "off",
+    "tailwindcss/enforce-consistent-line-wrapping": "off",
+    "tailwindcss/no-restricted-classes": [
+      "error",
+      {
+        "patterns": [
+          {
+            "pattern": "(^|:)leading-\\[(?:1|1\\.25|1\\.375|1\\.5|1\\.625|2)\\]$",
+            "message": "Use the matching named leading-* utility (for example, leading-tight) instead of an arbitrary value."
+          }
+        ]
+      }
+    ],
+    "tailwindcss/no-arbitrary-value": "error",
+    "tailwindcss/prefer-theme-tokens": "error"
+  },
+  "ignorePatterns": [
+    "dist/**",
+    "node_modules/**",
+    "src/components/ui/**",
+    "src/hooks/use-mobile.ts"
+  ]
+}

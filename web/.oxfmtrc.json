@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": false,
+  "trailingComma": "all",
+  "sortTailwindcss": {
+    "stylesheet": "src/index.css",
+    "functions": ["cn", "clsx", "cva", "twMerge", "twJoin"],
+    "attributes": ["classNames", "containerClassName", "labelClassName"]
+  },
+  "ignorePatterns": [
+    "data/**",
+    "dist/**",
+    "generated/**",
+    "node_modules/**",
+    "src/lib/exercises-data.ts"
+  ]
+}

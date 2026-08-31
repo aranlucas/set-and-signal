@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [],
+  "jsPlugins": ["oxlint-tailwindcss"],
+  "categories": {
+    "correctness": "off",
+    "suspicious": "off",
+    "pedantic": "off",
+    "perf": "off"
+  },
+  "settings": {
+    "tailwindcss": {
+      "entryPoint": "src/index.css",
+      "rootFontSize": 16
+    }
+  },
+  "rules": {
+    "tailwindcss/no-arbitrary-value": "error"
+  },
+  "ignorePatterns": ["dist/**", "node_modules/**", "src/hooks/use-mobile.ts"]
+}

@@ -1,0 +1,12 @@
+.git
+.gitignore
+.superpowers
+docs
+data
+node_modules
+web/node_modules
+web/dist
+opengym-api
+*.md
+!README.md
+railway.toml

@@ -1,0 +1,73 @@
+{
+  "users": [
+    {
+      "id": "u1",
+      "name": "Alice",
+      "created": "2025-01-02T03:04:05Z",
+      "admin": true,
+      "lastReminder": "2025-06-01"
+    },
+    {
+      "id": "u2",
+      "name": "Bob",
+      "created": "2025-02-03T04:05:06Z",
+      "disabled": true,
+      "sv": 3,
+      "invitedBy": "FAMILY1",
+      "lastReminder": ""
+    }
+  ],
+  "creds": [
+    {
+      "id": "cred-1",
+      "userId": "u1",
+      "publicKey": "pQECAyYgASFYIAAAcHJpdmF0ZWtleQ",
+      "counter": 42,
+      "transports": ["internal", "hybrid"]
+    },
+    {
+      "id": "cred-2",
+      "userId": "u2",
+      "publicKey": "pQECAyYgASFYIEFCQ0RG",
+      "counter": 7,
+      "transports": ["usb"]
+    }
+  ],
+  "subs": [
+    {
+      "userId": "u1",
+      "endpoint": "https://push.example.com/send/abc123",
+      "keys": {
+        "p256dh": "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U",
+        "auth": "UUxI4O8-FbRouA-vSmHvbA"
+      },
+      "created": "2025-03-01T00:00:00Z"
+    }
+  ],
+  "tokens": [
+    {
+      "id": "tok-1",
+      "userId": "u1",
+      "name": "scripting",
+      "hash": "deadbeefcafe0000000000000000000000000000000000000000000000000000",
+      "created": "2025-03-02T00:00:00Z"
+    }
+  ],
+  "invites": [
+    {
+      "code": "FAMILY1",
+      "note": "family code",
+      "createdBy": "u1",
+      "created": "2025-01-01T00:00:00Z",
+      "usedBy": "u2",
+      "usedAt": "2025-02-03T04:05:06Z"
+    },
+    {
+      "code": "SPARE",
+      "note": "spare",
+      "createdBy": "u1",
+      "created": "2025-04-01T00:00:00Z",
+      "revoked": true
+    }
+  ]
+}

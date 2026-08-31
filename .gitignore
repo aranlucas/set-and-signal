@@ -1,0 +1,20 @@
+node_modules/
+.pnpm-store/
+web/dist/*
+!web/dist/.gitkeep
+# Exercise media is fetched from an approved host at runtime, not committed.
+/web/public/img/
+/web/public/gif/
+data/
+.env
+.superpowers/
+.DS_Store
+/opengym-api
+/opengym-import
+*.test
+.playwright-cli/
+.codex/
+.impeccable/
+output/
+web/.agents/
+web/skills-lock.json

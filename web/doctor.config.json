@@ -1,0 +1,13 @@
+{
+  "$schema": "https://react.doctor/schema/config.json",
+  "rules": {
+    "tailwindcss/enforce-canonical": "off",
+    "tailwindcss/enforce-sort-order": "off",
+    "tailwindcss/no-conflicting-classes": "off",
+    "tailwindcss/no-unknown-classes": "off",
+    "tailwindcss/no-unnecessary-arbitrary-value": "off"
+  },
+  "ignore": {
+    "files": ["src/components/ui/**", "src/hooks/use-mobile.ts"]
+  }
+}
