@@ -1,6 +1,7 @@
 import Icon from "@/shared/components/Icon";
 import { NumberField } from "@/shared/components/NumField";
 import { cn } from "@/shared/lib/utils";
+import { Button } from "@/shared/ui/button";
 
 export function Stepper({
   value,
@@ -23,26 +24,28 @@ export function Stepper({
   const cur = +(value ?? 0) || 0;
   const inner = (
     <div className={cn("flex min-w-0 items-center overflow-hidden rounded-md bg-muted", className)}>
-      <button
+      <Button
+        variant="plain"
         type="button"
         className="flex size-11 shrink-0 items-center justify-center text-base text-foreground transition-colors duration-150 active:bg-input"
         onClick={() => set(cur - step)}
         aria-label={label ? `Decrease ${label}` : "Decrease"}
       >
         <Icon name="minus" />
-      </button>
+      </Button>
       <span className="flex min-w-0 flex-1 items-baseline justify-center gap-1 px-0.5">
         <NumberField aria-label={label} value={value} decimal={decimal} onChange={onChange} />
         {unit && <i className="flex-none text-xs text-foreground/60 not-italic">{unit}</i>}
       </span>
-      <button
+      <Button
+        variant="plain"
         type="button"
         className="flex size-11 shrink-0 items-center justify-center text-base text-foreground transition-colors duration-150 active:bg-input"
         onClick={() => set(cur + step)}
         aria-label={label ? `Increase ${label}` : "Increase"}
       >
         <Icon name="plus" />
-      </button>
+      </Button>
     </div>
   );
   if (!label) return inner;

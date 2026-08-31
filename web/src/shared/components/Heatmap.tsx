@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useDateLabels } from "@/shared/hooks/use-date-labels";
 import { fmtVol, isoOf, todayISO } from "@/shared/lib/format";
 import type { AppState, IsoDate } from "@/shared/lib/types";
+import { Button } from "@/shared/ui/button";
 
 const activityCellClasses = [
   "bg-muted",
@@ -119,7 +120,8 @@ export default function Heatmap({
           : "");
       dayCells.push(
         activity ? (
-          <button
+          <Button
+            variant="plain"
             key={dateKey}
             type="button"
             className={cellClassName}

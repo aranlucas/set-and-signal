@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { formatDate, isoOf } from "@/shared/lib/format";
 import { cn } from "@/shared/lib/utils";
 import Icon from "@/shared/components/Icon";
+import { Button } from "@/shared/ui/button";
 
 export type WeekCalendarDayStatus = "completed" | "rescheduled" | "planned";
 
@@ -75,7 +76,8 @@ export function WeekCalendar({ weekStart, dayStatuses, onSelect }: WeekCalendarP
             .join(", ");
 
           return (
-            <button
+            <Button
+              variant="plain"
               key={iso}
               type="button"
               className="flex h-16 min-w-0 flex-col items-center justify-center gap-0 rounded-md bg-transparent p-0 font-normal transition hover:bg-muted active:scale-95"
@@ -95,7 +97,7 @@ export function WeekCalendar({ weekStart, dayStatuses, onSelect }: WeekCalendarP
                 {date.getDate()}
               </span>
               {status ? <WeekStatusMark status={status} /> : <span className="h-3" />}
-            </button>
+            </Button>
           );
         })}
       </fieldset>

@@ -133,7 +133,8 @@ export function CustomExerciseForm({
             className="flex scrollbar-none gap-2 overflow-x-auto pb-0.5"
           >
             {BODYPARTS.map((option) => (
-              <button
+              <Button
+                variant="plain"
                 key={option}
                 type="button"
                 aria-pressed={bodyPart === option}
@@ -147,7 +148,7 @@ export function CustomExerciseForm({
                 }
               >
                 {metadata.bodyPart(option)}
-              </button>
+              </Button>
             ))}
           </fieldset>
           {bodyPart === "cardio" && (

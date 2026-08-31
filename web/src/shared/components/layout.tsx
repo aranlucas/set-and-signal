@@ -2,6 +2,7 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import Icon from "@/shared/components/Icon";
 import type { IconName } from "@/shared/components/Icon";
 import { cn } from "@/shared/lib/utils";
+import { Button } from "@/shared/ui/button";
 
 export function PageHeader({ className, ...props }: ComponentPropsWithoutRef<"header">) {
   return (
@@ -111,9 +112,9 @@ export function Row({
   );
 
   return onClick ? (
-    <button type="button" className={rowClassName} onClick={onClick}>
+    <Button variant="plain" type="button" className={rowClassName} onClick={onClick}>
       {content}
-    </button>
+    </Button>
   ) : (
     <div className={rowClassName}>{content}</div>
   );

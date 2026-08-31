@@ -174,13 +174,14 @@ function HomeHeader({ user, onSettings }: { user: User | null; onSettings: () =>
           <span>{user ? t("home.hi", "Hi {{name}}", { name: user.name }) : "Set & Signal"}</span>
         </PageTitle>
       </div>
-      <button
+      <Button
+        variant="plain"
         className="flex size-9 flex-none items-center justify-center rounded-full border border-border bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
         onClick={onSettings}
         aria-label={t("navigation.settings", "Settings")}
       >
         <Icon name="gear" />
-      </button>
+      </Button>
     </PageHeader>
   );
 }
@@ -223,21 +224,23 @@ function HomeSchedule({
     <section className="overflow-hidden rounded-xl border border-border bg-card lg:flex lg:h-full lg:flex-col">
       <SpaceBetween size="xs">
         <div className="flex items-center justify-between gap-3 px-4 pt-3">
-          <button
+          <Button
+            variant="plain"
             className="flex size-8 flex-none items-center justify-center rounded-full text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
             onClick={onPreviousWeek}
             aria-label={t("home.previousWeek", "Previous week")}
           >
             <Icon name="chevronLeft" />
-          </button>
+          </Button>
           <div className="text-sm leading-snug font-medium text-foreground/60">{wkLabel}</div>
-          <button
+          <Button
+            variant="plain"
             className="flex size-8 flex-none items-center justify-center rounded-full text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
             onClick={onNextWeek}
             aria-label={t("home.nextWeek", "Next week")}
           >
             <Icon name="chevronRight" />
-          </button>
+          </Button>
         </div>
         <div className="px-2 pb-2">
           <WeekCalendar
@@ -334,14 +337,15 @@ function HomeSchedule({
         </SpaceBetween>
 
         {routine && !state.active && user && (
-          <button
+          <Button
+            variant="plain"
             type="button"
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-md py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10 active:bg-primary/15"
             onClick={onAi}
           >
             <Icon name="sparkles" />
             {t("home.personalizeSessionAi", "Personalize this session with AI")}
-          </button>
+          </Button>
         )}
       </div>
     </section>
@@ -494,7 +498,8 @@ function HomeInsights({
         </SpaceBetween>
       </div>
 
-      <button
+      <Button
+        variant="plain"
         type="button"
         className="block w-full border-b border-border/60 bg-muted/30 p-4 text-left transition-colors hover:bg-muted/50 active:bg-muted"
         onClick={onCalendar}
@@ -549,10 +554,11 @@ function HomeInsights({
             ))}
           </div>
         )}
-      </button>
+      </Button>
 
       {progress && (
-        <button
+        <Button
+          variant="plain"
           type="button"
           className="flex w-full items-center gap-3 border-b border-border/60 p-4 text-left transition-colors hover:bg-muted/50 active:bg-muted"
           onClick={onStats}
@@ -587,7 +593,7 @@ function HomeInsights({
             </div>
           </div>
           <Icon name="chevronRight" className="text-lg text-muted-foreground" />
-        </button>
+        </Button>
       )}
 
       <div className="flex flex-wrap items-center gap-3 p-4">
@@ -639,7 +645,8 @@ function HomeInsights({
         </div>
       </div>
       {measures && (
-        <button
+        <Button
+          variant="plain"
           type="button"
           className="flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border/60 px-4 py-3 text-left transition-colors hover:bg-muted/50 active:bg-muted"
           onClick={onMeasures}
@@ -672,7 +679,7 @@ function HomeInsights({
                 </span>
               );
             })}
-        </button>
+        </Button>
       )}
     </section>
   );

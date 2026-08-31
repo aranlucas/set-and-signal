@@ -252,7 +252,8 @@ function InvitesCard({ invites }: { invites: AdminInvite[] | undefined }) {
           key={invite.code}
           className="flex items-center justify-between gap-3 border-b border-border/60 px-0.5 py-2"
         >
-          <button
+          <Button
+            variant="plain"
             type="button"
             className="h-min font-mono font-medium tracking-wider"
             onClick={() => {
@@ -261,14 +262,15 @@ function InvitesCard({ invites }: { invites: AdminInvite[] | undefined }) {
             }}
           >
             {invite.code}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="plain"
             className="flex h-7.5 w-8 flex-none items-center justify-center rounded-lg text-base text-destructive transition duration-140 active:scale-95 active:bg-muted"
             onClick={() => revokeInviteMutation.mutate(invite.code)}
             aria-label="revoke"
           >
             <Icon name="trash" />
-          </button>
+          </Button>
         </div>
       ))}
       {redeemedInvites.map((invite) => (
@@ -321,20 +323,22 @@ function AdminContent() {
   return (
     <div className="mx-auto w-full max-w-160">
       <div className="mt-2 mb-4.5 flex items-end justify-between gap-3">
-        <button
+        <Button
+          variant="plain"
           className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
           onClick={() => void navigate({ to: "/settings" })}
           aria-label="Back"
         >
           <Icon name="chevronLeft" />
-        </button>
+        </Button>
         <div className="ml-2 min-w-0 flex-1">
           <h1 className="m-0 text-4xl leading-none font-bold tracking-tight">Admin</h1>
           <div className="mt-1 text-base tracking-tight text-foreground/60">
             {users ? userList.length + " users · " + activeCount + " active this week" : "Loading…"}
           </div>
         </div>
-        <button
+        <Button
+          variant="plain"
           className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
           onClick={() => {
             void usersQuery.refetch();
@@ -343,7 +347,7 @@ function AdminContent() {
           aria-label="refresh"
         >
           ↻
-        </button>
+        </Button>
       </div>
 
       {(usersQuery.isError || invitesQuery.isError) && (
@@ -390,7 +394,8 @@ function AdminContent() {
             Training now
           </h2>
           {liveUsers.map((userRecord) => (
-            <button
+            <Button
+              variant="plain"
               type="button"
               key={userRecord.id}
               className="flex w-full items-center justify-between gap-3 border-b border-border/60 px-0.5 py-2 text-left"
@@ -406,7 +411,7 @@ function AdminContent() {
               <span className="inline-flex items-center gap-1 rounded-sm bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
                 {formatDuration(currentTime - userRecord.live.startedAt)}
               </span>
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -418,7 +423,8 @@ function AdminContent() {
       </h4>
       <Grid columns={{ default: 1, lg: 2 }} gap="xs">
         {userList.map((userRecord) => (
-          <button
+          <Button
+            variant="plain"
             type="button"
             key={userRecord.id}
             className={`flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors duration-140 active:bg-muted ${userRecord.disabled ? "opacity-50" : ""}`}
@@ -459,7 +465,7 @@ function AdminContent() {
               </span>
             )}
             <Icon name="chevronRight" className="flex-none text-base text-foreground" />
-          </button>
+          </Button>
         ))}
         {users && userList.length === 0 && (
           <div className="px-5 py-11 text-center text-base leading-normal text-foreground/60">

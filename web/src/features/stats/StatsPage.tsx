@@ -121,13 +121,14 @@ function StatsHeaderAndActivity({
         className="mt-2 mb-4.5"
         description={t("stats.progressHistory", "Progress & history")}
         actions={
-          <button
+          <Button
+            variant="plain"
             className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
             onClick={() => nav({ to: "/history" })}
             aria-label={t("navigation.history", "History")}
           >
             <Icon name="history" />
-          </button>
+          </Button>
         }
       >
         {t("navigation.stats", "Stats")}

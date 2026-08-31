@@ -3,6 +3,7 @@ import Icon from "@/shared/components/Icon";
 import type { IconName } from "@/shared/components/Icon";
 import { Row } from "@/shared/components/layout";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
+import { Button } from "@/shared/ui/button";
 
 export interface PickOption<V extends string = string> {
   value: V;
@@ -50,7 +51,8 @@ export function SelectRow<V extends string>({
           <SheetTitle>{sheetTitle || title}</SheetTitle>
           <div className="overflow-hidden rounded-lg bg-card">
             {options.map((option, optionIndex) => (
-              <button
+              <Button
+                variant="plain"
                 type="button"
                 key={option.value}
                 className={`relative flex min-h-11.5 w-full items-center gap-3 bg-transparent px-3.5 py-3 text-left text-foreground active:bg-muted ${optionIndex === 0 ? "" : "before:absolute before:top-0 before:right-0 before:left-3.5 before:h-px before:bg-border/60"}`}
@@ -70,7 +72,7 @@ export function SelectRow<V extends string>({
                 {option.value === value && (
                   <Icon name="check" className="flex-none text-lg text-primary" />
                 )}
-              </button>
+              </Button>
             ))}
           </div>
           <div className="h-2" />

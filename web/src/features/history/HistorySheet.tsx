@@ -114,7 +114,8 @@ export function WorkoutDetail({
             </div>
           </form>
         ) : (
-          <button
+          <Button
+            variant="plain"
             type="button"
             className="flex w-full items-start gap-2 rounded-lg bg-card px-4 py-3 text-left transition-colors active:bg-muted"
             onClick={() => {
@@ -134,7 +135,7 @@ export function WorkoutDetail({
               </span>
             )}
             <Icon name="pencil" className="mt-0.5 shrink-0 text-sm text-muted-foreground" />
-          </button>
+          </Button>
         )}
       </div>
       {workout.entries.map((entry) => {
@@ -233,7 +234,8 @@ export function Calendar({
     const ovr = st.dayPlan[iso] !== undefined;
     const dotCls = ws ? "done" : ovr && effId ? "ovr" : effId ? "plan" : "";
     cells.push(
-      <button
+      <Button
+        variant="plain"
         key={d}
         className={
           "flex aspect-square flex-col items-center justify-center gap-1 rounded-md bg-card text-base text-foreground transition-colors active:bg-muted" +
@@ -266,29 +268,31 @@ export function Calendar({
                   : "")
           }
         />
-      </button>,
+      </Button>,
     );
   }
   return (
     <>
       <div className="mb-0.5 flex items-center justify-between">
-        <button
+        <Button
+          variant="plain"
           className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-lg text-foreground transition active:scale-95 active:bg-muted"
           onClick={() => setCur(new Date(y, mo - 1, 1))}
           aria-label="Previous month"
         >
           <Icon name="chevronLeft" />
-        </button>
+        </Button>
         <h3 className="m-0">
           {monthsLong[mo]} {y}
         </h3>
-        <button
+        <Button
+          variant="plain"
           className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-lg text-foreground transition active:scale-95 active:bg-muted"
           onClick={() => setCur(new Date(y, mo + 1, 1))}
           aria-label="Next month"
         >
           <Icon name="chevronRight" />
-        </button>
+        </Button>
       </div>
       <div className="text-center text-sm leading-snug text-foreground/60">
         {monthWs.length > 0
@@ -371,13 +375,14 @@ export function WorkoutRow({
     </>
   );
   return onClick ? (
-    <button
+    <Button
+      variant="plain"
       type="button"
       className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
       onClick={onClick}
     >
       {content}
-    </button>
+    </Button>
   ) : (
     <div className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left">
       {content}

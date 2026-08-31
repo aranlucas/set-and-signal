@@ -53,14 +53,15 @@ export default function Plan() {
         className="mt-2 mb-4.5"
         description={t("plan.weeklyRoutine", "Your weekly routine")}
         actions={
-          <button
+          <Button
+            variant="plain"
             className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
             onClick={() => setSheet({ kind: "tools" })}
             aria-label={t("sharing.sharePlan", "Share your plan")}
             title={t("sharing.sharePlan", "Share your plan")}
           >
             <Icon name="upload" />
-          </button>
+          </Button>
         }
       >
         {t("navigation.plan", "Plan")}
@@ -72,7 +73,8 @@ export default function Plan() {
             {([1, 2, 3, 4, 5, 6, 0] as Weekday[]).map((d) => {
               const routine = state.routines.find((candidate) => candidate.id === state.week[d]);
               return (
-                <button
+                <Button
+                  variant="plain"
                   type="button"
                   key={d}
                   className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2 text-left transition-colors duration-140 active:bg-muted"
@@ -94,7 +96,7 @@ export default function Plan() {
                     </span>
                   )}
                   <Icon name="chevronRight" className="flex-none text-base text-foreground" />
-                </button>
+                </Button>
               );
             })}
           </SpaceBetween>
@@ -114,7 +116,8 @@ export default function Plan() {
           {state.routines.length > 0 ? (
             <SpaceBetween size="xs">
               {state.routines.map((routine) => (
-                <button
+                <Button
+                  variant="plain"
                   type="button"
                   key={routine.id}
                   className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2 text-left transition-colors duration-140 active:bg-muted"
@@ -132,7 +135,7 @@ export default function Plan() {
                     </div>
                   </div>
                   <Icon name="chevronRight" className="flex-none text-base text-foreground" />
-                </button>
+                </Button>
               ))}
             </SpaceBetween>
           ) : (
