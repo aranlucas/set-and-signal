@@ -36,6 +36,7 @@ import type { AppState, IsoDate, Routine, User } from "@/shared/lib/types";
 import { cn } from "@/shared/lib/utils";
 import BrandMark from "@/shared/components/BrandMark";
 import { useMeasurementFields } from "@/shared/hooks/use-measurement-fields";
+import { SpaceBetween } from "@/shared/components/SpaceBetween";
 
 // Home = what to do now + a quick glance. Deep charts & history live in Stats.
 export default function Home() {
@@ -105,9 +106,13 @@ export default function Home() {
   };
 
   return (
-    <div className="proof-page mx-auto w-full max-w-160 lg:max-w-240">
+    <div className="proof-page mx-auto w-full max-w-xl md:max-w-none">
       <HomeHeader today={today} user={user} onSettings={() => nav({ to: "/settings" })} />
-      <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-4">
+      <SpaceBetween
+        size="m"
+        responsiveSize={{ lg: "l" }}
+        className="lg:grid lg:grid-cols-2 lg:items-stretch"
+      >
         <HomeSchedule
           state={state}
           user={user}
@@ -125,7 +130,7 @@ export default function Home() {
           onNextWeek={() => setWeekOffset((week) => week + 1)}
           routineMinutes={routineMinutes}
         />
-        <div>
+        <div className="min-w-0 lg:h-full">
           {state.routines.length === 0 && !state.active && (
             <HomeWelcome
               onStart={() => void nav({ to: "/home/get-started", resetScroll: false })}
@@ -151,7 +156,7 @@ export default function Home() {
             onStats={() => nav({ to: "/stats" })}
           />
         </div>
-      </div>
+      </SpaceBetween>
       <Outlet />
     </div>
   );
@@ -168,7 +173,7 @@ function HomeHeader({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="proof-header mt-2 mb-4.5 flex items-end justify-between gap-3">
+    <div className="proof-header mt-2 mb-4 flex items-end justify-between gap-3 lg:mt-0 lg:mb-6">
       <div>
         <h1 className="proof-wordmark flex items-center gap-2.5 text-4xl leading-none font-bold tracking-tight">
           <BrandMark className="size-9 text-primary" />
@@ -227,7 +232,7 @@ function HomeSchedule({
   const { t } = useTranslation();
   return (
     <section
-      className="proof-signature proof-signature--primary mb-3 overflow-hidden rounded-xl bg-card"
+      className="proof-signature proof-signature--primary overflow-hidden rounded-xl bg-card lg:flex lg:h-full lg:flex-col"
       data-proof="01 / session"
     >
       <div className="flex items-center justify-between gap-3 px-4 pt-3">
@@ -255,10 +260,10 @@ function HomeSchedule({
         />
       </div>
 
-      <div className="border-t border-border/60 p-4">
+      <div className="border-t border-border/60 p-4 lg:flex lg:flex-1 lg:flex-col">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h2 className="overflow-hidden text-3xl leading-tight font-semibold tracking-tight text-ellipsis whitespace-nowrap capitalize">
+            <h2 className="text-2xl leading-tight font-semibold tracking-tight capitalize sm:text-3xl">
               {state.active
                 ? state.active.name
                 : routine
@@ -307,7 +312,11 @@ function HomeSchedule({
           </span>
         </div>
 
-        <div className="mt-4 flex gap-2">
+        <SpaceBetween
+          direction="horizontal"
+          size="xs"
+          className="mt-4 flex-nowrap lg:mt-auto lg:pt-6"
+        >
           <Button className="proof-action flex-1" onClick={onToday}>
             <Icon name={state.active ? "play" : routine ? "play" : "plus"} />
             {state.active
@@ -327,7 +336,7 @@ function HomeSchedule({
               <span className="hidden sm:inline">{t("home.adjust", "Adjust")}</span>
             </Button>
           )}
-        </div>
+        </SpaceBetween>
 
         {routine && !state.active && user && (
           <button
@@ -370,19 +379,19 @@ function HomeWelcome({
           "Answer a few quick questions and get a first week with sensible starting weights.",
         )}
       </div>
-      <Button className="w-full" variant="default" onClick={onStart}>
-        <Icon name="figureStrength" />
-        {t("startingSetup.cta", "Set up my first plan")}
-      </Button>
-      <div className="h-2" />
-      <Button className="w-full" onClick={onBrowse}>
-        <Icon name="sparkles" />
-        {t("plans.curated.browse", "Browse curated plans")}
-      </Button>
-      <div className="h-2" />
-      <Button className="w-full" onClick={onBuild}>
-        {t("home.buildMyOwnPlan", "Build my own plan")}
-      </Button>
+      <SpaceBetween size="xs">
+        <Button className="w-full" variant="default" onClick={onStart}>
+          <Icon name="figureStrength" />
+          {t("startingSetup.cta", "Set up my first plan")}
+        </Button>
+        <Button className="w-full" onClick={onBrowse}>
+          <Icon name="sparkles" />
+          {t("plans.curated.browse", "Browse curated plans")}
+        </Button>
+        <Button className="w-full" onClick={onBuild}>
+          {t("home.buildMyOwnPlan", "Build my own plan")}
+        </Button>
+      </SpaceBetween>
     </div>
   );
 }
@@ -450,7 +459,7 @@ function HomeInsights({
 
   return (
     <section
-      className="proof-signature proof-signature--insights mb-3 overflow-hidden rounded-xl bg-card"
+      className="proof-signature proof-signature--insights overflow-hidden rounded-xl bg-card lg:h-full"
       data-proof="record"
     >
       <div
@@ -476,7 +485,7 @@ function HomeInsights({
           </div>
           <Icon name="info" className="mt-0.5 flex-none text-xl text-muted-foreground" />
         </div>
-        <div className="space-y-3">
+        <SpaceBetween size="s">
           {recovery.map((item) => (
             <div key={item.muscle} className="flex items-center gap-3">
               <span className="w-26 flex-none overflow-hidden text-sm font-medium text-ellipsis whitespace-nowrap">
@@ -493,7 +502,7 @@ function HomeInsights({
               </span>
             </div>
           ))}
-        </div>
+        </SpaceBetween>
       </div>
 
       <button
@@ -544,7 +553,7 @@ function HomeInsights({
                 <span className="text-xs font-medium tracking-wide text-foreground/60 uppercase">
                   {formatDate(t, day.date, { weekday: "short" })}
                 </span>
-                <span className="mt-0.5 w-full overflow-hidden text-xs font-medium text-ellipsis whitespace-nowrap">
+                <span className="mt-0.5 line-clamp-2 min-h-7 w-full text-xs leading-tight font-medium">
                   {day.name}
                 </span>
                 <WeekStatusMark status={day.status} className="mt-1" />
@@ -593,11 +602,11 @@ function HomeInsights({
         </button>
       )}
 
-      <div className="proof-record-block flex items-center gap-3 p-4">
+      <div className="proof-record-block flex flex-wrap items-center gap-3 p-4">
         <span className="flex size-10 flex-none items-center justify-center rounded-lg bg-muted text-xl text-primary">
           <Icon name="scale" />
         </span>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-32 flex-1">
           <div className="text-sm text-foreground/60">{t("weight.bodyWeight", "Body weight")}</div>
           {bodyWeight ? (
             <div className="mt-0.5 flex items-baseline gap-2">
@@ -621,7 +630,7 @@ function HomeInsights({
             </div>
           )}
         </div>
-        <div className="flex items-stretch gap-3">
+        <div className="grid w-full grid-cols-3 items-stretch gap-2 sm:flex sm:w-auto sm:gap-3">
           <Button
             size="sm"
             variant="secondary"
