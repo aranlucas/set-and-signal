@@ -38,7 +38,6 @@ export default defineRailway(() => {
       healthcheckPath: "/api/health",
       healthcheckTimeout: 100,
       sleepApplication: true,
-      restartPolicyType: "ON_FAILURE",
       restartPolicyMaxRetries: 3,
       multiRegionConfig: {
         "us-west2": { numReplicas: 1 },
