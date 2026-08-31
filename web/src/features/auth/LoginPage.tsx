@@ -51,7 +51,7 @@ export default function Login() {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-160 flex-col justify-center text-center">
         <BrandMark className="mx-auto size-18 text-primary" />
-        <h1 className="proof-wordmark mt-3 mb-1 text-4xl font-semibold tracking-tight">
+        <h1 className="mt-3 mb-1 font-heading text-4xl font-semibold tracking-tight">
           Set &amp; Signal
         </h1>
         <div className="mb-7.5 text-foreground/60">
@@ -80,7 +80,7 @@ export default function Login() {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-160 flex-col justify-center text-center">
       <BrandMark className="mx-auto size-18 text-primary" />
-      <h1 className="proof-wordmark mt-3 mb-1 text-4xl font-semibold tracking-tight">
+      <h1 className="mt-3 mb-1 font-heading text-4xl font-semibold tracking-tight">
         Set &amp; Signal
       </h1>
       <div className="mb-8.5 text-foreground/60">

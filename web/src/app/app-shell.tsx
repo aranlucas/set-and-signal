@@ -59,7 +59,7 @@ export default function AppShell() {
     return (
       <div
         id="app"
-        className="proof-app mx-auto max-w-xl px-4 pt-2 pb-32 md:max-w-3xl lg:max-w-6xl lg:pt-8"
+        className="mx-auto max-w-xl pt-safe-app-top pr-safe-app-right pb-32 pl-safe-app-left md:max-w-3xl lg:max-w-6xl lg:px-4 lg:pt-8"
       >
         <BrandMark className="mx-auto mt-64 size-12 text-primary" title="Set & Signal" />
       </div>
@@ -70,7 +70,7 @@ export default function AppShell() {
       <main
         id="app"
         className={cn(
-          "proof-app mx-auto max-w-xl px-4 pt-2 pb-32 md:max-w-3xl lg:max-w-6xl lg:pt-8",
+          "mx-auto max-w-xl pt-safe-app-top pr-safe-app-right pb-32 pl-safe-app-left md:max-w-3xl lg:max-w-6xl lg:px-4 lg:pt-8",
           "animate-in duration-200 ease-out fade-in slide-in-from-bottom-1",
           isTimerVisible && "pb-64!",
         )}

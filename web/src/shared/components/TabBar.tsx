@@ -38,7 +38,7 @@ function NavigationTab({
       value={value}
       nativeButton={false}
       render={<Link to={to} activeOptions={{ exact: true }} />}
-      className="h-auto min-h-12 flex-col justify-end gap-1 px-1 py-0.5 leading-none"
+      className="h-auto min-h-12 flex-col justify-end gap-1 rounded-sm px-1 py-0.5 font-mono text-xs leading-none tracking-wider text-muted-foreground uppercase data-active:text-foreground"
     >
       <Icon name={icon} />
       <span>{label}</span>
@@ -77,7 +77,7 @@ export default function TabBar({
     <nav
       id="tabbar"
       aria-label="Main navigation"
-      className="proof-tabbar fixed inset-x-0 bottom-0 z-50 border-t border-border/40 bg-background/80 px-1.5 py-2.5 backdrop-blur-xl backdrop-saturate-180 lg:inset-x-auto lg:bottom-4 lg:left-1/2 lg:w-130 lg:-translate-x-1/2 lg:rounded-2xl lg:border lg:px-2.5 lg:shadow-xl"
+      className="fixed inset-x-0 bottom-0 z-50 overflow-visible border-t border-border/40 bg-background/80 pt-2.5 pr-safe-tab-right pb-safe-tab-bottom pl-safe-tab-left shadow-xl backdrop-blur-xl backdrop-saturate-180 contain-layout lg:inset-x-auto lg:bottom-4 lg:left-1/2 lg:w-130 lg:-translate-x-1/2 lg:rounded-2xl lg:border lg:p-2.5"
     >
       <Tabs value={activeTab} className="w-full gap-0">
         <TabsList
@@ -99,7 +99,7 @@ export default function TabBar({
           <TabsTrigger
             value="workout"
             className={cn(
-              "-mt-6 h-auto min-h-12 flex-col justify-end gap-1 px-1 py-0.5 leading-none text-primary after:hidden data-active:bg-transparent dark:data-active:bg-transparent",
+              "-mt-6 h-auto min-h-12 flex-col justify-end gap-1 rounded-sm px-1 py-0.5 font-mono text-xs leading-none tracking-wider text-primary uppercase after:hidden data-active:bg-transparent dark:data-active:bg-transparent",
               appState.active && "text-active",
             )}
             onClick={startWorkout}
@@ -108,7 +108,7 @@ export default function TabBar({
           >
             <span
               className={cn(
-                "proof-start relative flex size-13 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-150 ease-out active:scale-95",
+                "relative flex size-13 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-150 ease-out active:scale-95",
                 appState.active &&
                   "bg-orange-500 text-black shadow-lg after:absolute after:inset-0 after:animate-attention-ping after:rounded-full after:border-2 after:border-orange-500",
               )}

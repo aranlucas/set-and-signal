@@ -16,9 +16,7 @@ export function WeekStatusMark({
 }) {
   return (
     <span className={cn("flex h-3 w-4 items-center justify-center", className)} aria-hidden="true">
-      {status === "completed" && (
-        <Icon name="check" className="proof-status-complete text-xs text-primary" />
-      )}
+      {status === "completed" && <Icon name="check" className="text-xs text-system-blue" />}
       {status === "rescheduled" && <span className="size-2 rotate-45 bg-primary" />}
       {status === "planned" && <span className="h-0.5 w-3 bg-foreground/50" />}
     </span>
@@ -53,7 +51,7 @@ export function WeekCalendar({ weekStart, dayStatuses, onSelect }: WeekCalendarP
   return (
     <div>
       <fieldset
-        className="proof-calendar grid grid-cols-7 border-0 p-0"
+        className="grid grid-cols-7 border-0 border-t border-border p-0"
         aria-label={`${formatAccessibleDate(t, weekStart)} – ${formatAccessibleDate(t, weekEnd)}`}
       >
         {days.map((date) => {
@@ -80,7 +78,7 @@ export function WeekCalendar({ weekStart, dayStatuses, onSelect }: WeekCalendarP
             <button
               key={iso}
               type="button"
-              className="proof-calendar__day flex h-16 min-w-0 flex-col items-center justify-center gap-0 rounded-md bg-transparent p-0 font-normal transition hover:bg-muted active:scale-95"
+              className="flex h-16 min-w-0 flex-col items-center justify-center gap-0 rounded-md bg-transparent p-0 font-normal transition hover:bg-muted active:scale-95"
               onClick={() => onSelect(date)}
               aria-label={label}
               aria-current={isToday ? "date" : undefined}

@@ -1,7 +1,30 @@
-import type { ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import Icon from "@/shared/components/Icon";
 import type { IconName } from "@/shared/components/Icon";
 import { cn } from "@/shared/lib/utils";
+
+export function PageHeader({ className, ...props }: ComponentPropsWithoutRef<"header">) {
+  return (
+    <header
+      className={cn(
+        "mt-2 mb-4.5 flex items-end justify-between gap-3 border-b border-border pb-3.5",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export function PageTitle({ className, children, ...props }: ComponentPropsWithoutRef<"h1">) {
+  return (
+    <h1
+      className={cn("text-4xl leading-none font-bold tracking-tight text-balance", className)}
+      {...props}
+    >
+      {children}
+    </h1>
+  );
+}
 
 export function Section({
   title,
@@ -21,7 +44,7 @@ export function Section({
           {title}
         </h2>
       )}
-      <div className="proof-panel overflow-hidden rounded-lg bg-card">{children}</div>
+      <div className="overflow-hidden rounded-lg border border-border bg-card">{children}</div>
       {footer && <p className="px-1 pt-2 text-sm leading-snug text-foreground/60">{footer}</p>}
     </section>
   );
@@ -57,7 +80,7 @@ export function Row({
       {icon && (
         <span
           data-row-icon
-          className="proof-row-icon flex size-7 shrink-0 items-center justify-center rounded-sm text-lg text-white"
+          className="flex size-7 shrink-0 items-center justify-center rounded-sm text-lg text-white"
           style={{ backgroundColor: iconTint || "var(--primary)" }}
         >
           <Icon name={icon} />
@@ -81,7 +104,7 @@ export function Row({
   );
 
   const rowClassName = cn(
-    "proof-row relative flex min-h-11.5 w-full items-center gap-3 bg-transparent px-3.5 py-3 text-left text-foreground before:pointer-events-none before:absolute before:top-0 before:right-0 before:left-3.5 before:hidden before:h-px before:bg-border/60 [&+&]:before:block [&:has([data-row-icon])+&:has([data-row-icon])]:before:left-14",
+    "relative flex min-h-12 w-full items-center gap-3 bg-transparent px-3.5 py-3 text-left text-foreground before:pointer-events-none before:absolute before:top-0 before:right-0 before:left-3.5 before:hidden before:h-px before:bg-border/60 [&+&]:before:block [&:has([data-row-icon])+&:has([data-row-icon])]:before:left-14",
     onClick && "active:bg-muted",
     danger && "text-destructive",
     className,

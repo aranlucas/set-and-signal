@@ -26,7 +26,7 @@ import { CuratedPlans } from "@/features/plan/CuratedPlanSheet";
 import { ImportSummary } from "@/features/settings/ImportSheet";
 import { importFromApp, type ParsedImport } from "@/features/settings/import-actions";
 import Icon from "@/shared/components/Icon";
-import { Section, Row } from "@/shared/components/layout";
+import { PageHeader, PageTitle, Row, Section } from "@/shared/components/layout";
 import { SelectRow } from "@/shared/components/SelectRow";
 import { Switch } from "@/shared/ui/switch";
 import { cn } from "@/shared/lib/utils";
@@ -79,7 +79,7 @@ function SettingsContent() {
   };
   return (
     <div className="mx-auto w-full max-w-160">
-      <div className="proof-header mt-2 mb-4.5 flex items-end justify-between gap-3">
+      <PageHeader>
         <button
           className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
           onClick={() => navigate({ to: "/home" })}
@@ -88,11 +88,9 @@ function SettingsContent() {
           <Icon name="chevronLeft" />
         </button>
         <div className="ml-2.5 min-w-0 flex-1">
-          <h1 className="text-4xl leading-none font-bold tracking-tight">
-            {t("navigation.settings", "Settings")}
-          </h1>
+          <PageTitle>{t("navigation.settings", "Settings")}</PageTitle>
         </div>
-      </div>
+      </PageHeader>
 
       {/* ---------- account (demo and mobile builds have nothing to sign in to) ---------- */}
       <Section
