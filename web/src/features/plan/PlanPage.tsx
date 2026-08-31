@@ -6,8 +6,10 @@ import { uid, exCount } from "@/shared/lib/format";
 import { useDateLabels } from "@/shared/hooks/use-date-labels";
 import { CuratedPlans } from "@/features/plan/CuratedPlanSheet";
 import { DayAssign, PlanImport, PlanTools, type ParsedBundle } from "@/features/plan/PlansSheet";
+import { Header } from "@/shared/components/Header";
 import Icon from "@/shared/components/Icon";
 import { Grid } from "@/shared/components/Grid";
+import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { Button } from "@/shared/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 import { glyphOf, DEFAULT_GLYPH } from "@/domain/exercises/glyphs";
@@ -46,30 +48,27 @@ export default function Plan() {
 
   return (
     <>
-      <div className="mt-2 mb-4.5 flex items-end justify-between gap-3">
+      <Header
+        variant="h1"
+        className="mt-2 mb-4.5"
+        description={t("plan.weeklyRoutine", "Your weekly routine")}
+        actions={
+          <button
+            className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
+            onClick={() => setSheet({ kind: "tools" })}
+            aria-label={t("sharing.sharePlan", "Share your plan")}
+            title={t("sharing.sharePlan", "Share your plan")}
+          >
+            <Icon name="upload" />
+          </button>
+        }
+      >
+        {t("navigation.plan", "Plan")}
+      </Header>
+      <Grid columns={{ default: 1, lg: 2 }} gap="s" alignItems="start">
         <div>
-          <h1 className="text-4xl leading-none font-bold tracking-tight">
-            {t("navigation.plan", "Plan")}
-          </h1>
-          <div className="mt-1 text-base tracking-tight text-foreground/60">
-            {t("plan.weeklyRoutine", "Your weekly routine")}
-          </div>
-        </div>
-        <button
-          className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
-          onClick={() => setSheet({ kind: "tools" })}
-          aria-label={t("sharing.sharePlan", "Share your plan")}
-          title={t("sharing.sharePlan", "Share your plan")}
-        >
-          <Icon name="upload" />
-        </button>
-      </div>
-      <div className="block lg:grid lg:grid-cols-2 lg:items-start lg:gap-3.5 [&>*]:min-w-0">
-        <div>
-          <h2 className="mt-6 mb-2 px-1 font-sans text-sm leading-none font-medium tracking-tight text-foreground/60">
-            {t("plan.weekSchedule", "Week schedule")}
-          </h2>
-          <div className="flex flex-col gap-2">
+          <Header className="mb-2 px-1">{t("plan.weekSchedule", "Week schedule")}</Header>
+          <SpaceBetween size="xs">
             {([1, 2, 3, 4, 5, 6, 0] as Weekday[]).map((d) => {
               const routine = state.routines.find((candidate) => candidate.id === state.week[d]);
               return (
@@ -98,20 +97,22 @@ export default function Plan() {
                 </button>
               );
             })}
-          </div>
+          </SpaceBetween>
         </div>
         <div>
-          <div className="mt-6 mb-2 flex min-h-8 items-center justify-between gap-3 px-1">
-            <h2 className="m-0 font-sans text-sm leading-none font-medium tracking-tight text-foreground/60">
-              {t("plan.routines", "Routines")}
-            </h2>
-            <Button size="xs" variant="secondary" onClick={addRoutine}>
-              <Icon name="plus" />
-              {t("common.new", "New")}
-            </Button>
-          </div>
+          <Header
+            className="mt-6 mb-2 px-1 lg:mt-0"
+            actions={
+              <Button size="xs" variant="secondary" onClick={addRoutine}>
+                <Icon name="plus" />
+                {t("common.new", "New")}
+              </Button>
+            }
+          >
+            {t("plan.routines", "Routines")}
+          </Header>
           {state.routines.length > 0 ? (
-            <Grid columns={{ default: 1, lg: 2 }} gap="xs">
+            <SpaceBetween size="xs">
               {state.routines.map((routine) => (
                 <button
                   type="button"
@@ -133,7 +134,7 @@ export default function Plan() {
                   <Icon name="chevronRight" className="flex-none text-base text-foreground" />
                 </button>
               ))}
-            </Grid>
+            </SpaceBetween>
           ) : (
             <>
               <div className="px-5 py-11 text-center text-base leading-normal text-foreground/60">
@@ -151,7 +152,7 @@ export default function Plan() {
             </>
           )}
         </div>
-      </div>
+      </Grid>
       <Sheet open={sheet !== null} onOpenChange={(open) => !open && setSheet(null)}>
         <SheetContent
           side="bottom"

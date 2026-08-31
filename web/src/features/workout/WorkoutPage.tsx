@@ -33,6 +33,7 @@ import { beep, vibrate } from "@/shared/lib/sound";
 import { api } from "@/shared/lib/api";
 import Media from "@/shared/components/Media";
 import { beginWorkout, completeWorkout } from "@/features/workout/workout-actions";
+import { Header } from "@/shared/components/Header";
 import Icon from "@/shared/components/Icon";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { Button } from "@/shared/ui/button";
@@ -99,19 +100,20 @@ function StartChooser() {
   const others = appState.routines.filter((r) => r !== todayR);
   return (
     <div className="mx-auto max-w-140">
-      <div className="mt-2 mb-4.5 flex items-end justify-between gap-3">
-        <div>
-          <h1 className="text-4xl leading-none font-bold tracking-tight">
-            {t("workout.startWorkout", "Start workout")}
-          </h1>
-          <div className="mt-1 text-base tracking-tight text-foreground/60">
+      <Header
+        variant="h1"
+        className="mt-2 mb-4.5"
+        description={
+          <>
             {weekdays[new Date().getDay()]} —{" "}
             {todayR
               ? t("workout.todayIs", "today is {{day}}", { day: todayR.name })
               : t("workout.restDayNoOneS", "rest day, but no one’s stopping you")}
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      >
+        {t("workout.startWorkout", "Start workout")}
+      </Header>
       {todayR && (
         <div className="mb-3 rounded-lg border border-primary bg-card p-4">
           <h2 className="mb-3 text-sm font-normal tracking-tight text-foreground/60">

@@ -10,6 +10,7 @@ import { ExerciseDetail } from "@/features/exercises/ExerciseDetailSheet";
 import { AddToRoutine } from "@/features/exercises/ExercisePickerSheet";
 import { CustomExerciseForm } from "@/features/exercises/CustomExerciseSheet";
 import { ExConfigSheet } from "@/features/exercises/ConfigSheet";
+import { Header } from "@/shared/components/Header";
 import Icon from "@/shared/components/Icon";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { Button } from "@/shared/ui/button";
@@ -91,18 +92,15 @@ export default function Library() {
 
   return (
     <>
-      <div className="mt-2 mb-4.5 flex items-end justify-between gap-3">
-        <div>
-          <h1 className="text-4xl leading-none font-bold tracking-tight">
-            {t("navigation.exercises", "Exercises")}
-          </h1>
-          <div className="mt-1 text-base tracking-tight text-foreground/60">
-            {t("library.exercisesAnimations", "{{count}} exercises with animations", {
-              count: EXDB.length,
-            })}
-          </div>
-        </div>
-      </div>
+      <Header
+        variant="h1"
+        className="mt-2 mb-4.5"
+        description={t("library.exercisesAnimations", "{{count}} exercises with animations", {
+          count: EXDB.length,
+        })}
+      >
+        {t("navigation.exercises", "Exercises")}
+      </Header>
       <div className="relative mb-2.5">
         <svg
           className="pointer-events-none absolute top-1/2 left-3 z-1 size-4 -translate-y-1/2 stroke-foreground/30"

@@ -24,6 +24,7 @@ import {
 import { DayOverride } from "@/features/plan/PlansSheet";
 import LineChart from "@/shared/components/LineChart";
 import Heatmap from "@/shared/components/Heatmap";
+import { Header } from "@/shared/components/Header";
 import Icon from "@/shared/components/Icon";
 import BodyMap, { BodyMapLegend } from "@/shared/components/BodyMap";
 import { loadOfWorkouts, rankOf } from "@/domain/exercises/muscles";
@@ -115,23 +116,22 @@ function StatsHeaderAndActivity({
   ).length;
   return (
     <>
-      <div className="mt-2 mb-4.5 flex items-end justify-between gap-3">
-        <div>
-          <h1 className="text-4xl leading-none font-bold tracking-tight">
-            {t("navigation.stats", "Stats")}
-          </h1>
-          <div className="mt-1 text-base tracking-tight text-foreground/60">
-            {t("stats.progressHistory", "Progress & history")}
-          </div>
-        </div>
-        <button
-          className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
-          onClick={() => nav({ to: "/history" })}
-          aria-label={t("navigation.history", "History")}
-        >
-          <Icon name="history" />
-        </button>
-      </div>
+      <Header
+        variant="h1"
+        className="mt-2 mb-4.5"
+        description={t("stats.progressHistory", "Progress & history")}
+        actions={
+          <button
+            className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
+            onClick={() => nav({ to: "/history" })}
+            aria-label={t("navigation.history", "History")}
+          >
+            <Icon name="history" />
+          </button>
+        }
+      >
+        {t("navigation.stats", "Stats")}
+      </Header>
       <Grid columns={{ default: 2, lg: 4 }} className="mb-3">
         <StatsTile
           icon="dumbbell"
