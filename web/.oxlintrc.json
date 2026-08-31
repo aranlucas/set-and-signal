@@ -14,7 +14,7 @@
   },
   "settings": {
     "tailwindcss": {
-      "entryPoint": "src/index.css",
+      "entryPoint": "src/app/index.css",
       "rootFontSize": 16
     }
   },
@@ -120,7 +120,7 @@
   "ignorePatterns": [
     "dist/**",
     "node_modules/**",
-    "src/components/ui/**",
-    "src/hooks/use-mobile.ts"
+    "src/shared/ui/**",
+    "src/shared/hooks/use-mobile.ts"
   ]
 }

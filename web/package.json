@@ -15,7 +15,7 @@
     "instructions:generate": "node --experimental-strip-types scripts/build-instructions.mjs",
     "test": "pnpm catalog:validate && vitest run",
     "test:watch": "vitest",
-    "i18n:check": "pnpm instructions:generate && i18next-cli extract --config ./i18next.config.mjs --sync-primary --ci --dry-run && vitest run src/lib/exercise-instructions.test.ts src/lib/i18n-catalog.test.ts src/lib/i18n-source.test.ts src/lib/i18n.test.ts",
+    "i18n:check": "pnpm instructions:generate && i18next-cli extract --config ./i18next.config.mjs --sync-primary --ci --dry-run && vitest run src/domain/exercises/exercise-instructions.test.ts src/i18n/i18n-catalog.test.ts src/i18n/i18n-source.test.ts src/i18n/i18n.test.ts",
     "i18n:extract": "i18next-cli extract --config ./i18next.config.mjs --sync-primary",
     "build:mobile": "pnpm instructions:generate && VITE_MOBILE=1 VITE_IMG_BASE=https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@7455efae41b330c265e7cd4b78dfa848e7ce5ebd/images/ VITE_GIF_BASE=https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@7455efae41b330c265e7cd4b78dfa848e7ce5ebd/videos/ vite build && cap sync"
   },

@@ -246,7 +246,7 @@ type reminderState struct {
 }
 
 // effectiveRoutineId decides which routine id is planned for iso. Ported from
-// frontend/src/lib/history.js via server.js: a dayPlan override wins ('rest'
+// web/src/domain/training/history.ts: a dayPlan override wins ('rest'
 // means nothing planned), otherwise fall back to the week grid indexed by JS
 // getDay() (Sunday = 0).
 func effectiveRoutineId(s *reminderState, iso string) string {

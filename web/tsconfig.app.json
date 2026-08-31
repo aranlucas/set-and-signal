@@ -25,5 +25,5 @@
     "paths": { "@/*": ["./src/*"] }
   },
   "include": ["src"],
-  "exclude": ["src/components/ui/calendar.tsx", "src/components/ui/questionnaire.tsx"]
+  "exclude": ["src/shared/ui/calendar.tsx", "src/shared/ui/questionnaire.tsx"]
 }

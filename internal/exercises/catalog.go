@@ -183,7 +183,7 @@ func str(v any) string {
 	return s
 }
 
-// normalizeSearchText mirrors web/src/lib/exercises.ts (NFD strip + separators).
+// normalizeSearchText mirrors web/src/domain/exercises/exercises.ts (NFD strip + separators).
 func normalizeSearchText(value string) string {
 	value = strings.ToLower(strings.TrimSpace(value))
 	var b strings.Builder

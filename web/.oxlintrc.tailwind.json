@@ -10,12 +10,12 @@
   },
   "settings": {
     "tailwindcss": {
-      "entryPoint": "src/index.css",
+      "entryPoint": "src/app/index.css",
       "rootFontSize": 16
     }
   },
   "rules": {
     "tailwindcss/no-arbitrary-value": "error"
   },
-  "ignorePatterns": ["dist/**", "node_modules/**", "src/hooks/use-mobile.ts"]
+  "ignorePatterns": ["dist/**", "node_modules/**", "src/shared/hooks/use-mobile.ts"]
 }

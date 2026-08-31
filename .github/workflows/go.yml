@@ -70,9 +70,6 @@ jobs:
     name: Frontend
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    defaults:
-      run:
-        working-directory: web
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -87,19 +84,22 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-          cache-dependency-path: web/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Check formatting
-        run: pnpm format
+        run: pnpm --dir web format
+
+      - name: Lint Tailwind classes
+        run: pnpm --dir web lint:tailwind
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm --dir web lint
 
       - name: Test catalogue and app logic
-        run: pnpm test
+        run: pnpm --dir web test
 
       - name: Build production SPA
-        run: pnpm build
+        run: pnpm --dir web build

@@ -30,9 +30,8 @@ Requirements: Go 1.27+, Node 24+, and pnpm 11+.
 go run ./cmd/opengym-api
 
 # In a second terminal, during frontend work:
-cd web
 pnpm install
-pnpm dev
+pnpm --dir web dev
 ```
 
 For a production-shaped build, the Dockerfile builds the SPA and embeds it in the
@@ -76,9 +75,18 @@ every apply.
 - `internal/store` — SQLite connection, goose migrations, and typed queries
 - `internal/auth` — signed sessions, bearer tokens, and WebAuthn
 - `internal/oauth` — OAuth 2.1 authorization server with DCR + PKCE
-- `internal/api` — chi handlers, static SPA delivery, and MCP tools at `/mcp`
+- `internal/httpapi` — chi handlers, static SPA delivery, and the HTTP-mounted MCP transport
+- `internal/training` — training state, persistence, analytics, prescriptions, and MCP data contracts
 - `internal/exercises` — embedded exercise catalogue and instruction shards
-- `web/` — React 19, Vite, Tailwind v4, and the browser/mobile surfaces
+- `web/catalog` — source exercise catalogue and translated instruction shards
+- `web/src/app` — React bootstrap, routing, global styles, and client store
+- `web/src/domain` — framework-light exercise and training rules
+- `web/src/features` — route and sheet modules grouped by user flow
+- `web/src/shared` — reusable components, hooks, utilities, and UI primitives
+- `web/src/generated` — checked-in generated exercise data consumed by the app
+
+See [the architecture guide](docs/architecture.md) for the complete dependency
+direction and where new code belongs.
 
 The frontend routes are unchanged: `/home`, `/plan`, `/plan/r/$id`, `/workout`,
 `/stats`, `/history`, `/library`, `/settings`, and `/admin`, plus the existing
@@ -123,15 +131,17 @@ go test ./...
 go vet ./...
 pnpm install --frozen-lockfile
 pnpm infra:check
-cd web
-pnpm format
-pnpm lint
-pnpm test
-pnpm build
+pnpm --dir web format
+pnpm --dir web lint:tailwind
+pnpm --dir web lint
+pnpm --dir web test
+pnpm --dir web build
 ```
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request and
-see [SECURITY.md](SECURITY.md) for private vulnerability reports.
+see [SECURITY.md](SECURITY.md) for private vulnerability reports. Product,
+design, internationalization, and architecture references live under
+[`docs/`](docs/architecture.md).
 
 ## License and attribution
 

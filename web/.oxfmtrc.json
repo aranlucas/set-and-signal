@@ -7,15 +7,16 @@
   "singleQuote": false,
   "trailingComma": "all",
   "sortTailwindcss": {
-    "stylesheet": "src/index.css",
+    "stylesheet": "src/app/index.css",
     "functions": ["cn", "clsx", "cva", "twMerge", "twJoin"],
     "attributes": ["classNames", "containerClassName", "labelClassName"]
   },
   "ignorePatterns": [
-    "data/**",
+    "catalog/**",
     "dist/**",
-    "generated/**",
+    "src/i18n/locales/**",
+    "src/generated/**",
     "node_modules/**",
-    "src/lib/exercises-data.ts"
+    "src/generated/exercises-data.ts"
   ]
 }

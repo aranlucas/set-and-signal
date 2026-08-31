@@ -8,6 +8,6 @@
     "tailwindcss/no-unnecessary-arbitrary-value": "off"
   },
   "ignore": {
-    "files": ["src/components/ui/**", "src/hooks/use-mobile.ts"]
+    "files": ["src/shared/ui/**", "src/shared/hooks/use-mobile.ts"]
   }
 }

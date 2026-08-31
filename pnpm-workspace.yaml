@@ -1,2 +1,12 @@
+packages:
+  - web
+
+optimisticRepeatInstall: false
+minimumReleaseAge: 0
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  - semver@6.3.1
+  - reselect@5.1.1
 allowBuilds:
+  "@swc/core": true
   esbuild: true

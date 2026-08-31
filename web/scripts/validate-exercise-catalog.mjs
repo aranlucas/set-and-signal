@@ -1,12 +1,12 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { INSTRUCTION_SHARD_COUNT } from "../src/lib/instruction-shard.ts";
+import { INSTRUCTION_SHARD_COUNT } from "../src/domain/exercises/instruction-shard.ts";
 
 const MAX_INSTRUCTION_SHARD_BYTES = 150_000;
 
 const projectRoot = dirname(import.meta.dirname);
-const catalogPath = join(projectRoot, "data", "exercises.ts");
-const generatedCatalogPath = join(projectRoot, "src", "lib", "exercises-data.ts");
+const catalogPath = join(projectRoot, "catalog", "exercises.ts");
+const generatedCatalogPath = join(projectRoot, "src", "generated", "exercises-data.ts");
 const generatedInstructionsDirectory = join(projectRoot, "public", "instructions");
 const imageDirectory = join(projectRoot, "public", "img");
 const animationDirectory = join(projectRoot, "public", "gif");

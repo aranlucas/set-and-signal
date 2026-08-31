@@ -21,9 +21,9 @@ import (
 	_ "time/tzdata"
 
 	"github.com/aranlucas/set-and-signal/internal/ai"
-	"github.com/aranlucas/set-and-signal/internal/api"
 	"github.com/aranlucas/set-and-signal/internal/auth"
 	"github.com/aranlucas/set-and-signal/internal/config"
+	"github.com/aranlucas/set-and-signal/internal/httpapi"
 	"github.com/aranlucas/set-and-signal/internal/oauth"
 	"github.com/aranlucas/set-and-signal/internal/presence"
 	"github.com/aranlucas/set-and-signal/internal/push"
@@ -115,7 +115,7 @@ func wire(cfg config.Config) (*app, error) {
 		return nil, err
 	}
 
-	server := &api.Server{
+	server := &httpapi.Server{
 		Cfg:      cfg,
 		ST:       st,
 		Sess:     sess,
@@ -126,7 +126,7 @@ func wire(cfg config.Config) (*app, error) {
 		OAuth:    oauth.New(cfg, st, sess),
 	}
 	return &app{
-		handler:  api.Static(server),
+		handler:  httpapi.Static(server),
 		st:       st,
 		presence: server.Presence,
 		push:     pushSvc,

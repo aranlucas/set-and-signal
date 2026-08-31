@@ -13,7 +13,7 @@ so existing installations and exports continue to work.
 
 ## Body map
 
-The body-path geometry in `web/src/lib/body-paths.ts` is derived from MuscleMap
+The body-path geometry in `web/src/domain/exercises/body-paths.ts` is derived from MuscleMap
 by Melih Colpan and is available under the MIT License. Preserve that attribution
 when reusing the geometry.
 
