@@ -66,7 +66,7 @@ export default function Plan() {
       </div>
       <div className="block lg:grid lg:grid-cols-2 lg:items-start lg:gap-3.5 [&>*]:min-w-0">
         <div>
-          <h2 className="mt-5.5 mb-2 px-1 text-sm font-normal tracking-tight text-foreground/60">
+          <h2 className="mt-6 mb-2 px-1 font-sans text-sm leading-none font-medium tracking-tight text-foreground/60">
             {t("plan.weekSchedule", "Week schedule")}
           </h2>
           <div className="flex flex-col gap-2">
@@ -101,11 +101,11 @@ export default function Plan() {
           </div>
         </div>
         <div>
-          <div className="mt-5.5 mb-2.5 flex items-center justify-between gap-3">
-            <h2 className="m-0 px-1 text-sm font-normal tracking-tight text-foreground/60">
+          <div className="mt-6 mb-2 flex min-h-8 items-center justify-between gap-3 px-1">
+            <h2 className="m-0 font-sans text-sm leading-none font-medium tracking-tight text-foreground/60">
               {t("plan.routines", "Routines")}
             </h2>
-            <Button size="sm" variant="secondary" onClick={addRoutine}>
+            <Button size="xs" variant="secondary" onClick={addRoutine}>
               <Icon name="plus" />
               {t("common.new", "New")}
             </Button>

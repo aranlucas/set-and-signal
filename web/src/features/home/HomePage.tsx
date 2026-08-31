@@ -108,7 +108,7 @@ export default function Home() {
 
   return (
     <div className="mx-auto w-full max-w-xl min-w-0 md:max-w-none">
-      <HomeHeader today={today} user={user} onSettings={() => nav({ to: "/settings" })} />
+      <HomeHeader user={user} onSettings={() => nav({ to: "/settings" })} />
       <SpaceBetween
         size="m"
         responsiveSize={{ lg: "l" }}
@@ -117,6 +117,7 @@ export default function Home() {
         <HomeSchedule
           state={state}
           user={user}
+          today={today}
           routine={routine}
           monday={monday}
           wkLabel={wkLabel}
@@ -163,15 +164,7 @@ export default function Home() {
   );
 }
 
-function HomeHeader({
-  today,
-  user,
-  onSettings,
-}: {
-  today: Date;
-  user: User | null;
-  onSettings: () => void;
-}) {
+function HomeHeader({ user, onSettings }: { user: User | null; onSettings: () => void }) {
   const { t } = useTranslation();
   return (
     <PageHeader className="mb-4 lg:mt-0 lg:mb-6">
@@ -180,13 +173,6 @@ function HomeHeader({
           <BrandMark className="size-9 text-primary" />
           <span>{user ? t("home.hi", "Hi {{name}}", { name: user.name }) : "Set & Signal"}</span>
         </PageTitle>
-        <div className="mt-1 text-base tracking-tight text-foreground/60">
-          {formatDate(t, today, {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-          })}
-        </div>
       </div>
       <button
         className="flex size-9 flex-none items-center justify-center rounded-full border border-border bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
@@ -202,6 +188,7 @@ function HomeHeader({
 type HomeScheduleProps = {
   state: AppState;
   user: User | null;
+  today: Date;
   routine: Routine | null;
   monday: Date;
   wkLabel: string;
@@ -218,6 +205,7 @@ type HomeScheduleProps = {
 function HomeSchedule({
   state,
   user,
+  today,
   routine,
   monday,
   wkLabel,
@@ -261,55 +249,62 @@ function HomeSchedule({
       </SpaceBetween>
 
       <div className="border-t border-border/60 p-4 lg:flex lg:flex-1 lg:flex-col">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h2 className="text-2xl leading-tight font-semibold tracking-tight capitalize sm:text-3xl">
+        <div>
+          <div className="mb-1 text-xs font-medium tracking-wide text-foreground/60">
+            {formatDate(t, today, {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+            })}
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="min-w-0 text-2xl leading-tight font-semibold tracking-tight capitalize sm:text-3xl">
               {state.active
                 ? state.active.name
                 : routine
                   ? routine.name
                   : t("home.recoveryDay", "Recovery day")}
             </h2>
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground/60">
-              {state.active ? (
-                <span className="flex items-center gap-1.5 text-active">
-                  <Icon name="timer" />
-                  {t("home.workoutProgress", "Workout in progress")}
-                </span>
-              ) : routine ? (
-                <>
-                  <span className="flex items-center gap-1.5">
-                    <Icon name="clock" />
-                    {t("home.aboutMin", "About {{minutes}} min", { minutes: routineMinutes })}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Icon name="dumbbell" />
-                    {exCount(t, routine.ex.length)}
-                  </span>
-                  {todayOvr && (
-                    <span className="text-active">
-                      {t("calendar.status.rescheduled", "Rescheduled")}
-                    </span>
-                  )}
-                </>
-              ) : (
-                <span>
-                  {t(
-                    "home.recoverAddLightSessionFeel",
-                    "Recover, or add a light session if you feel ready.",
-                  )}
-                </span>
+            <span
+              className={cn(
+                "flex size-11 flex-none items-center justify-center rounded-lg bg-muted text-2xl text-primary",
+                state.active && "bg-orange-500/15 text-active",
               )}
-            </div>
+            >
+              <Icon name={state.active ? "timer" : routine ? glyphOf(routine.emoji) : "moon"} />
+            </span>
           </div>
-          <span
-            className={cn(
-              "flex size-11 flex-none items-center justify-center rounded-lg bg-muted text-2xl text-primary",
-              state.active && "bg-orange-500/15 text-active",
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground/60">
+            {state.active ? (
+              <span className="flex items-center gap-1.5 text-active">
+                <Icon name="timer" />
+                {t("home.workoutProgress", "Workout in progress")}
+              </span>
+            ) : routine ? (
+              <>
+                <span className="flex items-center gap-1.5">
+                  <Icon name="clock" />
+                  {t("home.aboutMin", "About {{minutes}} min", { minutes: routineMinutes })}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Icon name="dumbbell" />
+                  {exCount(t, routine.ex.length)}
+                </span>
+                {todayOvr && (
+                  <span className="text-active sm:ml-auto">
+                    {t("calendar.status.rescheduled", "Rescheduled")}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span>
+                {t(
+                  "home.recoverAddLightSessionFeel",
+                  "Recover, or add a light session if you feel ready.",
+                )}
+              </span>
             )}
-          >
-            <Icon name={state.active ? "timer" : routine ? glyphOf(routine.emoji) : "moon"} />
-          </span>
+          </div>
         </div>
 
         <SpaceBetween
