@@ -327,7 +327,8 @@
   }
 
   .proof-tabbar {
-    contain: layout paint;
+    contain: layout;
+    overflow: visible;
   }
 
   .proof-panel {
@@ -569,4 +570,34 @@
 .proof-signature--insights .text-primary,
 .proof-signature--insights [class*="text-primary"] {
   color: var(--system-blue) !important;
+}
+
+/* The app opts into viewport-fit=cover, so the shell and its fixed index must
+   clear display cutouts and the home indicator in standalone/mobile contexts. */
+@supports (padding: max(0px)) {
+  .proof-app {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+
+  .proof-tabbar {
+    padding-right: max(0.375rem, env(safe-area-inset-right));
+    padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
+    padding-left: max(0.375rem, env(safe-area-inset-left));
+  }
+}
+
+@media (min-width: 64rem) {
+  .proof-app {
+    padding-top: 2rem;
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+
+  .proof-tabbar {
+    padding-right: 0.625rem;
+    padding-bottom: 0.625rem;
+    padding-left: 0.625rem;
+  }
 }
