@@ -19,6 +19,7 @@ import { Field } from "@/shared/ui/field";
 import Icon from "@/shared/components/Icon";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { Grid } from "@/shared/components/Grid";
+import { MetricCard } from "@/shared/components/MetricCard";
 import BodyMap from "@/shared/components/BodyMap";
 import { PlateRow } from "@/shared/components/PlateRow";
 import { Textarea } from "@/shared/ui/textarea";
@@ -261,39 +262,39 @@ export function FinishSummary({
       <h3 className="my-2 text-xl font-semibold">
         {t("workout.completion.workoutComplete", "Workout complete!")}
       </h3>
-      <Grid columns={2} className="mb-3 text-left">
-        <div className="rounded-lg bg-card p-3.5">
+      <Grid columns={2} className="mb-3">
+        <MetricCard>
           <div className="text-sm tracking-tight text-foreground/60">
             {t("workout.completion.duration", "Duration")}
           </div>
           <div className="mt-1.5 text-lg leading-tight font-semibold tracking-tight">
             {fmtDur(workout.end - workout.start)}
           </div>
-        </div>
-        <div className="rounded-lg bg-card p-3.5">
+        </MetricCard>
+        <MetricCard>
           <div className="text-sm tracking-tight text-foreground/60">
             {t("workout.completion.volume", "Volume")}
           </div>
           <div className="mt-1.5 text-lg leading-tight font-semibold tracking-tight">
             {fmtVol(workout.vol, appState.unit)}
           </div>
-        </div>
-        <div className="rounded-lg bg-card p-3.5">
+        </MetricCard>
+        <MetricCard>
           <div className="text-sm tracking-tight text-foreground/60">
             {t("exercise.sets", "Sets")}
           </div>
           <div className="mt-1.5 text-lg leading-tight font-semibold tracking-tight">
             {setsDone(workout)}
           </div>
-        </div>
-        <div className="rounded-lg bg-card p-3.5">
+        </MetricCard>
+        <MetricCard>
           <div className="text-sm tracking-tight text-foreground/60">
             {t("workout.completion.prs", "PRs")}
           </div>
           <div className="mt-1.5 text-xl leading-tight font-semibold tracking-tight">
             {prs.length || "—"}
           </div>
-        </div>
+        </MetricCard>
       </Grid>
       {(prs.length > 0 || e1prs.length > 0) && (
         <div className="mb-3 text-left">

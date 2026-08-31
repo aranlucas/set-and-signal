@@ -8,6 +8,7 @@ import type { ParseResult } from "@/features/settings/import-csv";
 import type { SheetClose } from "@/shared/lib/types";
 import { Button } from "@/shared/ui/button";
 import { Grid } from "@/shared/components/Grid";
+import { MetricCard } from "@/shared/components/MetricCard";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { updateAppState } from "@/features/exercises/sheet-shared";
 
@@ -48,60 +49,60 @@ export function ImportSummary({ parsed, close }: { parsed: ParsedOk; close: Shee
             : fmtDate(t, parsed.from, true) + " – " + fmtDate(t, parsed.to, true)
           : ""}
       </div>
-      <Grid columns={2} className="mb-3 text-left">
+      <Grid columns={2} className="mb-3">
         {isBW ? (
           <>
-            <div className="rounded-lg bg-card p-3.5">
+            <MetricCard>
               <div className="flex items-center gap-1.5 text-sm text-foreground/60">
                 {t("import.weighIns", "Weigh-ins")}
               </div>
               <div className="mt-1.5 text-lg leading-tight font-semibold tracking-tight">
                 {parsed.bodyweight.length}
               </div>
-            </div>
-            <div className="rounded-lg bg-card p-3.5">
+            </MetricCard>
+            <MetricCard>
               <div className="flex items-center gap-1.5 text-sm text-foreground/60">
                 {t("common.new", "New")}
               </div>
               <div className="mt-1.5 text-lg leading-tight font-semibold tracking-tight">
                 {fresh}
               </div>
-            </div>
+            </MetricCard>
           </>
         ) : (
           <>
-            <div className="rounded-lg bg-card p-3.5">
+            <MetricCard>
               <div className="flex items-center gap-1.5 text-sm text-foreground/60">
                 {t("stats.workouts", "Workouts")}
               </div>
               <div className="mt-1.5 text-lg leading-tight font-semibold tracking-tight">
                 {parsed.workouts.length}
               </div>
-            </div>
-            <div className="rounded-lg bg-card p-3.5">
+            </MetricCard>
+            <MetricCard>
               <div className="flex items-center gap-1.5 text-sm text-foreground/60">
                 {t("exercise.sets", "Sets")}
               </div>
               <div className="mt-1.5 text-lg leading-tight font-semibold tracking-tight">
                 {parsed.sets}
               </div>
-            </div>
-            <div className="rounded-lg bg-card p-3.5">
+            </MetricCard>
+            <MetricCard>
               <div className="flex items-center gap-1.5 text-sm text-foreground/60">
                 {t("import.exercisesMatched", "Exercises matched")}
               </div>
               <div className="mt-1.5 text-lg leading-tight font-semibold tracking-tight">
                 {parsed.matched}
               </div>
-            </div>
-            <div className="rounded-lg bg-card p-3.5">
+            </MetricCard>
+            <MetricCard>
               <div className="flex items-center gap-1.5 text-sm text-foreground/60">
                 {t("import.addedOwn", "Added as your own")}
               </div>
               <div className="mt-1.5 text-lg leading-tight font-semibold tracking-tight">
                 {parsed.created}
               </div>
-            </div>
+            </MetricCard>
           </>
         )}
       </Grid>

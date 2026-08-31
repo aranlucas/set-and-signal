@@ -131,7 +131,7 @@ export default function Home() {
           onNextWeek={() => setWeekOffset((week) => week + 1)}
           routineMinutes={routineMinutes}
         />
-        <div className="min-w-0 lg:h-full">
+        <SpaceBetween size="s" className="min-w-0">
           {state.routines.length === 0 && !state.active && (
             <HomeWelcome
               onStart={() => void nav({ to: "/home/get-started", resetScroll: false })}
@@ -156,7 +156,7 @@ export default function Home() {
             onCalendar={() => void nav({ to: "/home/calendar", resetScroll: false })}
             onStats={() => nav({ to: "/stats" })}
           />
-        </div>
+        </SpaceBetween>
       </SpaceBetween>
       <Outlet />
     </div>
@@ -233,30 +233,32 @@ function HomeSchedule({
   const { t } = useTranslation();
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-card lg:flex lg:h-full lg:flex-col">
-      <div className="flex items-center justify-between gap-3 px-4 pt-3">
-        <button
-          className="flex size-8 flex-none items-center justify-center rounded-full text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
-          onClick={onPreviousWeek}
-          aria-label={t("home.previousWeek", "Previous week")}
-        >
-          <Icon name="chevronLeft" />
-        </button>
-        <div className="text-sm leading-snug font-medium text-foreground/60">{wkLabel}</div>
-        <button
-          className="flex size-8 flex-none items-center justify-center rounded-full text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
-          onClick={onNextWeek}
-          aria-label={t("home.nextWeek", "Next week")}
-        >
-          <Icon name="chevronRight" />
-        </button>
-      </div>
-      <div className="px-2 pb-2">
-        <WeekCalendar
-          weekStart={monday}
-          dayStatuses={dayStatuses}
-          onSelect={(date) => onDaySelect(isoOf(date))}
-        />
-      </div>
+      <SpaceBetween size="xs">
+        <div className="flex items-center justify-between gap-3 px-4 pt-3">
+          <button
+            className="flex size-8 flex-none items-center justify-center rounded-full text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
+            onClick={onPreviousWeek}
+            aria-label={t("home.previousWeek", "Previous week")}
+          >
+            <Icon name="chevronLeft" />
+          </button>
+          <div className="text-sm leading-snug font-medium text-foreground/60">{wkLabel}</div>
+          <button
+            className="flex size-8 flex-none items-center justify-center rounded-full text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
+            onClick={onNextWeek}
+            aria-label={t("home.nextWeek", "Next week")}
+          >
+            <Icon name="chevronRight" />
+          </button>
+        </div>
+        <div className="px-2 pb-2">
+          <WeekCalendar
+            weekStart={monday}
+            dayStatuses={dayStatuses}
+            onSelect={(date) => onDaySelect(isoOf(date))}
+          />
+        </div>
+      </SpaceBetween>
 
       <div className="border-t border-border/60 p-4 lg:flex lg:flex-1 lg:flex-col">
         <div className="flex items-start justify-between gap-4">
@@ -362,7 +364,7 @@ function HomeWelcome({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="mb-3 rounded-lg border border-border bg-card p-4">
+    <div className="rounded-lg border border-border bg-card p-4">
       <div className="mb-1.5 flex items-center gap-3">
         <span className="flex size-7 flex-none items-center justify-center rounded-sm bg-primary text-lg text-white">
           <Icon name="sparkles" />
@@ -456,7 +458,7 @@ function HomeInsights({
     : 0;
 
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card lg:h-full">
+    <section className="overflow-hidden rounded-xl border border-border bg-card lg:flex-1">
       <div className="border-b border-border/60 bg-muted/30 p-4">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>

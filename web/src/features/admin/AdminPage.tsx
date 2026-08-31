@@ -8,6 +8,7 @@ import { fmtDate, fmtDur, fmtVol } from "@/shared/lib/format";
 import { workoutVolume, setsDone } from "@/domain/training/history";
 import Icon from "@/shared/components/Icon";
 import { Grid } from "@/shared/components/Grid";
+import { MetricCard } from "@/shared/components/MetricCard";
 import { Button } from "@/shared/ui/button";
 import { toast } from "@/shared/lib/toast";
 import {
@@ -113,31 +114,31 @@ function UserDetail({
           joined {userRecord.created ? fmtDate(t, userRecord.created.slice(0, 10)) : "—"}
         </span>
       </div>
-      <Grid columns={2} className="text-left">
-        <div className="rounded-lg bg-card p-3.5">
+      <Grid columns={2}>
+        <MetricCard>
           <div className="flex items-center gap-1.5 text-sm text-foreground/60">Workouts</div>
           <div className="mt-1 text-lg leading-tight font-semibold tracking-tight">
             {details.workouts.length}
           </div>
-        </div>
-        <div className="rounded-lg bg-card p-3.5">
+        </MetricCard>
+        <MetricCard>
           <div className="flex items-center gap-1.5 text-sm text-foreground/60">Weigh-ins</div>
           <div className="mt-1 text-lg leading-tight font-semibold tracking-tight">
             {details.bodyweight.length}
           </div>
-        </div>
-        <div className="rounded-lg bg-card p-3.5">
+        </MetricCard>
+        <MetricCard>
           <div className="flex items-center gap-1.5 text-sm text-foreground/60">Routines</div>
           <div className="mt-1 text-lg leading-tight font-semibold tracking-tight">
             {details.routines.length}
           </div>
-        </div>
-        <div className="rounded-lg bg-card p-3.5">
+        </MetricCard>
+        <MetricCard>
           <div className="flex items-center gap-1.5 text-sm text-foreground/60">Last sync</div>
           <div className="mt-1 text-base leading-tight font-semibold tracking-tight">
             {formatRelativeTime(details.lastSync)}
           </div>
-        </div>
+        </MetricCard>
       </Grid>
       {!userRecord.admin && (
         <Button
@@ -354,32 +355,32 @@ function AdminContent() {
       )}
 
       <Grid columns={{ default: 2, lg: 4 }} className="mb-3">
-        <div className="rounded-lg bg-card p-3.5">
+        <MetricCard>
           <div className="flex items-center gap-1.5 text-sm text-foreground/60">Users</div>
           <div className="mt-1 text-3xl leading-tight font-semibold tracking-tight">
             {users ? userList.length : "—"}
           </div>
-        </div>
-        <div className="rounded-lg bg-card p-3.5">
+        </MetricCard>
+        <MetricCard>
           <div className="flex items-center gap-1.5 text-sm text-foreground/60">Training now</div>
           <div
             className={`mt-1 text-3xl leading-tight font-semibold tracking-tight ${liveUsers.length > 0 ? "text-primary" : ""}`}
           >
             {users ? liveUsers.length : "—"}
           </div>
-        </div>
-        <div className="rounded-lg bg-card p-3.5">
+        </MetricCard>
+        <MetricCard>
           <div className="flex items-center gap-1.5 text-sm text-foreground/60">Active 7d</div>
           <div className="mt-1 text-3xl leading-tight font-semibold tracking-tight">
             {users ? activeCount : "—"}
           </div>
-        </div>
-        <div className="rounded-lg bg-card p-3.5">
+        </MetricCard>
+        <MetricCard>
           <div className="flex items-center gap-1.5 text-sm text-foreground/60">Disabled</div>
           <div className="mt-1 text-3xl leading-tight font-semibold tracking-tight">
             {users ? disabledCount : "—"}
           </div>
-        </div>
+        </MetricCard>
       </Grid>
 
       {liveUsers.length > 0 && (

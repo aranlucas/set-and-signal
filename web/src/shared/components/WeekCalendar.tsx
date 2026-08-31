@@ -51,7 +51,7 @@ export function WeekCalendar({ weekStart, dayStatuses, onSelect }: WeekCalendarP
   return (
     <div>
       <fieldset
-        className="grid grid-cols-7 border-0 border-t border-border p-0"
+        className="grid grid-cols-7 border-0 border-t border-border p-0 pt-2"
         aria-label={`${formatAccessibleDate(t, weekStart)} – ${formatAccessibleDate(t, weekEnd)}`}
       >
         {days.map((date) => {
@@ -88,8 +88,8 @@ export function WeekCalendar({ weekStart, dayStatuses, onSelect }: WeekCalendarP
               </span>
               <span
                 className={cn(
-                  "my-1 flex size-8 items-center justify-center rounded-full text-lg tracking-tight",
-                  isToday && "my-0 bg-primary font-semibold text-primary-foreground",
+                  "my-0.5 flex size-8 items-center justify-center rounded-full text-lg tracking-tight",
+                  isToday && "bg-primary font-semibold text-primary-foreground",
                 )}
               >
                 {date.getDate()}

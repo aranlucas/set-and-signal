@@ -45,6 +45,7 @@ import { Button } from "@/shared/ui/button";
 import { Segmented } from "@/shared/components/Segmented";
 import { SelectRow } from "@/shared/components/SelectRow";
 import { Grid } from "@/shared/components/Grid";
+import { MetricCard } from "@/shared/components/MetricCard";
 import type { AppState, ExConfig, IsoDate, LoggedSet, Workout } from "@/shared/lib/types";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 
@@ -194,7 +195,7 @@ function StatsTile({
   valueColor?: string;
 }) {
   return (
-    <div className="rounded-lg bg-card p-3.5">
+    <MetricCard>
       <div className="flex items-center gap-1.5 text-sm text-foreground/60">
         <Icon name={icon} />
         {label}
@@ -205,7 +206,7 @@ function StatsTile({
       >
         {value}
       </div>
-    </div>
+    </MetricCard>
   );
 }
 // Which muscles the training in a window actually hit — and, the point of the card,
