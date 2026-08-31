@@ -47,6 +47,27 @@ Copy `.env.example` to `.env` for local overrides. At minimum, set `PUBLIC_URL` 
 the public HTTPS origin when enabling OAuth or MCP clients. Configure one or more
 of `GOOGLE_*`, `GITHUB_*`, or `APPLE_*` credentials for sign-in.
 
+## Deploy on Railway
+
+The production topology is declared in
+[`/.railway/railway.ts`](.railway/railway.ts): a Dockerfile-built application,
+health and restart policy, environment contract, and a persistent 5 GB volume at
+`/data`. Railway secrets remain stored in Railway; the source declaration only
+preserves them.
+
+```bash
+pnpm install --frozen-lockfile
+pnpm infra:check
+railway link
+railway environment production
+pnpm infra:plan
+pnpm infra:apply
+```
+
+Read [`.railway/README.md`](.railway/README.md) before changing resource names,
+the volume mount, domain, or relying-party settings. A plan is mandatory before
+every apply.
+
 ## Architecture
 
 - `cmd/opengym-api` — HTTP server binary
@@ -100,6 +121,8 @@ Authorization Code + PKCE. Planning writes are revision-checked: call
 ```bash
 go test ./...
 go vet ./...
+pnpm install --frozen-lockfile
+pnpm infra:check
 cd web
 pnpm format
 pnpm lint

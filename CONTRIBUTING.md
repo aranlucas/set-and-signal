@@ -10,6 +10,8 @@ migration and release note.
 go test -race ./...
 go vet ./...
 go fix -diff ./...
+pnpm install --frozen-lockfile
+pnpm infra:check
 cd web
 pnpm format
 pnpm lint:tailwind
@@ -28,3 +30,8 @@ exercise media. Update user-facing copy in every locale when a brand term change
 Describe the user-visible behavior, the routes or storage contracts touched,
 and the verification you ran. If a change depends on a provider, CDN, or
 environment variable, document the fallback and the privacy implication.
+
+Infrastructure changes must include the output of `pnpm infra:check` and a
+reviewed `pnpm infra:plan`. Never commit a pinned Railway plan or decrypted
+variable value, and never rename a data-bearing resource without an explicit
+migration and rollback procedure.

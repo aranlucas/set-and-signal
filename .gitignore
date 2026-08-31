@@ -16,5 +16,7 @@ data/
 .codex/
 .impeccable/
 output/
+.railway/*.plan.json
+railway-plan.json
 web/.agents/
 web/skills-lock.json
