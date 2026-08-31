@@ -36,6 +36,7 @@ import type { AppState, IsoDate, Routine, User } from "@/shared/lib/types";
 import { cn } from "@/shared/lib/utils";
 import BrandMark from "@/shared/components/BrandMark";
 import { useMeasurementFields } from "@/shared/hooks/use-measurement-fields";
+import { SpaceBetween } from "@/shared/components/SpaceBetween";
 
 // Home = what to do now + a quick glance. Deep charts & history live in Stats.
 export default function Home() {
@@ -107,7 +108,11 @@ export default function Home() {
   return (
     <div className="proof-page mx-auto w-full max-w-xl md:max-w-none">
       <HomeHeader today={today} user={user} onSettings={() => nav({ to: "/settings" })} />
-      <div className="space-y-4 lg:grid lg:grid-cols-2 lg:items-stretch lg:gap-6 lg:space-y-0">
+      <SpaceBetween
+        size="m"
+        responsiveSize={{ lg: "l" }}
+        className="lg:grid lg:grid-cols-2 lg:items-stretch"
+      >
         <HomeSchedule
           state={state}
           user={user}
@@ -151,7 +156,7 @@ export default function Home() {
             onStats={() => nav({ to: "/stats" })}
           />
         </div>
-      </div>
+      </SpaceBetween>
       <Outlet />
     </div>
   );
@@ -307,7 +312,11 @@ function HomeSchedule({
           </span>
         </div>
 
-        <div className="mt-4 flex gap-2 lg:mt-auto lg:pt-6">
+        <SpaceBetween
+          direction="horizontal"
+          size="xs"
+          className="mt-4 flex-nowrap lg:mt-auto lg:pt-6"
+        >
           <Button className="proof-action flex-1" onClick={onToday}>
             <Icon name={state.active ? "play" : routine ? "play" : "plus"} />
             {state.active
@@ -327,7 +336,7 @@ function HomeSchedule({
               <span className="hidden sm:inline">{t("home.adjust", "Adjust")}</span>
             </Button>
           )}
-        </div>
+        </SpaceBetween>
 
         {routine && !state.active && user && (
           <button
@@ -370,19 +379,19 @@ function HomeWelcome({
           "Answer a few quick questions and get a first week with sensible starting weights.",
         )}
       </div>
-      <Button className="w-full" variant="default" onClick={onStart}>
-        <Icon name="figureStrength" />
-        {t("startingSetup.cta", "Set up my first plan")}
-      </Button>
-      <div className="h-2" />
-      <Button className="w-full" onClick={onBrowse}>
-        <Icon name="sparkles" />
-        {t("plans.curated.browse", "Browse curated plans")}
-      </Button>
-      <div className="h-2" />
-      <Button className="w-full" onClick={onBuild}>
-        {t("home.buildMyOwnPlan", "Build my own plan")}
-      </Button>
+      <SpaceBetween size="xs">
+        <Button className="w-full" variant="default" onClick={onStart}>
+          <Icon name="figureStrength" />
+          {t("startingSetup.cta", "Set up my first plan")}
+        </Button>
+        <Button className="w-full" onClick={onBrowse}>
+          <Icon name="sparkles" />
+          {t("plans.curated.browse", "Browse curated plans")}
+        </Button>
+        <Button className="w-full" onClick={onBuild}>
+          {t("home.buildMyOwnPlan", "Build my own plan")}
+        </Button>
+      </SpaceBetween>
     </div>
   );
 }
@@ -476,7 +485,7 @@ function HomeInsights({
           </div>
           <Icon name="info" className="mt-0.5 flex-none text-xl text-muted-foreground" />
         </div>
-        <div className="space-y-3">
+        <SpaceBetween size="s">
           {recovery.map((item) => (
             <div key={item.muscle} className="flex items-center gap-3">
               <span className="w-26 flex-none overflow-hidden text-sm font-medium text-ellipsis whitespace-nowrap">
@@ -493,7 +502,7 @@ function HomeInsights({
               </span>
             </div>
           ))}
-        </div>
+        </SpaceBetween>
       </div>
 
       <button
