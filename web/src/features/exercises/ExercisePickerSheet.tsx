@@ -15,6 +15,7 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Thumb } from "@/shared/components/Media";
 import Icon from "@/shared/components/Icon";
+import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { glyphOf } from "@/domain/exercises/glyphs";
 import { cn } from "@/shared/lib/utils";
 import type { CustomEx, ExConfig, Routine, SheetClose } from "@/shared/lib/types";
@@ -106,7 +107,7 @@ export function AddToRoutine({
       <div className="mb-3 text-sm leading-snug text-foreground/60">
         {t("exercise.pickRoutineSetsRepsWeight", "Pick a routine — sets, reps & weight come next.")}
       </div>
-      <div className="flex flex-col gap-2">
+      <SpaceBetween size="xs">
         {appState.routines.map((routine) => (
           <button
             type="button"
@@ -149,7 +150,7 @@ export function AddToRoutine({
           </span>
           <Icon name="plus" className="shrink-0 text-base text-foreground" />
         </button>
-      </div>
+      </SpaceBetween>
     </>
   );
 }
@@ -319,77 +320,76 @@ export function ExercisePicker({
           ))}
         </div>
       )}
-      <div className="flex flex-col gap-2">
-        {bodyPart !== "★" && (
-          <button
-            type="button"
-            className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
-            onClick={() =>
-              openCustom(
-                null,
-                async (customExercise) => {
-                  if (customExercise) await pickExercise(customExercise);
-                },
-                query.trim(),
-              )
-            }
-          >
-            <span className="flex size-12.5 shrink-0 items-center justify-center rounded-md bg-muted text-2xl text-foreground/60">
-              <Icon name="sparkles" />
-            </span>
-            <span className="min-w-0 grow">
-              <span className="block text-base leading-tight tracking-tight">
-                {t("customExercise.createOwnExercise", "Create your own exercise")}
+      <SpaceBetween size="xs">
+        <SpaceBetween size="xs">
+          {bodyPart !== "★" && (
+            <button
+              type="button"
+              className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
+              onClick={() =>
+                openCustom(
+                  null,
+                  async (customExercise) => {
+                    if (customExercise) await pickExercise(customExercise);
+                  },
+                  query.trim(),
+                )
+              }
+            >
+              <span className="flex size-12.5 shrink-0 items-center justify-center rounded-md bg-muted text-2xl text-foreground/60">
+                <Icon name="sparkles" />
               </span>
-              <span className="mt-0.5 block text-sm text-foreground/60">
-                {t("customExercise.nameBodyPartNoAnimation", "name + body part, no animation")}
+              <span className="min-w-0 grow">
+                <span className="block text-base leading-tight tracking-tight">
+                  {t("customExercise.createOwnExercise", "Create your own exercise")}
+                </span>
+                <span className="mt-0.5 block text-sm text-foreground/60">
+                  {t("customExercise.nameBodyPartNoAnimation", "name + body part, no animation")}
+                </span>
               </span>
-            </span>
-            <Icon name="plus" className="shrink-0 text-base text-foreground" />
-          </button>
-        )}
-        {filteredExercises.slice(0, visibleCount).map((exercise) => (
-          <button
-            type="button"
-            key={exercise.id}
-            className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
-            onClick={() => pickExercise(exercise)}
-          >
-            <Thumb exercise={toCatalogExercise(exercise)} />
-            <span className="min-w-0 grow">
-              <span className="block text-base leading-tight tracking-tight capitalize">
-                {exercise.n}
+              <Icon name="plus" className="shrink-0 text-base text-foreground" />
+            </button>
+          )}
+          {filteredExercises.slice(0, visibleCount).map((exercise) => (
+            <button
+              type="button"
+              key={exercise.id}
+              className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
+              onClick={() => pickExercise(exercise)}
+            >
+              <Thumb exercise={toCatalogExercise(exercise)} />
+              <span className="min-w-0 grow">
+                <span className="block text-base leading-tight tracking-tight capitalize">
+                  {exercise.n}
+                </span>
+                <span className="mt-0.5 block text-sm text-foreground/60 capitalize">
+                  {metadata.muscle(exercise.tg || exercise.bp)} ·{" "}
+                  {metadata.equipment(exercise.eq || "")}
+                </span>
               </span>
-              <span className="mt-0.5 block text-sm text-foreground/60 capitalize">
-                {metadata.muscle(exercise.tg || exercise.bp)} ·{" "}
-                {metadata.equipment(exercise.eq || "")}
-              </span>
-            </span>
-            {usageByExercise[exercise.id] ? (
-              <span className="inline-flex items-center gap-1 rounded-sm bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
-                <Icon name="starFill" />
-              </span>
-            ) : null}
-            <Icon name="plus" className="shrink-0 text-base text-foreground" />
-          </button>
-        ))}
-        {filteredExercises.length === 0 && bodyPart === "★" && (
-          <div className="px-5 py-11 text-center text-base leading-normal text-foreground/60">
-            {t(
-              "exercise.nothingChosenYetAddExercises",
-              "Nothing chosen yet — add exercises and they’ll show up here.",
-            )}
-          </div>
-        )}
-      </div>
-      {filteredExercises.length > visibleCount && (
-        <>
-          <div className="h-2" />
+              {usageByExercise[exercise.id] ? (
+                <span className="inline-flex items-center gap-1 rounded-sm bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
+                  <Icon name="starFill" />
+                </span>
+              ) : null}
+              <Icon name="plus" className="shrink-0 text-base text-foreground" />
+            </button>
+          ))}
+          {filteredExercises.length === 0 && bodyPart === "★" && (
+            <div className="px-5 py-11 text-center text-base leading-normal text-foreground/60">
+              {t(
+                "exercise.nothingChosenYetAddExercises",
+                "Nothing chosen yet — add exercises and they’ll show up here.",
+              )}
+            </div>
+          )}
+        </SpaceBetween>
+        {filteredExercises.length > visibleCount && (
           <Button className="w-full" onClick={() => setVisibleCount((count) => count + 50)}>
             {t("exercise.showMore", "Show more")}
           </Button>
-        </>
-      )}
+        )}
+      </SpaceBetween>
     </>
   );
 }

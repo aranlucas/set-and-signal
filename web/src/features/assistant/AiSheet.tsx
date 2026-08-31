@@ -15,6 +15,7 @@ import {
 } from "@/shared/lib/schemas";
 import { Button } from "@/shared/ui/button";
 import Icon from "@/shared/components/Icon";
+import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { DEFAULT_GLYPH, glyphOf } from "@/domain/exercises/glyphs";
 import type { ExConfig, Id, SheetClose } from "@/shared/lib/types";
 import { getAppState, getErrorMessage, updateAppState } from "@/features/exercises/sheet-shared";
@@ -111,13 +112,15 @@ export function AiPlan({ close }: { close: SheetClose }) {
         </>
       )}
       {planQuery.isSuccess && res && (
-        <>
-          <div className="mb-2.5 text-sm leading-snug text-muted-foreground">
-            <Icon name="bolt" className="text-xs" />{" "}
-            {t("ai.plannedBy", "planned by {{source}}", { source: res.model })}
-          </div>
-          <div className="mb-3 text-sm leading-normal">{res.suggestion.summary}</div>
-          <div className="flex flex-col gap-2">
+        <SpaceBetween size="s">
+          <SpaceBetween size="xxs">
+            <div className="text-sm leading-snug text-muted-foreground">
+              <Icon name="bolt" className="text-xs" />{" "}
+              {t("ai.plannedBy", "planned by {{source}}", { source: res.model })}
+            </div>
+            <div className="text-sm leading-normal">{res.suggestion.summary}</div>
+          </SpaceBetween>
+          <SpaceBetween size="xs">
             {res.suggestion.entries.map((g) => {
               const cur = effectiveRoutine(getAppState(), todayISO())?.ex.find(
                 (x) => x.id === g.id,
@@ -150,21 +153,19 @@ export function AiPlan({ close }: { close: SheetClose }) {
                 </div>
               );
             })}
-          </div>
-          {!applied && (
-            <>
-              <div className="h-3" />
+          </SpaceBetween>
+          <SpaceBetween size="xs">
+            {!applied && (
               <Button className="w-full" variant="default" onClick={apply}>
                 <Icon name="check" />
                 {t("ai.applyToRoutine", "Apply to today's routine")}
               </Button>
-            </>
-          )}
-          <div className="h-2" />
-          <Button variant="ghost" className="w-full text-muted-foreground" onClick={close}>
-            {applied ? t("common.close", "Close") : t("common.dismiss", "Dismiss")}
-          </Button>
-        </>
+            )}
+            <Button variant="ghost" className="w-full text-muted-foreground" onClick={close}>
+              {applied ? t("common.close", "Close") : t("common.dismiss", "Dismiss")}
+            </Button>
+          </SpaceBetween>
+        </SpaceBetween>
       )}
     </>
   );

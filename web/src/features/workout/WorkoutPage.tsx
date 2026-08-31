@@ -34,6 +34,7 @@ import { api } from "@/shared/lib/api";
 import Media from "@/shared/components/Media";
 import { beginWorkout, completeWorkout } from "@/features/workout/workout-actions";
 import Icon from "@/shared/components/Icon";
+import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { NumberField } from "@/shared/components/NumField";
@@ -141,7 +142,7 @@ function StartChooser() {
           <h2 className="mt-5.5 mb-2 px-1 text-sm font-normal tracking-tight text-foreground/60">
             {t("workout.otherRoutines", "Other routines")}
           </h2>
-          <div className="flex flex-col gap-2">
+          <SpaceBetween size="xs">
             {others.map((routine) => (
               <button
                 type="button"
@@ -165,22 +166,20 @@ function StartChooser() {
                 </span>
               </button>
             ))}
-          </div>
+          </SpaceBetween>
         </>
       )}
-      <div className="h-3.5" />
-      <Button className="w-full" onClick={() => openStart(null)}>
-        <Icon name="shuffle" />
-        {t("workout.freestyleWorkoutPickGo", "Freestyle workout (pick as you go)")}
-      </Button>
-      {appState.routines.length === 0 && (
-        <>
-          <div className="h-2.5" />
+      <SpaceBetween size="xs" className="pt-4">
+        <Button className="w-full" onClick={() => openStart(null)}>
+          <Icon name="shuffle" />
+          {t("workout.freestyleWorkoutPickGo", "Freestyle workout (pick as you go)")}
+        </Button>
+        {appState.routines.length === 0 && (
           <Button className="w-full" variant="default" onClick={() => nav({ to: "/plan" })}>
             {t("workout.buildPlanFirst", "Build a plan first")}
           </Button>
-        </>
-      )}
+        )}
+      </SpaceBetween>
       <Sheet
         open={sheetOpen}
         onOpenChange={(open) => {
@@ -1130,94 +1129,93 @@ function ActiveWorkoutSession({
           setWorkoutSheet={setWorkoutSheet}
         />
 
-        <div className="h-3" />
-        <div className="flex items-center gap-3">
-          <Button
-            className="w-0 flex-1 shrink"
-            disabled={unitIdx <= 0}
-            onClick={() =>
-              update((s) => {
-                if (s.active) s.active.cur = units[unitIdx - 1][0];
-              })
-            }
-          >
-            <Icon name="chevronLeft" />
-            {t("common.previous", "Prev")}
-          </Button>
-          <Button
-            className="w-0 flex-1 shrink"
-            disabled={unitIdx < 0 || unitIdx >= units.length - 1}
-            onClick={() =>
-              update((s) => {
-                if (s.active) s.active.cur = units[unitIdx + 1][0];
-              })
-            }
-          >
-            {t("common.next", "Next")}
-            <Icon name="chevronRight" />
-          </Button>
-        </div>
-        <div className="h-2.5" />
-        <Button
-          className="w-full"
-          onClick={() =>
-            setWorkoutSheet({
-              type: "picker",
-              onPick: (exercise) =>
-                setWorkoutSheet({
-                  type: "config",
-                  exercise,
-                  existing: null,
-                  onSave: (config) =>
-                    update((s) => {
-                      const act = s.active;
-                      if (!act) return;
-                      const full = { ...config, id: exercise.id };
-                      const plan = nextPrescription(
-                        s,
-                        full,
-                        s.routines.find((r) => r.id === act.routineId) ?? null,
-                      );
-                      act.entries.push({
-                        id: exercise.id,
-                        target: { ...config },
-                        plan,
-                        sets: applyPrescription(buildSets(s, full), plan),
-                      });
-                      act.cur = act.entries.length - 1;
-                    }),
-                  onDelete: null,
-                  routine: appState.routines.find((routine) => routine.id === A.routineId) ?? null,
-                }),
-            })
-          }
-        >
-          <Icon name="plus" />
-          {t("exercise.addExercise", "Add exercise")}
-        </Button>
-        <div className="h-2.5" />
-        {(() => {
-          const exDone = A.entries.filter(
-            (e) => e.sets.length && e.sets.every((s) => s.done),
-          ).length;
-          const allDone = A.entries.length > 0 && exDone === A.entries.length;
-          return (
+        <SpaceBetween size="s" className="pt-3 pb-10">
+          <SpaceBetween direction="horizontal" size="s" alignItems="center" className="flex-nowrap">
             <Button
-              variant={allDone ? "default" : "ghost"}
-              className={cn("w-full", !allDone && "text-muted-foreground")}
-              onClick={requestFinish}
+              className="w-0 flex-1 shrink"
+              disabled={unitIdx <= 0}
+              onClick={() =>
+                update((s) => {
+                  if (s.active) s.active.cur = units[unitIdx - 1][0];
+                })
+              }
             >
-              {allDone
-                ? t("workout.completion.finishWorkout", "Finish workout")
-                : t(
-                    "workout.finishWorkoutEarlyProgress",
-                    "Finish workout early · {{progress}} exercises",
-                    { progress: exDone + "/" + A.entries.length },
-                  )}
+              <Icon name="chevronLeft" />
+              {t("common.previous", "Prev")}
             </Button>
-          );
-        })()}
-        <div className="h-10" />
+            <Button
+              className="w-0 flex-1 shrink"
+              disabled={unitIdx < 0 || unitIdx >= units.length - 1}
+              onClick={() =>
+                update((s) => {
+                  if (s.active) s.active.cur = units[unitIdx + 1][0];
+                })
+              }
+            >
+              {t("common.next", "Next")}
+              <Icon name="chevronRight" />
+            </Button>
+          </SpaceBetween>
+          <Button
+            className="w-full"
+            onClick={() =>
+              setWorkoutSheet({
+                type: "picker",
+                onPick: (exercise) =>
+                  setWorkoutSheet({
+                    type: "config",
+                    exercise,
+                    existing: null,
+                    onSave: (config) =>
+                      update((s) => {
+                        const act = s.active;
+                        if (!act) return;
+                        const full = { ...config, id: exercise.id };
+                        const plan = nextPrescription(
+                          s,
+                          full,
+                          s.routines.find((r) => r.id === act.routineId) ?? null,
+                        );
+                        act.entries.push({
+                          id: exercise.id,
+                          target: { ...config },
+                          plan,
+                          sets: applyPrescription(buildSets(s, full), plan),
+                        });
+                        act.cur = act.entries.length - 1;
+                      }),
+                    onDelete: null,
+                    routine:
+                      appState.routines.find((routine) => routine.id === A.routineId) ?? null,
+                  }),
+              })
+            }
+          >
+            <Icon name="plus" />
+            {t("exercise.addExercise", "Add exercise")}
+          </Button>
+          {(() => {
+            const exDone = A.entries.filter(
+              (e) => e.sets.length && e.sets.every((s) => s.done),
+            ).length;
+            const allDone = A.entries.length > 0 && exDone === A.entries.length;
+            return (
+              <Button
+                variant={allDone ? "default" : "ghost"}
+                className={cn("w-full", !allDone && "text-muted-foreground")}
+                onClick={requestFinish}
+              >
+                {allDone
+                  ? t("workout.completion.finishWorkout", "Finish workout")
+                  : t(
+                      "workout.finishWorkoutEarlyProgress",
+                      "Finish workout early · {{progress}} exercises",
+                      { progress: exDone + "/" + A.entries.length },
+                    )}
+              </Button>
+            );
+          })()}
+        </SpaceBetween>
       </div>
       {workoutSheet?.type === "top-weight" && (
         <TopWeightSheet

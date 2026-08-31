@@ -491,14 +491,14 @@
     color: var(--system-blue);
   }
 
-  .proof-app #tabbar {
+  #tabbar {
     border-color: var(--proof-rule);
     background-color: color-mix(in srgb, var(--background) 96%, var(--card));
     backdrop-filter: none;
     box-shadow: 0 -8px 20px rgb(23 23 19 / 8%);
   }
 
-  .proof-app #tabbar [data-slot="tabs-trigger"] {
+  #tabbar [data-slot="tabs-trigger"] {
     border-radius: 3px;
     color: var(--muted-foreground);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -507,27 +507,27 @@
     text-transform: uppercase;
   }
 
-  .proof-app #tabbar [data-slot="tabs-trigger"][data-active="true"] {
+  #tabbar [data-slot="tabs-trigger"][data-active="true"] {
     color: var(--foreground);
   }
 
-  .proof-app #tabbar [data-slot="tabs-trigger"] > span:first-child {
+  #tabbar [data-slot="tabs-trigger"] > span:first-child {
     color: var(--system-blue);
   }
 
-  .proof-app #tabbar .proof-start {
+  #tabbar .proof-start {
     background-color: var(--primary);
     border-radius: 3px;
     box-shadow: 0 3px 0 color-mix(in srgb, var(--primary) 42%, var(--foreground));
   }
 
-  .proof-app #tabbar .proof-start[data-active="true"],
-  .proof-app #tabbar .proof-start:hover {
+  #tabbar .proof-start[data-active="true"],
+  #tabbar .proof-start:hover {
     background-color: color-mix(in srgb, var(--primary) 86%, var(--foreground));
   }
 
-  .proof-app #tabbar [data-slot="tabs-trigger"]:has(+ [data-active="true"])::after,
-  .proof-app #tabbar [data-slot="tabs-trigger"][data-active="true"]::after {
+  #tabbar [data-slot="tabs-trigger"]:has(+ [data-active="true"])::after,
+  #tabbar [data-slot="tabs-trigger"][data-active="true"]::after {
     background-color: var(--primary);
   }
 
@@ -587,8 +587,12 @@
 
   .proof-tabbar {
     padding-right: max(0.375rem, env(safe-area-inset-right));
-    padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
     padding-left: max(0.375rem, env(safe-area-inset-left));
+  }
+
+  .proof-sheet[data-side="bottom"] {
+    padding-bottom: max(calc(var(--spacing) * 5), env(safe-area-inset-bottom));
   }
 }
 

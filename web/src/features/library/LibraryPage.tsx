@@ -11,6 +11,7 @@ import { AddToRoutine } from "@/features/exercises/ExercisePickerSheet";
 import { CustomExerciseForm } from "@/features/exercises/CustomExerciseSheet";
 import { ExConfigSheet } from "@/features/exercises/ConfigSheet";
 import Icon from "@/shared/components/Icon";
+import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { Button } from "@/shared/ui/button";
 import {
   AlertDialog,
@@ -202,7 +203,7 @@ export default function Library() {
           ))}
         </div>
       )}
-      <div className="flex flex-col gap-2">
+      <SpaceBetween size="xs">
         <button
           type="button"
           className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2 text-left transition-colors duration-140 active:bg-muted"
@@ -301,15 +302,12 @@ export default function Library() {
             {t("exercise.noMatch", "No match")}
           </div>
         )}
-      </div>
-      {visibleExercises.length > visibleCount && (
-        <>
-          <div className="h-2.5" />
+        {visibleExercises.length > visibleCount && (
           <Button className="w-full" onClick={() => setVisibleCount((count) => count + 40)}>
             {t("exercise.showMore", "Show more")}
           </Button>
-        </>
-      )}
+        )}
+      </SpaceBetween>
       <LibrarySheetOverlay
         sheet={sheet}
         setSheet={setSheet}

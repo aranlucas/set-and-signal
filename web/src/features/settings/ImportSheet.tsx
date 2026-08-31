@@ -7,6 +7,8 @@ import { mergeImport } from "@/features/settings/import-csv";
 import type { ParseResult } from "@/features/settings/import-csv";
 import type { SheetClose } from "@/shared/lib/types";
 import { Button } from "@/shared/ui/button";
+import { Grid } from "@/shared/components/Grid";
+import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { updateAppState } from "@/features/exercises/sheet-shared";
 
 type ParsedOk = Exclude<ParseResult, { error: string }>;
@@ -46,7 +48,7 @@ export function ImportSummary({ parsed, close }: { parsed: ParsedOk; close: Shee
             : fmtDate(t, parsed.from, true) + " – " + fmtDate(t, parsed.to, true)
           : ""}
       </div>
-      <div className="mb-3 grid grid-cols-2 gap-2.5 text-left">
+      <Grid columns={2} className="mb-3 text-left">
         {isBW ? (
           <>
             <div className="rounded-lg bg-card p-3.5">
@@ -102,7 +104,7 @@ export function ImportSummary({ parsed, close }: { parsed: ParsedOk; close: Shee
             </div>
           </>
         )}
-      </div>
+      </Grid>
       {mixedUnits ? (
         <div className="mb-2.5 text-sm leading-snug text-warning">
           {t(
@@ -186,15 +188,16 @@ export function ImportSummary({ parsed, close }: { parsed: ParsedOk; close: Shee
           </div>
         </>
       )}
-      <Button className="w-full" variant="default" onClick={doImport} disabled={!fresh}>
-        {fresh
-          ? t("common.import", "Import")
-          : t("import.nothingNewImport", "Nothing new to import")}
-      </Button>
-      <div className="h-2" />
-      <Button variant="ghost" className="w-full text-muted-foreground" onClick={close}>
-        {t("common.cancel", "Cancel")}
-      </Button>
+      <SpaceBetween size="xs">
+        <Button className="w-full" variant="default" onClick={doImport} disabled={!fresh}>
+          {fresh
+            ? t("common.import", "Import")
+            : t("import.nothingNewImport", "Nothing new to import")}
+        </Button>
+        <Button variant="ghost" className="w-full text-muted-foreground" onClick={close}>
+          {t("common.cancel", "Cancel")}
+        </Button>
+      </SpaceBetween>
     </>
   );
 }

@@ -17,6 +17,8 @@ import { toast } from "@/shared/lib/toast";
 import { Button } from "@/shared/ui/button";
 import { Field } from "@/shared/ui/field";
 import Icon from "@/shared/components/Icon";
+import { SpaceBetween } from "@/shared/components/SpaceBetween";
+import { Grid } from "@/shared/components/Grid";
 import BodyMap from "@/shared/components/BodyMap";
 import { PlateRow } from "@/shared/components/PlateRow";
 import { Textarea } from "@/shared/ui/textarea";
@@ -187,32 +189,33 @@ export function WorkoutComplete({ close, onFinish }: { close: SheetClose; onFini
           "Every exercise done — great work. Finish up, or keep going and add another exercise.",
         )}
       </div>
-      <Button
-        className="w-full"
-        variant="default"
-        onClick={async () => {
-          await close();
-          onFinish();
-        }}
-      >
-        <Icon name="flag" />
-        {t("workout.completion.finishWorkout", "Finish workout")}
-      </Button>
-      <div className="h-2" />
-      <Button
-        className="w-full"
-        onClick={async () => {
-          await close();
-          toast(
-            t(
-              "workout.completion.keepGoingTapAddExercise",
-              "Keep going — tap “+ Add exercise” below",
-            ),
-          );
-        }}
-      >
-        {t("workout.completion.continueWorkout", "Continue workout")}
-      </Button>
+      <SpaceBetween size="xs">
+        <Button
+          className="w-full"
+          variant="default"
+          onClick={async () => {
+            await close();
+            onFinish();
+          }}
+        >
+          <Icon name="flag" />
+          {t("workout.completion.finishWorkout", "Finish workout")}
+        </Button>
+        <Button
+          className="w-full"
+          onClick={async () => {
+            await close();
+            toast(
+              t(
+                "workout.completion.keepGoingTapAddExercise",
+                "Keep going — tap “+ Add exercise” below",
+              ),
+            );
+          }}
+        >
+          {t("workout.completion.continueWorkout", "Continue workout")}
+        </Button>
+      </SpaceBetween>
     </div>
   );
 }
@@ -258,7 +261,7 @@ export function FinishSummary({
       <h3 className="my-2 text-xl font-semibold">
         {t("workout.completion.workoutComplete", "Workout complete!")}
       </h3>
-      <div className="mb-3 grid grid-cols-2 gap-2.5 text-left">
+      <Grid columns={2} className="mb-3 text-left">
         <div className="rounded-lg bg-card p-3.5">
           <div className="text-sm tracking-tight text-foreground/60">
             {t("workout.completion.duration", "Duration")}
@@ -291,7 +294,7 @@ export function FinishSummary({
             {prs.length || "—"}
           </div>
         </div>
-      </div>
+      </Grid>
       {(prs.length > 0 || e1prs.length > 0) && (
         <div className="mb-3 text-left">
           {prs.map((id) => (
@@ -332,9 +335,8 @@ export function FinishSummary({
         {t("muscleMap.whatJustTrained", "What you just trained")}
       </h4>
       <BodyMap load={loadOfWorkouts([workout])} body={appState.body} />
-      <div className="h-3.5" />
       <Button
-        className="w-full"
+        className="mt-4 w-full"
         variant="default"
         onClick={async () => {
           await close();

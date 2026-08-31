@@ -16,6 +16,7 @@ import { ExercisePicker } from "@/features/exercises/ExercisePickerSheet";
 import { ExConfigSheet } from "@/features/exercises/ConfigSheet";
 import { CustomExerciseForm } from "@/features/exercises/CustomExerciseSheet";
 import Icon from "@/shared/components/Icon";
+import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { glyphOf } from "@/domain/exercises/glyphs";
 import { Button } from "@/shared/ui/button";
 import {
@@ -225,60 +226,61 @@ export default function RoutineEdit() {
           "Tap the link button on an exercise to superset it with the one above — you’ll do them back-to-back.",
         )}
       </div>
-      <Button
-        className="w-full"
-        variant="default"
-        onClick={() =>
-          setSheet({
-            kind: "picker",
-            onPick: (ex) =>
-              setSheet({
-                kind: "config",
-                exercise: ex,
-                existing: null,
-                onSave: (cfg) =>
-                  edit((x) => {
-                    x.push({ ...cfg, id: ex.id });
-                  }),
-                onDelete: null,
-                routine,
-              }),
-          })
-        }
-      >
-        <Icon name="plus" />
-        {t("exercise.addExercise", "Add exercise")}
-      </Button>
-      <div className="h-2.5" />
-      <Button
-        className="w-full"
-        variant="destructive"
-        onClick={() =>
-          setConfirmation({
-            title: t("routine.deleteRoutine", "Delete routine?"),
-            message: t(
-              "routine.exercisesWillRemoved",
-              "“{{routine}}” and its exercises will be removed.",
-              { routine: routine.name },
-            ),
-            onConfirm: () => {
-              update((s) => {
-                s.routines = s.routines.filter((x) => x.id !== id);
-                Object.keys(s.week).forEach((weekdayKey) => {
-                  const weekday = weekdayFromNumber(Number(weekdayKey));
-                  if (weekday != null && s.week[weekday] === id) delete s.week[weekday];
+      <SpaceBetween size="xs">
+        <Button
+          className="w-full"
+          variant="default"
+          onClick={() =>
+            setSheet({
+              kind: "picker",
+              onPick: (ex) =>
+                setSheet({
+                  kind: "config",
+                  exercise: ex,
+                  existing: null,
+                  onSave: (cfg) =>
+                    edit((x) => {
+                      x.push({ ...cfg, id: ex.id });
+                    }),
+                  onDelete: null,
+                  routine,
+                }),
+            })
+          }
+        >
+          <Icon name="plus" />
+          {t("exercise.addExercise", "Add exercise")}
+        </Button>
+        <Button
+          className="w-full"
+          variant="destructive"
+          onClick={() =>
+            setConfirmation({
+              title: t("routine.deleteRoutine", "Delete routine?"),
+              message: t(
+                "routine.exercisesWillRemoved",
+                "“{{routine}}” and its exercises will be removed.",
+                { routine: routine.name },
+              ),
+              onConfirm: () => {
+                update((s) => {
+                  s.routines = s.routines.filter((x) => x.id !== id);
+                  Object.keys(s.week).forEach((weekdayKey) => {
+                    const weekday = weekdayFromNumber(Number(weekdayKey));
+                    if (weekday != null && s.week[weekday] === id) delete s.week[weekday];
+                  });
+                  Object.keys(s.dayPlan).forEach((k) => {
+                    if (s.dayPlan[k] === id) delete s.dayPlan[k];
+                  });
                 });
-                Object.keys(s.dayPlan).forEach((k) => {
-                  if (s.dayPlan[k] === id) delete s.dayPlan[k];
-                });
-              });
-              void nav({ to: "/plan" });
-            },
-          })
-        }
-      >
-        {t("routine.deleteRoutineLabel", "Delete routine")}
-      </Button>
+                void nav({ to: "/plan" });
+              },
+            })
+          }
+        >
+          {t("routine.deleteRoutineLabel", "Delete routine")}
+        </Button>
+      </SpaceBetween>
       <RoutineSheet
         sheet={sheet}
         setSheet={setSheet}

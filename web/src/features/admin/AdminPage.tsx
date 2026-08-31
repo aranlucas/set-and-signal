@@ -7,6 +7,7 @@ import { api, apiParsed } from "@/shared/lib/api";
 import { fmtDate, fmtDur, fmtVol } from "@/shared/lib/format";
 import { workoutVolume, setsDone } from "@/domain/training/history";
 import Icon from "@/shared/components/Icon";
+import { Grid } from "@/shared/components/Grid";
 import { Button } from "@/shared/ui/button";
 import { toast } from "@/shared/lib/toast";
 import {
@@ -112,7 +113,7 @@ function UserDetail({
           joined {userRecord.created ? fmtDate(t, userRecord.created.slice(0, 10)) : "—"}
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-2.5 text-left">
+      <Grid columns={2} className="text-left">
         <div className="rounded-lg bg-card p-3.5">
           <div className="flex items-center gap-1.5 text-sm text-foreground/60">Workouts</div>
           <div className="mt-1 text-lg leading-tight font-semibold tracking-tight">
@@ -137,7 +138,7 @@ function UserDetail({
             {formatRelativeTime(details.lastSync)}
           </div>
         </div>
-      </div>
+      </Grid>
       {!userRecord.admin && (
         <Button
           variant={userRecord.disabled ? "default" : "destructive"}
@@ -352,7 +353,7 @@ function AdminContent() {
         </div>
       )}
 
-      <div className="mb-3 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+      <Grid columns={{ default: 2, lg: 4 }} className="mb-3">
         <div className="rounded-lg bg-card p-3.5">
           <div className="flex items-center gap-1.5 text-sm text-foreground/60">Users</div>
           <div className="mt-1 text-3xl leading-tight font-semibold tracking-tight">
@@ -379,7 +380,7 @@ function AdminContent() {
             {users ? disabledCount : "—"}
           </div>
         </div>
-      </div>
+      </Grid>
 
       {liveUsers.length > 0 && (
         <div className="mb-3 rounded-lg border border-primary bg-card p-4">
@@ -414,7 +415,7 @@ function AdminContent() {
       <h4 className="mt-5.5 mb-2 px-1 text-sm font-normal tracking-tight text-foreground/60">
         Users
       </h4>
-      <div className="flex flex-col gap-2 lg:grid lg:grid-cols-2">
+      <Grid columns={{ default: 1, lg: 2 }} gap="xs">
         {userList.map((userRecord) => (
           <button
             type="button"
@@ -464,7 +465,7 @@ function AdminContent() {
             No users yet.
           </div>
         )}
-      </div>
+      </Grid>
       <Sheet
         open={detailUserId !== null}
         onOpenChange={(open) => {

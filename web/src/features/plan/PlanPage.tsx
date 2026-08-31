@@ -7,6 +7,7 @@ import { useDateLabels } from "@/shared/hooks/use-date-labels";
 import { CuratedPlans } from "@/features/plan/CuratedPlanSheet";
 import { DayAssign, PlanImport, PlanTools, type ParsedBundle } from "@/features/plan/PlansSheet";
 import Icon from "@/shared/components/Icon";
+import { Grid } from "@/shared/components/Grid";
 import { Button } from "@/shared/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 import { glyphOf, DEFAULT_GLYPH } from "@/domain/exercises/glyphs";
@@ -110,7 +111,7 @@ export default function Plan() {
             </Button>
           </div>
           {state.routines.length > 0 ? (
-            <div className="flex flex-col gap-2 lg:grid lg:grid-cols-2">
+            <Grid columns={{ default: 1, lg: 2 }} gap="xs">
               {state.routines.map((routine) => (
                 <button
                   type="button"
@@ -132,7 +133,7 @@ export default function Plan() {
                   <Icon name="chevronRight" className="flex-none text-base text-foreground" />
                 </button>
               ))}
-            </div>
+            </Grid>
           ) : (
             <>
               <div className="px-5 py-11 text-center text-base leading-normal text-foreground/60">
