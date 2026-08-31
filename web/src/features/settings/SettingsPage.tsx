@@ -33,6 +33,7 @@ import { cn } from "@/shared/lib/utils";
 import { Segmented } from "@/shared/components/Segmented";
 import { Stepper } from "@/shared/components/Stepper";
 import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -698,14 +699,14 @@ function SettingsData({
           }
         />
       </Section>
-      <input
+      <Input
         ref={fileRef}
         type="file"
         accept=".json,application/json"
         className="hidden"
         onChange={doImport}
       />
-      <input
+      <Input
         ref={importRef}
         type="file"
         accept=".csv,.xml,text/csv,text/xml"
@@ -1022,9 +1023,9 @@ function MobileReminderCard({ appState, update, notify }: CardProps) {
           iconTint="var(--system-purple)"
           title={t("settings.reminderTime", "Reminder time")}
         >
-          <input
+          <Input
             aria-label={t("settings.reminderTime", "Reminder time")}
-            className="rounded-lg border-0 bg-muted px-2.5 py-1.5 text-base text-foreground tabular-nums outline-none"
+            className="w-auto rounded-lg border-0 bg-muted px-2.5 py-1.5 text-base text-foreground tabular-nums outline-none"
             value={appState.reminder?.time || DEF.reminder.time}
             onChange={(e) => setReminder({ time: e.target.value })}
           />
@@ -1149,9 +1150,9 @@ function PushCard({ appState, update, notify }: CardProps) {
             iconTint="var(--system-purple)"
             title={t("settings.reminderTime", "Reminder time")}
           >
-            <input
+            <Input
               aria-label={t("settings.reminderTime", "Reminder time")}
-              className="rounded-lg border-0 bg-muted px-2.5 py-1.5 text-base text-foreground tabular-nums outline-none"
+              className="w-auto rounded-lg border-0 bg-muted px-2.5 py-1.5 text-base text-foreground tabular-nums outline-none"
               value={appState.reminder?.time || DEF.reminder.time}
               onChange={(event) =>
                 update((state) => {

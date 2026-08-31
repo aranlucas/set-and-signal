@@ -11,6 +11,7 @@ import { effectiveRoutineId } from "@/domain/training/history";
 import { toast } from "@/shared/lib/toast";
 import { Button } from "@/shared/ui/button";
 import { Field } from "@/shared/ui/field";
+import { Input } from "@/shared/ui/input";
 import { Switch } from "@/shared/ui/switch";
 import Icon from "@/shared/components/Icon";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
@@ -148,7 +149,7 @@ export function PlanTools({
         <Icon name="folder" />
         {t("sharing.importPlanFile", "Import a plan file")}
       </Button>
-      <input ref={fileRef} type="file" accept="application/json,.json" onChange={pickFile} hidden />
+      <Input ref={fileRef} type="file" accept="application/json,.json" onChange={pickFile} hidden />
     </>
   );
 }

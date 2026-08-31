@@ -6,10 +6,23 @@ interface JsxOpeningElement {
 }
 
 interface RuleContext {
-  report(descriptor: { node: JsxOpeningElement["name"]; messageId: string }): void;
+  filename?: string;
+  getFilename?(): string;
+  report(descriptor: {
+    node: JsxOpeningElement["name"];
+    messageId: string;
+    data?: Record<string, string>;
+  }): void;
 }
 
-export const noNativeButton: {
+interface ComponentReplacement {
+  component: string;
+  module: string;
+}
+
+export const componentsByElement: Readonly<Record<string, ComponentReplacement>>;
+
+export const preferComponents: {
   create(context: RuleContext): {
     JSXOpeningElement(node: JsxOpeningElement): void;
   };
@@ -17,7 +30,7 @@ export const noNativeButton: {
 
 declare const plugin: {
   meta: { name: string };
-  rules: { "no-native-button": typeof noNativeButton };
+  rules: { "prefer-components": typeof preferComponents };
 };
 
 export default plugin;

@@ -6,6 +6,7 @@ import { valibotResolver } from "@hookform/resolvers/valibot";
 import Icon from "@/shared/components/Icon";
 import { NumberField } from "@/shared/components/NumField";
 import { Button } from "@/shared/ui/button";
+import { Label } from "@/shared/ui/label";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 import { todayISO } from "@/shared/lib/format";
 import { createStartingStrengthFormSchema } from "@/shared/lib/form-schemas";
@@ -316,10 +317,10 @@ export default function HomeStrengthSetupSheet() {
 
                 <div className="overflow-hidden rounded-xl bg-card">
                   {liftRows.map((lift, index) => (
-                    <label
+                    <Label
                       key={lift.id}
                       className={cn(
-                        "flex min-h-15 items-center gap-3 px-4 py-2",
+                        "min-h-15 px-4 py-2 leading-normal",
                         index > 0 && "border-t border-border/60",
                       )}
                     >
@@ -346,7 +347,7 @@ export default function HomeStrengthSetupSheet() {
                         />
                         <span className="text-sm font-medium text-foreground/60">{unit}</span>
                       </span>
-                    </label>
+                    </Label>
                   ))}
                 </div>
                 <p className="mt-3 flex gap-2 text-sm leading-snug text-foreground/60">

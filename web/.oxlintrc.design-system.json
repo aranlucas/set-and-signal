@@ -9,7 +9,7 @@
     "perf": "off"
   },
   "rules": {
-    "design-system/no-native-button": "error"
+    "design-system/prefer-components": "error"
   },
   "ignorePatterns": ["dist/**", "node_modules/**"]
 }
