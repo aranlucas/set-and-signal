@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { useStore } from "@/app/store/useStore";
@@ -8,9 +8,11 @@ import { CuratedPlans } from "@/features/plan/CuratedPlanSheet";
 import { DayAssign, PlanImport, PlanTools, type ParsedBundle } from "@/features/plan/PlansSheet";
 import Icon from "@/shared/components/Icon";
 import { Grid } from "@/shared/components/Grid";
+import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { Button } from "@/shared/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 import { glyphOf, DEFAULT_GLYPH } from "@/domain/exercises/glyphs";
+import { cn } from "@/shared/lib/utils";
 import type { SheetClose, Weekday } from "@/shared/lib/types";
 
 type PlanSheet =
@@ -18,6 +20,25 @@ type PlanSheet =
   | { kind: "import"; bundle: ParsedBundle }
   | { kind: "assign"; day: Weekday }
   | { kind: "curated" };
+
+function PlanSectionHeader({
+  children,
+  action,
+  className,
+}: {
+  children: ReactNode;
+  action?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("mb-2 flex min-h-9 items-center justify-between gap-3 px-1", className)}>
+      <h2 className="m-0 font-sans text-sm leading-none font-medium tracking-tight text-foreground/60">
+        {children}
+      </h2>
+      {action}
+    </div>
+  );
+}
 
 export default function Plan() {
   const { t } = useTranslation();
@@ -64,12 +85,10 @@ export default function Plan() {
           <Icon name="upload" />
         </button>
       </div>
-      <div className="block lg:grid lg:grid-cols-2 lg:items-start lg:gap-3.5 [&>*]:min-w-0">
+      <Grid columns={{ default: 1, lg: 2 }} gap="s" alignItems="start">
         <div>
-          <h2 className="mt-6 mb-2 px-1 font-sans text-sm leading-none font-medium tracking-tight text-foreground/60">
-            {t("plan.weekSchedule", "Week schedule")}
-          </h2>
-          <div className="flex flex-col gap-2">
+          <PlanSectionHeader>{t("plan.weekSchedule", "Week schedule")}</PlanSectionHeader>
+          <SpaceBetween size="xs">
             {([1, 2, 3, 4, 5, 6, 0] as Weekday[]).map((d) => {
               const routine = state.routines.find((candidate) => candidate.id === state.week[d]);
               return (
@@ -98,20 +117,22 @@ export default function Plan() {
                 </button>
               );
             })}
-          </div>
+          </SpaceBetween>
         </div>
         <div>
-          <div className="mt-6 mb-2 flex min-h-8 items-center justify-between gap-3 px-1">
-            <h2 className="m-0 font-sans text-sm leading-none font-medium tracking-tight text-foreground/60">
-              {t("plan.routines", "Routines")}
-            </h2>
-            <Button size="xs" variant="secondary" onClick={addRoutine}>
-              <Icon name="plus" />
-              {t("common.new", "New")}
-            </Button>
-          </div>
+          <PlanSectionHeader
+            className="mt-6 lg:mt-0"
+            action={
+              <Button size="xs" variant="secondary" onClick={addRoutine}>
+                <Icon name="plus" />
+                {t("common.new", "New")}
+              </Button>
+            }
+          >
+            {t("plan.routines", "Routines")}
+          </PlanSectionHeader>
           {state.routines.length > 0 ? (
-            <Grid columns={{ default: 1, lg: 2 }} gap="xs">
+            <SpaceBetween size="xs">
               {state.routines.map((routine) => (
                 <button
                   type="button"
@@ -133,7 +154,7 @@ export default function Plan() {
                   <Icon name="chevronRight" className="flex-none text-base text-foreground" />
                 </button>
               ))}
-            </Grid>
+            </SpaceBetween>
           ) : (
             <>
               <div className="px-5 py-11 text-center text-base leading-normal text-foreground/60">
@@ -151,7 +172,7 @@ export default function Plan() {
             </>
           )}
         </div>
-      </div>
+      </Grid>
       <Sheet open={sheet !== null} onOpenChange={(open) => !open && setSheet(null)}>
         <SheetContent
           side="bottom"
