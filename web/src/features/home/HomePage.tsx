@@ -37,6 +37,7 @@ import { cn } from "@/shared/lib/utils";
 import BrandMark from "@/shared/components/BrandMark";
 import { useMeasurementFields } from "@/shared/hooks/use-measurement-fields";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
+import { PageHeader, PageTitle } from "@/shared/components/layout";
 
 // Home = what to do now + a quick glance. Deep charts & history live in Stats.
 export default function Home() {
@@ -106,8 +107,8 @@ export default function Home() {
   };
 
   return (
-    <div className="proof-page mx-auto w-full max-w-xl md:max-w-none">
-      <HomeHeader today={today} user={user} onSettings={() => nav({ to: "/settings" })} />
+    <div className="mx-auto w-full max-w-xl min-w-0 md:max-w-none">
+      <HomeHeader user={user} onSettings={() => nav({ to: "/settings" })} />
       <SpaceBetween
         size="m"
         responsiveSize={{ lg: "l" }}
@@ -116,6 +117,7 @@ export default function Home() {
         <HomeSchedule
           state={state}
           user={user}
+          today={today}
           routine={routine}
           monday={monday}
           wkLabel={wkLabel}
@@ -130,7 +132,7 @@ export default function Home() {
           onNextWeek={() => setWeekOffset((week) => week + 1)}
           routineMinutes={routineMinutes}
         />
-        <div className="min-w-0 lg:h-full">
+        <SpaceBetween size="s" className="min-w-0">
           {state.routines.length === 0 && !state.active && (
             <HomeWelcome
               onStart={() => void nav({ to: "/home/get-started", resetScroll: false })}
@@ -155,52 +157,38 @@ export default function Home() {
             onCalendar={() => void nav({ to: "/home/calendar", resetScroll: false })}
             onStats={() => nav({ to: "/stats" })}
           />
-        </div>
+        </SpaceBetween>
       </SpaceBetween>
       <Outlet />
     </div>
   );
 }
 
-function HomeHeader({
-  today,
-  user,
-  onSettings,
-}: {
-  today: Date;
-  user: User | null;
-  onSettings: () => void;
-}) {
+function HomeHeader({ user, onSettings }: { user: User | null; onSettings: () => void }) {
   const { t } = useTranslation();
   return (
-    <div className="proof-header mt-2 mb-4 flex items-end justify-between gap-3 lg:mt-0 lg:mb-6">
+    <PageHeader className="mb-4 lg:mt-0 lg:mb-6">
       <div>
-        <h1 className="proof-wordmark flex items-center gap-2.5 text-4xl leading-none font-bold tracking-tight">
+        <PageTitle className="flex items-center gap-2.5">
           <BrandMark className="size-9 text-primary" />
           <span>{user ? t("home.hi", "Hi {{name}}", { name: user.name }) : "Set & Signal"}</span>
-        </h1>
-        <div className="mt-1 text-base tracking-tight text-foreground/60">
-          {formatDate(t, today, {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-          })}
-        </div>
+        </PageTitle>
       </div>
       <button
-        className="proof-stamp flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
+        className="flex size-9 flex-none items-center justify-center rounded-full border border-border bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
         onClick={onSettings}
         aria-label={t("navigation.settings", "Settings")}
       >
         <Icon name="gear" />
       </button>
-    </div>
+    </PageHeader>
   );
 }
 
 type HomeScheduleProps = {
   state: AppState;
   user: User | null;
+  today: Date;
   routine: Routine | null;
   monday: Date;
   wkLabel: string;
@@ -217,6 +205,7 @@ type HomeScheduleProps = {
 function HomeSchedule({
   state,
   user,
+  today,
   routine,
   monday,
   wkLabel,
@@ -231,85 +220,91 @@ function HomeSchedule({
 }: HomeScheduleProps) {
   const { t } = useTranslation();
   return (
-    <section
-      className="proof-signature proof-signature--primary overflow-hidden rounded-xl bg-card lg:flex lg:h-full lg:flex-col"
-      data-proof="01 / session"
-    >
-      <div className="flex items-center justify-between gap-3 px-4 pt-3">
-        <button
-          className="flex size-8 flex-none items-center justify-center rounded-full text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
-          onClick={onPreviousWeek}
-          aria-label={t("home.previousWeek", "Previous week")}
-        >
-          <Icon name="chevronLeft" />
-        </button>
-        <div className="text-sm leading-snug font-medium text-foreground/60">{wkLabel}</div>
-        <button
-          className="flex size-8 flex-none items-center justify-center rounded-full text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
-          onClick={onNextWeek}
-          aria-label={t("home.nextWeek", "Next week")}
-        >
-          <Icon name="chevronRight" />
-        </button>
-      </div>
-      <div className="px-2 pb-2">
-        <WeekCalendar
-          weekStart={monday}
-          dayStatuses={dayStatuses}
-          onSelect={(date) => onDaySelect(isoOf(date))}
-        />
-      </div>
+    <section className="overflow-hidden rounded-xl border border-border bg-card lg:flex lg:h-full lg:flex-col">
+      <SpaceBetween size="xs">
+        <div className="flex items-center justify-between gap-3 px-4 pt-3">
+          <button
+            className="flex size-8 flex-none items-center justify-center rounded-full text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
+            onClick={onPreviousWeek}
+            aria-label={t("home.previousWeek", "Previous week")}
+          >
+            <Icon name="chevronLeft" />
+          </button>
+          <div className="text-sm leading-snug font-medium text-foreground/60">{wkLabel}</div>
+          <button
+            className="flex size-8 flex-none items-center justify-center rounded-full text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
+            onClick={onNextWeek}
+            aria-label={t("home.nextWeek", "Next week")}
+          >
+            <Icon name="chevronRight" />
+          </button>
+        </div>
+        <div className="px-2 pb-2">
+          <WeekCalendar
+            weekStart={monday}
+            dayStatuses={dayStatuses}
+            onSelect={(date) => onDaySelect(isoOf(date))}
+          />
+        </div>
+      </SpaceBetween>
 
       <div className="border-t border-border/60 p-4 lg:flex lg:flex-1 lg:flex-col">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h2 className="text-2xl leading-tight font-semibold tracking-tight capitalize sm:text-3xl">
+        <div>
+          <div className="mb-1 text-xs font-medium tracking-wide text-foreground/60">
+            {formatDate(t, today, {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+            })}
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="min-w-0 text-2xl leading-tight font-semibold tracking-tight capitalize sm:text-3xl">
               {state.active
                 ? state.active.name
                 : routine
                   ? routine.name
                   : t("home.recoveryDay", "Recovery day")}
             </h2>
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground/60">
-              {state.active ? (
-                <span className="flex items-center gap-1.5 text-active">
-                  <Icon name="timer" />
-                  {t("home.workoutProgress", "Workout in progress")}
-                </span>
-              ) : routine ? (
-                <>
-                  <span className="flex items-center gap-1.5">
-                    <Icon name="clock" />
-                    {t("home.aboutMin", "About {{minutes}} min", { minutes: routineMinutes })}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Icon name="dumbbell" />
-                    {exCount(t, routine.ex.length)}
-                  </span>
-                  {todayOvr && (
-                    <span className="text-active">
-                      {t("calendar.status.rescheduled", "Rescheduled")}
-                    </span>
-                  )}
-                </>
-              ) : (
-                <span>
-                  {t(
-                    "home.recoverAddLightSessionFeel",
-                    "Recover, or add a light session if you feel ready.",
-                  )}
-                </span>
+            <span
+              className={cn(
+                "flex size-11 flex-none items-center justify-center rounded-lg bg-muted text-2xl text-primary",
+                state.active && "bg-orange-500/15 text-active",
               )}
-            </div>
+            >
+              <Icon name={state.active ? "timer" : routine ? glyphOf(routine.emoji) : "moon"} />
+            </span>
           </div>
-          <span
-            className={cn(
-              "flex size-11 flex-none items-center justify-center rounded-lg bg-muted text-2xl text-primary",
-              state.active && "bg-orange-500/15 text-active",
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground/60">
+            {state.active ? (
+              <span className="flex items-center gap-1.5 text-active">
+                <Icon name="timer" />
+                {t("home.workoutProgress", "Workout in progress")}
+              </span>
+            ) : routine ? (
+              <>
+                <span className="flex items-center gap-1.5">
+                  <Icon name="clock" />
+                  {t("home.aboutMin", "About {{minutes}} min", { minutes: routineMinutes })}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Icon name="dumbbell" />
+                  {exCount(t, routine.ex.length)}
+                </span>
+                {todayOvr && (
+                  <span className="text-active sm:ml-auto">
+                    {t("calendar.status.rescheduled", "Rescheduled")}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span>
+                {t(
+                  "home.recoverAddLightSessionFeel",
+                  "Recover, or add a light session if you feel ready.",
+                )}
+              </span>
             )}
-          >
-            <Icon name={state.active ? "timer" : routine ? glyphOf(routine.emoji) : "moon"} />
-          </span>
+          </div>
         </div>
 
         <SpaceBetween
@@ -317,7 +312,7 @@ function HomeSchedule({
           size="xs"
           className="mt-4 flex-nowrap lg:mt-auto lg:pt-6"
         >
-          <Button className="proof-action flex-1" onClick={onToday}>
+          <Button className="flex-1" onClick={onToday}>
             <Icon name={state.active ? "play" : routine ? "play" : "plus"} />
             {state.active
               ? t("home.resumeWorkout", "Resume workout")
@@ -364,7 +359,7 @@ function HomeWelcome({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="proof-signature mb-3 rounded-lg bg-card p-4" data-proof="00 / first proof">
+    <div className="rounded-lg border border-border bg-card p-4">
       <div className="mb-1.5 flex items-center gap-3">
         <span className="flex size-7 flex-none items-center justify-center rounded-sm bg-primary text-lg text-white">
           <Icon name="sparkles" />
@@ -458,14 +453,8 @@ function HomeInsights({
     : 0;
 
   return (
-    <section
-      className="proof-signature proof-signature--insights overflow-hidden rounded-xl bg-card lg:h-full"
-      data-proof="record"
-    >
-      <div
-        className="proof-record-block proof-record-block--recovery border-b border-border/60 p-4"
-        data-proof-label="02 / recovery"
-      >
+    <section className="overflow-hidden rounded-xl border border-border bg-card lg:flex-1">
+      <div className="border-b border-border/60 bg-muted/30 p-4">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold tracking-tight">
@@ -493,7 +482,7 @@ function HomeInsights({
               </span>
               <span className="h-1.5 flex-1 overflow-hidden rounded-sm bg-muted">
                 <span
-                  className="proof-progress block h-full rounded-sm bg-primary transition-all duration-200 ease-out"
+                  className="block h-full rounded-sm bg-system-blue transition-all duration-200 ease-out"
                   style={{ width: `${item.recovery}%` }}
                 />
               </span>
@@ -507,8 +496,7 @@ function HomeInsights({
 
       <button
         type="button"
-        className="proof-record-block proof-record-block--week block w-full border-b border-border/60 p-4 text-left transition-colors hover:bg-muted/50 active:bg-muted"
-        data-proof-label="03 / weekly record"
+        className="block w-full border-b border-border/60 bg-muted/30 p-4 text-left transition-colors hover:bg-muted/50 active:bg-muted"
         onClick={onCalendar}
       >
         <div className="flex items-start justify-between gap-3">
@@ -526,11 +514,11 @@ function HomeInsights({
             </p>
           </div>
           <div className="text-right">
-            <div className="text-lg font-semibold text-primary tabular-nums">
+            <div className="text-lg font-semibold text-system-blue tabular-nums">
               {plannedPerWeek ? `${adherence}%` : t("navigation.plan", "Plan")}
             </div>
             <div className="mt-1 flex items-center justify-end gap-1 text-sm text-foreground/60">
-              <Icon name="flame" className="text-primary" />
+              <Icon name="flame" className="text-system-blue" />
               {t("home.weekStreak", "{{count}} week streak", { count: streakWeeks(state) })}
             </div>
           </div>
@@ -566,7 +554,7 @@ function HomeInsights({
       {progress && (
         <button
           type="button"
-          className="proof-record-block flex w-full items-center gap-3 border-b border-border/60 p-4 text-left transition-colors hover:bg-muted/50 active:bg-muted"
+          className="flex w-full items-center gap-3 border-b border-border/60 p-4 text-left transition-colors hover:bg-muted/50 active:bg-muted"
           onClick={onStats}
         >
           <div className="min-w-0">
@@ -579,7 +567,7 @@ function HomeInsights({
             <div className="mt-0.5 text-sm">
               <span
                 className={cn(
-                  "font-medium text-primary",
+                  "font-medium text-system-blue",
                   progress.delta !== null && progress.delta < 0 && "text-destructive",
                 )}
               >
@@ -602,8 +590,8 @@ function HomeInsights({
         </button>
       )}
 
-      <div className="proof-record-block flex flex-wrap items-center gap-3 p-4">
-        <span className="flex size-10 flex-none items-center justify-center rounded-lg bg-muted text-xl text-primary">
+      <div className="flex flex-wrap items-center gap-3 p-4">
+        <span className="flex size-10 flex-none items-center justify-center rounded-lg bg-muted text-xl text-system-blue">
           <Icon name="scale" />
         </span>
         <div className="min-w-32 flex-1">
@@ -653,7 +641,7 @@ function HomeInsights({
       {measures && (
         <button
           type="button"
-          className="proof-record-block flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border/60 px-4 py-3 text-left transition-colors hover:bg-muted/50 active:bg-muted"
+          className="flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border/60 px-4 py-3 text-left transition-colors hover:bg-muted/50 active:bg-muted"
           onClick={onMeasures}
         >
           <span className="inline-flex items-center gap-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
@@ -674,7 +662,7 @@ function HomeInsights({
                     <span
                       className={cn(
                         "text-xs font-medium",
-                        delta > 0 ? "text-primary" : "text-sky-400",
+                        delta > 0 ? "text-system-blue" : "text-sky-400",
                       )}
                     >
                       {delta > 0 ? "+" : "−"}

@@ -4,6 +4,7 @@ import { getConfig, webauthnOK, passkeyLogin, BIO } from "@/shared/lib/api";
 import { DEMO, REPO } from "@/shared/lib/demo";
 import { lazy, Suspense, useEffect, useState } from "react";
 import Icon from "@/shared/components/Icon";
+import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { Button } from "@/shared/ui/button";
 import { toast } from "@/shared/lib/toast";
 import BrandMark from "@/shared/components/BrandMark";
@@ -50,7 +51,7 @@ export default function Login() {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-160 flex-col justify-center text-center">
         <BrandMark className="mx-auto size-18 text-primary" />
-        <h1 className="proof-wordmark mt-3 mb-1 text-4xl font-semibold tracking-tight">
+        <h1 className="mt-3 mb-1 font-heading text-4xl font-semibold tracking-tight">
           Set &amp; Signal
         </h1>
         <div className="mb-7.5 text-foreground/60">
@@ -79,7 +80,7 @@ export default function Login() {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-160 flex-col justify-center text-center">
       <BrandMark className="mx-auto size-18 text-primary" />
-      <h1 className="proof-wordmark mt-3 mb-1 text-4xl font-semibold tracking-tight">
+      <h1 className="mt-3 mb-1 font-heading text-4xl font-semibold tracking-tight">
         Set &amp; Signal
       </h1>
       <div className="mb-8.5 text-foreground/60">
@@ -113,9 +114,9 @@ export default function Login() {
       )}
 
       {webauthnOK() && (
-        <>
+        <SpaceBetween size="s">
           {hasOidc && (
-            <div className="mb-2.5 text-xs tracking-wide text-muted-foreground uppercase">
+            <div className="text-xs tracking-wide text-muted-foreground uppercase">
               {t("account.orPasskey", "Or use a passkey")}
             </div>
           )}
@@ -123,7 +124,6 @@ export default function Login() {
             <Icon name="person" />
             {t("account.signPasskey", "Sign in with passkey")}
           </Button>
-          <div className="h-2.5" />
           <Button
             onClick={() => setRegistrationOpen(true)}
             onPointerEnter={() => void loadRegistrationDialog()}
@@ -132,8 +132,7 @@ export default function Login() {
             <Icon name="sparkles" />
             {t("account.createNewProfile", "Create new profile")}
           </Button>
-          <div className="h-2.5" />
-        </>
+        </SpaceBetween>
       )}
 
       {!hasOidc && !webauthnOK() && (

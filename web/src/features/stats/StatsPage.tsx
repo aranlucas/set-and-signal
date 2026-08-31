@@ -44,6 +44,8 @@ import {
 import { Button } from "@/shared/ui/button";
 import { Segmented } from "@/shared/components/Segmented";
 import { SelectRow } from "@/shared/components/SelectRow";
+import { Grid } from "@/shared/components/Grid";
+import { MetricCard } from "@/shared/components/MetricCard";
 import type { AppState, ExConfig, IsoDate, LoggedSet, Workout } from "@/shared/lib/types";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 
@@ -130,7 +132,7 @@ function StatsHeaderAndActivity({
           <Icon name="history" />
         </button>
       </div>
-      <div className="mb-3 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+      <Grid columns={{ default: 2, lg: 4 }} className="mb-3">
         <StatsTile
           icon="dumbbell"
           label={t("stats.workouts", "Workouts")}
@@ -160,7 +162,7 @@ function StatsHeaderAndActivity({
               : weightDeltaColor(bodyweightDelta, lastBW(appState)?.w || 0, appState.targetW)
           }
         />
-      </div>
+      </Grid>
       <div className="mb-3 rounded-lg bg-card p-4">
         <h2 className="m-0 mb-3 text-sm font-normal tracking-tight text-foreground/60">
           {t("stats.activityLast12Months", "Activity — last 12 months")}{" "}
@@ -193,7 +195,7 @@ function StatsTile({
   valueColor?: string;
 }) {
   return (
-    <div className="rounded-lg bg-card p-3.5">
+    <MetricCard>
       <div className="flex items-center gap-1.5 text-sm text-foreground/60">
         <Icon name={icon} />
         {label}
@@ -204,7 +206,7 @@ function StatsTile({
       >
         {value}
       </div>
-    </div>
+    </MetricCard>
   );
 }
 // Which muscles the training in a window actually hit — and, the point of the card,
@@ -881,7 +883,7 @@ export default function Stats() {
               <Icon name="chevronRight" />
             </Button>
           </div>
-          <div className="flex flex-col gap-2 lg:grid lg:grid-cols-2">
+          <Grid columns={{ default: 1, lg: 2 }} gap="xs">
             {[...appState.workouts]
               .reverse()
               .slice(0, 6)
@@ -892,7 +894,7 @@ export default function Stats() {
                   onClick={() => setActiveSheet({ kind: "workout", workout: w })}
                 />
               ))}
-          </div>
+          </Grid>
         </>
       )}
       <Sheet

@@ -7,6 +7,9 @@ import { mergeImport } from "@/features/settings/import-csv";
 import type { ParseResult } from "@/features/settings/import-csv";
 import type { SheetClose } from "@/shared/lib/types";
 import { Button } from "@/shared/ui/button";
+import { Grid } from "@/shared/components/Grid";
+import { MetricCard } from "@/shared/components/MetricCard";
+import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { updateAppState } from "@/features/exercises/sheet-shared";
 
 type ParsedOk = Exclude<ParseResult, { error: string }>;
@@ -46,63 +49,63 @@ export function ImportSummary({ parsed, close }: { parsed: ParsedOk; close: Shee
             : fmtDate(t, parsed.from, true) + " – " + fmtDate(t, parsed.to, true)
           : ""}
       </div>
-      <div className="mb-3 grid grid-cols-2 gap-2.5 text-left">
+      <Grid columns={2} className="mb-3">
         {isBW ? (
           <>
-            <div className="rounded-lg bg-card p-3.5">
+            <MetricCard>
               <div className="flex items-center gap-1.5 text-sm text-foreground/60">
                 {t("import.weighIns", "Weigh-ins")}
               </div>
               <div className="mt-1.5 text-lg leading-tight font-semibold tracking-tight">
                 {parsed.bodyweight.length}
               </div>
-            </div>
-            <div className="rounded-lg bg-card p-3.5">
+            </MetricCard>
+            <MetricCard>
               <div className="flex items-center gap-1.5 text-sm text-foreground/60">
                 {t("common.new", "New")}
               </div>
               <div className="mt-1.5 text-lg leading-tight font-semibold tracking-tight">
                 {fresh}
               </div>
-            </div>
+            </MetricCard>
           </>
         ) : (
           <>
-            <div className="rounded-lg bg-card p-3.5">
+            <MetricCard>
               <div className="flex items-center gap-1.5 text-sm text-foreground/60">
                 {t("stats.workouts", "Workouts")}
               </div>
               <div className="mt-1.5 text-lg leading-tight font-semibold tracking-tight">
                 {parsed.workouts.length}
               </div>
-            </div>
-            <div className="rounded-lg bg-card p-3.5">
+            </MetricCard>
+            <MetricCard>
               <div className="flex items-center gap-1.5 text-sm text-foreground/60">
                 {t("exercise.sets", "Sets")}
               </div>
               <div className="mt-1.5 text-lg leading-tight font-semibold tracking-tight">
                 {parsed.sets}
               </div>
-            </div>
-            <div className="rounded-lg bg-card p-3.5">
+            </MetricCard>
+            <MetricCard>
               <div className="flex items-center gap-1.5 text-sm text-foreground/60">
                 {t("import.exercisesMatched", "Exercises matched")}
               </div>
               <div className="mt-1.5 text-lg leading-tight font-semibold tracking-tight">
                 {parsed.matched}
               </div>
-            </div>
-            <div className="rounded-lg bg-card p-3.5">
+            </MetricCard>
+            <MetricCard>
               <div className="flex items-center gap-1.5 text-sm text-foreground/60">
                 {t("import.addedOwn", "Added as your own")}
               </div>
               <div className="mt-1.5 text-lg leading-tight font-semibold tracking-tight">
                 {parsed.created}
               </div>
-            </div>
+            </MetricCard>
           </>
         )}
-      </div>
+      </Grid>
       {mixedUnits ? (
         <div className="mb-2.5 text-sm leading-snug text-warning">
           {t(
@@ -186,15 +189,16 @@ export function ImportSummary({ parsed, close }: { parsed: ParsedOk; close: Shee
           </div>
         </>
       )}
-      <Button className="w-full" variant="default" onClick={doImport} disabled={!fresh}>
-        {fresh
-          ? t("common.import", "Import")
-          : t("import.nothingNewImport", "Nothing new to import")}
-      </Button>
-      <div className="h-2" />
-      <Button variant="ghost" className="w-full text-muted-foreground" onClick={close}>
-        {t("common.cancel", "Cancel")}
-      </Button>
+      <SpaceBetween size="xs">
+        <Button className="w-full" variant="default" onClick={doImport} disabled={!fresh}>
+          {fresh
+            ? t("common.import", "Import")
+            : t("import.nothingNewImport", "Nothing new to import")}
+        </Button>
+        <Button variant="ghost" className="w-full text-muted-foreground" onClick={close}>
+          {t("common.cancel", "Cancel")}
+        </Button>
+      </SpaceBetween>
     </>
   );
 }

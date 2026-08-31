@@ -33,7 +33,7 @@ describe("SpaceBetween", () => {
     expect(markup).toContain("flex-wrap");
     expect(markup).toContain("gap-3");
     expect(markup).toContain("md:gap-4");
-    expect(markup).toContain("lg:gap-6");
+    expect(markup).toContain("lg:gap-5");
     expect(markup).toContain("items-center");
   });
 

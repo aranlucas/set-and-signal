@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { useStore } from "@/app/store/useStore";
 import Icon from "@/shared/components/Icon";
+import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { Button } from "@/shared/ui/button";
 
 interface ErrorBoundaryProps {
@@ -35,13 +36,12 @@ function Fallback() {
           "This screen could not be drawn. Your data is safe on this device.",
         )}
       </div>
-      <Button className="w-full" variant="default" onClick={() => location.reload()}>
-        <Icon name="reset" />
-        {t("error.reloadApp", "Reload Set & Signal")}
-      </Button>
-      {activeWorkout && (
-        <>
-          <div className="h-2" />
+      <SpaceBetween size="xs">
+        <Button className="w-full" variant="default" onClick={() => location.reload()}>
+          <Icon name="reset" />
+          {t("error.reloadApp", "Reload Set & Signal")}
+        </Button>
+        {activeWorkout && (
           <Button
             className="w-full"
             variant="destructive"
@@ -55,8 +55,8 @@ function Fallback() {
             <Icon name="trash" />
             {t("sharing.discardRunningWorkout", "Discard the running workout")}
           </Button>
-        </>
-      )}
+        )}
+      </SpaceBetween>
     </div>
   );
 }

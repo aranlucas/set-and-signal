@@ -13,6 +13,7 @@ import { Button } from "@/shared/ui/button";
 import { Field } from "@/shared/ui/field";
 import { Switch } from "@/shared/ui/switch";
 import Icon from "@/shared/components/Icon";
+import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { PlanPrintDocument } from "@/shared/components/PlanPrintDocument";
 import { glyphOf } from "@/domain/exercises/glyphs";
 import { buildPlanBundle, parsePlan, mergePlan } from "@/features/plan/plan-share";
@@ -94,36 +95,39 @@ export function PlanTools({
           "Send your routines to a friend, or put your week on paper.",
         )}
       </div>
-      <Button className="w-full" variant="default" onClick={exportFile} disabled={!hasRoutines}>
-        <Icon name="upload" />
-        {t("sharing.exportPlanFile", "Export plan file")}
-      </Button>
-      <div className="mx-0.5 mt-2 text-sm leading-snug text-muted-foreground">
-        {t(
-          "sharing.smallFileFriendImportsTheir",
-          "A small file a friend imports into their own Set & Signal — routines only, none of your workouts or weigh-ins.",
-        )}
-      </div>
-      {!MOBILE && (
-        <>
-          <div className="h-3" />
-          <Button
-            className="w-full"
-            variant="secondary"
-            onClick={printPlan}
-            disabled={!hasRoutines}
-          >
-            <Icon name="download" />
-            {t("sharing.printSavePdf", "Print / Save as PDF")}
+      <SpaceBetween size="s">
+        <SpaceBetween size="xs">
+          <Button className="w-full" variant="default" onClick={exportFile} disabled={!hasRoutines}>
+            <Icon name="upload" />
+            {t("sharing.exportPlanFile", "Export plan file")}
           </Button>
-          <div className="mx-0.5 mt-2 text-sm leading-snug text-muted-foreground">
+          <div className="mx-0.5 text-sm leading-snug text-muted-foreground">
             {t(
-              "sharing.cleanOnePagePerPlan",
-              "A clean one-page-per-plan printout — no exercise ever splits across a page.",
+              "sharing.smallFileFriendImportsTheir",
+              "A small file a friend imports into their own Set & Signal — routines only, none of your workouts or weigh-ins.",
             )}
           </div>
-        </>
-      )}
+        </SpaceBetween>
+        {!MOBILE && (
+          <SpaceBetween size="xs">
+            <Button
+              className="w-full"
+              variant="secondary"
+              onClick={printPlan}
+              disabled={!hasRoutines}
+            >
+              <Icon name="download" />
+              {t("sharing.printSavePdf", "Print / Save as PDF")}
+            </Button>
+            <div className="mx-0.5 text-sm leading-snug text-muted-foreground">
+              {t(
+                "sharing.cleanOnePagePerPlan",
+                "A clean one-page-per-plan printout — no exercise ever splits across a page.",
+              )}
+            </div>
+          </SpaceBetween>
+        )}
+      </SpaceBetween>
       {!MOBILE ? (
         <div className="pointer-events-none fixed size-0 overflow-hidden" aria-hidden="true">
           <PlanPrintDocument appState={st} contentRef={printRef} owner={uname} />
