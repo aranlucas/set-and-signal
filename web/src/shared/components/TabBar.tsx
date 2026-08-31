@@ -77,7 +77,7 @@ export default function TabBar({
     <nav
       id="tabbar"
       aria-label="Main navigation"
-      className="fixed inset-x-0 bottom-0 z-50 overflow-visible border-t border-border/40 bg-background/80 pt-2.5 pr-safe-tab-right pb-safe-tab-bottom pl-safe-tab-left shadow-xl backdrop-blur-xl backdrop-saturate-180 contain-layout lg:inset-x-auto lg:bottom-4 lg:left-1/2 lg:w-130 lg:-translate-x-1/2 lg:rounded-2xl lg:border lg:p-2.5"
+      className="fixed inset-x-0 bottom-0 z-50 overflow-visible border-t border-border/40 bg-background/80 pt-1.5 pr-safe-tab-right pb-safe-tab-bottom pl-safe-tab-left shadow-xl backdrop-blur-xl backdrop-saturate-180 contain-layout lg:inset-x-auto lg:bottom-4 lg:left-1/2 lg:w-130 lg:-translate-x-1/2 lg:rounded-2xl lg:border lg:px-2.5 lg:pb-2.5"
     >
       <Tabs value={activeTab} className="w-full gap-0">
         <TabsList
