@@ -10,3 +10,4 @@ trustPolicyExclude:
 allowBuilds:
   "@swc/core": true
   esbuild: true
+pmOnFail: ignore
