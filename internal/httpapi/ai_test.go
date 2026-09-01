@@ -13,8 +13,21 @@ func TestNextWorkoutSuggestionMCPUsesClosedOutput(t *testing.T) {
 	provider := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		body, _ := json.Marshal(map[string]any{
-			"choices": []any{map[string]any{
-				"message": map[string]string{"content": "```json\n{\"summary\":\"Keep the effort steady.\",\"entries\":[{\"id\":\"squat\",\"sets\":3,\"weight\":100,\"swapTo\":\"bench\",\"note\":\"Add one rep\",\"unknown\":true},{\"id\":\"\",\"sets\":9},{\"id\":\"noop\"}]}\n```"},
+			"id":         "resp_test",
+			"object":     "response",
+			"created_at": 1,
+			"status":     "completed",
+			"model":      "test/model",
+			"output": []map[string]any{{
+				"id":     "msg_test",
+				"type":   "message",
+				"status": "completed",
+				"role":   "assistant",
+				"content": []map[string]any{{
+					"type":        "output_text",
+					"text":        "```json\n{\"summary\":\"Keep the effort steady.\",\"entries\":[{\"id\":\"squat\",\"sets\":3,\"weight\":100,\"swapTo\":\"bench\",\"note\":\"Add one rep\",\"unknown\":true},{\"id\":\"\",\"sets\":9},{\"id\":\"noop\"}]}\n```",
+					"annotations": []any{},
+				}},
 			}},
 		})
 		_, _ = w.Write(body)

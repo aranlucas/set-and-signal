@@ -39,7 +39,7 @@ func TestLoadDefaults(t *testing.T) {
 		InviteOnly:      false,
 		SessionDays:     90,
 		OpenRouterKey:   "",
-		OpenRouterModel: "openai/gpt-4o-mini",
+		OpenRouterModel: "openrouter/free",
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("Load() = %+v, want %+v", got, want)

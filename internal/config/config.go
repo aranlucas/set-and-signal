@@ -69,7 +69,7 @@ func Load() Config {
 		InviteOnly:      inviteTruthy.MatchString(os.Getenv("INVITE_ONLY")),
 		SessionDays:     sessionDays,
 		OpenRouterKey:   os.Getenv("OPENROUTER_API_KEY"),
-		OpenRouterModel: env("OPENROUTER_MODEL", "openai/gpt-4o-mini"),
+		OpenRouterModel: env("OPENROUTER_MODEL", "openrouter/free"),
 
 		GoogleClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		GoogleClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),

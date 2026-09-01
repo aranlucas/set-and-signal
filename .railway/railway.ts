@@ -54,6 +54,7 @@ export default defineRailway(() => {
     env: {
       DATA_DIR: "/data",
       OPENROUTER_API_KEY: preserve(),
+      OPENROUTER_MODEL: "openrouter/free",
       ORIGIN: publicOrigin,
       PUBLIC_URL: publicOrigin,
       RP_ID: publicDomain,

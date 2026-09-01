@@ -17,8 +17,7 @@ const systemPrompt = "You are a strength coach planning the athlete's NEXT worko
 	"Rules: progress conservatively — no weight jumps above ~10%; if recent sets show missed reps or big drops, reduce; " +
 	"bodyweight exercises progress in reps or extra sets, not load; timed exercises change seconds, cardio changes minutes/speed. " +
 	"Keep the same exercises unless a swap is clearly better (then set swapTo to another exercise id). " +
-	"Reply with ONLY a JSON object, no prose, exactly this shape: " +
-	`{"summary": string (2-3 sentences, why today looks like this), "entries": [{"id": string, "sets"?: number, "reps"?: number, "weight"?: number, "sec"?: number, "min"?: number, "speed"?: number, "swapTo"?: string, "note"?: string}]}. ` +
+	"Return the structured workout plan requested by the response schema. Use null for adjustment fields that should stay unchanged. " +
 	"Every entry.id MUST be an exercise id from the digest's routine; include one entry per exercise you want to adjust."
 
 // GET /api/ai/status — no auth upstream; the login screen probes it.

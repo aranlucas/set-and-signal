@@ -1049,7 +1049,34 @@ func TestAINextWorkoutWithStub(t *testing.T) {
 	var called int
 	var mu sync.Mutex
 	mode := "" // "", "bad", "garbage"
+	writeReply := func(w http.ResponseWriter, content string) {
+		body, err := json.Marshal(map[string]any{
+			"id":         "resp_test",
+			"object":     "response",
+			"created_at": 1,
+			"status":     "completed",
+			"model":      "test/model",
+			"output": []map[string]any{{
+				"id":     "msg_test",
+				"type":   "message",
+				"status": "completed",
+				"role":   "assistant",
+				"content": []map[string]any{{
+					"type":        "output_text",
+					"text":        content,
+					"annotations": []any{},
+				}},
+			}},
+		})
+		if err != nil {
+			t.Errorf("marshal response: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		_, _ = w.Write(body)
+	}
 	stub := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		mu.Lock()
 		called++
 		mu.Unlock()
@@ -1061,8 +1088,7 @@ func TestAINextWorkoutWithStub(t *testing.T) {
 			_, _ = w.Write([]byte(`{"error":{"message":"rate limited"}}`))
 		case "garbage":
 			// A well-formed reply whose content has no braces at all.
-			enc, _ := json.Marshal("I cannot help with that.")
-			_, _ = w.Write([]byte(`{"choices":[{"message":{"content":` + string(enc) + `}}]}`))
+			writeReply(w, "I cannot help with that.")
 		default:
 			reply, _ := json.Marshal(map[string]any{
 				"summary": "Go easy today.",
@@ -1074,8 +1100,7 @@ func TestAINextWorkoutWithStub(t *testing.T) {
 				},
 			})
 			content := "Sure!\n```json\n" + string(reply) + "\n```\nGood luck!"
-			enc, _ := json.Marshal(content)
-			_, _ = w.Write([]byte(`{"choices":[{"message":{"content":` + string(enc) + `}}]}`))
+			writeReply(w, content)
 		}
 	}))
 	stubClient := stub.Client()
@@ -1105,9 +1130,16 @@ func TestAINextWorkoutWithStub(t *testing.T) {
 	if body["model"] != "m" {
 		t.Fatalf("model = %v", body["model"])
 	}
-	// The provider saw the fixed sampling parameters and the raw digest.
-	if lastBody["temperature"] != 0.4 || lastBody["max_tokens"] != float64(1500) || lastBody["model"] != "m" {
+	// The provider saw the fixed sampling parameters, structured-output
+	// requirement, and the raw digest.
+	if lastBody["temperature"] != 0.4 || lastBody["max_output_tokens"] != float64(1500) || lastBody["model"] != "m" {
 		t.Fatalf("stub request = %v", lastBody)
+	}
+	provider := lastBody["provider"].(map[string]any)
+	textConfig := lastBody["text"].(map[string]any)
+	responseFormat := textConfig["format"].(map[string]any)
+	if provider["require_parameters"] != true || responseFormat["type"] != "json_schema" {
+		t.Fatalf("structured output request = %v", lastBody)
 	}
 
 	// Provider failure maps to 502 with the provider message; a non-JSON
