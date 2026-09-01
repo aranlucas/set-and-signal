@@ -103,7 +103,7 @@ export function AiPlan({ close }: { close: SheetClose }) {
       )}
       {planQuery.isError && (
         <>
-          <div className="mb-3.5 text-sm leading-snug text-foreground/60">
+          <div className="mb-3.5 min-w-0 text-sm leading-snug wrap-break-word text-foreground/60">
             {getErrorMessage(planQuery.error)}
           </div>
           <Button variant="ghost" className="w-full text-muted-foreground" onClick={close}>
