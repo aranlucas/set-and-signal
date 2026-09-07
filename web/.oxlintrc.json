@@ -54,9 +54,9 @@
     "typescript/no-confusing-void-expression": "off",
     "typescript/strict-void-return": "off",
     "typescript/no-unsafe-type-assertion": "error",
-    "typescript/no-misused-promises": "off",
-    "typescript/no-unnecessary-type-assertion": "off",
-    "typescript/no-unnecessary-type-conversion": "off",
+    "typescript/no-misused-promises": "error",
+    "typescript/no-unnecessary-type-assertion": "error",
+    "typescript/no-unnecessary-type-conversion": "error",
     "typescript/no-unsafe-argument": "error",
     "typescript/no-unsafe-assignment": "error",
     "typescript/consistent-return": "off",
@@ -83,7 +83,18 @@
     "react/only-export-components": ["error", { "allowConstantExport": true }],
     "tailwindcss/no-unknown-classes": [
       "error",
-      { "allowlist": ["plain", "metric-name", "metric-bar", "metric-value"] }
+      {
+        "allowlist": [
+          "plain",
+          "metric-name",
+          "metric-bar",
+          "metric-value",
+          "cn-input-otp",
+          "chk",
+          "icn",
+          "toaster"
+        ]
+      }
     ],
     "tailwindcss/no-duplicate-classes": "error",
     "tailwindcss/no-conflicting-classes": "error",
@@ -117,10 +128,62 @@
     "tailwindcss/no-arbitrary-value": "error",
     "tailwindcss/prefer-theme-tokens": "error"
   },
-  "ignorePatterns": [
-    "dist/**",
-    "node_modules/**",
-    "src/shared/ui/**",
-    "src/shared/hooks/use-mobile.ts"
+  "ignorePatterns": ["dist/**", "node_modules/**"],
+  "overrides": [
+    {
+      "files": [
+        "src/shared/ui/button.tsx",
+        "src/shared/ui/direction.tsx",
+        "src/shared/ui/message-scroller.tsx",
+        "src/shared/ui/combobox.tsx",
+        "src/shared/ui/carousel.tsx",
+        "src/shared/ui/sidebar.tsx",
+        "src/shared/ui/button-group.tsx",
+        "src/shared/ui/navigation-menu.tsx",
+        "src/shared/ui/marker.tsx",
+        "src/shared/ui/toast.tsx"
+      ],
+      "rules": {
+        "react/only-export-components": "off"
+      }
+    },
+    {
+      "files": [
+        "src/shared/ui/field.tsx",
+        "src/shared/ui/carousel.tsx",
+        "src/shared/ui/input-group.tsx",
+        "src/shared/ui/button-group.tsx",
+        "src/shared/ui/spinner.tsx",
+        "src/shared/ui/item.tsx"
+      ],
+      "rules": {
+        "jsx-a11y/prefer-tag-over-role": "off"
+      }
+    },
+    {
+      "files": ["src/shared/ui/label.tsx"],
+      "rules": {
+        "jsx-a11y/label-has-associated-control": "off"
+      }
+    },
+    {
+      "files": ["src/shared/ui/calendar.tsx"],
+      "rules": {
+        "react/no-unstable-nested-components": "off"
+      }
+    },
+    {
+      "files": ["src/shared/ui/carousel.tsx"],
+      "rules": {
+        "react/set-state-in-effect": "off"
+      }
+    },
+    {
+      "files": ["src/shared/ui/input-group.tsx"],
+      "rules": {
+        "jsx-a11y/click-events-have-key-events": "off",
+        "jsx-a11y/no-noninteractive-element-interactions": "off"
+      }
+    }
   ]
 }

@@ -21,7 +21,7 @@ export function Stepper({
   unit?: string;
 }) {
   const set = (v: number | null) => onChange(Math.max(0, Math.round((v || 0) * 100) / 100));
-  const cur = +(value ?? 0) || 0;
+  const cur = value || 0;
   const inner = (
     <div className={cn("flex min-w-0 items-center overflow-hidden rounded-md bg-muted", className)}>
       <Button

@@ -62,7 +62,7 @@ export function MeasuresSheet({ close }: { close: SheetClose }) {
           "Tape measure in cm — log whichever ones you take. Today's entry updates in place.",
         )}
       </div>
-      <form onSubmit={handleSubmit(save, () => toast(atLeastOneMessage))}>
+      <form onSubmit={(event) => void handleSubmit(save, () => toast(atLeastOneMessage))(event)}>
         <div className="mt-3.5 grid grid-cols-2 gap-x-3 gap-y-2.5">
           {fields.map((field) => (
             <Controller

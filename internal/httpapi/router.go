@@ -15,6 +15,7 @@ import (
 	"github.com/aranlucas/set-and-signal/internal/ai"
 	"github.com/aranlucas/set-and-signal/internal/auth"
 	"github.com/aranlucas/set-and-signal/internal/config"
+	"github.com/aranlucas/set-and-signal/internal/convex"
 	"github.com/aranlucas/set-and-signal/internal/oauth"
 	"github.com/aranlucas/set-and-signal/internal/presence"
 	"github.com/aranlucas/set-and-signal/internal/push"
@@ -24,6 +25,7 @@ import (
 // Server carries every dependency the handlers need.
 type Server struct {
 	Cfg      config.Config
+	Convex   *convex.Client
 	ST       *store.Store
 	Sess     *auth.Sessions
 	WA       *auth.WebAuthn
@@ -45,6 +47,8 @@ func Router(s *Server) http.Handler {
 	r.Get("/api/health", s.health)
 	r.Get("/api/config", s.config)
 	r.Get("/api/me", s.me)
+	r.Get("/api/convex/token", s.convexToken)
+	r.Get("/api/convex/jwks", s.convexJWKS)
 
 	r.Post("/api/register/options", s.registerOptions)
 	r.Post("/api/register/verify", s.registerVerify)

@@ -24,6 +24,5 @@
     "noFallthroughCasesInSwitch": true,
     "paths": { "@/*": ["./src/*"] }
   },
-  "include": ["src"],
-  "exclude": ["src/shared/ui/calendar.tsx", "src/shared/ui/questionnaire.tsx"]
+  "include": ["src"]
 }

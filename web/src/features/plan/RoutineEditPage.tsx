@@ -32,17 +32,9 @@ import {
 import { Input } from "@/shared/ui/input";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 import { SelectRow } from "@/shared/components/SelectRow";
-import type { PickOption } from "@/shared/components/SelectRow";
 import { POLICIES_FOR } from "@/domain/training/progression";
 import BodyMap from "@/shared/components/BodyMap";
-import type {
-  AppState,
-  CustomEx,
-  ExConfig,
-  PolicyId,
-  Routine,
-  SheetClose,
-} from "@/shared/lib/types";
+import type { AppState, CustomEx, ExConfig, Routine, SheetClose } from "@/shared/lib/types";
 import type { SheetEx } from "@/features/exercises/sheet-shared";
 import type { IconName } from "@/shared/components/Icon";
 import { loadOfRoutine, rankOf } from "@/domain/exercises/muscles";
@@ -140,12 +132,15 @@ export default function RoutineEdit() {
           variant="plain"
           type="button"
           className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
-          onClick={() => nav({ to: "/plan" })}
+          onClick={() => void nav({ to: "/plan" })}
           aria-label={t("navigation.plan", "Plan")}
         >
           <Icon name="chevronLeft" />
         </Button>
-        <form className="mx-3 min-w-0 flex-1" onSubmit={handleSubmit(saveName)}>
+        <form
+          className="mx-3 min-w-0 flex-1"
+          onSubmit={(event) => void handleSubmit(saveName)(event)}
+        >
           <Input
             aria-label={t("routine.name", "Routine name")}
             className="w-full rounded-lg bg-card px-4 py-3 text-xl font-semibold tracking-tight transition-shadow duration-140 outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary"
@@ -190,13 +185,11 @@ export default function RoutineEdit() {
               currentRoutine.prog = v;
             })
           }
-          options={
-            POLICIES_FOR.reps.map((p: PolicyId) => ({
-              value: p,
-              label: progressionLabels[p].name,
-              subtitle: progressionLabels[p].description,
-            })) as PickOption<PolicyId>[]
-          }
+          options={POLICIES_FOR.reps.map((p) => ({
+            value: p,
+            label: progressionLabels[p].name,
+            subtitle: progressionLabels[p].description,
+          }))}
         />
       </div>
       <div className="mx-0.5 -mt-2.5 mb-4 text-sm leading-snug text-muted-foreground">
@@ -509,9 +502,8 @@ function RoutineSheet({ sheet, setSheet, closeSheet, setConfirmation }: RoutineS
         )}
         {sheet?.kind === "picker" && (
           <ExercisePicker
-            onPick={async (exercise) => {
-              await closeSheet();
-              sheet.onPick(exercise);
+            onPick={(exercise) => {
+              void closeSheet().then(() => sheet.onPick(exercise));
             }}
             openCustom={(existingExercise, onDone, prefillName) =>
               setSheet({ kind: "custom", existingExercise, onDone, prefillName })

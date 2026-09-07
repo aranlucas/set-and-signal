@@ -203,9 +203,11 @@ export default function HomeStrengthSetupSheet() {
         </SheetTitle>
         <form
           className="flex min-h-full flex-col"
-          onSubmit={handleSubmit(finish, () =>
-            toast(t("startingSetup.validWeights", "Enter a starting weight for every lift")),
-          )}
+          onSubmit={(event) =>
+            void handleSubmit(finish, () =>
+              toast(t("startingSetup.validWeights", "Enter a starting weight for every lift")),
+            )(event)
+          }
         >
           <div className="mb-5 flex items-center justify-between gap-3">
             <Button

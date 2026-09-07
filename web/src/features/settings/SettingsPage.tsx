@@ -84,7 +84,7 @@ function SettingsContent() {
         <Button
           variant="plain"
           className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
-          onClick={() => navigate({ to: "/home" })}
+          onClick={() => void navigate({ to: "/home" })}
           aria-label={t("navigation.home", "Home")}
         >
           <Icon name="chevronLeft" />
@@ -191,7 +191,7 @@ function SettingsContent() {
               iconTint="var(--system-blue)"
               title={t("account.signPasskey", "Sign in with passkey")}
               accessory="chevron"
-              onClick={signInHere}
+              onClick={() => void signInHere()}
             />
           </>
         ) : (
@@ -357,7 +357,7 @@ function SettingsPreferences({ onEffortHelp }: { onEffortHelp: () => void }) {
         <Row icon="bell" iconTint="var(--system-pink)" title={t("settings.sounds", "Sounds")}>
           <Switch
             aria-label={t("settings.sounds", "Sounds")}
-            checked={!!appState.sound}
+            checked={appState.sound}
             onCheckedChange={(soundEnabled) => update((state) => void (state.sound = soundEnabled))}
           />
         </Row>
@@ -663,7 +663,7 @@ function SettingsData({
           iconTint="var(--system-blue)"
           title={t("settings.exportBackupJson", "Export backup (JSON)")}
           accessory="chevron"
-          onClick={doExport}
+          onClick={() => void doExport()}
         />
         <Row
           icon="download"
@@ -784,7 +784,7 @@ function UserRows({
           iconTint="var(--system-indigo)"
           title={t("customExercise.adminDashboard", "Admin dashboard")}
           accessory="chevron"
-          onClick={() => navigate({ to: "/admin" })}
+          onClick={() => void navigate({ to: "/admin" })}
         />
       )}
       <Row
@@ -1013,8 +1013,8 @@ function MobileReminderCard({ appState, update, notify }: CardProps) {
       >
         <Switch
           aria-label={t("settings.workoutDayReminder", "Workout day reminder")}
-          checked={!!appState.reminder?.on}
-          onCheckedChange={toggle}
+          checked={appState.reminder?.on ?? false}
+          onCheckedChange={() => void toggle()}
         />
       </Row>
       {appState.reminder?.on && (
@@ -1131,7 +1131,7 @@ function PushCard({ appState, update, notify }: CardProps) {
           >
             <Switch
               aria-label={t("settings.workoutDayReminder", "Workout day reminder")}
-              checked={!!appState.reminder?.on}
+              checked={appState.reminder?.on ?? false}
               onCheckedChange={() =>
                 update((state) => {
                   state.reminder = {

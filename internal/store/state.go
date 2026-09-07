@@ -13,6 +13,9 @@ import (
 // ReadState loads the user's JSON state blob; "null" when no row exists yet,
 // matching upstream GET /api/data which serializes a nil state.
 func (s *Store) ReadState(uid string) (jsontext.Value, error) {
+	if s.Training != nil {
+		return s.Training.ReadState(uid)
+	}
 	var raw string
 	err := s.DB.QueryRow(`SELECT state FROM user_state WHERE user_id = ?`, uid).Scan(&raw)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -29,6 +32,9 @@ func (s *Store) ReadState(uid string) (jsontext.Value, error) {
 
 // WriteState replaces the blob wholesale (PUT /api/data path).
 func (s *Store) WriteState(uid string, raw jsontext.Value) error {
+	if s.Training != nil {
+		return s.Training.WriteState(uid, raw)
+	}
 	if !raw.IsValid() {
 		return fmt.Errorf("store: write state for %s: invalid JSON", uid)
 	}
@@ -48,6 +54,9 @@ func (s *Store) WriteState(uid string, raw jsontext.Value) error {
 // upstream mutateState) plus the updated_at column, then persisted. A non-nil
 // error from fn aborts the whole transaction.
 func (s *Store) MutateState(uid string, fn func(jsontext.Value) (jsontext.Value, error)) error {
+	if s.Training != nil {
+		return s.Training.MutateState(uid, fn)
+	}
 	tx, err := s.DB.BeginTx(context.Background(), nil) // BEGIN IMMEDIATE via _txlock=immediate DSN option
 	if err != nil {
 		return fmt.Errorf("store: mutate state %s: %w", uid, err)

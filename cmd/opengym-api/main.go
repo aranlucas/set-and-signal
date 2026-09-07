@@ -23,6 +23,7 @@ import (
 	"github.com/aranlucas/set-and-signal/internal/ai"
 	"github.com/aranlucas/set-and-signal/internal/auth"
 	"github.com/aranlucas/set-and-signal/internal/config"
+	"github.com/aranlucas/set-and-signal/internal/convex"
 	"github.com/aranlucas/set-and-signal/internal/httpapi"
 	"github.com/aranlucas/set-and-signal/internal/oauth"
 	"github.com/aranlucas/set-and-signal/internal/presence"
@@ -56,6 +57,9 @@ const maxHeaderValueCount = 100
 
 func run() error {
 	cfg := config.Load()
+	if cfg.ConvexURL == "" {
+		return errors.New("CONVEX_URL is required; configure the training deployment before starting the hosted API")
+	}
 	a, err := wire(cfg)
 	if err != nil {
 		return err
@@ -102,6 +106,29 @@ func wire(cfg config.Config) (*app, error) {
 	if err != nil {
 		return nil, err
 	}
+	var convexClient *convex.Client
+	if cfg.ConvexURL != "" {
+		convexClient, err = convex.New(cfg.ConvexURL, cfg.PublicURL, cfg.DataDir)
+		if err != nil {
+			return nil, err
+		}
+		users, err := st.Users()
+		if err != nil {
+			return nil, err
+		}
+		for _, u := range users {
+			raw, err := st.ReadState(u.ID)
+			if err != nil {
+				return nil, err
+			}
+			if string(raw) != "null" {
+				if err := convexClient.Import(u.ID, raw); err != nil {
+					return nil, fmt.Errorf("migrate training: %w", err)
+				}
+			}
+		}
+		st.Training = convexClient
+	}
 	sess, err := auth.NewSessions(cfg.DataDir, cfg.SessionDays)
 	if err != nil {
 		return nil, err
@@ -117,6 +144,7 @@ func wire(cfg config.Config) (*app, error) {
 
 	server := &httpapi.Server{
 		Cfg:      cfg,
+		Convex:   convexClient,
 		ST:       st,
 		Sess:     sess,
 		WA:       wa,

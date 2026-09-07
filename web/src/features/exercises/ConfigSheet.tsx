@@ -550,7 +550,7 @@ export function ExConfigSheet({
 
   const customExercise = isCustomExercise(exercise) ? exercise : null;
   return (
-    <form onSubmit={handleSubmit(saveConfig)}>
+    <form onSubmit={(event) => void handleSubmit(saveConfig)(event)}>
       <ConfigExerciseIntro exercise={exercise} cardio={cardio} />
       {!cardio && (
         <div className="mb-3.5">

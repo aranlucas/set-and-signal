@@ -22,6 +22,7 @@ type Config struct {
 	SessionDays                    int
 	OpenRouterKey, OpenRouterModel string
 	DBPath                         string
+	ConvexURL                      string
 
 	// OIDC federation for the MCP authorization server + web login.
 	GoogleClientID, GoogleClientSecret                      string
@@ -58,6 +59,7 @@ func Load() Config {
 
 	origin := env("ORIGIN", "http://localhost:8080")
 	return Config{
+		ConvexURL:       os.Getenv("CONVEX_URL"),
 		Port:            env("PORT", "3000"),
 		DataDir:         dataDir,
 		DBPath:          env("DB_PATH", filepath.Join(dataDir, "opengym.db")),

@@ -14,6 +14,9 @@ import {
   isBw,
   sideReps,
   repStep,
+  bestWeightFor,
+  bestWeightsFor,
+  type WorkoutLike,
 } from "@/domain/training/history.js";
 import { EXDB } from "@/domain/exercises/exercises.js";
 
@@ -24,6 +27,59 @@ const CARDIO = EXDB.find((e) => e.bp === "cardio")!.id;
 const LIFT = EXDB.find((e) => e.bp !== "cardio" && e.eq !== "body weight")!.id;
 const BW = EXDB.find((e) => e.eq === "body weight")!.id;
 const BARBELL = EXDB.find((e) => e.eq === "barbell")!.id;
+
+describe("bestWeightsFor", () => {
+  it("keeps completed working-set records and confirmed top weights across sessions", () => {
+    const workouts: WorkoutLike[] = [
+      {
+        d: "2026-01-01",
+        entries: [
+          {
+            id: LIFT,
+            sets: [
+              { w: 50, done: true },
+              { w: 200, done: false },
+            ],
+          },
+          { id: BW, sets: [{ w: 0, done: true }] },
+          { id: CARDIO, sets: [{ min: 20, done: true }] },
+        ],
+      },
+      {
+        d: "2026-01-02",
+        entries: [
+          {
+            id: LIFT,
+            sets: [
+              { w: 40, done: true },
+              { w: 150, done: true, wu: true },
+            ],
+            topW: 60,
+          },
+          { id: BARBELL, sets: [{ w: 80, done: true }], topW: 70 },
+          { id: "custom", sets: [], topW: 25 },
+          { id: "__proto__", sets: [{ w: 10, done: true }] },
+        ],
+      },
+    ];
+    const weights = bestWeightsFor(workouts);
+    expect(weights).toEqual(
+      new Map([
+        [LIFT, 60],
+        [BW, 0],
+        [CARDIO, 0],
+        [BARBELL, 80],
+        ["custom", 25],
+        ["__proto__", 10],
+      ]),
+    );
+    for (const [id, weight] of weights) {
+      expect(bestWeightFor({ workouts }, id)).toBe(weight);
+    }
+    expect(weights.get("unlogged") ?? 0).toBe(0);
+    expect(bestWeightsFor([]).size).toBe(0);
+  });
+});
 
 describe("modeOf", () => {
   it("falls back to the body part when a plan has no mode — every existing plan keeps working", () => {

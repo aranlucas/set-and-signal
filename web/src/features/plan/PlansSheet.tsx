@@ -98,7 +98,12 @@ export function PlanTools({
       </div>
       <SpaceBetween size="s">
         <SpaceBetween size="xs">
-          <Button className="w-full" variant="default" onClick={exportFile} disabled={!hasRoutines}>
+          <Button
+            className="w-full"
+            variant="default"
+            onClick={() => void exportFile()}
+            disabled={!hasRoutines}
+          >
             <Icon name="upload" />
             {t("sharing.exportPlanFile", "Export plan file")}
           </Button>
@@ -172,7 +177,7 @@ export function PlanImport({ bundle, close }: { bundle: ParsedBundle; close: She
     void nav({ to: "/plan" });
   };
   return (
-    <form onSubmit={handleSubmit(apply)}>
+    <form onSubmit={(event) => void handleSubmit(apply)(event)}>
       <h3>
         {bundle.name
           ? t("sharing.import", "Import “{{plan}}”", { plan: bundle.name })
@@ -235,7 +240,12 @@ export function PlanImport({ bundle, close }: { bundle: ParsedBundle; close: She
         <Button type="submit" variant="default">
           {t("exercise.addMyPlan", "Add to my plan")}
         </Button>
-        <Button type="button" variant="ghost" className="text-muted-foreground" onClick={close}>
+        <Button
+          type="button"
+          variant="ghost"
+          className="text-muted-foreground"
+          onClick={() => void close()}
+        >
           {t("common.cancel", "Cancel")}
         </Button>
       </Field>

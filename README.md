@@ -4,11 +4,14 @@ Set & Signal is a workout planner and training log.
 
 ## Run locally
 
-Requires Go 1.27+, Node.js 24+, and pnpm 11+.
+Requires Go 1.27+, Node.js 24+, pnpm 12+, and a configured Convex deployment.
+See [Convex setup and migration](docs/convex.md) before starting the hosted API.
 
 ```bash
 pnpm install --frozen-lockfile
-DATA_DIR="$PWD/.data" ORIGIN=http://localhost:5173 go run ./cmd/opengym-api
+CONVEX_URL=https://YOUR-DEPLOYMENT.convex.cloud \
+PUBLIC_URL=http://localhost:3000 \
+DATA_DIR="$PWD/data" ORIGIN=http://localhost:5173 go run ./cmd/opengym-api
 ```
 
 Run the web app in a second terminal:

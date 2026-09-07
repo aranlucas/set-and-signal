@@ -20,3 +20,9 @@ output/
 railway-plan.json
 web/.agents/
 web/skills-lock.json
+
+.env.local
+
+.data/
+.convex/
+web/.env.local

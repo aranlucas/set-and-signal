@@ -178,7 +178,7 @@ function StartChooser() {
           {t("workout.freestyleWorkoutPickGo", "Freestyle workout (pick as you go)")}
         </Button>
         {appState.routines.length === 0 && (
-          <Button className="w-full" variant="default" onClick={() => nav({ to: "/plan" })}>
+          <Button className="w-full" variant="default" onClick={() => void nav({ to: "/plan" })}>
             {t("workout.buildPlanFirst", "Build a plan first")}
           </Button>
         )}
@@ -852,7 +852,7 @@ function useWorkoutSessionActions({
   // back off when tapped again. The ramp is rebuilt from the heaviest weight in sight
   // (plan target or a seeded/logged set) so it always leads up to what you're about to do.
   const toggleWarmup = (idx: number) => {
-    const removing = !!activeWorkout.entries[idx]?.sets.some(isWarmup);
+    const removing = activeWorkout.entries[idx]?.sets.some(isWarmup) ?? false;
     let built = false;
     mutEntry(idx, (draftEntry) => {
       if (removing) {

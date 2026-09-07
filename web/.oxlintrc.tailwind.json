@@ -17,5 +17,5 @@
   "rules": {
     "tailwindcss/no-arbitrary-value": "error"
   },
-  "ignorePatterns": ["dist/**", "node_modules/**", "src/shared/hooks/use-mobile.ts"]
+  "ignorePatterns": ["dist/**", "node_modules/**"]
 }

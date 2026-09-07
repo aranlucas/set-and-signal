@@ -53,6 +53,7 @@ export default defineRailway(() => {
     },
     env: {
       DATA_DIR: "/data",
+      CONVEX_URL: "https://cheerful-peacock-198.convex.cloud",
       OPENROUTER_API_KEY: preserve(),
       OPENROUTER_MODEL: "openrouter/free",
       ORIGIN: publicOrigin,

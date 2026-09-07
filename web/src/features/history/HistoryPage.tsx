@@ -23,7 +23,7 @@ export default function History() {
         <Button
           variant="plain"
           className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
-          onClick={() => nav({ to: "/stats" })}
+          onClick={() => void nav({ to: "/stats" })}
           aria-label={t("navigation.stats", "Stats")}
         >
           <Icon name="chevronLeft" />

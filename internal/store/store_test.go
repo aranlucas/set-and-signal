@@ -1,9 +1,51 @@
 package store
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
+	"time"
 )
+
+func TestWALWriterCommitsWhileReaderKeepsSnapshot(t *testing.T) {
+	st := openTest(t)
+	if err := st.CreateUser(User{ID: "u1", Name: "before"}); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	reader, err := st.DB.Conn(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = reader.Close() }()
+	// Explicit deferred transaction: BeginTx uses the store's IMMEDIATE write lock.
+	if _, err := reader.ExecContext(ctx, "BEGIN"); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _, _ = reader.ExecContext(context.Background(), "ROLLBACK") }()
+	readName := func() string {
+		t.Helper()
+		var name string
+		if err := reader.QueryRowContext(ctx, "SELECT name FROM users WHERE id = 'u1'").Scan(&name); err != nil {
+			t.Fatal(err)
+		}
+		return name
+	}
+	if got := readName(); got != "before" {
+		t.Fatalf("initial name = %q", got)
+	}
+	if _, err := st.DB.ExecContext(ctx, "UPDATE users SET name = 'after' WHERE id = 'u1'"); err != nil {
+		t.Fatalf("writer blocked by reader: %v", err)
+	}
+	if got := readName(); got != "before" {
+		t.Fatalf("reader snapshot changed: %q", got)
+	}
+	user, err := st.UserByID("u1")
+	if err != nil || user == nil || user.Name != "after" {
+		t.Fatalf("committed update missing: %+v, %v", user, err)
+	}
+}
 
 func openTest(t *testing.T) *Store {
 	t.Helper()

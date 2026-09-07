@@ -120,7 +120,7 @@ export default function Login() {
               {t("account.orPasskey", "Or use a passkey")}
             </div>
           )}
-          <Button variant={hasOidc ? "outline" : "default"} onClick={signIn}>
+          <Button variant={hasOidc ? "outline" : "default"} onClick={() => void signIn()}>
             <Icon name="person" />
             {t("account.signPasskey", "Sign in with passkey")}
           </Button>

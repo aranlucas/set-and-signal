@@ -87,7 +87,11 @@ export function CuratedPlans({ close }: { close: SheetClose }) {
             );
           })}
         </SpaceBetween>
-        <Button variant="ghost" className="w-full text-muted-foreground" onClick={close}>
+        <Button
+          variant="ghost"
+          className="w-full text-muted-foreground"
+          onClick={() => void close()}
+        >
           {t("common.cancel", "Cancel")}
         </Button>
       </SpaceBetween>

@@ -109,8 +109,12 @@ function StatsHeaderAndActivity({
   const recentBodyweight = appState.bodyweight.filter(
     (bodyweight) => (bodyweight.t || new Date(bodyweight.d).getTime()) > now - 30 * 86400000,
   );
+  const firstRecentBodyweight = recentBodyweight[0];
+  const lastRecentBodyweight = recentBodyweight.at(-1);
   const bodyweightDelta =
-    recentBodyweight.length > 1 ? recentBodyweight.at(-1)!.w - recentBodyweight[0]!.w : null;
+    firstRecentBodyweight && lastRecentBodyweight
+      ? lastRecentBodyweight.w - firstRecentBodyweight.w
+      : null;
   const monthWorkouts = appState.workouts.filter(
     (workout) => workout.d.slice(0, 7) === todayISO().slice(0, 7),
   ).length;
@@ -124,7 +128,7 @@ function StatsHeaderAndActivity({
           <Button
             variant="plain"
             className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
-            onClick={() => nav({ to: "/history" })}
+            onClick={() => void nav({ to: "/history" })}
             aria-label={t("navigation.history", "History")}
           >
             <Icon name="history" />
@@ -879,7 +883,7 @@ export default function Stats() {
             <h2 className="m-0 px-1 text-sm font-normal tracking-tight text-foreground/60">
               {t("stats.recentWorkouts", "Recent workouts")}
             </h2>
-            <Button size="sm" variant="ghost" onClick={() => nav({ to: "/history" })}>
+            <Button size="sm" variant="ghost" onClick={() => void nav({ to: "/history" })}>
               {t("common.all", "All")} {appState.workouts.length}
               <Icon name="chevronRight" />
             </Button>
@@ -956,9 +960,8 @@ function CalendarDaySheet({
           <WorkoutRow
             key={workout.id}
             workout={workout}
-            onClick={async () => {
-              await close();
-              onWorkoutDetail?.(workout);
+            onClick={() => {
+              void close().then(() => onWorkoutDetail?.(workout));
             }}
           />
         ))}

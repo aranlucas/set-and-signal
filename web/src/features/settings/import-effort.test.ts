@@ -36,7 +36,7 @@ describe("importing effort from another app", () => {
 
   it("reads the RPE Strong writes per set", () => {
     const p = rows(STRONG, "2026-01-12 18:00:00,Push,Bench Press (Barbell),1,60,10,0,7.5");
-    expect(setsOf(p)[0]!.rpe).toBe(7.5);
+    expect(setsOf(p)[0].rpe).toBe(7.5);
     expect(p.rpeSets).toBe(1);
   });
 
@@ -59,7 +59,7 @@ describe("importing effort from another app", () => {
     );
     const s = setsOf(p);
     expect("rpe" in s[0]).toBe(false); // the key is absent, so the set reads as unrated
-    expect(s[1]!.rpe).toBe(8);
+    expect(s[1].rpe).toBe(8);
     expect(p.rpeSets).toBe(1);
   });
 
@@ -67,13 +67,13 @@ describe("importing effort from another app", () => {
     // RPE runs 1–10, so a 0 in that column is an app saying "nothing here". Reading it as a
     // rating would stamp an effort on every unrated set in the file.
     const p = rows(STRONG, "2026-01-12 18:00:00,Push,Bench Press (Barbell),1,60,10,0,0");
-    expect("rpe" in setsOf(p)[0]!).toBe(false);
+    expect("rpe" in setsOf(p)[0]).toBe(false);
     expect(p.rpeSets).toBe(0);
   });
 
   it("caps a rating that overruns the scale instead of dropping the set", () => {
     const p = rows(STRONG, "2026-01-12 18:00:00,Push,Bench Press (Barbell),1,60,10,0,12");
-    expect(setsOf(p)[0]!.rpe).toBe(10);
+    expect(setsOf(p)[0].rpe).toBe(10);
   });
 
   it("ignores junk in the rating column", () => {
@@ -89,7 +89,7 @@ describe("importing effort from another app", () => {
 
   it("keeps one scale per set when a file carries both columns", () => {
     const p = rows("Date,Exercise,Weight,Reps,RPE,RIR", "2026-01-12,Bench Press,60,10,8,2");
-    const s = setsOf(p)[0]!;
+    const s = setsOf(p)[0];
     expect(s.rir).toBe(2);
     expect("rpe" in s).toBe(false);
     // and it reads back on the scale it was stored with
@@ -102,7 +102,7 @@ describe("importing effort from another app", () => {
       "Date,Exercise,Distance,Distance Unit,Time,RPE",
       "2026-01-12,Running,5,km,00:30:00,7",
     );
-    const s = setsOf(p)[0]!;
+    const s = setsOf(p)[0];
     expect(s.min).toBe(30);
     expect("rpe" in s).toBe(false);
     expect(p.rpeSets).toBe(0);
@@ -125,7 +125,7 @@ describe("importing effort from another app", () => {
         { unit: "kg" },
       ),
     );
-    const s = setsOf(p)[0]!;
+    const s = setsOf(p)[0];
     expect(s.w).toBe(61.2);
     expect(s.rpe).toBe(8);
     expect("u" in s).toBe(false); // the row's unit marker never reaches the set

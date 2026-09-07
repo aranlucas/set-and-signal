@@ -31,7 +31,7 @@ interface RegistrationFormValues {
 function RegistrationDialogContent({ open, onOpenChange }: RegistrationDialogProps) {
   const { t } = useTranslation();
   const setUser = useStore((state) => state.setUser);
-  const pushState = useStore((state) => state.pushState);
+  const transferGuest = useStore((state) => state.transferGuest);
   const pullState = useStore((state) => state.pullState);
   const configQuery = useQuery({
     queryKey: ["config"],
@@ -56,12 +56,13 @@ function RegistrationDialogContent({ open, onOpenChange }: RegistrationDialogPro
     const trimmedInviteCode = values.inviteCode.trim();
 
     try {
+      const guestState = structuredClone(useStore.getState().appState);
       const user = await passkeyRegister(trimmedName, trimmedInviteCode);
       setUser(user);
       onOpenChange(false);
       reset();
-      if (hasData(useStore.getState().appState)) {
-        await pushState();
+      if (hasData(guestState)) {
+        await transferGuest(guestState);
         toast(
           t(
             "account.profileCreatedDataDeviceMoved",
@@ -89,7 +90,7 @@ function RegistrationDialogContent({ open, onOpenChange }: RegistrationDialogPro
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full max-w-xs rounded-xl bg-modal p-5 shadow-2xl">
-        <form onSubmit={handleSubmit(registerProfile)}>
+        <form onSubmit={(event) => void handleSubmit(registerProfile)(event)}>
           <DialogHeader>
             <DialogTitle>{t("account.createProfile", "Create your profile")}</DialogTitle>
             <DialogDescription>
