@@ -1,9 +1,9 @@
-import { type Dispatch, type SetStateAction, useState } from "react";
+import { type Dispatch, type SetStateAction, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useExerciseMetadataLabels } from "@/shared/hooks/use-exercise-metadata-labels";
 import { useStore } from "@/app/store/useStore";
 import { EXDB, BODYPARTS, allExercises, equipmentOf } from "@/domain/exercises/exercises";
-import { bestWeightFor } from "@/domain/training/history";
+import { bestWeightsFor } from "@/domain/training/history";
 import { fmtNum } from "@/shared/lib/format";
 import { Thumb } from "@/shared/components/Media";
 import { ExerciseDetail } from "@/features/exercises/ExerciseDetailSheet";
@@ -59,6 +59,7 @@ export default function Library() {
   const { t, i18n } = useTranslation();
   const metadata = useExerciseMetadataLabels();
   const state = useStore((store) => store.appState);
+  const bestWeights = useMemo(() => bestWeightsFor(state.workouts), [state.workouts]);
   const [searchQuery, setSearchQuery] = useState("");
   const [bodyPart, setBodyPart] = useState("");
   const [equipment, setEquipment] = useState("");
@@ -235,7 +236,7 @@ export default function Library() {
           <Icon name="plus" className="flex-none text-base text-foreground" />
         </Button>
         {visibleExercises.slice(0, visibleCount).map((exercise) => {
-          const bestWeight = bestWeightFor(state, exercise.id);
+          const bestWeight = bestWeights.get(exercise.id) ?? 0;
           return (
             <div
               key={exercise.id}

@@ -114,10 +114,12 @@ export function TopWeight({
           : ""}
       </div>
       <form
-        onSubmit={handleSubmit(
-          (values) => commit(values, unitDone),
-          () => toast(invalidWeightMessage),
-        )}
+        onSubmit={(event) =>
+          void handleSubmit(
+            (values) => commit(values, unitDone),
+            () => toast(invalidWeightMessage),
+          )(event)
+        }
       >
         <Controller
           control={control}
@@ -194,9 +196,8 @@ export function WorkoutComplete({ close, onFinish }: { close: SheetClose; onFini
         <Button
           className="w-full"
           variant="default"
-          onClick={async () => {
-            await close();
-            onFinish();
+          onClick={() => {
+            void close().then(onFinish);
           }}
         >
           <Icon name="flag" />
@@ -204,12 +205,13 @@ export function WorkoutComplete({ close, onFinish }: { close: SheetClose; onFini
         </Button>
         <Button
           className="w-full"
-          onClick={async () => {
-            await close();
-            toast(
-              t(
-                "workout.completion.keepGoingTapAddExercise",
-                "Keep going — tap “+ Add exercise” below",
+          onClick={() => {
+            void close().then(() =>
+              toast(
+                t(
+                  "workout.completion.keepGoingTapAddExercise",
+                  "Keep going — tap “+ Add exercise” below",
+                ),
               ),
             );
           }}
@@ -339,9 +341,8 @@ export function FinishSummary({
       <Button
         className="mt-4 w-full"
         variant="default"
-        onClick={async () => {
-          await close();
-          void nav({ to: "/home" });
+        onClick={() => {
+          void close().then(() => void nav({ to: "/home" }));
         }}
       >
         {t("workout.completion.nice", "Nice!")}

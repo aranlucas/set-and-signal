@@ -114,7 +114,7 @@ export function AddToRoutine({
             type="button"
             key={routine.id}
             className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
-            onClick={() => chooseRoutine(routine.id)}
+            onClick={() => void chooseRoutine(routine.id)}
           >
             <span className="flex size-7.25 shrink-0 items-center justify-center rounded-sm bg-primary text-lg text-white">
               <Icon name={glyphOf(routine.emoji)} />
@@ -137,7 +137,7 @@ export function AddToRoutine({
           variant="plain"
           type="button"
           className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
-          onClick={() => chooseRoutine("_new")}
+          onClick={() => void chooseRoutine("_new")}
         >
           <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-input text-lg text-white">
             <Icon name="sparkles" />
@@ -337,8 +337,8 @@ export function ExercisePicker({
               onClick={() =>
                 openCustom(
                   null,
-                  async (customExercise) => {
-                    if (customExercise) await pickExercise(customExercise);
+                  (customExercise) => {
+                    if (customExercise) void pickExercise(customExercise);
                   },
                   query.trim(),
                 )
@@ -364,7 +364,7 @@ export function ExercisePicker({
               type="button"
               key={exercise.id}
               className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
-              onClick={() => pickExercise(exercise)}
+              onClick={() => void pickExercise(exercise)}
             >
               <Thumb exercise={toCatalogExercise(exercise)} />
               <span className="min-w-0 grow">

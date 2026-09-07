@@ -108,7 +108,7 @@ export default function Home() {
 
   return (
     <div className="mx-auto w-full max-w-xl min-w-0 md:max-w-none">
-      <HomeHeader user={user} onSettings={() => nav({ to: "/settings" })} />
+      <HomeHeader user={user} onSettings={() => void nav({ to: "/settings" })} />
       <SpaceBetween
         size="m"
         responsiveSize={{ lg: "l" }}
@@ -137,7 +137,7 @@ export default function Home() {
             <HomeWelcome
               onStart={() => void nav({ to: "/home/get-started", resetScroll: false })}
               onBrowse={() => void nav({ to: "/home/curated", resetScroll: false })}
-              onBuild={() => nav({ to: "/plan" })}
+              onBuild={() => void nav({ to: "/plan" })}
             />
           )}
 
@@ -155,7 +155,7 @@ export default function Home() {
             thisWeek={wThisWeek}
             plannedPerWeek={plannedPerWeek}
             onCalendar={() => void nav({ to: "/home/calendar", resetScroll: false })}
-            onStats={() => nav({ to: "/stats" })}
+            onStats={() => void nav({ to: "/stats" })}
           />
         </SpaceBetween>
       </SpaceBetween>

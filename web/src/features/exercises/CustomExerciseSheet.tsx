@@ -99,7 +99,7 @@ export function CustomExerciseForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(saveExercise)}>
+    <form onSubmit={(event) => void handleSubmit(saveExercise)(event)}>
       <h3>
         {existingExercise
           ? t("customExercise.editCustomExercise", "Edit custom exercise")

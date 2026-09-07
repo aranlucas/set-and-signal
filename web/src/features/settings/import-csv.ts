@@ -221,7 +221,7 @@ const FILLER = new Set([
 function wordsOf(name: string | null | undefined): string[] {
   // Parentheses are unwrapped rather than dropped: "Bench Press (Barbell)" carries its
   // equipment in there, and the dataset writes that as "barbell bench press".
-  let k = String(name || "")
+  let k = (name || "")
     .toLowerCase()
     .replaceAll(/[()[\]]/g, " ")
     .replaceAll(/[^a-z0-9]+/g, " ")
@@ -548,8 +548,7 @@ export function parseWorkoutCSV(
   let sawLb = false;
   let sawKg = false;
 
-  const cell = (r: string[], f: string) =>
-    map[f] === undefined ? "" : String(r[map[f]] ?? "").trim();
+  const cell = (r: string[], f: string) => (map[f] === undefined ? "" : (r[map[f]] ?? "").trim());
 
   for (const r of dataRows) {
     const name = cell(r, "exercise");
@@ -796,7 +795,7 @@ export function parseBodyweight(
     if (map.weightKg !== undefined) fileUnit = "kg";
     else if (map.weightLb !== undefined) fileUnit = "lb";
     for (let i = 1; i < rows.length; i++) {
-      const when = parseWhen(String(rows[i]?.[dCol] ?? ""));
+      const when = parseWhen(rows[i]?.[dCol] ?? "");
       const w = num(rows[i]?.[wCol]);
       if (!when || !w) continue;
       out.set(when.d, { w, t: new Date(when.d).getTime() + (when.t ?? 0) });

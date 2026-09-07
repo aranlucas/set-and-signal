@@ -32,6 +32,29 @@ const (
 	testOrigin = "http://localhost:8080"
 )
 
+func TestDataUploadPreservesUnknownJSONNumbers(t *testing.T) {
+	e := newTestEnv(t)
+	resp, _ := e.do("PUT", "/api/data",
+		`{"state":{"future":{"id":9007199254740993,"decimal":0.1234567890123456789},"active":{"private":true}}}`, "cookie")
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("upload = %d", resp.StatusCode)
+	}
+	raw, err := e.st.ReadState("u1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc map[string]jsontext.Value
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		t.Fatal(err)
+	}
+	if string(doc["future"]) != `{"id":9007199254740993,"decimal":0.1234567890123456789}` {
+		t.Fatalf("unknown numbers changed: %s", doc["future"])
+	}
+	if _, ok := doc["active"]; ok {
+		t.Fatal("device-local workout was uploaded")
+	}
+}
+
 // ---------- harness ----------
 
 type testEnv struct {

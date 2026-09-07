@@ -143,7 +143,7 @@ function BodyweightEntryForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(submit, () => toast(invalidWeightMessage))}>
+    <form onSubmit={(event) => void handleSubmit(submit, () => toast(invalidWeightMessage))(event)}>
       <Controller
         control={control}
         name="weight"
@@ -190,13 +190,13 @@ export function PreWorkoutBodyweightSheet({
         }}
       />
       <div className="mt-2 flex flex-col gap-0.5">
-        <Button variant="ghost" className="text-muted-foreground" onClick={() => onDone(null)}>
+        <Button variant="ghost" className="text-muted-foreground" onClick={() => void onDone(null)}>
           {t("weight.startWithoutWeighing", "Start without weighing in")}
         </Button>
         <Button
           variant="ghost"
           className="text-muted-foreground"
-          onClick={onChooseDifferentWorkout}
+          onClick={() => void onChooseDifferentWorkout()}
         >
           <Icon name="reset" />
           {t("weight.chooseDifferentWorkout", "Choose a different workout")}
@@ -301,7 +301,7 @@ export function GoalSheet({ close }: { close: SheetClose }) {
           "Your goal is drawn as a line through the weight charts, and gains/losses are colored by whether they move toward it.",
         )}
       </div>
-      <form onSubmit={handleSubmit(save, () => toast(invalidWeightMessage))}>
+      <form onSubmit={(event) => void handleSubmit(save, () => toast(invalidWeightMessage))(event)}>
         <Controller
           control={control}
           name="weight"

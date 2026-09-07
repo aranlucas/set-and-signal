@@ -43,6 +43,20 @@ func TestTrainingDataRepositoryLoadNormalizesTypedData(t *testing.T) {
 	}
 }
 
+func TestDecodeTrainingDataDocumentBoundary(t *testing.T) {
+	for _, raw := range []string{"", "null", " {} ", `{"future":{"id":9007199254740993}}`} {
+		data, err := decodeTrainingData(jsontext.Value(raw))
+		if err != nil || data.Workouts == nil || data.Week == nil {
+			t.Errorf("decode %q: unnormalized data or error: %+v, %v", raw, data, err)
+		}
+	}
+	for _, raw := range []string{"[]", "42", `"text"`, "true", `{"workouts":42}`, `{"unit":"kg","unit":"lb"}`} {
+		if _, err := decodeTrainingData(jsontext.Value(raw)); err == nil {
+			t.Errorf("accepted invalid training document: %s", raw)
+		}
+	}
+}
+
 func TestTrainingDataRepositoryMutationPreservesUnknownFields(t *testing.T) {
 	st, repo := openTrainingRepositoryTest(t)
 	if err := st.WriteState("u1", jsontext.Value(`{"unit":"lb","targetW":80,"settings":{"theme":"dark"},"future":[1,{"x":2}],"routines":[]}`)); err != nil {

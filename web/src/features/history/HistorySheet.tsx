@@ -86,7 +86,7 @@ export function WorkoutDetail({
       </div>
       <div className="mb-3">
         {editingNote ? (
-          <form onSubmit={handleSubmit(saveNote)}>
+          <form onSubmit={(event) => void handleSubmit(saveNote)(event)}>
             <Textarea
               {...register("note")}
               placeholder={t(
@@ -242,17 +242,18 @@ export function Calendar({
           (ws ? " bg-primary/15 text-primary" : "") +
           (iso === todayISO() ? " ring-2 ring-primary" : "")
         }
-        onClick={async () => {
-          await close();
-          if (!ws) {
-            onDayOverride?.(iso);
-            return;
-          }
-          if (ws.length === 1) {
-            onWorkoutDetail?.(ws[0]);
-            return;
-          }
-          onCalendarDay?.(iso, ws);
+        onClick={() => {
+          void close().then(() => {
+            if (!ws) {
+              onDayOverride?.(iso);
+              return;
+            }
+            if (ws.length === 1) {
+              onWorkoutDetail?.(ws[0]);
+              return;
+            }
+            onCalendarDay?.(iso, ws);
+          });
         }}
       >
         <span>{d}</span>

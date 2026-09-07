@@ -1,5 +1,8 @@
 .git
 .gitignore
+.data
+.convex
+**/.env.local
 .superpowers
 docs
 data

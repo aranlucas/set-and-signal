@@ -18,14 +18,8 @@ import (
 // credentials.
 
 // adminUserRow is one row of GET /api/admin/users.
-func (s *Server) adminUserRow(u store.User, st map[string]any, hasPush bool) map[string]any {
-	workouts, _ := st["workouts"].([]any)
-	var lastWorkout any
-	if len(workouts) > 0 {
-		if last, ok := workouts[len(workouts)-1].(map[string]any); ok {
-			lastWorkout = last["d"]
-		}
-	}
+func (s *Server) adminUserRow(summary store.UserSummary) map[string]any {
+	u := summary.User
 	return map[string]any{
 		"id":          u.ID,
 		"name":        u.Name,
@@ -33,10 +27,10 @@ func (s *Server) adminUserRow(u store.User, st map[string]any, hasPush bool) map
 		"disabled":    u.Disabled,
 		"admin":       s.isAdmin(&u),
 		"invitedBy":   orNull(u.InvitedBy),
-		"workouts":    len(workouts),
-		"lastWorkout": lastWorkout,
-		"lastSync":    falsyNull(st["_ts"]),
-		"hasPush":     hasPush,
+		"workouts":    summary.Workouts,
+		"lastWorkout": summary.LastWorkout,
+		"lastSync":    summary.LastSync,
+		"hasPush":     summary.HasPush,
 		"live":        s.livePayload(u.ID),
 	}
 }
@@ -88,31 +82,20 @@ func (s *Server) readStateMap(uid string) (map[string]any, error) {
 	return st, nil
 }
 
-// GET /api/admin/users — one row per user, cheap enough for a personal
-// instance (reads each state blob once).
+// GET /api/admin/users — one SQLite snapshot of the compact user summaries.
 func (s *Server) adminUsers(w http.ResponseWriter, r *http.Request) {
 	admin := s.requireAdmin(w, r)
 	if admin == nil {
 		return
 	}
-	users, err := s.ST.Users()
+	users, err := s.ST.UserSummaries(r.Context())
 	if err != nil {
 		serverError(w)
 		return
 	}
 	rows := make([]map[string]any, 0, len(users))
 	for _, u := range users {
-		st, err := s.readStateMap(u.ID)
-		if err != nil {
-			serverError(w)
-			return
-		}
-		hasPush, err := s.ST.AnySubFor(u.ID)
-		if err != nil {
-			serverError(w)
-			return
-		}
-		rows = append(rows, s.adminUserRow(u, st, hasPush))
+		rows = append(rows, s.adminUserRow(u))
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"users": rows, "invite_only": s.Cfg.InviteOnly, "now": time.Now().UnixMilli(),

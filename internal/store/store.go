@@ -4,6 +4,7 @@ package store
 import (
 	"database/sql"
 	"embed"
+	"encoding/json/jsontext"
 	"errors"
 	"fmt"
 	"os"
@@ -18,8 +19,14 @@ import (
 var migrationsFS embed.FS
 
 // Store wraps the SQLite handle shared by all typed query files.
+type StateBackend interface {
+	ReadState(string) (jsontext.Value, error)
+	WriteState(string, jsontext.Value) error
+	MutateState(string, func(jsontext.Value) (jsontext.Value, error)) error
+}
 type Store struct {
-	DB *sql.DB
+	DB       *sql.DB
+	Training StateBackend
 }
 
 // Open opens (and migrates) <dataDir>/opengym.db, creating dataDir first.
@@ -45,6 +52,16 @@ func OpenAtPath(dbPath string) (*Store, error) {
 		return nil, fmt.Errorf("store: open db: %w", err)
 	}
 
+	// WAL lets readers keep their committed snapshot while a state mutation
+	// writes. Set this once before migrations; journal mode persists in the file.
+	var journalMode string
+	if err := db.QueryRow("PRAGMA journal_mode=WAL").Scan(&journalMode); err != nil {
+		return nil, fmt.Errorf("store: enable WAL: %w", errors.Join(err, db.Close()))
+	}
+	if journalMode != "wal" {
+		return nil, errors.Join(fmt.Errorf("store: expected WAL journal mode, got %q", journalMode), db.Close())
+	}
+
 	goose.SetBaseFS(migrationsFS)
 	if err := goose.SetDialect("sqlite3"); err != nil {
 		return nil, fmt.Errorf("store: goose dialect: %w", errors.Join(err, db.Close()))
@@ -54,11 +71,5 @@ func OpenAtPath(dbPath string) (*Store, error) {
 	}
 	goose.SetBaseFS(nil)
 
-	// Belt-and-braces for connections acquired outside the DSN defaults.
-	for _, pragma := range []string{"PRAGMA foreign_keys=ON", "PRAGMA busy_timeout=5000"} {
-		if _, err := db.Exec(pragma); err != nil {
-			return nil, fmt.Errorf("store: %s: %w", pragma, errors.Join(err, db.Close()))
-		}
-	}
 	return &Store{DB: db}, nil
 }

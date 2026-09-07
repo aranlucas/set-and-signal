@@ -121,7 +121,7 @@ export default function Plan() {
                   type="button"
                   key={routine.id}
                   className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2 text-left transition-colors duration-140 active:bg-muted"
-                  onClick={() => nav({ to: "/plan/r/$id", params: { id: routine.id } })}
+                  onClick={() => void nav({ to: "/plan/r/$id", params: { id: routine.id } })}
                 >
                   <span className="flex size-7 flex-none items-center justify-center rounded-sm bg-primary text-lg text-white">
                     <Icon name={glyphOf(routine.emoji)} />

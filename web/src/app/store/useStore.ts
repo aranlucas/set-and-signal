@@ -1,12 +1,14 @@
 import { create } from "zustand";
-import { api, apiParsed, ApiError, getSession } from "@/shared/lib/api.js";
+import { toast } from "sonner";
+import { TrainingSync } from "./training-sync";
+import { api, ApiError, getSession } from "@/shared/lib/api.js";
 import { localTZ } from "@/shared/lib/format.js";
 import { registerCustom } from "@/domain/exercises/exercise-registry.js";
 import { DEMO, DEMO_SEEDED } from "@/shared/lib/demo.js";
 import { MOBILE, nativeLoad, nativeSave, syncReminder } from "@/shared/lib/mobile.js";
 import { DEFAULT_APP_STATE } from "@/domain/training/default-state.js";
 import type { AppState, StoreState, User } from "@/shared/lib/types.js";
-import { dataResponse, parseStoredState, parseUser } from "@/shared/lib/schemas.js";
+import { parseStoredState, parseUser } from "@/shared/lib/schemas.js";
 
 const STATE_STORAGE_KEY = "gym_state_v1";
 
@@ -24,8 +26,16 @@ const cloneValue = <T>(value: T): T => structuredClone(value);
 
 function loadState(): AppState {
   try {
-    const storedState = parseStoredState(localStorage.getItem(STATE_STORAGE_KEY));
-    if (storedState) return Object.assign(cloneValue(DEFAULT_STATE), storedState);
+    migrateUserKey();
+    const rawUser = localStorage.getItem(USER_STORAGE_KEY);
+    const user = rawUser ? parseUser(JSON.parse(rawUser)) : null;
+    const storedState = parseStoredState(
+      localStorage.getItem(user ? `gym_cache:${user.id}` : STATE_STORAGE_KEY),
+    );
+    const draft = user
+      ? parseStoredState(`{"active":${localStorage.getItem(`gym_active:${user.id}`) ?? "null"}}`)
+      : null;
+    if (storedState || draft) return Object.assign(cloneValue(DEFAULT_STATE), storedState, draft);
   } catch {
     /* ignore */
   }
@@ -47,11 +57,9 @@ function migrateUserKey() {
 }
 
 export const hasData = (appState: Partial<AppState>) =>
-  !!(
-    (appState.workouts || []).length > 0 ||
-    (appState.routines || []).length > 0 ||
-    (appState.bodyweight || []).length > 0
-  );
+  (appState.workouts || []).length > 0 ||
+  (appState.routines || []).length > 0 ||
+  (appState.bodyweight || []).length > 0;
 
 interface StoreActions {
   update: (mutate: (draft: AppState) => void, push?: boolean) => void;
@@ -59,6 +67,7 @@ interface StoreActions {
   setGuest: (isGuest: boolean) => void;
   setUser: (user: User | null) => void;
   pushState: () => Promise<void>;
+  transferGuest: (state: AppState) => Promise<void>;
   pullState: () => Promise<void>;
   signOut: () => Promise<void>;
   signOutAll: () => Promise<void>;
@@ -69,7 +78,9 @@ interface StoreActions {
 type Store = StoreState & StoreActions;
 
 export const useStore = create<Store>()((set, get) => {
-  let pushTimerId: number | undefined;
+  let trainingSync: TrainingSync | undefined;
+  let syncUser: string | undefined;
+  let syncStart: Promise<void> | undefined;
   let saveTimerId: number | undefined;
   let isBooting = false;
 
@@ -85,15 +96,21 @@ export const useStore = create<Store>()((set, get) => {
   };
 
   const persist = (nextState: AppState, push = true) => {
-    nextState._ts = Date.now();
+    const previous = get().appState;
     registerCustom(nextState.customEx);
-    localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(nextState));
+    if (MOBILE || DEMO || !get().user) {
+      nextState._ts = Date.now();
+      localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(nextState));
+    } else {
+      if (push) {
+        if (!trainingSync)
+          throw new Error("Training connection is not ready. Your existing draft is preserved.");
+        trainingSync.enqueue(previous, nextState);
+      }
+      localStorage.setItem(`gym_active:${get().user?.id}`, JSON.stringify(nextState.active));
+    }
     set({ appState: nextState });
     if (MOBILE) nativePersist();
-    if (push && get().user) {
-      clearTimeout(pushTimerId);
-      pushTimerId = setTimeout(() => get().pushState(), 1500);
-    }
   };
 
   // A setting changed right before switching away/closing the tab must not get lost mid-debounce
@@ -108,19 +125,19 @@ export const useStore = create<Store>()((set, get) => {
         saveTimerId = undefined;
         void nativeSave(get().appState);
       }
-      if (pushTimerId) {
-        clearTimeout(pushTimerId);
-        pushTimerId = undefined;
-        void get().pushState();
-      }
     });
   }
 
   // Everything a sign-out leaves behind on this device, whichever way it was triggered.
   const clearLocalSession = () => {
+    const uid = get().user?.id;
+    if (uid) {
+      localStorage.removeItem(`gym_cache:${uid}`);
+      localStorage.removeItem(`gym_active:${uid}`);
+      localStorage.removeItem(`gym_pending_convex:${uid}`);
+    }
     get().setUser(null);
     get().setGuest(false);
-    localStorage.removeItem("gym_dirty");
     localStorage.removeItem(STATE_STORAGE_KEY);
     persist(cloneValue(DEFAULT_STATE), false);
   };
@@ -164,45 +181,101 @@ export const useStore = create<Store>()((set, get) => {
         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
         localStorage.removeItem("gym_guest");
       } else localStorage.removeItem(USER_STORAGE_KEY);
+      const previousUser = get().user?.id;
+      if (previousUser && !user) {
+        localStorage.removeItem(STATE_STORAGE_KEY);
+        set({ appState: cloneValue(DEFAULT_STATE) });
+      }
+      if (previousUser !== user?.id && user) {
+        const saved = parseStoredState(
+          `{"active":${localStorage.getItem(`gym_active:${user.id}`) ?? "null"}}`,
+        );
+        const next = Object.assign(cloneValue(DEFAULT_STATE), saved ?? { active: null });
+        set({ appState: next });
+      }
+      if (syncUser !== user?.id) {
+        void trainingSync?.close();
+        trainingSync = undefined;
+        syncUser = undefined;
+        syncStart = undefined;
+      }
       set({ user, ...(user ? { isGuest: false } : {}) });
     },
 
+    async transferGuest(state) {
+      const uid = get().user?.id;
+      if (!uid) throw new Error("Sign in before transferring guest data");
+      localStorage.setItem(`gym_guest_transfer:${uid}`, JSON.stringify(state));
+      localStorage.setItem(`gym_active:${uid}`, JSON.stringify(state.active));
+      await get().pullState();
+    },
     async pushState() {
       if (!get().user) return;
-      clearTimeout(pushTimerId);
-      try {
-        await api("/api/data", {
-          method: "PUT",
-          body: JSON.stringify({ state: get().appState }),
-        });
-        localStorage.removeItem("gym_dirty");
-      } catch {
-        localStorage.setItem("gym_dirty", "1");
-      }
+      if (!trainingSync) await get().pullState();
+      await trainingSync?.flush();
     },
     async pullState() {
+      const uid = get().user?.id;
+      if (!uid) return;
+      if (syncUser === uid && syncStart) return syncStart;
+      await trainingSync?.close();
+      syncUser = uid;
+      const profileCache = parseStoredState(localStorage.getItem(`gym_cache:${uid}`));
+      if (profileCache) set({ appState: Object.assign(cloneValue(DEFAULT_STATE), profileCache) });
+      const cached = parseStoredState(
+        `{"active":${localStorage.getItem(`gym_active:${uid}`) ?? "null"}}`,
+      );
+      if (cached?.active) set({ appState: Object.assign(cloneValue(get().appState), cached) });
+      trainingSync = new TrainingSync(
+        uid,
+        (remote) => {
+          if (get().user?.id !== uid) return;
+          const active = get().appState.active;
+          const nextState = Object.assign(cloneValue(DEFAULT_STATE), remote, { active });
+          localStorage.setItem(`gym_cache:${uid}`, JSON.stringify(remote));
+          registerCustom(nextState.customEx);
+          set({ appState: nextState });
+        },
+        (error) => {
+          if (get().user?.id !== uid) return;
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Training could not sync. Your pending edits are saved on this device.",
+            {
+              duration: Infinity,
+              action: { label: "Save recovery file", onClick: () => trainingSync?.saveRecovery() },
+              cancel: {
+                label: "Use synced data",
+                onClick: () => {
+                  void trainingSync
+                    ?.useRemote()
+                    .catch(() =>
+                      toast.error("Could not reconnect. Your saved edits are retained."),
+                    );
+                },
+              },
+            },
+          );
+        },
+      );
+      const transfer = parseStoredState(localStorage.getItem(`gym_guest_transfer:${uid}`));
+      if (transfer) {
+        trainingSync.enqueue({}, Object.assign(cloneValue(DEFAULT_STATE), transfer));
+        localStorage.removeItem(`gym_guest_transfer:${uid}`);
+      }
+      syncStart = trainingSync.start();
       try {
-        const { state } = await apiParsed("/api/data", dataResponse);
-        if (!state) return;
-        // Server is source of truth: take remote state, keep only an in-progress
-        // workout that is still running on this device.
-        const active = get().appState.active;
-        const nextState = Object.assign(cloneValue(DEFAULT_STATE), state);
-        if (active) nextState.active = active;
-        persist(nextState, false);
-        localStorage.removeItem("gym_dirty");
-      } catch {
-        /* offline — keep cached state until reconnect */
+        await syncStart;
+      } catch (error) {
+        syncStart = undefined;
+        throw error;
       }
     },
 
     async signOut() {
-      try {
-        await get().pushState();
-        await api("/api/logout", { method: "POST", body: "{}" });
-      } catch {
-        /* */
-      }
+      await get().pushState();
+      await api("/api/logout", { method: "POST", body: "{}" });
       clearLocalSession();
     },
 
@@ -212,7 +285,7 @@ export const useStore = create<Store>()((set, get) => {
     // the sessions elsewhere are all still valid, and wiping this device's copy of the data
     // would sign the user out of the one place the bump didn't reach. Caller reports the error.
     async signOutAll() {
-      await get().pushState(); // never throws — stores gym_dirty and moves on when offline
+      await get().pushState();
       await api("/api/logout/all", { method: "POST", body: "{}" });
       clearLocalSession();
     },
@@ -221,7 +294,6 @@ export const useStore = create<Store>()((set, get) => {
     // Dynamic import so the generator never ships in a self-hosted bundle.
     async resetDemo() {
       const { buildDemoState } = await import("@/features/home/demoSeed.js");
-      localStorage.removeItem("gym_dirty");
       persist(Object.assign(cloneValue(DEFAULT_STATE), buildDemoState()), false);
     },
 
@@ -272,6 +344,11 @@ export const useStore = create<Store>()((set, get) => {
           if (e instanceof ApiError && e.status === 401) {
             get().setUser(null);
             get().setGuest(false); // hosted builds require sign-in
+          } else if (get().user) {
+            // Construct the durable queue even when token refresh is offline.
+            await get()
+              .pullState()
+              .catch(() => {});
           }
         }
         set({ isReady: true });

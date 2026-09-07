@@ -17,6 +17,7 @@
     "src/i18n/locales/**",
     "src/generated/**",
     "node_modules/**",
-    "src/generated/exercises-data.ts"
+    "src/generated/exercises-data.ts",
+    "convex/_generated/**"
   ]
 }

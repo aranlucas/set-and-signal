@@ -52,7 +52,10 @@ export default function ConfirmDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{resolvedCancelLabel}</AlertDialogCancel>
-          <AlertDialogAction variant={danger ? "destructive" : "default"} onClick={confirm}>
+          <AlertDialogAction
+            variant={danger ? "destructive" : "default"}
+            onClick={() => void confirm()}
+          >
             {resolvedConfirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>

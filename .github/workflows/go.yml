@@ -98,6 +98,9 @@ jobs:
       - name: Lint
         run: pnpm --dir web lint
 
+      - name: Type-check Convex functions
+        run: pnpm --dir web convex:check
+
       - name: Test catalogue and app logic
         run: pnpm --dir web test
 

@@ -645,7 +645,7 @@ describe("history logged before targets were recorded", () => {
       entries: [
         {
           id: LIFT,
-          sets: row.slice(1).map((r) => ({ w: row[0]!, r, done: true })),
+          sets: row.slice(1).map((r) => ({ w: row[0], r, done: true })),
         },
       ], // no target
     })),

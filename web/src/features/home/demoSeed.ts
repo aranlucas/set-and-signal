@@ -13,7 +13,6 @@ import type {
   Routine,
   Weekday,
   Workout,
-  WorkoutEntry,
 } from "@/shared/lib/types.js";
 
 // Starting weight and weekly increment per exercise of the starter plan (kg).
@@ -232,7 +231,7 @@ export function buildDemoState(): DemoState {
       routineId: routine.id,
       name: routine.name,
       bw: bodyweightAtWorkout,
-      entries: entries as WorkoutEntry[],
+      entries,
       prs: weekIndex === 0 ? [] : prs, // the very first session isn't a PR party
       vol: volume,
     });

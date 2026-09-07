@@ -26,12 +26,19 @@ func (s *Server) getData(w http.ResponseWriter, r *http.Request) {
 // entire profile. The in-progress-workout `active` key is stripped — those
 // stay device-local.
 func (s *Server) putData(w http.ResponseWriter, r *http.Request) {
+	if s.Convex != nil {
+		if s.requireSession(w, r) == nil {
+			return
+		}
+		writeErr(w, http.StatusGone, "Training edits now use Convex. Reload the application.")
+		return
+	}
 	u := s.requireSession(w, r)
 	if u == nil {
 		return
 	}
 	var body struct {
-		State map[string]any `json:"state"`
+		State map[string]jsontext.Value `json:"state"`
 	}
 	if !readJSON(w, r, &body) {
 		return
@@ -51,7 +58,8 @@ func (s *Server) putData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var ts any // upstream: body.state._ts || null
-	if f, ok := body.State["_ts"].(float64); ok && f != 0 {
+	var f float64
+	if json.Unmarshal(body.State["_ts"], &f) == nil && f != 0 {
 		ts = f
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "ts": ts})

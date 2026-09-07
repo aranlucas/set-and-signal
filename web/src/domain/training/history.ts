@@ -74,7 +74,7 @@ export const isTimed = (cfg: AnyConfig | null | undefined) => modeOf(cfg) === "t
 // Both are absent on every plan, workout and backup written before they existed, and absent
 // reads as false, so nothing needs migrating.
 export const isBw = (cfg: AnyConfig | null | undefined) =>
-  cfg && cfg.bodyweight != null ? !!cfg.bodyweight : isBodyweightEq(cfg && cfg.id);
+  cfg && cfg.bodyweight != null ? cfg.bodyweight : isBodyweightEq(cfg && cfg.id);
 export const isPerSide = (cfg: AnyConfig | null | undefined) => !!(cfg && cfg.side);
 // What one side did, for display only. Half of an odd total is shown as it falls (8.5) rather
 // than rounded away: it means the sides were not even, which is worth seeing.
@@ -266,15 +266,28 @@ export function bestWeightFor(state: { workouts: WorkoutLike[] }, exId: Id): num
   let bestWeight = 0;
   state.workouts.forEach((workout) =>
     workout.entries.forEach((entry) => {
-      if (entry.id === exId) {
-        entry.sets.forEach((set) => {
-          if (set.done && (set.w || 0) > bestWeight && !isWarmup(set)) bestWeight = set.w || 0;
-        });
-        if (entry.topW && entry.topW > bestWeight) bestWeight = entry.topW;
-      }
+      if (entry.id === exId) bestWeight = entryBestWeight(entry, bestWeight);
     }),
   );
   return bestWeight;
+}
+
+function entryBestWeight(entry: WorkoutLike["entries"][number], bestWeight: number): number {
+  for (const set of entry.sets) {
+    if (set.done && (set.w || 0) > bestWeight && !isWarmup(set)) bestWeight = set.w || 0;
+  }
+  return entry.topW && entry.topW > bestWeight ? entry.topW : bestWeight;
+}
+
+// List views can look up every exercise without rescanning history for each row.
+export function bestWeightsFor(workouts: WorkoutLike[]): Map<Id, number> {
+  const weights = new Map<Id, number>();
+  for (const workout of workouts) {
+    for (const entry of workout.entries) {
+      weights.set(entry.id, entryBestWeight(entry, weights.get(entry.id) ?? 0));
+    }
+  }
+  return weights;
 }
 export { effectiveRoutine, effectiveRoutineId } from "@/domain/training/schedule.js";
 export function buildSets(
