@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm instructions:generate && vite",
-    "build": "pnpm instructions:generate && tsc -b && vite build",
+    "build": "pnpm typecheck && vite build",
     "preview": "vite preview",
     "lint": "oxlint src --type-aware --type-check --deny-warnings --report-unused-disable-directives && pnpm lint:design-system",
     "lint:design-system": "oxlint --config .oxlintrc.design-system.json src --deny-warnings",
@@ -21,7 +21,8 @@
     "build:mobile": "pnpm instructions:generate && VITE_MOBILE=1 VITE_IMG_BASE=https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@7455efae41b330c265e7cd4b78dfa848e7ce5ebd/images/ VITE_GIF_BASE=https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@7455efae41b330c265e7cd4b78dfa848e7ce5ebd/videos/ vite build && cap sync",
     "convex:dev": "convex dev",
     "convex:deploy": "convex deploy",
-    "convex:check": "tsc --noEmit -p convex/tsconfig.json"
+    "convex:check": "tsc --noEmit -p convex/tsconfig.json",
+    "typecheck": "pnpm instructions:generate && tsc -b && pnpm convex:check"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
