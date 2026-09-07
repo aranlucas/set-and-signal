@@ -5,7 +5,8 @@
   "scripts": {
     "infra:check": "tsc -p .railway/tsconfig.json",
     "infra:plan": "railway config plan",
-    "infra:apply": "railway config apply"
+    "infra:apply": "railway config apply",
+    "typecheck": "pnpm infra:check && pnpm --dir web typecheck"
   },
   "dependencies": {
     "railway": "3.11.0"
