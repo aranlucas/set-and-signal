@@ -38,7 +38,7 @@ function NavigationTab({
       value={value}
       nativeButton={false}
       render={<Link to={to} activeOptions={{ exact: true }} />}
-      className="h-auto min-h-11 flex-col justify-end gap-1 rounded-sm px-1 py-0.5 font-mono text-xs leading-none tracking-wider text-muted-foreground uppercase data-active:text-foreground"
+      className="h-auto min-h-11 flex-col justify-end gap-1 rounded-sm px-1 py-0.5 text-xs leading-none font-medium text-muted-foreground data-active:text-system-blue"
     >
       <Icon name={icon} />
       <span>{label}</span>
@@ -77,7 +77,7 @@ export default function TabBar({
     <nav
       id="tabbar"
       aria-label="Main navigation"
-      className="fixed inset-x-0 bottom-0 z-50 overflow-visible rounded-2xl border-t border-border/40 bg-background/80 pt-0 pr-safe-tab-right pb-safe-tab-bottom pl-safe-tab-left shadow-xl backdrop-blur-xl backdrop-saturate-180 contain-layout lg:inset-x-auto lg:bottom-4 lg:left-1/2 lg:w-130 lg:-translate-x-1/2 lg:border lg:px-2.5 lg:pb-2.5"
+      className="fixed inset-x-0 bottom-0 z-50 overflow-visible border-t border-foreground bg-background pt-2 pr-safe-tab-right pb-safe-tab-bottom pl-safe-tab-left contain-layout lg:inset-x-auto lg:bottom-4 lg:left-1/2 lg:w-130 lg:-translate-x-1/2 lg:border lg:px-2.5 lg:pb-2.5"
     >
       <Tabs value={activeTab} className="w-full gap-0">
         <TabsList
@@ -99,7 +99,7 @@ export default function TabBar({
           <TabsTrigger
             value="workout"
             className={cn(
-              "-mt-6 h-auto min-h-11 flex-col justify-end gap-1 rounded-sm px-1 py-0.5 font-mono text-xs leading-none tracking-wider text-primary uppercase after:hidden data-active:bg-transparent dark:data-active:bg-transparent",
+              "-mt-6 h-auto min-h-11 flex-col justify-end gap-1 rounded-sm px-1 py-0.5 text-xs leading-none font-medium text-primary after:hidden data-active:bg-transparent dark:data-active:bg-transparent",
               appState.active && "text-active",
             )}
             onClick={startWorkout}
@@ -108,9 +108,8 @@ export default function TabBar({
           >
             <span
               className={cn(
-                "relative flex size-13 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform duration-150 ease-out active:scale-95",
-                appState.active &&
-                  "bg-orange-500 text-black shadow-lg after:absolute after:inset-0 after:animate-attention-ping after:rounded-full after:border-2 after:border-orange-500",
+                "relative flex size-13 items-center justify-center rounded-sm bg-primary text-primary-foreground transition-transform duration-150 ease-out active:scale-95",
+                appState.active && "bg-primary text-primary-foreground",
               )}
             >
               <Icon name={appState.active ? "play" : "plus"} />

@@ -766,6 +766,8 @@ function UserRows({
   const navigate = useNavigate();
   const user = useStore((state) => state.user);
   const signOut = useStore((state) => state.signOut);
+  const syncStatus = useStore((state) => state.syncStatus);
+  const pending = syncStatus.pending > 0 || syncStatus.phase === "conflict";
   if (!user) return null;
   return (
     <>
@@ -774,8 +776,8 @@ function UserRows({
         iconTint="var(--system-grey)"
         title={user.name}
         subtitle={t(
-          "settings.signedPasskeyDataSyncsProfile",
-          "Signed in with passkey — data syncs to this profile.",
+          "sync.profileOwnership",
+          "Your plan and completed workouts sync to this profile. Unfinished workouts stay on this device.",
         )}
       />
       {user.admin && (
@@ -795,11 +797,18 @@ function UserRows({
         onClick={() =>
           requestConfirmation({
             title: t("settings.signOut", "Sign out?"),
-            description: t(
-              "settings.dataSyncedProfileFirstCleared",
-              "Your data is synced to your profile first, then cleared from this device.",
-            ),
-            confirmLabel: t("settings.signOutLabel", "Sign out"),
+            description: pending
+              ? t(
+                  "sync.signOutPending",
+                  "Your latest changes haven’t synced yet. We’ll try saving them before signing out. If that fails, you’ll stay signed in and your edits will be kept.",
+                )
+              : t(
+                  "sync.signOutDescription",
+                  "Your saved training stays in your account. Any unfinished workout is kept on this device for when you sign back in.",
+                ),
+            confirmLabel: pending
+              ? t("sync.saveSignOut", "Save & sign out")
+              : t("settings.signOutLabel", "Sign out"),
             danger: true,
             onConfirm: async () => {
               await signOut();
@@ -823,25 +832,21 @@ function UserRows({
           // local is touched: still signed in here, and say so rather than leaving a half-signed-out app.
           requestConfirmation({
             title: t("settings.signOutEverywhere", "Sign out everywhere?"),
-            description: t(
-              "settings.signsProfileOutEveryDevice",
-              "Signs this profile out on every device, including this one. Your passkeys keep working — sign in with them again anytime.",
-            ),
+            description: pending
+              ? t(
+                  "sync.signOutPending",
+                  "Your latest changes haven’t synced yet. We’ll try saving them before signing out. If that fails, you’ll stay signed in and your edits will be kept.",
+                )
+              : t(
+                  "settings.signsProfileOutEveryDevice",
+                  "Signs this profile out on every device, including this one. Your passkeys keep working — sign in with them again anytime.",
+                ),
             confirmLabel: t("settings.signOutEverywhereLabel", "Sign out everywhere"),
             danger: true,
             onConfirm: async () => {
-              try {
-                await useStore.getState().signOutAll();
-                void navigate({ to: "/home" });
-                toast(t("settings.signedOutAllDevices", "Signed out on all devices"));
-              } catch {
-                toast(
-                  t(
-                    "settings.couldNotSignOutEverywhere",
-                    "Could not sign out everywhere — you are still signed in.",
-                  ),
-                );
-              }
+              await useStore.getState().signOutAll();
+              void navigate({ to: "/home" });
+              toast(t("settings.signedOutAllDevices", "Signed out on all devices"));
             },
           });
         }}

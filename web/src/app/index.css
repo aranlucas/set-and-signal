@@ -83,10 +83,10 @@
 
   --radius: 0.3rem;
 
-  --brand-light: #e84a35;
+  --brand-light: #be3927;
   --brand-dark: #ff7865;
   --brand-light-foreground: #fff;
-  --brand-dark-foreground: #fff;
+  --brand-dark-foreground: #171713;
 
   --background: #f3ecdd;
   --foreground: #171713;
@@ -154,7 +154,7 @@
 }
 :root[data-accent="orange"],
 [data-accent-swatch="orange"] {
-  --brand-light: #e84a35;
+  --brand-light: #be3927;
   --brand-dark: #ff7865;
   --brand-light-foreground: #fff;
   --brand-dark-foreground: #000;
@@ -316,4 +316,43 @@
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* The log's binding: quiet ownership, strong rules, and one action color. */
+.record-status {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.65rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.record-status > :first-child {
+  max-width: 38%;
+}
+.brand-wordmark {
+  letter-spacing: -0.035em;
+}
+.session-signature {
+  border-block: 2px solid var(--foreground);
+}
+.training-loading {
+  min-height: 22rem;
+  padding-block: 3rem;
+}
+@media (min-width: 64rem) {
+  .brand-wordmark {
+    font-size: 3.5rem;
+  }
+  .record-status {
+    margin-bottom: 1.5rem;
+  }
+}
+
+.sync-review {
+  max-height: 85dvh;
 }

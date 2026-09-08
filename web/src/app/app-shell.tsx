@@ -12,6 +12,7 @@ import Toast from "@/shared/components/Toast";
 import RestTimer from "@/shared/components/RestTimer";
 import Login from "@/features/auth/LoginPage";
 import { cn } from "@/shared/lib/utils";
+import SyncStatus from "@/shared/components/SyncStatus";
 import BrandMark from "@/shared/components/BrandMark";
 
 const loadStartWorkoutSheet = () => import("@/shared/components/StartWorkoutSheet");
@@ -37,10 +38,11 @@ export default function AppShell() {
   const keepAwake = useStore((state) => state.appState.keepAwake);
   const user = useStore((state) => state.user);
   const isGuest = useStore((state) => state.isGuest);
+  const profileLoaded = useStore((state) => state.profileLoaded);
   const isReady = useStore((state) => state.isReady);
   const isTimerVisible = useWorkoutTimer((state) => Boolean(state.timer || state.work));
   const [startRoutineId, setStartRoutineId] = useState<string | null>(null);
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const resolvedLanguage = i18n.resolvedLanguage;
 
   useEffect(() => {
@@ -61,7 +63,10 @@ export default function AppShell() {
         id="app"
         className="mx-auto max-w-xl pt-safe-app-top pr-safe-app-right pb-32 pl-safe-app-left md:max-w-3xl lg:max-w-6xl lg:px-4 lg:pt-8"
       >
-        <BrandMark className="mx-auto mt-64 size-12 text-primary" title="Set & Signal" />
+        <BrandMark className="mx-auto mt-32 size-12 text-primary" title="Set & Signal" />
+        <output className="mt-4 block text-center text-muted-foreground">
+          {t("sync.opening", "Opening your training log…")}
+        </output>
       </div>
     );
 
@@ -76,14 +81,38 @@ export default function AppShell() {
         )}
         key={pageRouteId}
       >
-        <ErrorBoundary>{authed ? <Outlet /> : <Login />}</ErrorBoundary>
+        <ErrorBoundary>
+          {authed && <SyncStatus key={user?.id ?? "local"} />}
+          {authed ? (
+            user && !profileLoaded ? (
+              <section className="training-loading" aria-busy="true">
+                <BrandMark className="size-10 text-primary" />
+                <h1 className="mt-6 font-heading text-3xl">
+                  {t("sync.loadingProfile", "Getting your training log")}
+                </h1>
+                <p className="mt-3 max-w-prose text-muted-foreground">
+                  {t(
+                    "sync.loadingProfileDetail",
+                    "Your plan and history will appear when we connect. If this is your first visit on this device, an internet connection is needed.",
+                  )}
+                </p>
+              </section>
+            ) : (
+              <Outlet />
+            )
+          ) : (
+            <Login />
+          )}
+        </ErrorBoundary>
       </main>
-      <TabBar
-        onStart={(routineId) => {
-          setStartRoutineId(routineId);
-        }}
-        onStartIntent={() => void loadStartWorkoutSheet()}
-      />
+      {(!user || profileLoaded) && (
+        <TabBar
+          onStart={(routineId) => {
+            setStartRoutineId(routineId);
+          }}
+          onStartIntent={() => void loadStartWorkoutSheet()}
+        />
+      )}
       <RestTimer />
       {startRoutineId !== null && (
         <Suspense fallback={null}>

@@ -645,6 +645,7 @@ function WorkoutSessionHeader({
   onFinish: () => void;
 }) {
   const { t } = useTranslation();
+  const hosted = useStore((state) => !!state.user);
   return (
     <div className="mt-2 mb-4.5 flex items-end justify-between gap-3">
       <Button
@@ -655,8 +656,13 @@ function WorkoutSessionHeader({
       >
         <Icon name="xmark" />
       </Button>
-      <div className="text-center">
-        <h1 className="font-semibold">{name}</h1>
+      <div className="min-w-0 text-center">
+        <h1 className="text-2xl font-semibold wrap-anywhere">{name}</h1>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {hosted
+            ? t("sync.workoutDevice", "Saved here · syncs when you finish")
+            : t("sync.deviceOnly", "Saved on this device")}
+        </p>
         <div className="mt-1 text-base tracking-tight text-foreground/60">
           <Elapsed start={start} /> ·{" "}
           {t("workout.completion.setProgress", "{{progress}} sets", {

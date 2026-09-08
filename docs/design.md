@@ -96,3 +96,21 @@ upstream visual files have separate terms; see [NOTICE.md](../NOTICE.md).
 The approved composition reference is kept out of the source release as a
 design artifact. The implementation contract is this document and the body
 comment in `web/index.html`.
+
+## Saving and account context
+
+A compact status line identifies the profile and the state of its saved record.
+Saved uses a check and registry blue; connection failures and pending edits use
+plain descriptions and a retry action. Successful saves never interrupt training.
+An uncached account shows an explicit loading surface before any empty-state UI.
+
+Conflicts are reviewed by affected record, with changed values presented side by
+side. Choosing a version retains a recovery copy and preserves unrelated pending
+edits. Active workouts stay on the current device, including across sign-out;
+completed workouts sync to the profile. Sign-out waits for saving and keeps the
+dialog open with a recovery explanation if saving fails.
+
+The masthead keeps the Set & Signal name even when signed in. The account name
+belongs in the status line. The session panel uses ink rules; navigation uses an
+opaque paper surface and a square action stamp. Vermilion actions use a darker
+text-safe shade, while dark mode retains its lighter action color.

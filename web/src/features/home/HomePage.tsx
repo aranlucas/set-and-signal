@@ -164,19 +164,21 @@ export default function Home() {
   );
 }
 
-function HomeHeader({ user, onSettings }: { user: User | null; onSettings: () => void }) {
+function HomeHeader({ onSettings }: { user: User | null; onSettings: () => void }) {
   const { t } = useTranslation();
   return (
     <PageHeader className="mb-4 lg:mt-0 lg:mb-6">
       <div>
         <PageTitle className="flex items-center gap-2.5">
           <BrandMark className="size-9 text-primary" />
-          <span>{user ? t("home.hi", "Hi {{name}}", { name: user.name }) : "Set & Signal"}</span>
+          <span className="brand-wordmark">
+            Set <span className="font-normal text-primary italic">&</span> Signal
+          </span>
         </PageTitle>
       </div>
       <Button
         variant="plain"
-        className="flex size-9 flex-none items-center justify-center rounded-full border border-border bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
+        className="flex size-11 flex-none items-center justify-center rounded-sm border border-border bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
         onClick={onSettings}
         aria-label={t("navigation.settings", "Settings")}
       >
@@ -221,12 +223,12 @@ function HomeSchedule({
 }: HomeScheduleProps) {
   const { t } = useTranslation();
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card lg:flex lg:h-full lg:flex-col">
+    <section className="session-signature overflow-hidden bg-card lg:flex lg:h-full lg:flex-col">
       <SpaceBetween size="xs">
         <div className="flex items-center justify-between gap-3 px-4 pt-3">
           <Button
             variant="plain"
-            className="flex size-8 flex-none items-center justify-center rounded-full text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
+            className="flex size-11 flex-none items-center justify-center rounded-sm text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
             onClick={onPreviousWeek}
             aria-label={t("home.previousWeek", "Previous week")}
           >
@@ -235,7 +237,7 @@ function HomeSchedule({
           <div className="text-sm leading-snug font-medium text-foreground/60">{wkLabel}</div>
           <Button
             variant="plain"
-            className="flex size-8 flex-none items-center justify-center rounded-full text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
+            className="flex size-11 flex-none items-center justify-center rounded-sm text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
             onClick={onNextWeek}
             aria-label={t("home.nextWeek", "Next week")}
           >
@@ -261,7 +263,7 @@ function HomeSchedule({
             })}
           </div>
           <div className="flex items-center justify-between gap-4">
-            <h2 className="min-w-0 text-2xl leading-tight font-semibold tracking-tight capitalize sm:text-3xl">
+            <h2 className="min-w-0 text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
               {state.active
                 ? state.active.name
                 : routine
@@ -281,7 +283,7 @@ function HomeSchedule({
             {state.active ? (
               <span className="flex items-center gap-1.5 text-active">
                 <Icon name="timer" />
-                {t("home.workoutProgress", "Workout in progress")}
+                {t("sync.activeHere", "In progress on this device")}
               </span>
             ) : routine ? (
               <>

@@ -3,8 +3,11 @@ import { makeFunctionReference } from "convex/server";
 import { api } from "@/shared/lib/api";
 import { parseStoredState, type ParsedAppStatePatch } from "@/shared/lib/schemas";
 import type { AppState } from "@/shared/lib/types";
-import { splitState } from "../../../convex/model";
+import { joinState, splitState } from "../../../convex/model";
 
+export type SyncPhase = "loading" | "saving" | "saved" | "offline" | "error" | "conflict";
+export type SyncStatus = { phase: SyncPhase; pending: number };
+export type SyncConflict = { key: string; local: string | null; remote: string | null };
 type Change = { key: string; expected: string | null; value: string | null };
 const snapshot = makeFunctionReference<"query", Record<string, never>, unknown>(
   "training:snapshot",
@@ -58,6 +61,8 @@ function readQueue(key: string): Change[][] {
 export class TrainingSync {
   private client: ConvexClient | undefined;
   private stop: (() => void) | undefined;
+  private stopConnection: (() => void) | undefined;
+  private problem: "error" | "conflict" | undefined;
   private closed = false;
   private queue: Change[][];
   private known = new Map<string, string>();
@@ -66,14 +71,23 @@ export class TrainingSync {
   private readonly uid: string;
   private readonly receive: (state: ParsedAppStatePatch) => void;
   private readonly failed: (error: unknown) => void;
+  private readonly status: (status: SyncStatus) => void;
   constructor(
     uid: string,
     receive: (state: ParsedAppStatePatch) => void,
     failed: (error: unknown) => void,
+    status: (status: SyncStatus) => void = () => {},
   ) {
     this.uid = uid;
     this.receive = receive;
-    this.failed = failed;
+    this.status = status;
+    this.failed = (error) => {
+      if (this.closed) return;
+      this.problem =
+        error instanceof Error && error.message.includes("CONFLICT") ? "conflict" : "error";
+      this.publish();
+      failed(error);
+    };
     this.key = `gym_pending_convex:${uid}`;
     const cached = parseStoredState(localStorage.getItem(`gym_cache:${uid}`));
     this.known = new Map(splitState(cached ?? {}).map((row) => [row.key, row.value]));
@@ -84,11 +98,42 @@ export class TrainingSync {
         else this.known.set(change.key, change.value);
       }
   }
+  private publish() {
+    if (this.closed) return;
+    const online = typeof navigator === "undefined" || navigator.onLine !== false;
+    const phase = !online ? "offline" : (this.problem ?? (this.queue.length ? "saving" : "saved"));
+    this.status({ phase, pending: this.queue.length });
+  }
+  private showPending() {
+    const state = parseStoredState(
+      JSON.stringify(
+        joinState(
+          [...this.known].map(([key, value]) => ({ key, value })),
+          0,
+        ),
+      ),
+    );
+    if (state) this.receive(state);
+  }
   async start() {
-    const initial = await credentials(this.uid);
+    if (this.queue.length) this.showPending();
+    this.status({ phase: "loading", pending: this.queue.length });
+    let initial;
+    try {
+      initial = await credentials(this.uid);
+    } catch (error) {
+      this.failed(error);
+      throw error;
+    }
     if (this.closed) return;
     const client = new ConvexClient(initial.url);
     this.client = client;
+    this.stopConnection = client.subscribeToConnectionState((connection) => {
+      if (this.closed || this.problem) return;
+      if (!connection.isWebSocketConnected)
+        this.status({ phase: "offline", pending: this.queue.length });
+      else this.publish();
+    });
     client.setAuth(async () => (this.closed ? null : (await credentials(this.uid)).token));
     this.stop = client.onUpdate(
       snapshot,
@@ -111,12 +156,16 @@ export class TrainingSync {
     if (value === null) {
       this.known.clear();
       this.receive({});
+      this.problem = undefined;
+      this.publish();
       return;
     }
     const state = parseStoredState(JSON.stringify(value));
     if (!state) throw new Error("Invalid training data from Convex");
     this.known = new Map(splitState(state).map((row) => [row.key, row.value]));
     this.receive(state);
+    this.problem = undefined;
+    this.publish();
   }
   enqueue(before: Partial<AppState>, after: Partial<AppState>) {
     const changes = changesBetween(before, after).map((change) => ({
@@ -131,7 +180,8 @@ export class TrainingSync {
     }
     this.queue.push(changes);
     localStorage.setItem(this.key, JSON.stringify(this.queue));
-    void this.flush().catch(this.failed);
+    this.publish();
+    if (this.client && !this.problem) void this.flush().catch(this.failed);
   }
   flush(): Promise<void> {
     if (this.flushing) return this.flushing;
@@ -149,7 +199,12 @@ export class TrainingSync {
   }
   private async drain() {
     const client = this.client;
-    if (!client || this.closed) return;
+    if (this.closed) return;
+    if (!client) {
+      if (this.queue.length)
+        throw new Error("Connect to save your pending edits before signing out.");
+      return;
+    }
     while (this.queue.length && !this.closed) {
       const changes = this.queue[0];
       if (!changes) break;
@@ -173,16 +228,57 @@ export class TrainingSync {
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
-  async useRemote() {
-    // Keep a local recovery copy even when the user chooses the server version.
-    localStorage.setItem(`${this.key}:recovery:${Date.now()}`, JSON.stringify(this.queue));
-    this.queue = [];
-    localStorage.removeItem(this.key);
-    await this.flush();
+  async conflicts(): Promise<SyncConflict[]> {
+    if (!this.client) throw new Error("Reconnect to review changes.");
+    const value: unknown = await this.client.query(snapshot, {});
+    const remote = new Map(
+      splitState(parseStoredState(JSON.stringify(value)) ?? {}).map((row) => [row.key, row.value]),
+    );
+    return (this.queue[0] ?? [])
+      .filter((change) => {
+        const current = remote.get(change.key) ?? null;
+        return current !== change.expected && current !== change.value;
+      })
+      .map((change) => ({
+        key: change.key,
+        local: this.known.get(change.key) ?? null,
+        remote: remote.get(change.key) ?? null,
+      }));
+  }
+  async resolve(conflicts: SyncConflict[], choice: "local" | "remote") {
+    // Retain both the original pending edits and the reviewed remote versions.
+    localStorage.setItem(
+      `${this.key}:recovery:${Date.now()}`,
+      JSON.stringify({ queue: this.queue, conflicts }),
+    );
+    const reviewed = new Map(conflicts.map((conflict) => [conflict.key, conflict]));
+    const seen = new Set<string>();
+    this.queue = this.queue
+      .map((batch) =>
+        batch.flatMap((change) => {
+          const conflict = reviewed.get(change.key);
+          if (!conflict) return [change];
+          if (choice === "remote") return [];
+          if (seen.has(change.key)) return [change];
+          seen.add(change.key);
+          return [{ ...change, expected: conflict.remote }];
+        }),
+      )
+      .filter((batch) => batch.length);
+    localStorage.setItem(this.key, JSON.stringify(this.queue));
+    this.problem = undefined;
+    this.publish();
+    try {
+      await this.flush();
+    } catch (error) {
+      this.failed(error);
+      throw error;
+    }
   }
   async close() {
     this.closed = true;
     this.stop?.();
+    this.stopConnection?.();
     await this.client?.close();
   }
 }
