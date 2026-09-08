@@ -176,9 +176,13 @@ export default function SyncStatus() {
                 <Table className="table-fixed text-left">
                   <TableHeader>
                     <TableRow className="border-b border-foreground">
-                      <TableHead className="w-1/3 p-2">{t("sync.detail", "Detail")}</TableHead>
-                      <TableHead className="p-2">{t("sync.thisDevice", "This device")}</TableHead>
-                      <TableHead className="p-2">
+                      <TableHead className="w-1/3 p-2 whitespace-normal">
+                        {t("sync.detail", "Detail")}
+                      </TableHead>
+                      <TableHead className="p-2 whitespace-normal">
+                        {t("sync.thisDevice", "This device")}
+                      </TableHead>
+                      <TableHead className="p-2 whitespace-normal">
                         {t("sync.otherVersion", "Other version")}
                       </TableHead>
                     </TableRow>
@@ -186,11 +190,15 @@ export default function SyncStatus() {
                   <TableBody>
                     {conflictRows(conflict).map((row) => (
                       <TableRow key={row.label} className="border-b border-border">
-                        <TableHead className="p-2 align-top font-normal wrap-anywhere text-muted-foreground">
+                        <TableHead className="p-2 align-top font-normal wrap-anywhere whitespace-normal text-muted-foreground">
                           {row.label}
                         </TableHead>
-                        <TableCell className="p-2 align-top wrap-anywhere">{row.local}</TableCell>
-                        <TableCell className="p-2 align-top wrap-anywhere">{row.remote}</TableCell>
+                        <TableCell className="p-2 align-top wrap-anywhere whitespace-normal">
+                          {row.local}
+                        </TableCell>
+                        <TableCell className="p-2 align-top wrap-anywhere whitespace-normal">
+                          {row.remote}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
