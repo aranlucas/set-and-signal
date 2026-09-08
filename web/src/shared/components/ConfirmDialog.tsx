@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AlertDialog,
@@ -36,27 +36,55 @@ export default function ConfirmDialog({
   onConfirm,
 }: ConfirmDialogProps) {
   const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   const resolvedConfirmLabel = confirmLabel ?? t("common.confirm", "Confirm");
   const resolvedCancelLabel = cancelLabel ?? t("common.cancel", "Cancel");
   const confirm = async () => {
-    onOpenChange(false);
-    await onConfirm();
+    setBusy(true);
+    setError("");
+    try {
+      await onConfirm();
+      onOpenChange(false);
+    } catch (failure) {
+      setError(
+        failure instanceof Error
+          ? failure.message
+          : t("common.actionFailed", "That didn’t work. Please try again."),
+      );
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!busy) {
+          setError("");
+          onOpenChange(next);
+        }
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
+        {error && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
         <AlertDialogFooter>
-          <AlertDialogCancel>{resolvedCancelLabel}</AlertDialogCancel>
+          <AlertDialogCancel disabled={busy}>{resolvedCancelLabel}</AlertDialogCancel>
           <AlertDialogAction
+            disabled={busy}
             variant={danger ? "destructive" : "default"}
             onClick={() => void confirm()}
           >
-            {resolvedConfirmLabel}
+            {busy ? t("common.working", "Working…") : resolvedConfirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -30,6 +30,7 @@ interface RegistrationFormValues {
 
 function RegistrationDialogContent({ open, onOpenChange }: RegistrationDialogProps) {
   const { t } = useTranslation();
+  const guestData = useStore((state) => !state.user && hasData(state.appState));
   const setUser = useStore((state) => state.setUser);
   const transferGuest = useStore((state) => state.transferGuest);
   const pullState = useStore((state) => state.pullState);
@@ -101,6 +102,14 @@ function RegistrationDialogContent({ open, onOpenChange }: RegistrationDialogPro
               )}
             </DialogDescription>
           </DialogHeader>
+          {guestData && (
+            <p className="mt-4 border-y border-border py-3 text-sm leading-relaxed">
+              {t(
+                "sync.guestTransfer",
+                "The training saved on this device will belong to your new profile. Your unfinished workout stays on this device.",
+              )}
+            </p>
+          )}
           <FieldGroup className="mt-4 gap-3">
             <Field data-invalid={!!errors.name}>
               <FieldLabel htmlFor="registration-name">

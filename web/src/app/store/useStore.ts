@@ -1,6 +1,5 @@
 import { create } from "zustand";
-import { toast } from "sonner";
-import { TrainingSync } from "./training-sync";
+import { TrainingSync, type SyncStatus, type SyncConflict } from "./training-sync";
 import { api, ApiError, getSession } from "@/shared/lib/api.js";
 import { localTZ } from "@/shared/lib/format.js";
 import { registerCustom } from "@/domain/exercises/exercise-registry.js";
@@ -73,6 +72,11 @@ interface StoreActions {
   signOutAll: () => Promise<void>;
   resetDemo: () => Promise<void>;
   boot: () => Promise<void>;
+  syncStatus: SyncStatus;
+  profileLoaded: boolean;
+  reviewChanges: () => Promise<SyncConflict[]>;
+  resolveChanges: (conflicts: SyncConflict[], choice: "local" | "remote") => Promise<void>;
+  saveRecovery: () => void;
 }
 
 type Store = StoreState & StoreActions;
@@ -133,7 +137,7 @@ export const useStore = create<Store>()((set, get) => {
     const uid = get().user?.id;
     if (uid) {
       localStorage.removeItem(`gym_cache:${uid}`);
-      localStorage.removeItem(`gym_active:${uid}`);
+      // Keep the unfinished workout for this account on this device.
       localStorage.removeItem(`gym_pending_convex:${uid}`);
     }
     get().setUser(null);
@@ -159,6 +163,25 @@ export const useStore = create<Store>()((set, get) => {
     })(),
     isGuest: localStorage.getItem("gym_guest") === "1",
     isReady: false,
+    profileLoaded: (() => {
+      try {
+        const raw = localStorage.getItem(USER_STORAGE_KEY);
+        const user = raw ? parseUser(JSON.parse(raw)) : null;
+        return !!user && !!parseStoredState(localStorage.getItem(`gym_cache:${user.id}`));
+      } catch {
+        return false;
+      }
+    })(),
+    syncStatus: { phase: "loading", pending: 0 },
+    async reviewChanges() {
+      return (await trainingSync?.conflicts()) ?? [];
+    },
+    async resolveChanges(conflicts, choice) {
+      await trainingSync?.resolve(conflicts, choice);
+    },
+    saveRecovery() {
+      trainingSync?.saveRecovery();
+    },
 
     // Mutate a draft of appState via producer fn, then persist + schedule sync.
     update(mutate, push = true) {
@@ -200,6 +223,8 @@ export const useStore = create<Store>()((set, get) => {
         syncStart = undefined;
       }
       set({ user, ...(user ? { isGuest: false } : {}) });
+      if (previousUser !== user?.id)
+        set({ profileLoaded: false, syncStatus: { phase: "loading", pending: 0 } });
     },
 
     async transferGuest(state) {
@@ -211,17 +236,30 @@ export const useStore = create<Store>()((set, get) => {
     },
     async pushState() {
       if (!get().user) return;
+      if (get().syncStatus.phase === "offline" || get().syncStatus.phase === "conflict")
+        throw new Error(
+          "Your latest changes haven’t synced yet. You’re still signed in; reconnect or review changes and try again.",
+        );
       if (!trainingSync) await get().pullState();
       await trainingSync?.flush();
     },
     async pullState() {
       const uid = get().user?.id;
       if (!uid) return;
-      if (syncUser === uid && syncStart) return syncStart;
+      if (syncUser === uid && syncStart) {
+        await syncStart;
+        await trainingSync?.flush();
+        return;
+      }
       await trainingSync?.close();
+      if (get().user?.id !== uid) return;
       syncUser = uid;
       const profileCache = parseStoredState(localStorage.getItem(`gym_cache:${uid}`));
-      if (profileCache) set({ appState: Object.assign(cloneValue(DEFAULT_STATE), profileCache) });
+      if (profileCache)
+        set({
+          appState: Object.assign(cloneValue(DEFAULT_STATE), profileCache),
+          profileLoaded: true,
+        });
       const cached = parseStoredState(
         `{"active":${localStorage.getItem(`gym_active:${uid}`) ?? "null"}}`,
       );
@@ -234,29 +272,11 @@ export const useStore = create<Store>()((set, get) => {
           const nextState = Object.assign(cloneValue(DEFAULT_STATE), remote, { active });
           localStorage.setItem(`gym_cache:${uid}`, JSON.stringify(remote));
           registerCustom(nextState.customEx);
-          set({ appState: nextState });
+          set({ appState: nextState, profileLoaded: true });
         },
-        (error) => {
-          if (get().user?.id !== uid) return;
-          toast.error(
-            error instanceof Error
-              ? error.message
-              : "Training could not sync. Your pending edits are saved on this device.",
-            {
-              duration: Infinity,
-              action: { label: "Save recovery file", onClick: () => trainingSync?.saveRecovery() },
-              cancel: {
-                label: "Use synced data",
-                onClick: () => {
-                  void trainingSync
-                    ?.useRemote()
-                    .catch(() =>
-                      toast.error("Could not reconnect. Your saved edits are retained."),
-                    );
-                },
-              },
-            },
-          );
+        () => {},
+        (syncStatus) => {
+          if (get().user?.id === uid) set({ syncStatus });
         },
       );
       const transfer = parseStoredState(localStorage.getItem(`gym_guest_transfer:${uid}`));
@@ -268,7 +288,7 @@ export const useStore = create<Store>()((set, get) => {
       try {
         await syncStart;
       } catch (error) {
-        syncStart = undefined;
+        if (syncUser === uid) syncStart = undefined;
         throw error;
       }
     },
