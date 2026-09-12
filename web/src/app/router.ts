@@ -29,6 +29,7 @@ const Workout = lazyRouteComponent(() => import("@/features/workout/WorkoutPage"
 const Stats = lazyRouteComponent(() => import("@/features/stats/StatsPage"));
 const History = lazyRouteComponent(() => import("@/features/history/HistoryPage"));
 const Library = lazyRouteComponent(() => import("@/features/library/LibraryPage"));
+const Tools = lazyRouteComponent(() => import("@/features/tools/ToolsPage"));
 const Settings = lazyRouteComponent(() => import("@/features/settings/SettingsPage"));
 const HomeCalendarSheet = lazyRouteComponent(
   () => import("@/features/home/routes/HomeCalendarSheet"),
@@ -92,6 +93,11 @@ const libraryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/library",
   component: Library,
+});
+const toolsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/tools",
+  component: Tools,
 });
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -183,6 +189,7 @@ const routeTree = rootRoute.addChildren([
   historyRoute,
   libraryRoute,
   settingsRoute,
+  toolsRoute,
   adminRoute,
 ]);
 

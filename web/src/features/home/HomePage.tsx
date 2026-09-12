@@ -1,688 +1,688 @@
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+import {
+  Activity,
+  ArrowDownRight,
+  ArrowRight,
+  ArrowUpRight,
+  CalendarDays,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  Dumbbell,
+  Flame,
+  Layers3,
+  Play,
+  Plus,
+  Ruler,
+  Scale,
+  Sparkles,
+  Target,
+  Trophy,
+} from "lucide-react";
 import { useStore } from "@/app/store/useStore";
-import {
-  effectiveRoutine,
-  effectiveRoutineId,
-  streakWeeks,
-  lastBW,
-} from "@/domain/training/history";
-import {
-  exCount,
-  fmtNum,
-  fmtDate,
-  formatDate,
-  todayISO,
-  isoOf,
-  weekKey,
-} from "@/shared/lib/format";
+import { effectiveRoutine, lastBW, streakWeeks } from "@/domain/training/history";
+import { exerciseMetadata } from "@/domain/exercises/exercise-metadata";
+import { loadOfRoutine, rankOf } from "@/domain/exercises/muscles";
+import { fmtDate, fmtDur, fmtNum, formatDate, isoOf, todayISO } from "@/shared/lib/format";
 import { useMuscleLabels } from "@/shared/hooks/use-muscle-labels";
-import { bwDeltaColor } from "@/features/account/account-actions";
-import Icon from "@/shared/components/Icon";
-import {
-  WeekCalendar,
-  WeekStatusMark,
-  type WeekCalendarDayStatus,
-} from "@/shared/components/WeekCalendar";
+import { useExerciseMetadataLabels } from "@/shared/hooks/use-exercise-metadata-labels";
+import { estimateRoutineMinutes, latestProgress } from "./home-insights";
 import { Button } from "@/shared/ui/button";
-import { glyphOf } from "@/domain/exercises/glyphs";
-import {
-  estimateRoutineMinutes,
-  latestProgress,
-  recoveryForRoutine,
-} from "@/features/home/home-insights";
-import type { AppState, IsoDate, Routine, User } from "@/shared/lib/types";
-import { cn } from "@/shared/lib/utils";
-import BrandMark from "@/shared/components/BrandMark";
-import { useMeasurementFields } from "@/shared/hooks/use-measurement-fields";
-import { SpaceBetween } from "@/shared/components/SpaceBetween";
-import { PageHeader, PageTitle } from "@/shared/components/layout";
+import BodySignals from "./BodySignals";
+import { NativeSelect, NativeSelectOption } from "@/shared/ui/native-select";
+import { weeklySummary, volumeTrend } from "./training-summary";
 
-// Home = what to do now + a quick glance. Deep charts & history live in Stats.
 export default function Home() {
   const { t } = useTranslation();
-  const nav = useNavigate();
+  const navigate = useNavigate();
   const state = useStore((store) => store.appState);
-  const user = useStore((storeState) => storeState.user);
+  const user = useStore((store) => store.user);
+  const muscles = useMuscleLabels();
+  const metadata = useExerciseMetadataLabels();
   const [weekOffset, setWeekOffset] = useState(0);
-
-  const today = new Date();
-  const routine = effectiveRoutine(state, todayISO());
-  const todayOvr = state.dayPlan[todayISO()] !== undefined;
-  const bodyWeight = lastBW(state);
-  const previousBodyWeight = state.bodyweight.length > 1 ? state.bodyweight.at(-2) : null;
-  const weightDelta = bodyWeight && previousBodyWeight ? bodyWeight.w - previousBodyWeight.w : null;
-
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7) + weekOffset * 7);
-  const completedDays = new Set(state.workouts.map((workout) => workout.d));
-  const dayStatuses: Record<string, WeekCalendarDayStatus> = {};
-  for (let i = 0; i < 7; i++) {
+  const [chartWeeks, setChartWeeks] = useState(6);
+  const today = todayISO();
+  const routine = effectiveRoutine(state, today);
+  const activeRoutine = state.active
+    ? {
+        id: state.active.routineId ?? state.active.id,
+        name: state.active.name,
+        emoji: "dumbbell",
+        ex: state.active.entries.map((entry) => ({
+          ...entry.target,
+          sets: entry.sets.filter((set) => !("wu" in set && set.wu)).length,
+        })),
+      }
+    : routine;
+  const summary = weeklySummary(state.workouts, today);
+  const trend = volumeTrend(state.workouts, today, chartWeeks);
+  const maxVolume = Math.max(1, ...trend.map((week) => week.volume));
+  const planned = Object.values(state.week).filter(Boolean).length;
+  const streak = streakWeeks(state);
+  const recent = state.workouts
+    .toSorted((a, b) => b.d.localeCompare(a.d) || b.start - a.start)
+    .slice(0, 3);
+  const latest = latestProgress(state);
+  const weight = lastBW(state);
+  const targetMuscles = rankOf(loadOfRoutine(activeRoutine)).worked.slice(0, 3);
+  const minutes = estimateRoutineMinutes(activeRoutine, state.restSec);
+  const sets = activeRoutine?.ex.reduce((total, exercise) => total + exercise.sets, 0) ?? 0;
+  const monday = new Date(today + "T12:00:00");
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7) + weekOffset * 7);
+  const dates = Array.from({ length: 7 }, (_, index) => {
     const date = new Date(monday);
-    date.setDate(monday.getDate() + i);
-    const iso = isoOf(date);
-    const effectiveId = effectiveRoutineId(state, iso);
-    const overrideExists = state.dayPlan[iso] !== undefined;
-    const isCompleted = completedDays.has(iso);
-    const status = isCompleted
-      ? "completed"
-      : overrideExists && effectiveId
-        ? "rescheduled"
-        : effectiveId
-          ? "planned"
-          : undefined;
-    if (status) dayStatuses[iso] = status;
-  }
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  const wkLabel =
-    weekOffset === 0
-      ? t("home.thisWeek", "This week")
-      : `${formatDate(t, monday, { day: "numeric", month: "short" })} – ${formatDate(t, sunday, { day: "numeric", month: "short" })}`;
-
-  const wThisWeek = state.workouts.filter(
-    (workout) => weekKey(workout.d) === weekKey(todayISO()),
-  ).length;
-  const plannedPerWeek = Object.values(state.week).filter(Boolean).length;
-  const routineMinutes = estimateRoutineMinutes(routine, state.restSec);
-  const recovery = recoveryForRoutine(state.workouts, routine, todayISO());
-  const progress = latestProgress(state);
-
-  // today's session shown right under the week strip
-  const onToday = () => {
-    if (state.active) void nav({ to: "/workout" });
+    date.setDate(date.getDate() + index);
+    return date;
+  });
+  const start = () => {
+    if (state.active) void navigate({ to: "/workout" });
     else if (routine)
-      void nav({
+      void navigate({
         to: "/home/pre-workout/$routineId",
         params: { routineId: routine.id },
         resetScroll: false,
       });
-    else
-      void nav({
-        to: "/home/day/$date",
-        params: { date: todayISO() },
-        resetScroll: false,
-      });
+    else void navigate({ to: "/workout" });
   };
-
+  const viewRoutine = () => {
+    if (state.active) {
+      void navigate({ to: "/workout" });
+      return;
+    }
+    if (activeRoutine) void navigate({ to: "/plan/r/$id", params: { id: activeRoutine.id } });
+  };
   return (
-    <div className="mx-auto w-full max-w-xl min-w-0 md:max-w-none">
-      <HomeHeader user={user} onSettings={() => void nav({ to: "/settings" })} />
-      <SpaceBetween
-        size="m"
-        responsiveSize={{ lg: "l" }}
-        className="lg:grid lg:grid-cols-2 lg:items-stretch"
-      >
-        <HomeSchedule
-          state={state}
-          user={user}
-          today={today}
-          routine={routine}
-          monday={monday}
-          wkLabel={wkLabel}
-          dayStatuses={dayStatuses}
-          todayOvr={todayOvr}
-          onToday={onToday}
-          onDaySelect={(date) =>
-            void nav({ to: "/home/day/$date", params: { date }, resetScroll: false })
-          }
-          onAi={() => void nav({ to: "/home/ai", resetScroll: false })}
-          onPreviousWeek={() => setWeekOffset((week) => week - 1)}
-          onNextWeek={() => setWeekOffset((week) => week + 1)}
-          routineMinutes={routineMinutes}
-        />
-        <SpaceBetween size="s" className="min-w-0">
-          {state.routines.length === 0 && !state.active && (
-            <HomeWelcome
-              onStart={() => void nav({ to: "/home/get-started", resetScroll: false })}
-              onBrowse={() => void nav({ to: "/home/curated", resetScroll: false })}
-              onBuild={() => void nav({ to: "/plan" })}
-            />
+    <div className="training-dashboard">
+      <div className="dashboard-heading">
+        <div>
+          <h1>{t("dashboard.headline", "A little stronger. Every session.")}</h1>
+          <p>
+            {user
+              ? t(
+                  "dashboard.welcomeName",
+                  "Welcome back, {{name}}. Let's make your next session count.",
+                  { name: user.name.split(" ")[0] },
+                )
+              : t(
+                  "dashboard.subtitle",
+                  "Consistency compounds. Keep showing up — the work adds up.",
+                )}
+          </p>
+        </div>
+        <Button onClick={start} className="dashboard-start">
+          <Play size={16} fill="currentColor" />
+          {state.active
+            ? t("home.resumeWorkout", "Resume workout")
+            : t("workout.startWorkout", "Start workout")}
+        </Button>
+      </div>
+      <div className="dashboard-metrics">
+        <Button
+          variant="plain"
+          type="button"
+          className="dashboard-metric"
+          onClick={() => void navigate({ to: "/home/calendar" })}
+        >
+          <span className="metric-symbol">
+            <CalendarDays size={22} />
+          </span>
+          <span>
+            <small>{t("dashboard.sessionsWeek", "Sessions this week")}</small>
+            <strong>
+              {summary.sessions}
+              <em>{planned ? ` / ${planned}` : ""}</em>
+            </strong>
+            <span className="metric-note">
+              {planned && summary.sessions >= planned
+                ? t("dashboard.weekComplete", "Weekly plan complete")
+                : t("dashboard.makeTime", "Make time for yourself")}
+            </span>
+          </span>
+        </Button>
+        <Button
+          variant="plain"
+          type="button"
+          className="dashboard-metric"
+          onClick={() => void navigate({ to: "/stats" })}
+        >
+          <span className="metric-symbol">
+            <ChartIcon />
+          </span>
+          <span>
+            <small>{t("dashboard.weeklyVolume", "Weekly volume")}</small>
+            <strong>
+              {fmtNum(summary.volume)} <em>{state.unit}</em>
+            </strong>
+            <span
+              className={`metric-note ${summary.change !== null && summary.change >= 0 ? "positive" : ""}`}
+            >
+              {summary.change !== null ? (
+                <>
+                  {summary.change >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
+                  {t("dashboard.weekChange", "{{change}}% vs last week", {
+                    change: summary.change,
+                  })}
+                </>
+              ) : (
+                t("dashboard.completedSets", "From completed work sets")
+              )}
+            </span>
+          </span>
+        </Button>
+        <Button
+          variant="plain"
+          type="button"
+          className="dashboard-metric"
+          onClick={() => void navigate({ to: "/history" })}
+        >
+          <span className="metric-symbol">
+            <Flame size={22} />
+          </span>
+          <span>
+            <small>{t("dashboard.trainingStreak", "Training streak")}</small>
+            <strong>
+              {streak} <em>{t("dashboard.weeks", "weeks")}</em>
+            </strong>
+            <span className="metric-note">
+              {t("dashboard.oneSession", "One session at a time")}
+            </span>
+          </span>
+        </Button>
+        <Button
+          variant="plain"
+          type="button"
+          className="dashboard-metric"
+          onClick={() => void navigate({ to: "/stats" })}
+        >
+          <span className="metric-symbol">
+            <Trophy size={22} />
+          </span>
+          <span>
+            <small>{t("dashboard.personalRecords", "Personal records")}</small>
+            <strong>{summary.records}</strong>
+            <span className="metric-note">{t("dashboard.thisWeek", "Earned this week")}</span>
+          </span>
+        </Button>
+      </div>
+      <div className="dashboard-columns">
+        <div className="dashboard-primary">
+          <section className="workout-spotlight">
+            <div className="spotlight-arcs" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
+            <div className="spotlight-content">
+              <p className="spotlight-label">
+                <span className="spotlight-status" />
+                {state.active
+                  ? t("dashboard.sessionActive", "Session in progress")
+                  : t("dashboard.todayWorkout", "Today's workout")}
+              </p>
+              <h2>
+                {state.active?.name || routine?.name || t("home.recoveryDay", "Recovery day")}
+              </h2>
+              <p className="spotlight-muscles">
+                {targetMuscles.length
+                  ? targetMuscles.map((muscle) => muscles[muscle]).join(" / ")
+                  : t("dashboard.recoveryMessage", "Take a breath. Come back stronger.")}
+              </p>
+              <div className="spotlight-details">
+                {activeRoutine ? (
+                  <>
+                    <span>
+                      <Dumbbell size={15} />
+                      {t("dashboard.exerciseTotal", "{{total}} exercises", {
+                        total: activeRoutine.ex.length,
+                      })}
+                    </span>
+                    <span>
+                      <Clock3 size={15} />
+                      {t("dashboard.minutes", "{{minutes}} min", { minutes })}
+                    </span>
+                    <span>
+                      <Layers3 size={15} />
+                      {t("dashboard.setTotal", "{{total}} sets", { total: sets })}
+                    </span>
+                  </>
+                ) : (
+                  <span>
+                    {t(
+                      "dashboard.restChoice",
+                      "Rest is part of the program. Or train on your terms.",
+                    )}
+                  </span>
+                )}
+              </div>
+              <div className="spotlight-actions">
+                <Button className="spotlight-start" onClick={start}>
+                  <Play size={16} fill="currentColor" />
+                  {state.active
+                    ? t("home.resumeWorkout", "Resume workout")
+                    : routine
+                      ? t("dashboard.startSession", "Start session")
+                      : t("dashboard.freestyleSession", "Start an empty workout")}
+                </Button>
+                {activeRoutine && (
+                  <Button
+                    variant="plain"
+                    type="button"
+                    className="spotlight-adjust"
+                    onClick={viewRoutine}
+                  >
+                    {state.active
+                      ? t("dashboard.openSession", "Open session")
+                      : t("dashboard.viewRoutine", "View routine")}
+                    <ArrowRight size={15} />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </section>
+          {!state.routines.length && (
+            <section className="dashboard-panel welcome-panel">
+              <Sparkles size={24} />
+              <div>
+                <h2>{t("dashboard.firstProgram", "Your next chapter starts here.")}</h2>
+                <p>
+                  {t(
+                    "dashboard.firstProgramDetail",
+                    "Build a routine from scratch, or find a program that fits your goals.",
+                  )}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button size="sm" onClick={() => void navigate({ to: "/home/get-started" })}>
+                    {t("startingSetup.cta", "Set up my first plan")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void navigate({ to: "/home/curated" })}
+                  >
+                    {t("plans.curated.browse", "Browse curated plans")}
+                  </Button>
+                </div>
+              </div>
+            </section>
           )}
-
-          <HomeInsights
-            state={state}
-            routine={routine}
-            monday={monday}
-            recovery={recovery}
-            progress={progress}
-            bodyWeight={bodyWeight}
-            weightDelta={weightDelta}
-            onGoal={() => void nav({ to: "/home/goal", resetScroll: false })}
-            onLog={() => void nav({ to: "/home/bodyweight", resetScroll: false })}
-            onMeasures={() => void nav({ to: "/home/measures", resetScroll: false })}
-            thisWeek={wThisWeek}
-            plannedPerWeek={plannedPerWeek}
-            onCalendar={() => void nav({ to: "/home/calendar", resetScroll: false })}
-            onStats={() => void nav({ to: "/stats" })}
-          />
-        </SpaceBetween>
-      </SpaceBetween>
+          <section className="dashboard-panel">
+            <div className="panel-heading">
+              <h2>{t("dashboard.trainingWeek", "Your training week")}</h2>
+              <div className="week-navigation">
+                <Button
+                  variant="plain"
+                  type="button"
+                  onClick={() => setWeekOffset(0)}
+                  className="week-current"
+                >
+                  {weekOffset === 0
+                    ? t("home.thisWeek", "This week")
+                    : formatDate(t, monday, { day: "numeric", month: "short" })}
+                </Button>
+                <Button
+                  variant="plain"
+                  type="button"
+                  aria-label={t("home.previousWeek", "Previous week")}
+                  onClick={() => setWeekOffset((offset) => offset - 1)}
+                >
+                  <ChevronLeft size={17} />
+                </Button>
+                <Button
+                  variant="plain"
+                  type="button"
+                  aria-label={t("home.nextWeek", "Next week")}
+                  onClick={() => setWeekOffset((offset) => offset + 1)}
+                >
+                  <ChevronRight size={17} />
+                </Button>
+              </div>
+            </div>
+            <div className="training-week">
+              {dates.map((date) => {
+                const iso = isoOf(date);
+                const scheduled = effectiveRoutine(state, iso);
+                const completed = state.workouts.some((workout) => workout.d === iso);
+                return (
+                  <Button
+                    variant="plain"
+                    type="button"
+                    key={iso}
+                    className={`training-day ${iso === today ? "is-today" : ""}`}
+                    onClick={() =>
+                      void navigate({
+                        to: "/home/day/$date",
+                        params: { date: iso },
+                        resetScroll: false,
+                      })
+                    }
+                    aria-label={`${formatDate(t, date, { weekday: "long", day: "numeric", month: "long" })}, ${completed ? t("calendar.status.completed", "Done") : scheduled?.name || t("home.recoveryDay", "Recovery day")}`}
+                    aria-current={iso === today ? "date" : undefined}
+                  >
+                    <span>{formatDate(t, date, { weekday: "short" })}</span>
+                    <strong>{date.getDate()}</strong>
+                    <span
+                      className={`day-status ${completed ? "is-completed" : scheduled ? "is-planned" : ""}`}
+                    >
+                      {completed ? (
+                        <Check size={12} strokeWidth={3} />
+                      ) : scheduled ? (
+                        <Dumbbell size={13} />
+                      ) : (
+                        <span />
+                      )}
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
+            {activeRoutine && (
+              <>
+                <div className="panel-heading exercise-preview-heading">
+                  <h2>{t("dashboard.sessionExercises", "In your session")}</h2>
+                  <span>
+                    {t("dashboard.exerciseTotal", "{{total}} exercises", {
+                      total: activeRoutine.ex.length,
+                    })}
+                  </span>
+                </div>
+                <div>
+                  {activeRoutine.ex.slice(0, 3).map((exercise) => {
+                    const data = exerciseMetadata(exercise.id);
+                    return (
+                      <Button
+                        variant="plain"
+                        type="button"
+                        className="exercise-preview-row"
+                        key={exercise.id}
+                        onClick={viewRoutine}
+                      >
+                        <span className="exercise-preview-icon">
+                          <Dumbbell size={23} />
+                        </span>
+                        <span className="exercise-preview-name">
+                          <strong>{data?.n || exercise.id}</strong>
+                          <small>{data?.bp ? metadata.bodyPart(data.bp) : ""}</small>
+                        </span>
+                        <span className="exercise-preview-sets">
+                          {exercise.sets} ×{" "}
+                          {exercise.mode === "time"
+                            ? `${exercise.sec ?? 30}s`
+                            : exercise.min
+                              ? `${exercise.min}m`
+                              : (exercise.reps ?? 8)}
+                        </span>
+                        <ChevronRight size={15} />
+                      </Button>
+                    );
+                  })}
+                </div>
+                <Button
+                  variant="plain"
+                  type="button"
+                  className="panel-link preview-link"
+                  onClick={viewRoutine}
+                >
+                  {t("dashboard.viewFullWorkout", "View full workout")}
+                  <ArrowRight size={14} />
+                </Button>
+              </>
+            )}
+            {!activeRoutine && (
+              <div className="week-empty">
+                <CalendarDays size={22} />
+                <p>{t("dashboard.planDay", "Select a day to plan your next session.")}</p>
+                <Button
+                  variant="plain"
+                  type="button"
+                  className="panel-link"
+                  onClick={() => void navigate({ to: "/plan" })}
+                >
+                  {t("dashboard.editSchedule", "Edit weekly schedule")}
+                  <ArrowRight size={14} />
+                </Button>
+              </div>
+            )}
+          </section>
+        </div>
+        <div className="dashboard-secondary">
+          <section className="dashboard-panel volume-panel">
+            <div className="panel-heading">
+              <div>
+                <h2>{t("dashboard.trainingVolume", "Training volume")}</h2>
+                <p>{t("dashboard.volumeDescription", "The work you've put in, week by week.")}</p>
+              </div>
+              <NativeSelect
+                aria-label={t("dashboard.chartRange", "Chart time range")}
+                value={chartWeeks}
+                onChange={(event) => setChartWeeks(Number(event.target.value))}
+              >
+                <NativeSelectOption value={6}>
+                  {t("dashboard.sixWeeks", "6 weeks")}
+                </NativeSelectOption>
+                <NativeSelectOption value={12}>
+                  {t("dashboard.twelveWeeks", "12 weeks")}
+                </NativeSelectOption>
+              </NativeSelect>
+            </div>
+            <figure
+              className="volume-chart"
+              aria-label={t("dashboard.volumeChart", "Weekly training volume in {{unit}}", {
+                unit: state.unit,
+              })}
+            >
+              <div className="volume-chart-scale">
+                <span>
+                  {fmtNum(maxVolume)} {state.unit}
+                </span>
+                <span>{fmtNum(maxVolume / 2)}</span>
+                <span>0</span>
+              </div>
+              <div className="volume-bars">
+                {trend.map((week, index) => (
+                  <div
+                    className="volume-bar-column"
+                    key={week.date}
+                    title={`${fmtDate(t, week.date)}: ${fmtNum(week.volume)} ${state.unit}`}
+                  >
+                    <span className="bar-value">
+                      {week.volume >= 1000
+                        ? `${Math.round(week.volume / 100) / 10}k`
+                        : fmtNum(week.volume)}
+                    </span>
+                    <div
+                      className={`volume-bar ${index === trend.length - 1 ? "is-current" : ""}`}
+                      style={{ height: `${Math.max(1, (week.volume / maxVolume) * 132)}px` }}
+                    />
+                    <span className="bar-date">
+                      {formatDate(t, new Date(week.date + "T12:00:00"), {
+                        day: "numeric",
+                        month: "short",
+                      })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </figure>
+            {summary.sessions === 0 && (
+              <p className="chart-empty-note">
+                {t(
+                  "dashboard.chartEmpty",
+                  "Log your first workout this week to start building momentum.",
+                )}
+              </p>
+            )}
+          </section>
+          <section className="dashboard-panel activity-panel">
+            <div className="panel-heading">
+              <h2>{t("dashboard.recentActivity", "Recent activity")}</h2>
+              <Button
+                variant="plain"
+                type="button"
+                className="panel-link"
+                onClick={() => void navigate({ to: "/history" })}
+              >
+                {t("dashboard.viewAll", "View all")}
+                <ArrowRight size={14} />
+              </Button>
+            </div>
+            {recent.length ? (
+              <div>
+                {recent.map((workout) => (
+                  <Button
+                    variant="plain"
+                    type="button"
+                    className="recent-workout"
+                    key={workout.id}
+                    onClick={() =>
+                      void navigate({
+                        to: "/home/workout/$workoutId",
+                        params: { workoutId: workout.id },
+                        resetScroll: false,
+                      })
+                    }
+                  >
+                    <span className="activity-check">
+                      <Check size={16} strokeWidth={2.5} />
+                    </span>
+                    <span>
+                      <strong>{workout.name}</strong>
+                      <small>
+                        {fmtNum(workout.vol)} {state.unit}
+                        {workout.end > workout.start
+                          ? ` · ${fmtDur(workout.end - workout.start)}`
+                          : ""}
+                      </small>
+                    </span>
+                    <span className="activity-date">
+                      {fmtDate(t, workout.d)}
+                      <ChevronRight size={14} />
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-activity">
+                <Dumbbell size={28} />
+                <p>{t("dashboard.historyEmpty", "Your story starts with your first set.")}</p>
+                <Button variant="plain" type="button" className="panel-link" onClick={start}>
+                  {t("workout.startWorkout", "Start workout")}
+                  <ArrowRight size={14} />
+                </Button>
+              </div>
+            )}
+            <div className="consistency-note">
+              <Activity size={24} />
+              <p>
+                <strong>
+                  {summary.sessions
+                    ? t(
+                        "dashboard.sessionsLogged",
+                        "Sessions logged this week: {{total}}. Keep your rhythm.",
+                        { total: summary.sessions },
+                      )
+                    : t("dashboard.freshStart", "A fresh week. A new opportunity.")}
+                </strong>
+                <span>{t("dashboard.smallSteps", "Small steps. Real progress.")}</span>
+              </p>
+            </div>
+          </section>
+          {latest && (
+            <Button
+              variant="plain"
+              type="button"
+              className="progress-highlight"
+              onClick={() => void navigate({ to: "/stats" })}
+            >
+              <span className="progress-trophy">
+                <Trophy size={21} />
+              </span>
+              <span>
+                <small>{t("dashboard.latestStrength", "Latest strength signal")}</small>
+                <strong>{latest.exerciseName}</strong>
+                <span>
+                  {fmtNum(latest.estimate)} {state.unit} {t("stats.est1rm", "estimated 1RM")}
+                </span>
+              </span>
+              <ArrowUpRight size={20} />
+            </Button>
+          )}
+        </div>
+      </div>
+      <section className="quick-actions">
+        <h2>{t("dashboard.quickActions", "Quick actions")}</h2>
+        <Button
+          variant="plain"
+          type="button"
+          onClick={() => void navigate({ to: "/home/bodyweight", resetScroll: false })}
+        >
+          <Scale size={21} />
+          <span>
+            {t("dashboard.logWeight", "Log body weight")}
+            <small>
+              {weight
+                ? `${fmtNum(weight.w)} ${state.unit}`
+                : t("dashboard.trackTrend", "Track your trend")}
+            </small>
+          </span>
+          <Plus size={15} />
+        </Button>
+        <Button
+          variant="plain"
+          type="button"
+          onClick={() => void navigate({ to: "/home/measures", resetScroll: false })}
+        >
+          <Ruler size={21} />
+          <span>
+            {t("dashboard.measurements", "Body measurements")}
+            <small>{t("dashboard.beyondScale", "Beyond the scale")}</small>
+          </span>
+        </Button>
+        <Button variant="plain" type="button" onClick={() => void navigate({ to: "/tools" })}>
+          <Layers3 size={21} />
+          <span>
+            {t("dashboard.calculatePlates", "Calculate plates")}
+            <small>{t("dashboard.loadWithConfidence", "Load with confidence")}</small>
+          </span>
+        </Button>
+        <Button
+          variant="plain"
+          type="button"
+          onClick={() => void navigate({ to: "/home/curated", resetScroll: false })}
+        >
+          <Target size={21} />
+          <span>
+            {t("dashboard.browsePrograms", "Browse programs")}
+            <small>{t("dashboard.findYourPlan", "Find your next plan")}</small>
+          </span>
+        </Button>
+      </section>
+      <BodySignals />
+      {user && (
+        <Button
+          variant="plain"
+          type="button"
+          className="ai-dashboard-link"
+          onClick={() => void navigate({ to: "/home/ai", resetScroll: false })}
+        >
+          <Sparkles size={18} />
+          {t("home.personalizeSessionAi", "Personalize this session with AI")}
+          <ArrowRight size={16} />
+        </Button>
+      )}
       <Outlet />
     </div>
   );
 }
 
-function HomeHeader({ onSettings }: { user: User | null; onSettings: () => void }) {
-  const { t } = useTranslation();
+function ChartIcon() {
   return (
-    <PageHeader className="mb-4 lg:mt-0 lg:mb-6">
-      <div>
-        <PageTitle className="flex items-center gap-2.5">
-          <BrandMark className="size-9 text-primary" />
-          <span className="brand-wordmark">
-            Set <span className="font-normal text-primary italic">&</span> Signal
-          </span>
-        </PageTitle>
-      </div>
-      <Button
-        variant="plain"
-        className="flex size-11 flex-none items-center justify-center rounded-sm border border-border bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
-        onClick={onSettings}
-        aria-label={t("navigation.settings", "Settings")}
-      >
-        <Icon name="gear" />
-      </Button>
-    </PageHeader>
-  );
-}
-
-type HomeScheduleProps = {
-  state: AppState;
-  user: User | null;
-  today: Date;
-  routine: Routine | null;
-  monday: Date;
-  wkLabel: string;
-  dayStatuses: Record<string, WeekCalendarDayStatus>;
-  todayOvr: boolean;
-  onToday: () => void;
-  onDaySelect: (iso: IsoDate) => void;
-  onAi: () => void;
-  onPreviousWeek: () => void;
-  onNextWeek: () => void;
-  routineMinutes: number;
-};
-
-function HomeSchedule({
-  state,
-  user,
-  today,
-  routine,
-  monday,
-  wkLabel,
-  dayStatuses,
-  todayOvr,
-  onToday,
-  onDaySelect,
-  onAi,
-  onPreviousWeek,
-  onNextWeek,
-  routineMinutes,
-}: HomeScheduleProps) {
-  const { t } = useTranslation();
-  return (
-    <section className="session-signature overflow-hidden bg-card lg:flex lg:h-full lg:flex-col">
-      <SpaceBetween size="xs">
-        <div className="flex items-center justify-between gap-3 px-4 pt-3">
-          <Button
-            variant="plain"
-            className="flex size-11 flex-none items-center justify-center rounded-sm text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
-            onClick={onPreviousWeek}
-            aria-label={t("home.previousWeek", "Previous week")}
-          >
-            <Icon name="chevronLeft" />
-          </Button>
-          <div className="text-sm leading-snug font-medium text-foreground/60">{wkLabel}</div>
-          <Button
-            variant="plain"
-            className="flex size-11 flex-none items-center justify-center rounded-sm text-base text-foreground transition duration-150 hover:bg-muted active:scale-95"
-            onClick={onNextWeek}
-            aria-label={t("home.nextWeek", "Next week")}
-          >
-            <Icon name="chevronRight" />
-          </Button>
-        </div>
-        <div className="px-2 pb-2">
-          <WeekCalendar
-            weekStart={monday}
-            dayStatuses={dayStatuses}
-            onSelect={(date) => onDaySelect(isoOf(date))}
-          />
-        </div>
-      </SpaceBetween>
-
-      <div className="border-t border-border/60 p-4 lg:flex lg:flex-1 lg:flex-col">
-        <div>
-          <div className="mb-1 text-xs font-medium tracking-wide text-foreground/60">
-            {formatDate(t, today, {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            })}
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="min-w-0 text-3xl leading-tight font-semibold tracking-tight sm:text-4xl">
-              {state.active
-                ? state.active.name
-                : routine
-                  ? routine.name
-                  : t("home.recoveryDay", "Recovery day")}
-            </h2>
-            <span
-              className={cn(
-                "flex size-11 flex-none items-center justify-center rounded-lg bg-muted text-2xl text-primary",
-                state.active && "bg-orange-500/15 text-active",
-              )}
-            >
-              <Icon name={state.active ? "timer" : routine ? glyphOf(routine.emoji) : "moon"} />
-            </span>
-          </div>
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground/60">
-            {state.active ? (
-              <span className="flex items-center gap-1.5 text-active">
-                <Icon name="timer" />
-                {t("sync.activeHere", "In progress on this device")}
-              </span>
-            ) : routine ? (
-              <>
-                <span className="flex items-center gap-1.5">
-                  <Icon name="clock" />
-                  {t("home.aboutMin", "About {{minutes}} min", { minutes: routineMinutes })}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Icon name="dumbbell" />
-                  {exCount(t, routine.ex.length)}
-                </span>
-                {todayOvr && (
-                  <span className="text-active sm:ml-auto">
-                    {t("calendar.status.rescheduled", "Rescheduled")}
-                  </span>
-                )}
-              </>
-            ) : (
-              <span>
-                {t(
-                  "home.recoverAddLightSessionFeel",
-                  "Recover, or add a light session if you feel ready.",
-                )}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <SpaceBetween
-          direction="horizontal"
-          size="xs"
-          className="mt-4 flex-nowrap lg:mt-auto lg:pt-6"
-        >
-          <Button className="flex-1" onClick={onToday}>
-            <Icon name={state.active ? "play" : routine ? "play" : "plus"} />
-            {state.active
-              ? t("home.resumeWorkout", "Resume workout")
-              : routine
-                ? t("workout.startWorkout", "Start workout")
-                : t("home.planSession", "Plan a session")}
-          </Button>
-          {routine && !state.active && (
-            <Button
-              variant="secondary"
-              className="w-auto px-4"
-              onClick={() => onDaySelect(todayISO())}
-              aria-label={t("home.adjustTodaySWorkout", "Adjust today's workout")}
-            >
-              <Icon name="settings" />
-              <span className="hidden sm:inline">{t("home.adjust", "Adjust")}</span>
-            </Button>
-          )}
-        </SpaceBetween>
-
-        {routine && !state.active && user && (
-          <Button
-            variant="plain"
-            type="button"
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-md py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10 active:bg-primary/15"
-            onClick={onAi}
-          >
-            <Icon name="sparkles" />
-            {t("home.personalizeSessionAi", "Personalize this session with AI")}
-          </Button>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function HomeWelcome({
-  onStart,
-  onBrowse,
-  onBuild,
-}: {
-  onStart: () => void;
-  onBrowse: () => void;
-  onBuild: () => void;
-}) {
-  const { t } = useTranslation();
-  return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <div className="mb-1.5 flex items-center gap-3">
-        <span className="flex size-7 flex-none items-center justify-center rounded-sm bg-primary text-lg text-white">
-          <Icon name="sparkles" />
-        </span>
-        <div className="text-2xl leading-tight font-semibold tracking-tight">
-          {t("home.welcome", "Welcome!")}
-        </div>
-      </div>
-      <div className="mb-3 text-sm leading-snug text-foreground/60">
-        {t(
-          "home.firstPlanSetupDescription",
-          "Answer a few quick questions and get a first week with sensible starting weights.",
-        )}
-      </div>
-      <SpaceBetween size="xs">
-        <Button className="w-full" variant="default" onClick={onStart}>
-          <Icon name="figureStrength" />
-          {t("startingSetup.cta", "Set up my first plan")}
-        </Button>
-        <Button className="w-full" onClick={onBrowse}>
-          <Icon name="sparkles" />
-          {t("plans.curated.browse", "Browse curated plans")}
-        </Button>
-        <Button className="w-full" onClick={onBuild}>
-          {t("home.buildMyOwnPlan", "Build my own plan")}
-        </Button>
-      </SpaceBetween>
-    </div>
-  );
-}
-
-type HomeInsightsProps = {
-  state: AppState;
-  routine: Routine | null;
-  monday: Date;
-  recovery: ReturnType<typeof recoveryForRoutine>;
-  progress: ReturnType<typeof latestProgress>;
-  bodyWeight: ReturnType<typeof lastBW>;
-  weightDelta: number | null;
-  onGoal: () => void;
-  onLog: () => void;
-  onMeasures: () => void;
-  thisWeek: number;
-  plannedPerWeek: number;
-  onCalendar: () => void;
-  onStats: () => void;
-};
-
-function HomeInsights({
-  state,
-  routine,
-  monday,
-  recovery,
-  progress,
-  bodyWeight,
-  weightDelta,
-  onGoal,
-  onLog,
-  onMeasures,
-  thisWeek,
-  plannedPerWeek,
-  onCalendar,
-  onStats,
-}: HomeInsightsProps) {
-  const { t } = useTranslation();
-  const muscleLabels = useMuscleLabels();
-  const measurementFields = useMeasurementFields();
-  const measures = state.measures?.at(-1) ?? null;
-  const previousMeasures = (state.measures || []).length > 1 ? state.measures.at(-2) : null;
-  const plannedDays = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(monday);
-    date.setDate(monday.getDate() + index);
-    const iso = isoOf(date);
-    const plannedRoutine = effectiveRoutine(state, iso);
-    if (!plannedRoutine) return null;
-    const completed = state.workouts.some((workout) => workout.d === iso);
-    return {
-      iso,
-      date,
-      name: plannedRoutine.name,
-      completed,
-      status: completed
-        ? ("completed" as const)
-        : state.dayPlan[iso] !== undefined
-          ? ("rescheduled" as const)
-          : ("planned" as const),
-    };
-  }).filter((day): day is NonNullable<typeof day> => Boolean(day));
-  const adherence = plannedPerWeek
-    ? Math.min(100, Math.round((thisWeek / plannedPerWeek) * 100))
-    : 0;
-
-  return (
-    <section className="overflow-hidden rounded-xl border border-border bg-card lg:flex-1">
-      <div className="border-b border-border/60 bg-muted/30 p-4">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight">
-              {t("home.recoveryEstimate", "Recovery estimate")}
-            </h2>
-            <p className="mt-0.5 text-sm text-foreground/60">
-              {routine
-                ? t(
-                    "home.basedEffectiveSetsLastSix",
-                    "Based on effective sets from your last six days",
-                  )
-                : t(
-                    "home.chooseTodaySWorkoutSee",
-                    "Choose today's workout to see target muscle recovery",
-                  )}
-            </p>
-          </div>
-          <Icon name="info" className="mt-0.5 flex-none text-xl text-muted-foreground" />
-        </div>
-        <SpaceBetween size="s">
-          {recovery.map((item) => (
-            <div key={item.muscle} className="flex items-center gap-3">
-              <span className="w-26 flex-none overflow-hidden text-sm font-medium text-ellipsis whitespace-nowrap">
-                {muscleLabels[item.muscle]}
-              </span>
-              <span className="h-1.5 flex-1 overflow-hidden rounded-sm bg-muted">
-                <span
-                  className="block h-full rounded-sm bg-system-blue transition-all duration-200 ease-out"
-                  style={{ width: `${item.recovery}%` }}
-                />
-              </span>
-              <span className="w-10 flex-none text-right text-sm font-medium tabular-nums">
-                {item.recovery}%
-              </span>
-            </div>
-          ))}
-        </SpaceBetween>
-      </div>
-
-      <Button
-        variant="plain"
-        type="button"
-        className="block w-full border-b border-border/60 bg-muted/30 p-4 text-left transition-colors hover:bg-muted/50 active:bg-muted"
-        onClick={onCalendar}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight">
-              {t("home.thisWeek", "This week")}
-            </h2>
-            <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">
-              {plannedPerWeek
-                ? t("home.ofSessions", "{{current}} of {{total}} sessions", {
-                    current: thisWeek,
-                    total: plannedPerWeek,
-                  })
-                : t("home.noSessionsPlanned", "No sessions planned")}
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="text-lg font-semibold text-system-blue tabular-nums">
-              {plannedPerWeek ? `${adherence}%` : t("navigation.plan", "Plan")}
-            </div>
-            <div className="mt-1 flex items-center justify-end gap-1 text-sm text-foreground/60">
-              <Icon name="flame" className="text-system-blue" />
-              {t("home.weekStreak", "{{count}} week streak", { count: streakWeeks(state) })}
-            </div>
-          </div>
-        </div>
-        {plannedDays.length > 0 && (
-          <div
-            className="mt-4 grid gap-2"
-            style={{
-              gridTemplateColumns: `repeat(${Math.min(plannedDays.length, 5)}, minmax(0, 1fr))`,
-            }}
-          >
-            {plannedDays.slice(0, 5).map((day) => (
-              <div
-                key={day.iso}
-                className={cn(
-                  "flex min-w-0 flex-col items-center rounded-md bg-muted px-1.5 py-2 text-center",
-                  day.status === "rescheduled" && "ring-1 ring-orange-500",
-                )}
-              >
-                <span className="text-xs font-medium tracking-wide text-foreground/60 uppercase">
-                  {formatDate(t, day.date, { weekday: "short" })}
-                </span>
-                <span className="mt-0.5 line-clamp-2 min-h-7 w-full text-xs leading-tight font-medium">
-                  {day.name}
-                </span>
-                <WeekStatusMark status={day.status} className="mt-1" />
-              </div>
-            ))}
-          </div>
-        )}
-      </Button>
-
-      {progress && (
-        <Button
-          variant="plain"
-          type="button"
-          className="flex w-full items-center gap-3 border-b border-border/60 p-4 text-left transition-colors hover:bg-muted/50 active:bg-muted"
-          onClick={onStats}
-        >
-          <div className="min-w-0">
-            <div className="text-sm text-foreground/60">
-              {t("home.recentProgress", "Recent progress")}
-            </div>
-            <div className="mt-0.5 overflow-hidden text-lg font-semibold tracking-tight text-ellipsis whitespace-nowrap capitalize">
-              {progress.exerciseName}
-            </div>
-            <div className="mt-0.5 text-sm">
-              <span
-                className={cn(
-                  "font-medium text-system-blue",
-                  progress.delta !== null && progress.delta < 0 && "text-destructive",
-                )}
-              >
-                {progress.delta !== null && progress.delta !== 0
-                  ? `${progress.delta > 0 ? "+" : ""}${fmtNum(progress.delta)} ${state.unit}`
-                  : t("home.latestEstimate", "Latest estimate")}
-              </span>{" "}
-              <span className="text-foreground/60">· {fmtDate(t, progress.date)}</span>
-            </div>
-          </div>
-          <div className="ml-auto flex-none text-right">
-            <div className="text-lg font-semibold tabular-nums">
-              {fmtNum(progress.estimate)} {state.unit}
-            </div>
-            <div className="text-xs text-foreground/60">
-              {t("home.estimated1rm", "estimated 1RM")}
-            </div>
-          </div>
-          <Icon name="chevronRight" className="text-lg text-muted-foreground" />
-        </Button>
-      )}
-
-      <div className="flex flex-wrap items-center gap-3 p-4">
-        <span className="flex size-10 flex-none items-center justify-center rounded-lg bg-muted text-xl text-system-blue">
-          <Icon name="scale" />
-        </span>
-        <div className="min-w-32 flex-1">
-          <div className="text-sm text-foreground/60">{t("weight.bodyWeight", "Body weight")}</div>
-          {bodyWeight ? (
-            <div className="mt-0.5 flex items-baseline gap-2">
-              <span className="text-lg font-semibold tracking-tight">
-                {fmtNum(bodyWeight.w)} {state.unit}
-              </span>
-              {!!weightDelta && (
-                <span
-                  className="text-sm font-medium"
-                  style={{ color: bwDeltaColor(weightDelta, bodyWeight.w) }}
-                >
-                  {weightDelta > 0 ? "+" : ""}
-                  {fmtNum(weightDelta)}
-                </span>
-              )}
-              <span className="text-sm text-muted-foreground">{fmtDate(t, bodyWeight.d)}</span>
-            </div>
-          ) : (
-            <div className="mt-0.5 text-sm text-foreground/60">
-              {t("home.noWeighInsYet", "No weigh-ins yet")}
-            </div>
-          )}
-        </div>
-        <div className="grid w-full grid-cols-3 items-stretch gap-2 sm:flex sm:w-auto sm:gap-3">
-          <Button
-            size="sm"
-            variant="secondary"
-            className="px-2.5"
-            onClick={onMeasures}
-            aria-label={t("measurements.log", "Log measurements")}
-          >
-            <Icon name="person" />
-          </Button>
-          <Button size="sm" variant="secondary" onClick={onGoal}>
-            <Icon name="target" />
-            {state.targetW ? fmtNum(state.targetW) : t("common.goal", "Goal")}
-          </Button>
-          <Button size="sm" onClick={onLog}>
-            <Icon name="plus" />
-            {t("common.log", "Log")}
-          </Button>
-        </div>
-      </div>
-      {measures && (
-        <Button
-          variant="plain"
-          type="button"
-          className="flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border/60 px-4 py-3 text-left transition-colors hover:bg-muted/50 active:bg-muted"
-          onClick={onMeasures}
-        >
-          <span className="inline-flex items-center gap-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-            <Icon name="person" className="text-sm" />
-            {t("measurements.title", "Measurements")}
-          </span>
-          {measurementFields
-            .filter(({ key }) => measures[key] != null)
-            .map(({ key, label }) => {
-              const current = measures[key]!;
-              const previous = previousMeasures?.[key];
-              const delta = previous != null ? current - previous : null;
-              return (
-                <span key={key} className="inline-flex items-center gap-1 text-sm tabular-nums">
-                  <span className="text-muted-foreground">{label}</span>
-                  <strong>{fmtNum(current)}</strong>
-                  {delta != null && Math.abs(delta) >= 0.05 && (
-                    <span
-                      className={cn(
-                        "text-xs font-medium",
-                        delta > 0 ? "text-system-blue" : "text-sky-400",
-                      )}
-                    >
-                      {delta > 0 ? "+" : "−"}
-                      {fmtNum(Math.abs(delta))}
-                    </span>
-                  )}
-                </span>
-              );
-            })}
-        </Button>
-      )}
-    </section>
+    <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
+      <rect x="3" y="14" width="4" height="7" rx="1" />
+      <rect x="10" y="8" width="4" height="13" rx="1" />
+      <rect x="17" y="3" width="4" height="18" rx="1" />
+    </svg>
   );
 }

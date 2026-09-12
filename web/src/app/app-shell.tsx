@@ -14,6 +14,10 @@ import Login from "@/features/auth/LoginPage";
 import { cn } from "@/shared/lib/utils";
 import SyncStatus from "@/shared/components/SyncStatus";
 import BrandMark from "@/shared/components/BrandMark";
+import AppNavigation from "@/shared/components/AppNavigation";
+import { useNavigate } from "@tanstack/react-router";
+import { effectiveRoutine } from "@/domain/training/schedule";
+import { todayISO } from "@/shared/lib/format";
 
 const loadStartWorkoutSheet = () => import("@/shared/components/StartWorkoutSheet");
 const StartWorkoutSheet = lazy(loadStartWorkoutSheet);
@@ -24,10 +28,11 @@ function applyPrefs(theme: string, accent: string) {
   de.classList.toggle("dark", isDark);
   de.dataset.accent = isAccent(accent) ? accent : DEFAULT_ACCENT;
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-  if (meta) meta.content = isDark ? "#171713" : "#f3ecdd";
+  if (meta) meta.content = isDark ? "#131521" : "#f6f7fb";
 }
 
 export default function AppShell() {
+  const navigate = useNavigate();
   const pageRouteId = useRouterState({
     select: (state) => state.matches[1]?.routeId ?? state.location.pathname,
   });
@@ -72,10 +77,25 @@ export default function AppShell() {
 
   return (
     <>
+      {authed && (
+        <AppNavigation
+          onStart={() => {
+            if (user && !profileLoaded) return;
+            if (activeWorkout) {
+              void navigate({ to: "/workout" });
+              return;
+            }
+            const routine = effectiveRoutine(useStore.getState().appState, todayISO());
+            if (routine?.ex.length) setStartRoutineId(routine.id);
+            else void navigate({ to: "/workout" });
+          }}
+        />
+      )}
       <main
         id="app"
+        tabIndex={-1}
         className={cn(
-          "mx-auto max-w-xl pt-safe-app-top pr-safe-app-right pb-32 pl-safe-app-left md:max-w-3xl lg:max-w-6xl lg:px-4 lg:pt-8",
+          authed ? "app-main" : "auth-main",
           "animate-in duration-200 ease-out fade-in slide-in-from-bottom-1",
           isTimerVisible && "pb-64!",
         )}
