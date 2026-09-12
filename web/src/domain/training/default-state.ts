@@ -7,7 +7,7 @@ export const DEFAULT_APP_STATE: AppState = {
   keepAwake: true,
   lang: "en",
   theme: "light",
-  accent: "orange",
+  accent: "violet",
   body: "male",
   targetW: null,
   bodyweight: [],

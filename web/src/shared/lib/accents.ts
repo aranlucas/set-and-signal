@@ -11,7 +11,7 @@ export const ACCENT_NAMES = [
 
 export type Accent = (typeof ACCENT_NAMES)[number];
 
-export const DEFAULT_ACCENT: Accent = "orange";
+export const DEFAULT_ACCENT: Accent = "violet";
 
 const ACCENT_SET = new Set<string>(ACCENT_NAMES);
 

@@ -23,6 +23,7 @@ import {
   sideReps,
   repStep,
   isWarmup,
+  workoutVolume,
   EFFORT,
   effortOf,
   stepEffort,
@@ -37,6 +38,7 @@ import { Header } from "@/shared/components/Header";
 import Icon from "@/shared/components/Icon";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { Button } from "@/shared/ui/button";
+import { Progress } from "@/shared/ui/progress";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { NumberField } from "@/shared/components/NumField";
 import { nextPrescription, applyPrescription } from "@/domain/training/progression";
@@ -217,16 +219,26 @@ function StartChooser() {
 
 /* ---------- elapsed clock (isolated so the workout tree doesn't re-render every second) ---------- */
 function Elapsed({ start }: { start: number }) {
+  const { t } = useTranslation();
   const [elapsedText, setElapsedText] = useState("0:00");
   useEffect(() => {
     const tick = () => {
-      const s = Math.floor((Date.now() - start) / 1000);
-      setElapsedText(Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"));
+      const seconds = Math.max(0, Math.floor((Date.now() - start) / 1000));
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      setElapsedText(
+        hours >= 24
+          ? t("workout.sessionSummary.elapsedDays", "{{days}}d {{hours}}h", {
+              days: Math.floor(hours / 24),
+              hours: hours % 24,
+            })
+          : `${hours ? `${hours}:` : ""}${hours ? String(minutes).padStart(2, "0") : minutes}:${String(seconds % 60).padStart(2, "0")}`,
+      );
     };
     tick();
     const iv = setInterval(tick, 1000);
     return () => clearInterval(iv);
-  }, [start]);
+  }, [start, t]);
   return <span>{elapsedText}</span>;
 }
 
@@ -682,6 +694,198 @@ function WorkoutSessionHeader({
   );
 }
 
+function WorkoutProgressSummary({
+  activeWorkout,
+  units,
+  currentUnit,
+  done,
+  total,
+}: {
+  activeWorkout: ActiveWorkout;
+  units: number[][];
+  currentUnit: number;
+  done: number;
+  total: number;
+}) {
+  const { t } = useTranslation();
+  const appState = useStore((state) => state.appState);
+  const completedExercises = activeWorkout.entries.filter((entry) => {
+    const workingSets = entry.sets.filter((set) => !isWarmup(set));
+    return workingSets.length > 0 && workingSets.every((set) => set.done);
+  }).length;
+  const percentage = total > 0 ? Math.round((done / total) * 100) : 0;
+  const volume = workoutVolume(activeWorkout);
+  const currentLabel =
+    currentUnit >= 0 && units[currentUnit]
+      ? units[currentUnit].map((index) => exOr(activeWorkout.entries[index].id).n).join(" + ")
+      : t("workout.sessionSummary.readyToStart", "Ready to start");
+  const progressLabel = t("workout.sessionSummary.sessionProgress", "Session progress");
+  const completeLabel = t("workout.sessionSummary.complete", "complete");
+  const setsLabel = t("workout.sessionSummary.sets", "sets");
+  const exercisesLabel = t("workout.sessionSummary.exercises", "Exercises");
+  const volumeLabel = t("workout.sessionSummary.volume", "Volume");
+  const currentBlockLabel = t("workout.sessionSummary.currentBlock", "Current block");
+  const setProgressLabel = t("workout.sessionSummary.setProgress", "Set progress");
+
+  return (
+    <section
+      aria-label={progressLabel}
+      className="mb-4 rounded-xl border border-primary/15 bg-card p-4 shadow-sm"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-primary uppercase">
+            <Icon name="target" className="text-base" />
+            {progressLabel}
+          </div>
+          <div className="mt-1.5 flex items-baseline gap-2">
+            <span className="text-3xl leading-none font-semibold tracking-tight tabular-nums">
+              {percentage}%
+            </span>
+            <span className="text-sm text-muted-foreground">{completeLabel}</span>
+          </div>
+        </div>
+        <div className="rounded-lg bg-primary/10 px-3 py-2 text-right">
+          <div className="text-lg leading-none font-semibold tracking-tight text-primary tabular-nums">
+            {done}/{total}
+          </div>
+          <div className="mt-1 text-xs font-medium tracking-wide text-primary/70 uppercase">
+            {setsLabel}
+          </div>
+        </div>
+      </div>
+      <Progress
+        className="mt-4 block h-2 w-full overflow-hidden rounded-full bg-muted accent-primary"
+        value={percentage}
+        aria-label={setProgressLabel}
+      />
+      <div className="mt-4 grid grid-cols-3 divide-x divide-border/70">
+        <div className="pr-3">
+          <div className="text-base font-semibold tracking-tight tabular-nums">
+            {completedExercises}/{activeWorkout.entries.length}
+          </div>
+          <div className="mt-0.5 text-xs text-muted-foreground">{exercisesLabel}</div>
+        </div>
+        <div className="px-3">
+          <div className="text-base font-semibold tracking-tight tabular-nums">
+            {fmtNum(volume)}
+          </div>
+          <div className="mt-0.5 text-xs text-muted-foreground">
+            {volumeLabel} · {appState.unit}
+          </div>
+        </div>
+        <div className="min-w-0 pl-3">
+          <div className="line-clamp-2 text-sm font-semibold tracking-tight capitalize">
+            {currentLabel}
+          </div>
+          <div className="mt-0.5 text-xs text-muted-foreground">{currentBlockLabel}</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function WorkoutExerciseNavigator({
+  activeWorkout,
+  units,
+  currentUnit,
+  onSelect,
+}: {
+  activeWorkout: ActiveWorkout;
+  units: number[][];
+  currentUnit: number;
+  onSelect: (entryIndex: number) => void;
+}) {
+  const { t } = useTranslation();
+  if (units.length < 2) return null;
+  return (
+    <section
+      className="mb-4"
+      aria-label={t("workout.sessionSummary.exerciseNavigation", "Exercise navigation")}
+    >
+      <div className="mb-2 flex items-center justify-between px-1">
+        <h2 className="text-sm font-semibold tracking-tight">
+          {t("workout.sessionSummary.exerciseFlow", "Exercise flow")}
+        </h2>
+        <span className="text-xs text-muted-foreground">
+          {t("workout.sessionSummary.tapToJump", "Tap to jump")}
+        </span>
+      </div>
+      <div className="-mx-1 flex snap-x snap-mandatory scrollbar-none gap-2 overflow-x-auto px-1 pb-1">
+        {units.map((unit, index) => {
+          const workingSets = unit.flatMap((entryIndex) =>
+            activeWorkout.entries[entryIndex].sets.filter((set) => !isWarmup(set)),
+          );
+          const completed = workingSets.length > 0 && workingSets.every((set) => set.done);
+          const started = workingSets.some((set) => set.done);
+          const names = unit.map((entryIndex) => exOr(activeWorkout.entries[entryIndex].id).n);
+          const label = names.join(" + ");
+          return (
+            <Button
+              key={unit[0]}
+              variant="plain"
+              type="button"
+              aria-current={index === currentUnit ? "step" : undefined}
+              aria-label={`${t("workout.sessionSummary.exerciseLabel", "Exercise")} ${index + 1}: ${label}`}
+              className={cn(
+                "flex w-52 shrink-0 snap-start items-center gap-2 rounded-lg border px-3 py-2.5 text-left transition-colors duration-150",
+                index === currentUnit
+                  ? "border-primary bg-primary text-primary-foreground hover:bg-primary"
+                  : "border-border/70 bg-card hover:bg-muted",
+              )}
+              onClick={() => onSelect(unit[0])}
+            >
+              <span
+                className={cn(
+                  "flex size-7 flex-none items-center justify-center rounded-full text-xs font-semibold tabular-nums",
+                  index === currentUnit
+                    ? "bg-primary-foreground/15 text-primary-foreground"
+                    : completed
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-foreground/60",
+                )}
+              >
+                {completed ? <Icon name="check" className="text-sm" /> : index + 1}
+              </span>
+              <span className="min-w-0">
+                <span
+                  className={cn(
+                    "block text-xs font-semibold tracking-wide whitespace-nowrap uppercase",
+                    index === currentUnit ? "text-primary-foreground/70" : "text-muted-foreground",
+                  )}
+                >
+                  {unit.length > 1
+                    ? t("workout.superset", "Superset {{current}} / {{total}}", {
+                        current: index + 1,
+                        total: units.length,
+                      })
+                    : t("workout.exercise", "Exercise {{current}} / {{total}}", {
+                        current: index + 1,
+                        total: units.length,
+                      })}
+                </span>
+                <span className="mt-0.5 line-clamp-2 text-sm font-semibold capitalize">
+                  {label}
+                </span>
+                {started && !completed && (
+                  <span
+                    className={cn(
+                      "mt-0.5 block text-xs",
+                      index === currentUnit ? "text-primary-foreground/70" : "text-primary",
+                    )}
+                  >
+                    {t("workout.sessionSummary.inProgress", "In progress")}
+                  </span>
+                )}
+              </span>
+            </Button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function WorkoutExerciseList({
   activeWorkout,
   currentEntry,
@@ -1121,12 +1325,23 @@ function ActiveWorkoutSession({
           onDiscard={requestDiscard}
           onFinish={requestFinish}
         />
-        <div className="mb-4 h-1 overflow-hidden rounded-full bg-muted">
-          <i
-            className="block h-full rounded-full bg-primary transition-all duration-220 ease-out"
-            style={{ width: `${total ? (done / total) * 100 : 0}%` }}
-          />
-        </div>
+        <WorkoutProgressSummary
+          activeWorkout={A}
+          units={units}
+          currentUnit={unitIdx}
+          done={done}
+          total={total}
+        />
+        <WorkoutExerciseNavigator
+          activeWorkout={A}
+          units={units}
+          currentUnit={unitIdx}
+          onSelect={(entryIndex) =>
+            update((state) => {
+              if (state.active) state.active.cur = entryIndex;
+            })
+          }
+        />
 
         <WorkoutExerciseList
           activeWorkout={A}
