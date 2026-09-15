@@ -90,7 +90,7 @@ export default function Plan() {
                     </div>
                   </div>
                   {routines.length ? (
-                    <span className="inline-flex max-w-[55%] flex-wrap justify-end gap-1">
+                    <span className="inline-flex max-w-3/5 flex-wrap justify-end gap-1">
                       {routines.map((routine) => (
                         <span
                           key={routine.id}
