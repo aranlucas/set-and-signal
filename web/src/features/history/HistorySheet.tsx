@@ -6,7 +6,7 @@ import { useDateLabels } from "@/shared/hooks/use-date-labels";
 import { useStore } from "@/app/store/useStore";
 import { EXIDX } from "@/domain/exercises/exercises";
 import { fmtDate, fmtDur, fmtVol, durPart, todayISO } from "@/shared/lib/format";
-import { effectiveRoutineId, setLabel, setsDone } from "@/domain/training/history";
+import { effectiveRoutineIds, setLabel, setsDone } from "@/domain/training/history";
 import { toast } from "@/shared/lib/toast";
 import { Button } from "@/shared/ui/button";
 import { Textarea } from "@/shared/ui/textarea";
@@ -230,9 +230,9 @@ export function Calendar({
   for (let d = 1; d <= daysIn; d++) {
     const iso = y + "-" + String(mo + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0");
     const ws = byDay[iso];
-    const effId = effectiveRoutineId(st, iso);
+    const effIds = effectiveRoutineIds(st, iso);
     const ovr = st.dayPlan[iso] !== undefined;
-    const dotCls = ws ? "done" : ovr && effId ? "ovr" : effId ? "plan" : "";
+    const dotCls = ws ? "done" : ovr && effIds.length ? "ovr" : effIds.length ? "plan" : "";
     cells.push(
       <Button
         variant="plain"

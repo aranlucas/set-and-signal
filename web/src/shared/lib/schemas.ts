@@ -3,7 +3,14 @@ import type {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
 } from "@simplewebauthn/browser";
-import type { PlanBundle, User } from "@/shared/lib/types.js";
+import type {
+  DayPlanEntry,
+  DaySession,
+  IsoDate,
+  PlanBundle,
+  User,
+  Weekday,
+} from "@/shared/lib/types.js";
 import { ACCENT_NAMES } from "@/shared/lib/accents.js";
 
 const finiteNumber = v.pipe(
@@ -160,6 +167,16 @@ const customExercise = v.object({
   tg: v.optional(v.string()),
 });
 
+const daySession = v.object({
+  routineId: id,
+  start: v.optional(v.string()),
+  label: v.optional(v.string()),
+});
+const dayPlanEntry = v.object({
+  rest: v.optional(v.boolean()),
+  sessions: v.optional(v.array(daySession)),
+});
+
 const appState = v.object({
   unit,
   restSec: finiteNumber,
@@ -181,8 +198,8 @@ const appState = v.object({
     ),
   ),
   routines: v.array(routine),
-  week: v.record(weekday, id),
-  dayPlan: v.record(v.string(), v.union([id, v.literal("rest")])),
+  week: v.record(weekday, v.array(daySession)),
+  dayPlan: v.record(v.string(), dayPlanEntry),
   exWeights: v.record(id, v.object({ w: finiteNumber, d: isoDate })),
   workouts: v.array(workout),
   active: v.nullable(activeWorkout),
@@ -373,10 +390,71 @@ export function payloadMessage(payload: unknown): string | undefined {
   return result.success ? result.output.error : undefined;
 }
 
+function normalizeDaySession(value: unknown): DaySession | null {
+  if (!value || typeof value !== "object") return null;
+  const routineId = (value as DaySession).routineId;
+  if (typeof routineId !== "string" || !routineId) return null;
+  const session: DaySession = { routineId };
+  const start = (value as DaySession).start;
+  const label = (value as DaySession).label;
+  if (typeof start === "string" && start) session.start = start;
+  if (typeof label === "string" && label) session.label = label;
+  return session;
+}
+
+function normalizeSessions(value: unknown): DaySession[] | null {
+  if (typeof value === "string" && value) return [{ routineId: value }];
+  if (!Array.isArray(value)) return null;
+  const sessions = value.flatMap((entry) => {
+    if (typeof entry === "string" && entry) return [{ routineId: entry }];
+    const session = normalizeDaySession(entry);
+    return session ? [session] : [];
+  });
+  return sessions;
+}
+
+function normalizeWeekSchedule(week: unknown): Partial<Record<Weekday, DaySession[]>> | undefined {
+  if (!week || typeof week !== "object") return undefined;
+  const out: Partial<Record<Weekday, DaySession[]>> = {};
+  for (const [key, value] of Object.entries(week)) {
+    const weekday = Number(key) as Weekday;
+    if (weekday < 0 || weekday > 6) continue;
+    const sessions = normalizeSessions(value);
+    if (sessions?.length) out[weekday] = sessions;
+  }
+  return out;
+}
+
+function normalizeDayPlanEntry(value: unknown): DayPlanEntry | null {
+  if (value === "rest") return { rest: true };
+  if (typeof value === "string" && value) return { sessions: [{ routineId: value }] };
+  if (!value || typeof value !== "object") return null;
+  const entry = value as DayPlanEntry;
+  if (entry.rest) return { rest: true };
+  const sessions = normalizeSessions(entry.sessions ?? entry);
+  if (!sessions) return null;
+  return { sessions };
+}
+
+function normalizeDayPlan(dayPlan: unknown): Record<IsoDate, DayPlanEntry> | undefined {
+  if (!dayPlan || typeof dayPlan !== "object") return undefined;
+  const out: Record<IsoDate, DayPlanEntry> = {};
+  for (const [iso, value] of Object.entries(dayPlan)) {
+    const entry = normalizeDayPlanEntry(value);
+    if (entry) out[iso] = entry;
+  }
+  return out;
+}
+
 export function parseStoredState(raw: string | null): ParsedAppStatePatch | null {
   if (!raw) return null;
   try {
-    const parsed = parsePayload(appStatePatch, JSON.parse(raw));
+    const json = JSON.parse(raw) as Record<string, unknown>;
+    const week = normalizeWeekSchedule(json.week);
+    const dayPlan = normalizeDayPlan(json.dayPlan);
+    if (week) json.week = week;
+    if (dayPlan) json.dayPlan = dayPlan;
+    const parsed = parsePayload(appStatePatch, json);
     return parsed;
   } catch {
     return null;

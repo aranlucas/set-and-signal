@@ -98,7 +98,8 @@ export function buildPlanBundle(
   );
   const week: Partial<Record<string, Id>> = {};
   WEEK_ORDER.forEach((d) => {
-    if (appState.week?.[d]) week[d] = appState.week[d];
+    const routineId = appState.week?.[d]?.[0]?.routineId;
+    if (routineId) week[d] = routineId;
   });
   return {
     opengym_plan: PLAN_FMT,
@@ -211,7 +212,7 @@ export function mergePlan(
       // bundle weeks are plain JSON keyed by weekday digits
       const weekday = WEEKDAY_BY_KEY[d];
       if (weekday !== undefined && oldId && routineIdMap[oldId]) {
-        appStateDraft.week[weekday] = routineIdMap[oldId];
+        appStateDraft.week[weekday] = [{ routineId: routineIdMap[oldId] }];
       }
     });
   }

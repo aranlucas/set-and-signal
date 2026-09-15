@@ -23,7 +23,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { useStore } from "@/app/store/useStore";
-import { effectiveRoutine, lastBW, streakWeeks } from "@/domain/training/history";
+import { effectiveRoutine, effectiveSessions, lastBW, streakWeeks } from "@/domain/training/history";
 import { exerciseMetadata } from "@/domain/exercises/exercise-metadata";
 import { loadOfRoutine, rankOf } from "@/domain/exercises/muscles";
 import { fmtDate, fmtDur, fmtNum, formatDate, isoOf, todayISO } from "@/shared/lib/format";
@@ -60,7 +60,7 @@ export default function Home() {
   const summary = weeklySummary(state.workouts, today);
   const trend = volumeTrend(state.workouts, today, chartWeeks);
   const maxVolume = Math.max(1, ...trend.map((week) => week.volume));
-  const planned = Object.values(state.week).filter(Boolean).length;
+  const planned = Object.values(state.week).reduce((total, sessions) => total + (sessions?.length ?? 0), 0);
   const streak = streakWeeks(state);
   const recent = state.workouts
     .toSorted((a, b) => b.d.localeCompare(a.d) || b.start - a.start)
@@ -343,8 +343,21 @@ export default function Home() {
             <div className="training-week">
               {dates.map((date) => {
                 const iso = isoOf(date);
-                const scheduled = effectiveRoutine(state, iso);
-                const completed = state.workouts.some((workout) => workout.d === iso);
+                const sessions = effectiveSessions(state, iso);
+                const dayWorkouts = state.workouts.filter((workout) => workout.d === iso);
+                const sessionLabels = sessions
+                  .map((session) => state.routines.find((routine) => routine.id === session.routineId)?.name)
+                  .filter(Boolean);
+                const allCompleted =
+                  sessions.length > 0 &&
+                  sessions.every((session) =>
+                    dayWorkouts.some((workout) => workout.routineId === session.routineId),
+                  );
+                const statusLabel = allCompleted
+                  ? t("calendar.status.completed", "Done")
+                  : sessionLabels.length
+                    ? sessionLabels.join(", ")
+                    : t("home.recoveryDay", "Recovery day");
                 return (
                   <Button
                     variant="plain"
@@ -358,20 +371,39 @@ export default function Home() {
                         resetScroll: false,
                       })
                     }
-                    aria-label={`${formatDate(t, date, { weekday: "long", day: "numeric", month: "long" })}, ${completed ? t("calendar.status.completed", "Done") : scheduled?.name || t("home.recoveryDay", "Recovery day")}`}
+                    aria-label={`${formatDate(t, date, { weekday: "long", day: "numeric", month: "long" })}, ${statusLabel}`}
                     aria-current={iso === today ? "date" : undefined}
                   >
                     <span>{formatDate(t, date, { weekday: "short" })}</span>
                     <strong>{date.getDate()}</strong>
-                    <span
-                      className={`day-status ${completed ? "is-completed" : scheduled ? "is-planned" : ""}`}
-                    >
-                      {completed ? (
-                        <Check size={12} strokeWidth={3} />
-                      ) : scheduled ? (
-                        <Dumbbell size={13} />
+                    <span className="day-status-row">
+                      {sessions.length ? (
+                        sessions.map((session) => {
+                          const scheduled = state.routines.some(
+                            (routine) => routine.id === session.routineId,
+                          );
+                          const completed = dayWorkouts.some(
+                            (workout) => workout.routineId === session.routineId,
+                          );
+                          return (
+                            <span
+                              key={session.routineId}
+                              className={`day-status ${completed ? "is-completed" : scheduled ? "is-planned" : ""}`}
+                            >
+                              {completed ? (
+                                <Check size={12} strokeWidth={3} />
+                              ) : scheduled ? (
+                                <Dumbbell size={13} />
+                              ) : (
+                                <span />
+                              )}
+                            </span>
+                          );
+                        })
                       ) : (
-                        <span />
+                        <span className="day-status">
+                          <span />
+                        </span>
                       )}
                     </span>
                   </Button>

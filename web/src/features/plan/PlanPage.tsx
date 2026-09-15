@@ -71,7 +71,9 @@ export default function Plan() {
           <Header className="mb-2 px-1">{t("plan.weekSchedule", "Week schedule")}</Header>
           <SpaceBetween size="xs">
             {([1, 2, 3, 4, 5, 6, 0] as Weekday[]).map((d) => {
-              const routine = state.routines.find((candidate) => candidate.id === state.week[d]);
+              const routines = (state.week[d] ?? [])
+                .map((session) => state.routines.find((candidate) => candidate.id === session.routineId))
+                .filter((routine): routine is NonNullable<typeof routine> => !!routine);
               return (
                 <Button
                   variant="plain"
@@ -85,10 +87,17 @@ export default function Plan() {
                       {weekdays[d]}
                     </div>
                   </div>
-                  {routine ? (
-                    <span className="inline-flex items-center gap-1 rounded-sm bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
-                      <Icon name={glyphOf(routine.emoji)} />
-                      {routine.name}
+                  {routines.length ? (
+                    <span className="inline-flex max-w-[55%] flex-wrap justify-end gap-1">
+                      {routines.map((routine) => (
+                        <span
+                          key={routine.id}
+                          className="inline-flex items-center gap-1 rounded-sm bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary"
+                        >
+                          <Icon name={glyphOf(routine.emoji)} />
+                          {routine.name}
+                        </span>
+                      ))}
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 rounded-sm bg-muted px-2 py-0.5 text-xs font-medium text-foreground/60">

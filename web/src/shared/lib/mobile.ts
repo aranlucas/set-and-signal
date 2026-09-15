@@ -66,8 +66,11 @@ export async function syncReminder(appState: AppState, interactive = false): Pro
       permission = await LocalNotifications.requestPermissions();
     if (permission.display !== "granted") return false;
     const [hour, minute] = (reminder.time || "08:00").split(":").map(Number);
-    const notifications = Object.entries(appState.week).flatMap(([day, routineId]) => {
-      const routine = appState.routines.find((candidate) => candidate.id === routineId);
+    const notifications = Object.entries(appState.week).flatMap(([day, sessions]) => {
+      const routineId = sessions?.[0]?.routineId;
+      const routine = routineId
+        ? appState.routines.find((candidate) => candidate.id === routineId)
+        : undefined;
       if (!routine) return [];
       return [
         {

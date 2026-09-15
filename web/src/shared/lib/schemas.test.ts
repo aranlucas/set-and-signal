@@ -103,4 +103,21 @@ describe("runtime payload schemas", () => {
       muscleWeights: { chest: 1 },
     });
   });
+
+  it("normalizes legacy single-id week and dayPlan values on read", () => {
+    const parsed = parseStoredState(
+      JSON.stringify({
+        week: { "1": "routine-a", "3": ["routine-b", "routine-c"] },
+        dayPlan: { "2026-09-14": "routine-a", "2026-09-15": "rest" },
+      }),
+    );
+    expect(parsed?.week).toEqual({
+      1: [{ routineId: "routine-a" }],
+      3: [{ routineId: "routine-b" }, { routineId: "routine-c" }],
+    });
+    expect(parsed?.dayPlan).toEqual({
+      "2026-09-14": { sessions: [{ routineId: "routine-a" }] },
+      "2026-09-15": { rest: true },
+    });
+  });
 });

@@ -289,7 +289,12 @@ export function bestWeightsFor(workouts: WorkoutLike[]): Map<Id, number> {
   }
   return weights;
 }
-export { effectiveRoutine, effectiveRoutineId } from "@/domain/training/schedule.js";
+export {
+  effectiveRoutine,
+  effectiveRoutineId,
+  effectiveRoutineIds,
+  effectiveSessions,
+} from "@/domain/training/schedule.js";
 export function buildSets(
   state: {
     workouts: WorkoutLike[];
