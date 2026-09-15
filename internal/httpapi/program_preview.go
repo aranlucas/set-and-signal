@@ -14,11 +14,11 @@ import (
 
 type typedPreparedProgram struct {
 	routines []MCPRoutine
-	week     map[string]*string
+	week     map[string][]MCPDaySession
 	hasWeek  bool
 }
 
-func prepareTypedProgram(routines []MCPRoutineInput, week map[string]*string) (typedPreparedProgram, error) {
+func prepareTypedProgram(routines []MCPRoutineInput, week map[string][]MCPDaySession) (typedPreparedProgram, error) {
 	prepared := typedPreparedProgram{}
 	if len(routines) == 0 {
 		return prepared, errors.New("routines array required")
@@ -41,18 +41,21 @@ func prepareTypedProgram(routines []MCPRoutineInput, week map[string]*string) (t
 	if week == nil {
 		return prepared, nil
 	}
-	prepared.hasWeek, prepared.week = true, map[string]*string{}
-	for day, routineID := range week {
+	prepared.hasWeek, prepared.week = true, map[string][]MCPDaySession{}
+	for day, sessions := range week {
 		n, err := strconv.Atoi(day)
 		if err != nil || n < 0 || n > 6 || strconv.Itoa(n) != day {
 			return typedPreparedProgram{}, errors.New("week keys must be 0–6 (0=Sun)")
 		}
-		if routineID != nil {
-			if jsLen(*routineID) > 40 {
-				return typedPreparedProgram{}, errors.New("week values must be routine ids or null")
+		cleaned := make([]MCPDaySession, 0, len(sessions))
+		for _, session := range sessions {
+			normalized, err := trainingNormalizeDaySession(session)
+			if err != nil {
+				return typedPreparedProgram{}, err
 			}
-			prepared.week[day] = new(*routineID)
+			cleaned = append(cleaned, normalized)
 		}
+		prepared.week[day] = cleaned
 	}
 	return prepared, nil
 }
@@ -139,26 +142,15 @@ func cloneMCPRoutines(value []MCPRoutine) []MCPRoutine {
 	return slices.Clone(value)
 }
 
-func cloneMCPWeek(week map[string]*string) map[string]*string {
-	if week == nil {
-		return nil
-	}
-	out := make(map[string]*string, len(week))
-	for day, value := range week {
-		if value != nil {
-			out[day] = new(*value)
-		} else {
-			out[day] = nil
-		}
-	}
-	return out
+func cloneMCPWeek(week map[string][]MCPDaySession) map[string][]MCPDaySession {
+	return trainingCloneWeek(week)
 }
 
-func typedApplyProgram(current []MCPRoutine, week map[string]*string, prepared typedPreparedProgram, replace bool) typedPreparedProgram {
+func typedApplyProgram(current []MCPRoutine, week map[string][]MCPDaySession, prepared typedPreparedProgram, replace bool) typedPreparedProgram {
 	out := typedPreparedProgram{routines: cloneMCPRoutines(current), week: cloneMCPWeek(week), hasWeek: prepared.hasWeek}
 	if replace {
 		out.routines = []MCPRoutine{}
-		out.week = map[string]*string{}
+		out.week = map[string][]MCPDaySession{}
 	}
 	for _, routine := range prepared.routines {
 		replaced := false
@@ -178,9 +170,17 @@ func typedApplyProgram(current []MCPRoutine, week map[string]*string, prepared t
 		for _, routine := range out.routines {
 			ids[routine.ID] = true
 		}
-		for day, id := range out.week {
-			if id != nil && !ids[*id] {
+		for day, sessions := range out.week {
+			kept := sessions[:0]
+			for _, session := range sessions {
+				if ids[session.RoutineID] {
+					kept = append(kept, session)
+				}
+			}
+			if len(kept) == 0 {
 				delete(out.week, day)
+			} else {
+				out.week[day] = kept
 			}
 		}
 	}
@@ -193,8 +193,8 @@ func (s *Server) mutateTypedProgram(uid string, prepared typedPreparedProgram, r
 		data.Routines = applied.routines
 		data.Week = applied.week
 		if replace {
-			for day, routineID := range data.DayPlan {
-				if routineID != nil && *routineID != "rest" {
+			for day, entry := range data.DayPlan {
+				if !entry.Rest {
 					delete(data.DayPlan, day)
 				}
 			}
@@ -263,20 +263,20 @@ func typedProgramDiff(before, after MCPProgramState) MCPProgramDiff {
 	}
 	slices.Sort(days)
 	for _, day := range days {
-		beforeID, afterID := weekValue(before.Week, day), weekValue(after.Week, day)
-		if beforeID == afterID {
+		beforeSessions, afterSessions := weekValue(before.Week, day), weekValue(after.Week, day)
+		if trainingDaySessionsEqual(beforeSessions, afterSessions) {
 			continue
 		}
-		diff.ScheduleChanges = append(diff.ScheduleChanges, MCPScheduleChange{Day: day, Before: beforeID, After: afterID})
+		diff.ScheduleChanges = append(diff.ScheduleChanges, MCPScheduleChange{Day: day, Before: beforeSessions, After: afterSessions})
 	}
 	diff.Summary = fmt.Sprintf("%d routines added, %d updated, %d removed, %d schedule changes", len(diff.AddedRoutines), len(diff.UpdatedRoutines), len(diff.RemovedRoutines), len(diff.ScheduleChanges))
 	return diff
 }
 
-func weekValue(week map[string]*string, day string) *string {
+func weekValue(week map[string][]MCPDaySession, day string) []MCPDaySession {
 	value, ok := week[day]
-	if !ok || value == nil {
+	if !ok || len(value) == 0 {
 		return nil
 	}
-	return new(*value)
+	return trainingCloneSessions(value)
 }

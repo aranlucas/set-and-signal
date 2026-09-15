@@ -307,11 +307,13 @@ func prepareProgram(routinesv, weekv any) (preparedProgram, int, string) {
 			if v == nil {
 				continue
 			}
-			id, ok := v.(string)
-			if !ok || jsLen(id) > 40 {
-				return prepared, http.StatusBadRequest, "week values must be routine ids or null"
+			sessions, ok, msg := parseWeekSessions(v)
+			if !ok {
+				return prepared, http.StatusBadRequest, msg
 			}
-			week[strconv.Itoa(day)] = id
+			if len(sessions) > 0 {
+				week[strconv.Itoa(day)] = sessions
+			}
 		}
 	}
 	prepared.cleaned = cleaned
@@ -339,10 +341,15 @@ func applyPreparedProgram(st map[string]any, prepared preparedProgram, replace b
 		// Drop week/dayPlan slots that pointed at the wiped routines.
 		for _, section := range []string{"week", "dayPlan"} {
 			m, _ := st[section].(map[string]any)
-			for k, v := range m {
-				if s, ok := v.(string); ok && s != "rest" {
-					delete(m, k)
+			for k := range m {
+				if section == "dayPlan" {
+					if entry, ok := m[k].(map[string]any); ok {
+						if rest, _ := entry["rest"].(bool); rest {
+							continue
+						}
+					}
 				}
+				delete(m, k)
 			}
 		}
 	}
@@ -372,8 +379,22 @@ func applyPreparedProgram(st map[string]any, prepared preparedProgram, replace b
 			}
 		}
 		for d, rid := range prepared.week {
-			if id, ok := rid.(string); ok && !ids[id] {
+			sessions, _ := rid.([]any)
+			kept := make([]any, 0, len(sessions))
+			for _, raw := range sessions {
+				m, ok := raw.(map[string]any)
+				if !ok {
+					continue
+				}
+				id, _ := m["routineId"].(string)
+				if ids[id] {
+					kept = append(kept, m)
+				}
+			}
+			if len(kept) == 0 {
 				delete(prepared.week, d)
+			} else {
+				prepared.week[d] = kept
 			}
 		}
 		st["week"] = prepared.week
@@ -401,6 +422,105 @@ func ensureRoutineID(routine any) any {
 }
 
 var nonWordRe = regexp.MustCompile(`[^a-z0-9]+`)
+
+func parseWeekSessions(v any) ([]any, bool, string) {
+	list, ok := v.([]any)
+	if !ok {
+		return nil, false, "week values must be session arrays"
+	}
+	out := make([]any, 0, len(list))
+	for _, raw := range list {
+		m, ok := raw.(map[string]any)
+		if !ok {
+			return nil, false, "week sessions must be objects with routineId"
+		}
+		id := sanitize.JSString(m["routineId"])
+		if id == "" || jsLen(id) > 40 {
+			return nil, false, "week session routineId required"
+		}
+		row := map[string]any{"routineId": id}
+		if start := sanitize.JSString(m["start"]); start != "" {
+			row["start"] = jsSlice(start, 5)
+		}
+		if label := sanitize.JSString(m["label"]); label != "" {
+			row["label"] = jsSlice(label, 80)
+		}
+		out = append(out, row)
+	}
+	return out, true, ""
+}
+
+func parseDayPlanEntry(planv any) (map[string]any, bool, string) {
+	if planv == "rest" {
+		return map[string]any{"rest": true}, true, ""
+	}
+	m, ok := planv.(map[string]any)
+	if !ok {
+		return nil, false, "day plan must be {rest:true} or {sessions:[...]}"
+	}
+	if rest, _ := m["rest"].(bool); rest {
+		return map[string]any{"rest": true}, true, ""
+	}
+	sessions, ok, msg := parseWeekSessions(m["sessions"])
+	if !ok {
+		return nil, false, msg
+	}
+	return map[string]any{"sessions": sessions}, true, ""
+}
+
+func pruneRoutineFromSchedule(st map[string]any, id string) {
+	if week, ok := st["week"].(map[string]any); ok {
+		for day, raw := range week {
+			sessions, _ := raw.([]any)
+			kept := make([]any, 0, len(sessions))
+			for _, session := range sessions {
+				m, ok := session.(map[string]any)
+				if !ok {
+					continue
+				}
+				if sanitize.JSString(m["routineId"]) == id {
+					continue
+				}
+				kept = append(kept, m)
+			}
+			if len(kept) == 0 {
+				delete(week, day)
+			} else {
+				week[day] = kept
+			}
+		}
+	}
+	if plan, ok := st["dayPlan"].(map[string]any); ok {
+		for day, raw := range plan {
+			m, ok := raw.(map[string]any)
+			if !ok {
+				delete(plan, day)
+				continue
+			}
+			if rest, _ := m["rest"].(bool); rest {
+				continue
+			}
+			sessions, _ := m["sessions"].([]any)
+			kept := make([]any, 0, len(sessions))
+			for _, session := range sessions {
+				row, ok := session.(map[string]any)
+				if !ok {
+					continue
+				}
+				if sanitize.JSString(row["routineId"]) == id {
+					continue
+				}
+				kept = append(kept, row)
+			}
+			m["sessions"] = kept
+			if len(kept) == 0 {
+				delete(plan, day)
+			} else {
+				plan[day] = m
+			}
+		}
+	}
+}
 
 // POST /api/routine/delete — removes the routine plus every week/dayPlan
 // slot pointing at it.
@@ -433,14 +553,7 @@ func (s *Server) applyRoutineDelete(uid string, idv any) (map[string]any, int, s
 			kept = append(kept, e)
 		}
 		st["routines"] = kept
-		for _, section := range []string{"week", "dayPlan"} {
-			m, _ := st[section].(map[string]any)
-			for k, v := range m {
-				if s, ok := v.(string); ok && s == id {
-					delete(m, k)
-				}
-			}
-		}
+		pruneRoutineFromSchedule(st, id)
 		return json.Marshal(st)
 	})
 	if err != nil {
@@ -449,9 +562,8 @@ func (s *Server) applyRoutineDelete(uid string, idv any) (map[string]any, int, s
 	return map[string]any{"ok": true}, 0, ""
 }
 
-// POST /api/week — replace the whole day→routine-id schedule. Keys must be
-// exactly "0".."6"; values are routine ids ≤40 chars or null (skipped).
-// Ghost ids (no matching routine) never survive to storage.
+// POST /api/week — replace the whole weekday→sessions schedule. Keys must be
+// exactly "0".."6"; values are ordered session arrays. Ghost routine ids are dropped.
 func (s *Server) postWeek(w http.ResponseWriter, r *http.Request) {
 	u := s.requireAnyAuth(w, r)
 	if u == nil {
@@ -482,11 +594,13 @@ func (s *Server) applyWeek(uid string, weekv any) (map[string]any, int, string) 
 		if v == nil {
 			continue
 		}
-		id, ok := v.(string)
-		if !ok || jsLen(id) > 40 {
-			return nil, http.StatusBadRequest, "week values must be routine ids or null"
+		sessions, ok, msg := parseWeekSessions(v)
+		if !ok {
+			return nil, http.StatusBadRequest, msg
 		}
-		week[strconv.Itoa(day)] = id
+		if len(sessions) > 0 {
+			week[strconv.Itoa(day)] = sessions
+		}
 	}
 	err := s.ST.MutateState(uid, func(raw jsontext.Value) (jsontext.Value, error) {
 		st := stateMap(raw)
@@ -499,9 +613,23 @@ func (s *Server) applyWeek(uid string, weekv any) (map[string]any, int, string) 
 				}
 			}
 		}
-		for d, rid := range week { // never schedule a ghost routine
-			if id, ok := rid.(string); ok && !ids[id] {
+		for d, rid := range week {
+			sessions, _ := rid.([]any)
+			kept := make([]any, 0, len(sessions))
+			for _, rawSession := range sessions {
+				m, ok := rawSession.(map[string]any)
+				if !ok {
+					continue
+				}
+				id, _ := m["routineId"].(string)
+				if ids[id] {
+					kept = append(kept, m)
+				}
+			}
+			if len(kept) == 0 {
 				delete(week, d)
+			} else {
+				week[d] = kept
 			}
 		}
 		st["week"] = week
@@ -513,8 +641,8 @@ func (s *Server) applyWeek(uid string, weekv any) (map[string]any, int, string) 
 	return map[string]any{"ok": true}, 0, ""
 }
 
-// POST /api/dayplan — set/clear one calendar day's plan. The literal 'rest'
-// sentinel is kept verbatim; null/"" clears the day.
+// POST /api/dayplan — set/clear one calendar day's plan. Body plan is
+// {rest:true}, {sessions:[...]}, or null/"" to clear.
 func (s *Server) postDayPlan(w http.ResponseWriter, r *http.Request) {
 	u := s.requireAnyAuth(w, r)
 	if u == nil {
@@ -537,16 +665,15 @@ func (s *Server) applyDayPlan(uid string, isov, planv any) (map[string]any, int,
 	if !isoDateRe.MatchString(iso) {
 		return nil, http.StatusBadRequest, "iso date required (YYYY-MM-DD)"
 	}
-	var plan string // "" means clear, like upstream's null
-	switch planv {
-	case nil:
-	case "rest":
-		plan = "rest"
-	default:
-		plan = sanitize.JSString(planv)
-	}
-	if plan != "" && plan != "rest" && jsLen(plan) > 40 {
-		return nil, http.StatusBadRequest, "bad plan value"
+	clear := planv == nil || planv == ""
+	var entry map[string]any
+	if !clear {
+		var ok bool
+		var msg string
+		entry, ok, msg = parseDayPlanEntry(planv)
+		if !ok {
+			return nil, http.StatusBadRequest, msg
+		}
 	}
 	err := s.ST.MutateState(uid, func(raw jsontext.Value) (jsontext.Value, error) {
 		st := stateMap(raw)
@@ -554,10 +681,10 @@ func (s *Server) applyDayPlan(uid string, isov, planv any) (map[string]any, int,
 		if dp == nil {
 			dp = map[string]any{}
 		}
-		if plan == "" {
+		if clear {
 			delete(dp, iso)
 		} else {
-			dp[iso] = plan
+			dp[iso] = entry
 		}
 		st["dayPlan"] = dp
 		return json.Marshal(st)

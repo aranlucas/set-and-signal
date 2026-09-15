@@ -137,14 +137,20 @@ type MCPLogWorkoutInput struct {
 	Workout MCPWorkout `json:"workout" jsonschema:"completed workout to append or replace by id"`
 }
 
-type MCPTodayResult struct {
-	Iso       string      `json:"iso"`
-	Weekday   string      `json:"weekday"`
-	Rest      bool        `json:"rest"`
-	Override  bool        `json:"override"`
-	RoutineID *string     `json:"routineId,omitempty"`
+type MCPTodaySession struct {
+	RoutineID string      `json:"routineId"`
+	Start     *string     `json:"start,omitempty"`
+	Label     *string     `json:"label,omitempty"`
 	Routine   *MCPRoutine `json:"routine,omitempty"`
-	WeekSlot  *string     `json:"weekSlot,omitempty"`
+}
+
+type MCPTodayResult struct {
+	Iso       string            `json:"iso"`
+	Weekday   string            `json:"weekday"`
+	Rest      bool              `json:"rest"`
+	Override  bool              `json:"override"`
+	Sessions  []MCPTodaySession `json:"sessions"`
+	WeekSlots []MCPDaySession   `json:"weekSlots,omitempty"`
 }
 
 type MCPSearchExercisesOutput struct {
@@ -156,10 +162,10 @@ type MCPRoutinesOutput struct {
 }
 
 type MCPSetProgramOutput struct {
-	OK       bool               `json:"ok"`
-	Routines []MCPRoutine       `json:"routines"`
-	Week     map[string]*string `json:"week,omitempty"`
-	Revision int64              `json:"revision"`
+	OK       bool                         `json:"ok"`
+	Routines []MCPRoutine                 `json:"routines"`
+	Week     map[string][]MCPDaySession   `json:"week,omitempty"`
+	Revision int64                        `json:"revision"`
 }
 
 type MCPBodyweightOutput struct {
@@ -218,18 +224,21 @@ type MCPDigestWorkout struct {
 	Entries []MCPDigestWorkoutEntry `json:"entries"`
 }
 
-type MCPTrainingDigestRoutine struct {
-	Name    string                   `json:"name"`
-	Entries []MCPDigestExerciseEntry `json:"entries"`
+type MCPTrainingDigestSession struct {
+	RoutineID string                   `json:"routineId"`
+	Name      string                   `json:"name"`
+	Start     *string                  `json:"start,omitempty"`
+	Label     *string                  `json:"label,omitempty"`
+	Entries   []MCPDigestExerciseEntry `json:"entries"`
 }
 
 type MCPTrainingDigest struct {
-	Unit           string                   `json:"unit"`
-	Today          string                   `json:"today"`
-	BodyweightGoal *float64                 `json:"bodyweightGoal,omitempty"`
-	Bodyweight     []MCPBodyweightEntry     `json:"bodyweight"`
-	Routine        MCPTrainingDigestRoutine `json:"routine"`
-	LastWorkouts   []MCPDigestWorkout       `json:"lastWorkouts"`
+	Unit           string                      `json:"unit"`
+	Today          string                      `json:"today"`
+	BodyweightGoal *float64                    `json:"bodyweightGoal,omitempty"`
+	Bodyweight     []MCPBodyweightEntry        `json:"bodyweight"`
+	Sessions       []MCPTrainingDigestSession  `json:"sessions"`
+	LastWorkouts   []MCPDigestWorkout          `json:"lastWorkouts"`
 }
 
 type MCPHistoryEntry struct {
@@ -268,16 +277,16 @@ type MCPSuggestion struct {
 }
 
 type MCPProgramInput struct {
-	Routines []MCPRoutineInput  `json:"routines" jsonschema:"routines to validate and preview"`
-	Week     map[string]*string `json:"week,omitempty" jsonschema:"weekday keys 0 through 6 mapped to routine ids or null"`
-	Replace  bool               `json:"replace,omitzero" jsonschema:"replace the full program instead of merging routines"`
+	Routines []MCPRoutineInput              `json:"routines" jsonschema:"routines to validate and preview"`
+	Week     map[string][]MCPDaySession     `json:"week,omitempty" jsonschema:"weekday keys 0 through 6 mapped to ordered session lists"`
+	Replace  bool                           `json:"replace,omitzero" jsonschema:"replace the full program instead of merging routines"`
 }
 
 type MCPSetProgramInput struct {
-	Routines         []MCPRoutineInput  `json:"routines" jsonschema:"routines to validate and apply"`
-	Week             map[string]*string `json:"week,omitempty" jsonschema:"weekday keys 0 through 6 mapped to routine ids or null"`
-	Replace          bool               `json:"replace,omitzero" jsonschema:"replace the full program instead of merging routines"`
-	ExpectedRevision *int64             `json:"expectedRevision,omitempty" jsonschema:"revision returned by preview_program for optimistic concurrency"`
+	Routines         []MCPRoutineInput          `json:"routines" jsonschema:"routines to validate and apply"`
+	Week             map[string][]MCPDaySession `json:"week,omitempty" jsonschema:"weekday keys 0 through 6 mapped to ordered session lists"`
+	Replace          bool                       `json:"replace,omitzero" jsonschema:"replace the full program instead of merging routines"`
+	ExpectedRevision *int64                     `json:"expectedRevision,omitempty" jsonschema:"revision returned by preview_program for optimistic concurrency"`
 }
 
 type MCPPreviewProgramInput = MCPProgramInput
@@ -342,18 +351,47 @@ type MCPExercisePrescription struct {
 }
 
 type MCPSessionPrescription struct {
-	Iso         string                    `json:"iso"`
-	Unit        string                    `json:"unit"`
-	Rest        bool                      `json:"rest"`
-	RoutineID   *string                   `json:"routineId,omitempty"`
-	RoutineName *string                   `json:"routineName,omitempty"`
+	RoutineID   string                    `json:"routineId"`
+	RoutineName string                    `json:"routineName"`
+	Start       *string                   `json:"start,omitempty"`
+	Label       *string                   `json:"label,omitempty"`
 	Policy      *string                   `json:"policy,omitempty"`
 	Exercises   []MCPExercisePrescription `json:"exercises"`
 }
 
+type MCPDayPrescription struct {
+	Iso      string                   `json:"iso"`
+	Unit     string                   `json:"unit"`
+	Rest     bool                     `json:"rest"`
+	Sessions []MCPSessionPrescription `json:"sessions"`
+}
+
 type MCPProgramState struct {
-	Routines []MCPRoutine       `json:"routines"`
-	Week     map[string]*string `json:"week,omitempty"`
+	Routines []MCPRoutine               `json:"routines"`
+	Week     map[string][]MCPDaySession `json:"week,omitempty"`
+}
+
+type MCPAddDaySessionInput struct {
+	Iso              string  `json:"iso" jsonschema:"date in YYYY-MM-DD"`
+	RoutineID        string  `json:"routineId" jsonschema:"routine id to append as a session"`
+	Start            *string `json:"start,omitempty" jsonschema:"optional local start time HH:MM"`
+	Label            *string `json:"label,omitempty" jsonschema:"optional coach-facing label"`
+	ExpectedRevision *int64  `json:"expectedRevision,omitempty" jsonschema:"optional revision for optimistic concurrency"`
+}
+
+type MCPRemoveDaySessionInput struct {
+	Iso              string  `json:"iso" jsonschema:"date in YYYY-MM-DD"`
+	RoutineID        string  `json:"routineId" jsonschema:"routine id to remove from that date"`
+	Index            *int    `json:"index,omitempty" jsonschema:"optional 0-based session index when the same routine appears twice"`
+	ExpectedRevision *int64  `json:"expectedRevision,omitempty" jsonschema:"optional revision for optimistic concurrency"`
+}
+
+type MCPDaySessionsOutput struct {
+	OK       bool            `json:"ok"`
+	Iso      string          `json:"iso"`
+	Rest     bool            `json:"rest"`
+	Sessions []MCPDaySession `json:"sessions"`
+	Revision int64           `json:"revision"`
 }
 
 type MCPRoutineChange struct {
@@ -368,9 +406,9 @@ type MCPRoutineUpdate struct {
 }
 
 type MCPScheduleChange struct {
-	Day    string  `json:"day"`
-	Before *string `json:"before,omitempty"`
-	After  *string `json:"after,omitempty"`
+	Day    string          `json:"day"`
+	Before []MCPDaySession `json:"before,omitempty"`
+	After  []MCPDaySession `json:"after,omitempty"`
 }
 
 type MCPProgramDiff struct {

@@ -30,16 +30,44 @@ func SearchExercises(data TrainingData, query string, filters exercises.SearchFi
 	return searchExercises(data, query, filters)
 }
 
-func BuildDigest(data TrainingData, routine MCPRoutine, today string) MCPTrainingDigest {
-	return buildTrainingDigest(data, routine, today)
+func BuildDigest(data TrainingData, sessions []MCPDaySession, today string) MCPTrainingDigest {
+	return buildTrainingDigest(data, sessions, today)
 }
 
 func BuildHistory(data TrainingData, query HistoryQuery) []MCPHistoryRow {
 	return buildHistory(data, historyQuery(query))
 }
 
-func SessionPrescription(data TrainingData, iso string) MCPSessionPrescription {
+func SessionPrescription(data TrainingData, iso string) MCPDayPrescription {
 	return sessionPrescription(data, iso)
+}
+
+func NormalizeDaySession(session MCPDaySession) (MCPDaySession, error) {
+	return normalizeDaySession(session)
+}
+
+func CloneWeekSchedule(week map[string][]MCPDaySession) map[string][]MCPDaySession {
+	return cloneWeekSchedule(week)
+}
+
+func CloneDaySessions(sessions []MCPDaySession) []MCPDaySession {
+	return cloneDaySessions(sessions)
+}
+
+func DaySessionsEqual(a, b []MCPDaySession) bool {
+	return daySessionsEqual(a, b)
+}
+
+func AddSessionToDayPlan(data *TrainingData, iso string, session MCPDaySession) error {
+	return addSessionToDayPlan(data, iso, session)
+}
+
+func RemoveSessionFromDayPlan(data *TrainingData, iso, routineID string, index *int) error {
+	return removeSessionFromDayPlan(data, iso, routineID, index)
+}
+
+func ResolveDaySessions(data TrainingData, iso string) (sessions []MCPDaySession, override, rest bool) {
+	return resolveDaySessions(data, iso)
 }
 
 func LogExerciseSets(data *TrainingData, input MCPLogExerciseSetsInput, now time.Time) (MCPWorkout, MCPProgression, error) {

@@ -20,10 +20,10 @@ func aptFullBody() MCPRoutine {
 func aptView(workouts ...MCPWorkout) TrainingData {
 	return TrainingData{
 		Unit: "lb", Routines: []MCPRoutine{aptFullBody()},
-		Week: map[string]*string{
-			"1": stringPtr("apt-full-body"),
-			"3": stringPtr("apt-full-body"),
-			"5": stringPtr("apt-full-body"),
+		Week: map[string][]MCPDaySession{
+			"1": {{RoutineID: "apt-full-body"}},
+			"3": {{RoutineID: "apt-full-body"}},
+			"5": {{RoutineID: "apt-full-body"}},
 		},
 		Workouts: workouts,
 	}
@@ -90,17 +90,18 @@ func TestZeroLoggedSetsFallBackToTargetWeight(t *testing.T) {
 func TestPrescribeTodayIsNotZeroWhenHistoryExists(t *testing.T) {
 	view := aptView(MCPWorkout{D: "2026-08-24", Entries: []MCPWorkoutEntry{gobletEntry(155, 8, 8, 8)}})
 	today := trainingDay(view, "2026-08-28")
-	if today.Routine == nil || today.Routine.ID != "apt-full-body" {
+	if len(today.Sessions) != 1 || today.Sessions[0].Routine == nil || today.Sessions[0].Routine.ID != "apt-full-body" {
 		t.Fatalf("today = %#v", today)
 	}
-	if len(today.Routine.Ex) != 5 || today.Routine.Name != "Apartment Full Body" {
-		t.Fatalf("routine wiped: %#v", today.Routine)
+	routine := today.Sessions[0].Routine
+	if len(routine.Ex) != 5 || routine.Name != "Apartment Full Body" {
+		t.Fatalf("routine wiped: %#v", routine)
 	}
-	if today.Routine.Ex[0].Weight == nil || *today.Routine.Ex[0].Weight != 160 {
-		t.Fatalf("today goblet weight = %#v", today.Routine.Ex[0].Weight)
+	if routine.Ex[0].Weight == nil || *routine.Ex[0].Weight != 160 {
+		t.Fatalf("today goblet weight = %#v", routine.Ex[0].Weight)
 	}
-	if today.Routine.Ex[1].ID != "0289" || today.Routine.Ex[2].ID != "0292" {
-		t.Fatalf("exercise order changed: %#v", today.Routine.Ex)
+	if routine.Ex[1].ID != "0289" || routine.Ex[2].ID != "0292" {
+		t.Fatalf("exercise order changed: %#v", routine.Ex)
 	}
 }
 
@@ -136,13 +137,13 @@ func TestPersistRoutineWorkingWeightsDoesNotWipeProgram(t *testing.T) {
 func TestSessionPrescriptionReportsLastAndNext(t *testing.T) {
 	view := aptView(MCPWorkout{D: "2026-08-24", Entries: []MCPWorkoutEntry{gobletEntry(155, 8, 8, 8)}})
 	got := sessionPrescription(view, "2026-08-28")
-	if got.Rest || got.RoutineName == nil || *got.RoutineName != "Apartment Full Body" {
+	if got.Rest || len(got.Sessions) != 1 || got.Sessions[0].RoutineName != "Apartment Full Body" {
 		t.Fatalf("session = %#v", got)
 	}
-	if len(got.Exercises) != 5 {
-		t.Fatalf("exercises = %#v", got.Exercises)
+	if len(got.Sessions[0].Exercises) != 5 {
+		t.Fatalf("exercises = %#v", got.Sessions[0].Exercises)
 	}
-	squat := got.Exercises[0]
+	squat := got.Sessions[0].Exercises[0]
 	if squat.ID != "1760" || squat.Decision != "increased" || squat.Last == nil || !squat.Last.Hit || squat.Last.Weight != 155 {
 		t.Fatalf("goblet prescription = %#v", squat)
 	}
@@ -152,8 +153,8 @@ func TestSessionPrescriptionReportsLastAndNext(t *testing.T) {
 	if squat.Last.Sets == nil || reflect.DeepEqual(squat.Last.Sets, []string{}) {
 		t.Fatalf("last sets missing: %#v", squat.Last.Sets)
 	}
-	if got.Exercises[1].Decision != "first" {
-		t.Fatalf("unlogged lift should be first: %#v", got.Exercises[1])
+	if got.Sessions[0].Exercises[1].Decision != "first" {
+		t.Fatalf("unlogged lift should be first: %#v", got.Sessions[0].Exercises[1])
 	}
 }
 

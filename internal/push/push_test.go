@@ -6,6 +6,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"fmt"
 	"io"
@@ -528,7 +529,7 @@ func TestReminderLoopSkipsWhenNothingPlanned(t *testing.T) {
 
 func TestReminderDayPlanOverrideWinsOverWeek(t *testing.T) {
 	doc := reminderStateDoc("07:30")
-	doc["dayPlan"] = map[string]any{"2026-08-25": "legs"}
+	doc["dayPlan"] = map[string]any{"2026-08-25": map[string]any{"sessions": []any{map[string]any{"routineId": "legs"}}}}
 	s := &reminderState{}
 	raw, _ := json.Marshal(doc)
 	if err := json.Unmarshal(raw, s); err != nil {
@@ -539,12 +540,14 @@ func TestReminderDayPlanOverrideWinsOverWeek(t *testing.T) {
 		t.Fatalf("override = %q, want legs", got)
 	}
 	// Unknown override id falls through to the week grid.
-	s.DayPlan["2026-08-25"] = "ghost"
+	ghost, _ := json.Marshal(map[string]any{"sessions": []any{map[string]any{"routineId": "ghost"}}})
+	s.DayPlan["2026-08-25"] = ghost
 	if got := effectiveRoutineId(s, "2026-08-25"); got != "legs" {
 		t.Fatalf("ghost override = %q, want week fallback legs", got)
 	}
 	// 'rest' always means nothing planned.
-	s.DayPlan["2026-08-25"] = "rest"
+	rest, _ := json.Marshal(map[string]any{"rest": true})
+	s.DayPlan["2026-08-25"] = rest
 	if got := effectiveRoutineId(s, "2026-08-25"); got != "" {
 		t.Fatalf("rest override = %q, want empty", got)
 	}
@@ -558,7 +561,8 @@ func TestReminderDayPlanOverrideWinsOverWeek(t *testing.T) {
 	}
 	// A sparse object-shaped week grid still indexes by weekday.
 	s.DayPlan = nil
-	s.Week = map[string]string{"0": "mystery"}
+	mystery, _ := json.Marshal([]any{map[string]any{"routineId": "mystery"}})
+	s.Week = map[string]jsontext.Value{"0": mystery}
 	if got := effectiveRoutineId(s, "2026-08-23"); got != "mystery" {
 		t.Fatalf("sparse fallback = %q, want mystery", got)
 	}

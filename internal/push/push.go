@@ -6,6 +6,7 @@ package push
 
 import (
 	"context"
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"errors"
 	"fmt"
@@ -233,42 +234,121 @@ type reminderState struct {
 		TZ   string `json:"tz"`
 		Time string `json:"time"`
 	} `json:"reminder"`
-	DayPlan  map[string]string `json:"dayPlan"`
+	DayPlan  map[string]jsontext.Value `json:"dayPlan"`
 	Routines []struct {
 		ID    string `json:"id"`
 		Name  string `json:"name"`
 		Emoji string `json:"emoji"`
 	} `json:"routines"`
-	Week     map[string]string `json:"week"`
+	Week map[string]jsontext.Value `json:"week"`
 	Workouts []struct {
 		D string `json:"d"`
 	} `json:"workouts"`
 }
 
-// effectiveRoutineId decides which routine id is planned for iso. Ported from
-// web/src/domain/training/history.ts: a dayPlan override wins ('rest'
-// means nothing planned), otherwise fall back to the week grid indexed by JS
-// getDay() (Sunday = 0).
+// effectiveRoutineId returns the first planned routine id for iso (empty when
+// rest / nothing planned). Multi-session days still trigger one reminder.
 func effectiveRoutineId(s *reminderState, iso string) string {
-	if ov, ok := s.DayPlan[iso]; ok {
-		if ov == "rest" {
-			return ""
-		}
-		for _, r := range s.Routines {
-			if r.ID == ov {
-				return ov
+	ids := knownRoutineIDs(s)
+	if raw, ok := s.DayPlan[iso]; ok {
+		sessions, rest, ok := decodePlanSessions(raw)
+		if ok {
+			if rest {
+				return ""
 			}
+			for _, id := range sessions {
+				if ids[id] {
+					return id
+				}
+			}
+			// Invalid override falls through to the week grid.
 		}
 	}
 	t, err := time.Parse("2006-01-02", iso)
 	if err != nil {
 		return ""
 	}
-	wd := int(t.Weekday()) // Sunday = 0, matching Date#getDay
-	if routineID := s.Week[strconv.Itoa(wd)]; routineID != "" {
-		return routineID
+	wd := strconv.Itoa(int(t.Weekday()))
+	raw, ok := s.Week[wd]
+	if !ok {
+		return ""
 	}
-	return ""
+	sessions := decodeWeekSessions(raw)
+	if len(sessions) == 0 {
+		return ""
+	}
+	return sessions[0]
+}
+
+func knownRoutineIDs(s *reminderState) map[string]bool {
+	ids := make(map[string]bool, len(s.Routines))
+	for _, r := range s.Routines {
+		ids[r.ID] = true
+	}
+	return ids
+}
+
+func decodeWeekSessions(raw jsontext.Value) []string {
+	if len(raw) == 0 || string(raw) == "null" {
+		return nil
+	}
+	var sessions []struct {
+		RoutineID string `json:"routineId"`
+	}
+	if err := json.Unmarshal(raw, &sessions); err == nil {
+		out := make([]string, 0, len(sessions))
+		for _, session := range sessions {
+			if session.RoutineID != "" {
+				out = append(out, session.RoutineID)
+			}
+		}
+		return out
+	}
+	var id string
+	if err := json.Unmarshal(raw, &id); err == nil && id != "" {
+		return []string{id}
+	}
+	return nil
+}
+
+func decodePlanSessions(raw jsontext.Value) (sessions []string, rest, ok bool) {
+	if len(raw) == 0 || string(raw) == "null" {
+		return nil, false, false
+	}
+	var entry struct {
+		Rest     bool `json:"rest"`
+		Sessions []struct {
+			RoutineID string `json:"routineId"`
+		} `json:"sessions"`
+	}
+	if err := json.Unmarshal(raw, &entry); err == nil {
+		// Require an object with rest or sessions so bare strings don't match.
+		var probe map[string]jsontext.Value
+		if json.Unmarshal(raw, &probe) == nil {
+			if _, hasRest := probe["rest"]; hasRest {
+				return nil, entry.Rest, true
+			}
+			if _, hasSessions := probe["sessions"]; hasSessions {
+				out := make([]string, 0, len(entry.Sessions))
+				for _, session := range entry.Sessions {
+					if session.RoutineID != "" {
+						out = append(out, session.RoutineID)
+					}
+				}
+				return out, false, true
+			}
+		}
+	}
+	var id string
+	if err := json.Unmarshal(raw, &id); err == nil {
+		if id == "rest" {
+			return nil, true, true
+		}
+		if id != "" {
+			return []string{id}, false, true
+		}
+	}
+	return nil, false, false
 }
 
 // RunReminderLoop fires each subscribed user's day reminder at most once per

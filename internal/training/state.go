@@ -40,8 +40,8 @@ type TrainingData struct {
 	TargetW    *float64                   `json:"targetW,omitempty"`
 	Bodyweight []MCPBodyweightEntry       `json:"bodyweight"`
 	Routines   []MCPRoutine               `json:"routines"`
-	Week       map[string]*string         `json:"week"`
-	DayPlan    map[string]*string         `json:"dayPlan"`
+	Week       map[string][]MCPDaySession `json:"week"`
+	DayPlan    map[string]MCPDayPlan      `json:"dayPlan"`
 	ExWeights  map[string]MCPExWeightHint `json:"exWeights"`
 	Workouts   []MCPWorkout               `json:"workouts"`
 	CustomEx   []MCPCustomExercise        `json:"customEx"`
@@ -66,10 +66,10 @@ func normalizeTrainingData(view *TrainingData) {
 		view.Routines = []MCPRoutine{}
 	}
 	if view.Week == nil {
-		view.Week = map[string]*string{}
+		view.Week = map[string][]MCPDaySession{}
 	}
 	if view.DayPlan == nil {
-		view.DayPlan = map[string]*string{}
+		view.DayPlan = map[string]MCPDayPlan{}
 	}
 	if view.ExWeights == nil {
 		view.ExWeights = map[string]MCPExWeightHint{}

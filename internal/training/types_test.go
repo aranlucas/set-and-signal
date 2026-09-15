@@ -23,7 +23,7 @@ func TestMCPDTOGraphsHaveNoInterfaceFields(t *testing.T) {
 		reflect.TypeFor[MCPLogExerciseSetsInput](), reflect.TypeFor[MCPLogExerciseSet](),
 		reflect.TypeFor[MCPLogExerciseSetsOutput](),
 		reflect.TypeFor[MCPTodayResult](), reflect.TypeFor[MCPDigestExerciseEntry](), reflect.TypeFor[MCPDigestWorkoutEntry](),
-		reflect.TypeFor[MCPDigestWorkout](), reflect.TypeFor[MCPTrainingDigestRoutine](), reflect.TypeFor[MCPTrainingDigest](),
+		reflect.TypeFor[MCPDigestWorkout](), reflect.TypeFor[MCPTrainingDigestSession](), reflect.TypeFor[MCPTrainingDigest](),
 		reflect.TypeFor[MCPHistoryEntry](), reflect.TypeFor[MCPHistoryRow](), reflect.TypeFor[MCPSuggestionEntry](),
 		reflect.TypeFor[MCPSuggestion](), reflect.TypeFor[MCPSearchExercisesOutput](), reflect.TypeFor[MCPRoutinesOutput](),
 		reflect.TypeFor[MCPSetProgramOutput](), reflect.TypeFor[MCPBodyweightOutput](),
@@ -32,13 +32,16 @@ func TestMCPDTOGraphsHaveNoInterfaceFields(t *testing.T) {
 		reflect.TypeFor[MCPStrengthProgressInput](), reflect.TypeFor[MCPMuscleBalanceInput](),
 		reflect.TypeFor[MCPNextProgressionInput](), reflect.TypeFor[MCPLastPerformance](),
 		reflect.TypeFor[MCPNextTarget](), reflect.TypeFor[MCPExercisePrescription](),
-		reflect.TypeFor[MCPSessionPrescription](), reflect.TypeFor[MCPProgramState](),
+		reflect.TypeFor[MCPSessionPrescription](), reflect.TypeFor[MCPDayPrescription](), reflect.TypeFor[MCPDaySession](),
+		reflect.TypeFor[MCPAddDaySessionInput](), reflect.TypeFor[MCPRemoveDaySessionInput](), reflect.TypeFor[MCPDaySessionsOutput](),
+		reflect.TypeFor[MCPProgramState](),
 		reflect.TypeFor[MCPPreviewProgramInput](), reflect.TypeFor[MCPSuggestionOutput](),
 		reflect.TypeFor[MCPRoutineChange](), reflect.TypeFor[MCPRoutineUpdate](), reflect.TypeFor[MCPScheduleChange](),
 		reflect.TypeFor[MCPProgramDiff](), reflect.TypeFor[MCPProgramPreview](),
 		reflect.TypeFor[MCPStrengthPoint](), reflect.TypeFor[MCPBestStrength](), reflect.TypeFor[MCPStrengthProgress](),
 		reflect.TypeFor[MCPMuscleLoadView](), reflect.TypeFor[MCPMuscleBalance](),
 		reflect.TypeFor[MCPProgression](),
+		reflect.TypeFor[MCPTodaySession](), reflect.TypeFor[MCPDayPlan](),
 	}
 	for _, typ := range types {
 		assertMCPConcrete(t, typ, typ.Name())
