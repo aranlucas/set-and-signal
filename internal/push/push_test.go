@@ -6,7 +6,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"fmt"
 	"io"
@@ -19,6 +18,7 @@ import (
 	"time"
 
 	"github.com/aranlucas/set-and-signal/internal/store"
+	"github.com/aranlucas/set-and-signal/internal/training"
 )
 
 // ---------- fake push service ----------
@@ -530,40 +530,37 @@ func TestReminderLoopSkipsWhenNothingPlanned(t *testing.T) {
 func TestReminderDayPlanOverrideWinsOverWeek(t *testing.T) {
 	doc := reminderStateDoc("07:30")
 	doc["dayPlan"] = map[string]any{"2026-08-25": map[string]any{"sessions": []any{map[string]any{"routineId": "legs"}}}}
-	s := &reminderState{}
 	raw, _ := json.Marshal(doc)
-	if err := json.Unmarshal(raw, s); err != nil {
-		t.Fatalf("unmarshal: %v", err)
+	s, err := decodeReminderState(raw)
+	if err != nil {
+		t.Fatalf("decode: %v", err)
 	}
 
-	if got := effectiveRoutineId(s, "2026-08-25"); got != "legs" {
+	if got := effectiveRoutineId(&s, "2026-08-25"); got != "legs" {
 		t.Fatalf("override = %q, want legs", got)
 	}
 	// Unknown override id falls through to the week grid.
-	ghost, _ := json.Marshal(map[string]any{"sessions": []any{map[string]any{"routineId": "ghost"}}})
-	s.DayPlan["2026-08-25"] = ghost
-	if got := effectiveRoutineId(s, "2026-08-25"); got != "legs" {
+	s.DayPlan["2026-08-25"] = training.MCPDayPlan{Sessions: []training.MCPDaySession{{RoutineID: "ghost"}}}
+	if got := effectiveRoutineId(&s, "2026-08-25"); got != "legs" {
 		t.Fatalf("ghost override = %q, want week fallback legs", got)
 	}
 	// 'rest' always means nothing planned.
-	rest, _ := json.Marshal(map[string]any{"rest": true})
-	s.DayPlan["2026-08-25"] = rest
-	if got := effectiveRoutineId(s, "2026-08-25"); got != "" {
+	s.DayPlan["2026-08-25"] = training.MCPDayPlan{Rest: true}
+	if got := effectiveRoutineId(&s, "2026-08-25"); got != "" {
 		t.Fatalf("rest override = %q, want empty", got)
 	}
 	// JS getDay(): Sunday = 0. The current object-shaped state omits rest days;
 	// Monday is keyed by "1".
-	if got := effectiveRoutineId(s, "2026-08-23"); got != "" {
+	if got := effectiveRoutineId(&s, "2026-08-23"); got != "" {
 		t.Fatalf("sunday = %q, want no routine", got)
 	}
-	if got := effectiveRoutineId(s, "2026-08-24"); got != "push" {
+	if got := effectiveRoutineId(&s, "2026-08-24"); got != "push" {
 		t.Fatalf("monday = %q, want week[1]=push", got)
 	}
 	// A sparse object-shaped week grid still indexes by weekday.
 	s.DayPlan = nil
-	mystery, _ := json.Marshal([]any{map[string]any{"routineId": "mystery"}})
-	s.Week = map[string]jsontext.Value{"0": mystery}
-	if got := effectiveRoutineId(s, "2026-08-23"); got != "mystery" {
+	s.Week = map[string][]training.MCPDaySession{"0": {{RoutineID: "mystery"}}}
+	if got := effectiveRoutineId(&s, "2026-08-23"); got != "mystery" {
 		t.Fatalf("sparse fallback = %q, want mystery", got)
 	}
 }

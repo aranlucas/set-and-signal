@@ -21,6 +21,7 @@ import (
 	webpush "github.com/SherClockHolmes/webpush-go"
 
 	"github.com/aranlucas/set-and-signal/internal/store"
+	"github.com/aranlucas/set-and-signal/internal/training"
 )
 
 // reminderInterval is the tick cadence of RunReminderLoop. Upstream ticks every
@@ -234,13 +235,13 @@ type reminderState struct {
 		TZ   string `json:"tz"`
 		Time string `json:"time"`
 	} `json:"reminder"`
-	DayPlan  map[string]jsontext.Value `json:"dayPlan"`
+	DayPlan  map[string]training.MCPDayPlan `json:"dayPlan"`
 	Routines []struct {
 		ID    string `json:"id"`
 		Name  string `json:"name"`
 		Emoji string `json:"emoji"`
 	} `json:"routines"`
-	Week map[string]jsontext.Value `json:"week"`
+	Week     map[string][]training.MCPDaySession `json:"week"`
 	Workouts []struct {
 		D string `json:"d"`
 	} `json:"workouts"`
@@ -250,34 +251,26 @@ type reminderState struct {
 // rest / nothing planned). Multi-session days still trigger one reminder.
 func effectiveRoutineId(s *reminderState, iso string) string {
 	ids := knownRoutineIDs(s)
-	if raw, ok := s.DayPlan[iso]; ok {
-		sessions, rest, ok := decodePlanSessions(raw)
-		if ok {
-			if rest {
-				return ""
-			}
-			for _, id := range sessions {
-				if ids[id] {
-					return id
-				}
-			}
-			// Invalid override falls through to the week grid.
+	if entry, ok := s.DayPlan[iso]; ok {
+		if entry.Rest {
+			return ""
 		}
+		for _, session := range entry.Sessions {
+			if ids[session.RoutineID] {
+				return session.RoutineID
+			}
+		}
+		// Invalid override falls through to the week grid.
 	}
 	t, err := time.Parse("2006-01-02", iso)
 	if err != nil {
 		return ""
 	}
-	wd := strconv.Itoa(int(t.Weekday()))
-	raw, ok := s.Week[wd]
-	if !ok {
-		return ""
-	}
-	sessions := decodeWeekSessions(raw)
+	sessions := s.Week[strconv.Itoa(int(t.Weekday()))]
 	if len(sessions) == 0 {
 		return ""
 	}
-	return sessions[0]
+	return sessions[0].RoutineID
 }
 
 func knownRoutineIDs(s *reminderState) map[string]bool {
@@ -288,67 +281,22 @@ func knownRoutineIDs(s *reminderState) map[string]bool {
 	return ids
 }
 
-func decodeWeekSessions(raw jsontext.Value) []string {
-	if len(raw) == 0 || string(raw) == "null" {
-		return nil
+func decodeReminderState(raw jsontext.Value) (reminderState, error) {
+	migrated, err := training.MigrateScheduleFields(raw)
+	if err != nil {
+		return reminderState{}, err
 	}
-	var sessions []struct {
-		RoutineID string `json:"routineId"`
+	var s reminderState
+	if err := json.Unmarshal(migrated, &s); err != nil {
+		return reminderState{}, err
 	}
-	if err := json.Unmarshal(raw, &sessions); err == nil {
-		out := make([]string, 0, len(sessions))
-		for _, session := range sessions {
-			if session.RoutineID != "" {
-				out = append(out, session.RoutineID)
-			}
-		}
-		return out
+	if s.Week == nil {
+		s.Week = map[string][]training.MCPDaySession{}
 	}
-	var id string
-	if err := json.Unmarshal(raw, &id); err == nil && id != "" {
-		return []string{id}
+	if s.DayPlan == nil {
+		s.DayPlan = map[string]training.MCPDayPlan{}
 	}
-	return nil
-}
-
-func decodePlanSessions(raw jsontext.Value) (sessions []string, rest, ok bool) {
-	if len(raw) == 0 || string(raw) == "null" {
-		return nil, false, false
-	}
-	var entry struct {
-		Rest     bool `json:"rest"`
-		Sessions []struct {
-			RoutineID string `json:"routineId"`
-		} `json:"sessions"`
-	}
-	if err := json.Unmarshal(raw, &entry); err == nil {
-		// Require an object with rest or sessions so bare strings don't match.
-		var probe map[string]jsontext.Value
-		if json.Unmarshal(raw, &probe) == nil {
-			if _, hasRest := probe["rest"]; hasRest {
-				return nil, entry.Rest, true
-			}
-			if _, hasSessions := probe["sessions"]; hasSessions {
-				out := make([]string, 0, len(entry.Sessions))
-				for _, session := range entry.Sessions {
-					if session.RoutineID != "" {
-						out = append(out, session.RoutineID)
-					}
-				}
-				return out, false, true
-			}
-		}
-	}
-	var id string
-	if err := json.Unmarshal(raw, &id); err == nil {
-		if id == "rest" {
-			return nil, true, true
-		}
-		if id != "" {
-			return []string{id}, false, true
-		}
-	}
-	return nil, false, false
+	return s, nil
 }
 
 // RunReminderLoop fires each subscribed user's day reminder at most once per
@@ -388,8 +336,8 @@ func (p *Service) reminderTick(nowFn func(tz string) (date, hhmm string, ok bool
 			p.log.Printf("read state %s: %v", user.ID, err)
 			continue
 		}
-		var s reminderState
-		if err := json.Unmarshal(raw, &s); err != nil {
+		s, err := decodeReminderState(raw)
+		if err != nil {
 			p.log.Printf("parse state %s: %v", user.ID, err)
 			continue
 		}

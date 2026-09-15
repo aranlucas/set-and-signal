@@ -8,6 +8,12 @@ import (
 	"strings"
 )
 
+// WeekSchedule is the persisted weekday → ordered sessions map.
+type WeekSchedule = map[string][]MCPDaySession
+
+// DayPlanMap is the persisted ISO-date → day override map.
+type DayPlanMap = map[string]MCPDayPlan
+
 // MCPDaySession is one planned workout on a calendar day or weekday slot.
 type MCPDaySession struct {
 	RoutineID string  `json:"routineId" jsonschema:"routine id for this session"`
@@ -312,6 +318,56 @@ func decodeFlexibleDayPlan(raw jsontext.Value) (MCPDayPlan, bool, error) {
 		return MCPDayPlan{}, false, err
 	}
 	return MCPDayPlan{Sessions: sessions}, migrated || true, nil
+}
+
+func decodeWeekMap(value any) (map[string][]MCPDaySession, error) {
+	if value == nil {
+		return map[string][]MCPDaySession{}, nil
+	}
+	encoded, err := json.Marshal(value)
+	if err != nil {
+		return nil, err
+	}
+	migrated, changed, err := migrateWeekValue(encoded)
+	if err != nil {
+		return nil, err
+	}
+	if !changed {
+		migrated = encoded
+	}
+	out := map[string][]MCPDaySession{}
+	if err := json.Unmarshal(migrated, &out); err != nil {
+		return nil, err
+	}
+	if out == nil {
+		out = map[string][]MCPDaySession{}
+	}
+	return out, nil
+}
+
+func decodeDayPlanMap(value any) (map[string]MCPDayPlan, error) {
+	if value == nil {
+		return map[string]MCPDayPlan{}, nil
+	}
+	encoded, err := json.Marshal(value)
+	if err != nil {
+		return nil, err
+	}
+	migrated, changed, err := migrateDayPlanValue(encoded)
+	if err != nil {
+		return nil, err
+	}
+	if !changed {
+		migrated = encoded
+	}
+	out := map[string]MCPDayPlan{}
+	if err := json.Unmarshal(migrated, &out); err != nil {
+		return nil, err
+	}
+	if out == nil {
+		out = map[string]MCPDayPlan{}
+	}
+	return out, nil
 }
 
 func materializeDayPlan(view TrainingData, iso string) MCPDayPlan {

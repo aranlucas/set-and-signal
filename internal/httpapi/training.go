@@ -19,9 +19,11 @@ type (
 	MCPCustomExercise        = training.MCPCustomExercise
 	MCPDateInput             = training.MCPDateInput
 	MCPDayPlan               = training.MCPDayPlan
+	MCPDayPlanMap            = training.DayPlanMap
 	MCPDayPrescription       = training.MCPDayPrescription
 	MCPDaySession            = training.MCPDaySession
 	MCPDaySessionsOutput     = training.MCPDaySessionsOutput
+	MCPWeekSchedule          = training.WeekSchedule
 	MCPDigestExerciseEntry   = training.MCPDigestExerciseEntry
 	MCPDigestWorkout         = training.MCPDigestWorkout
 	MCPDigestWorkoutEntry    = training.MCPDigestWorkoutEntry

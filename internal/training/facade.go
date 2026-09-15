@@ -3,6 +3,8 @@ package training
 import (
 	"time"
 
+	"encoding/json/jsontext"
+
 	"github.com/aranlucas/set-and-signal/internal/exercises"
 )
 
@@ -68,6 +70,22 @@ func RemoveSessionFromDayPlan(data *TrainingData, iso, routineID string, index *
 
 func ResolveDaySessions(data TrainingData, iso string) (sessions []MCPDaySession, override, rest bool) {
 	return resolveDaySessions(data, iso)
+}
+
+// MigrateScheduleFields rewrites legacy single-id week/dayPlan JSON into the
+// sessions-array shape without changing other document fields.
+func MigrateScheduleFields(raw jsontext.Value) (jsontext.Value, error) {
+	return migrateScheduleFields(raw)
+}
+
+// DecodeWeekMap coerces a JSON-decoded week value into the typed schedule map.
+func DecodeWeekMap(value any) (map[string][]MCPDaySession, error) {
+	return decodeWeekMap(value)
+}
+
+// DecodeDayPlanMap coerces a JSON-decoded dayPlan value into typed overrides.
+func DecodeDayPlanMap(value any) (map[string]MCPDayPlan, error) {
+	return decodeDayPlanMap(value)
 }
 
 func LogExerciseSets(data *TrainingData, input MCPLogExerciseSetsInput, now time.Time) (MCPWorkout, MCPProgression, error) {
