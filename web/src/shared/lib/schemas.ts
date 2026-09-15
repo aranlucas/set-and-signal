@@ -390,15 +390,32 @@ export function payloadMessage(payload: unknown): string | undefined {
   return result.success ? result.output.error : undefined;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function readStringField(record: Record<string, unknown>, key: string): string | undefined {
+  const value = record[key];
+  return typeof value === "string" && value ? value : undefined;
+}
+
+function toWeekday(key: string): Weekday | null {
+  const day = Number(key);
+  if (day === 0 || day === 1 || day === 2 || day === 3 || day === 4 || day === 5 || day === 6) {
+    return day;
+  }
+  return null;
+}
+
 function normalizeDaySession(value: unknown): DaySession | null {
-  if (!value || typeof value !== "object") return null;
-  const routineId = (value as DaySession).routineId;
-  if (typeof routineId !== "string" || !routineId) return null;
+  if (!isRecord(value)) return null;
+  const routineId = readStringField(value, "routineId");
+  if (!routineId) return null;
   const session: DaySession = { routineId };
-  const start = (value as DaySession).start;
-  const label = (value as DaySession).label;
-  if (typeof start === "string" && start) session.start = start;
-  if (typeof label === "string" && label) session.label = label;
+  const start = readStringField(value, "start");
+  const label = readStringField(value, "label");
+  if (start) session.start = start;
+  if (label) session.label = label;
   return session;
 }
 
@@ -414,13 +431,13 @@ function normalizeSessions(value: unknown): DaySession[] | null {
 }
 
 function normalizeWeekSchedule(week: unknown): Partial<Record<Weekday, DaySession[]>> | undefined {
-  if (!week || typeof week !== "object") return undefined;
+  if (!isRecord(week)) return undefined;
   const out: Partial<Record<Weekday, DaySession[]>> = {};
   for (const [key, value] of Object.entries(week)) {
-    const weekday = Number(key) as Weekday;
-    if (weekday < 0 || weekday > 6) continue;
+    const day = toWeekday(key);
+    if (day === null) continue;
     const sessions = normalizeSessions(value);
-    if (sessions?.length) out[weekday] = sessions;
+    if (sessions?.length) out[day] = sessions;
   }
   return out;
 }
@@ -428,16 +445,15 @@ function normalizeWeekSchedule(week: unknown): Partial<Record<Weekday, DaySessio
 function normalizeDayPlanEntry(value: unknown): DayPlanEntry | null {
   if (value === "rest") return { rest: true };
   if (typeof value === "string" && value) return { sessions: [{ routineId: value }] };
-  if (!value || typeof value !== "object") return null;
-  const entry = value as DayPlanEntry;
-  if (entry.rest) return { rest: true };
-  const sessions = normalizeSessions(entry.sessions ?? entry);
+  if (!isRecord(value)) return null;
+  if (value.rest) return { rest: true };
+  const sessions = normalizeSessions(Object.hasOwn(value, "sessions") ? value.sessions : value);
   if (!sessions) return null;
   return { sessions };
 }
 
 function normalizeDayPlan(dayPlan: unknown): Record<IsoDate, DayPlanEntry> | undefined {
-  if (!dayPlan || typeof dayPlan !== "object") return undefined;
+  if (!isRecord(dayPlan)) return undefined;
   const out: Record<IsoDate, DayPlanEntry> = {};
   for (const [iso, value] of Object.entries(dayPlan)) {
     const entry = normalizeDayPlanEntry(value);
@@ -449,13 +465,13 @@ function normalizeDayPlan(dayPlan: unknown): Record<IsoDate, DayPlanEntry> | und
 export function parseStoredState(raw: string | null): ParsedAppStatePatch | null {
   if (!raw) return null;
   try {
-    const json = JSON.parse(raw) as Record<string, unknown>;
-    const week = normalizeWeekSchedule(json.week);
-    const dayPlan = normalizeDayPlan(json.dayPlan);
-    if (week) json.week = week;
-    if (dayPlan) json.dayPlan = dayPlan;
-    const parsed = parsePayload(appStatePatch, json);
-    return parsed;
+    const parsed: unknown = JSON.parse(raw);
+    if (!isRecord(parsed)) return null;
+    const week = normalizeWeekSchedule(parsed.week);
+    const dayPlan = normalizeDayPlan(parsed.dayPlan);
+    if (week) parsed.week = week;
+    if (dayPlan) parsed.dayPlan = dayPlan;
+    return parsePayload(appStatePatch, parsed);
   } catch {
     return null;
   }

@@ -356,7 +356,7 @@ export default function Home() {
                 const sessionLabels = sessions
                   .map(
                     (session) =>
-                      state.routines.find((routine) => routine.id === session.routineId)?.name,
+                      state.routines.find((candidate) => candidate.id === session.routineId)?.name,
                   )
                   .filter(Boolean);
                 const allCompleted =
@@ -391,7 +391,7 @@ export default function Home() {
                       {sessions.length ? (
                         sessions.map((session) => {
                           const scheduled = state.routines.some(
-                            (routine) => routine.id === session.routineId,
+                            (candidate) => candidate.id === session.routineId,
                           );
                           const completed = dayWorkouts.some(
                             (workout) => workout.routineId === session.routineId,
