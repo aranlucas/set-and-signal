@@ -72,7 +72,9 @@ export default function Plan() {
           <SpaceBetween size="xs">
             {([1, 2, 3, 4, 5, 6, 0] as Weekday[]).map((d) => {
               const routines = (state.week[d] ?? [])
-                .map((session) => state.routines.find((candidate) => candidate.id === session.routineId))
+                .map((session) =>
+                  state.routines.find((candidate) => candidate.id === session.routineId),
+                )
                 .filter((routine): routine is NonNullable<typeof routine> => !!routine);
               return (
                 <Button

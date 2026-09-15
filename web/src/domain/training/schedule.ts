@@ -3,10 +3,7 @@ import type { AppState, DaySession, Id, IsoDate, Routine, Weekday } from "@/shar
 
 type ScheduleState = Pick<AppState, "dayPlan" | "routines" | "week">;
 
-function validSessions(
-  appState: ScheduleState,
-  sessions: DaySession[] | undefined,
-): DaySession[] {
+function validSessions(appState: ScheduleState, sessions: DaySession[] | undefined): DaySession[] {
   if (!sessions?.length) return [];
   const validIds = new Set(appState.routines.map((routine) => routine.id));
   return sessions.filter((session) => validIds.has(session.routineId));
@@ -39,5 +36,5 @@ export function effectiveRoutineId(appState: ScheduleState, iso: IsoDate): Id | 
 /** First planned routine object for `iso` (convenience for single-CTA flows). */
 export function effectiveRoutine(appState: ScheduleState, iso: IsoDate): Routine | null {
   const id = effectiveRoutineId(appState, iso);
-  return id ? appState.routines.find((routine) => routine.id === id) ?? null : null;
+  return id ? (appState.routines.find((routine) => routine.id === id) ?? null) : null;
 }

@@ -272,7 +272,9 @@ export default function RoutineEdit() {
                   Object.keys(s.dayPlan).forEach((k) => {
                     const entry = s.dayPlan[k];
                     if (!entry || entry.rest) return;
-                    const next = (entry.sessions ?? []).filter((session) => session.routineId !== id);
+                    const next = (entry.sessions ?? []).filter(
+                      (session) => session.routineId !== id,
+                    );
                     if (!next.length) delete s.dayPlan[k];
                     else s.dayPlan[k] = { sessions: next };
                   });

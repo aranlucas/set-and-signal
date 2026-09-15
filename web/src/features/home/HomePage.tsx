@@ -23,7 +23,12 @@ import {
   Trophy,
 } from "lucide-react";
 import { useStore } from "@/app/store/useStore";
-import { effectiveRoutine, effectiveSessions, lastBW, streakWeeks } from "@/domain/training/history";
+import {
+  effectiveRoutine,
+  effectiveSessions,
+  lastBW,
+  streakWeeks,
+} from "@/domain/training/history";
 import { exerciseMetadata } from "@/domain/exercises/exercise-metadata";
 import { loadOfRoutine, rankOf } from "@/domain/exercises/muscles";
 import { fmtDate, fmtDur, fmtNum, formatDate, isoOf, todayISO } from "@/shared/lib/format";
@@ -60,7 +65,10 @@ export default function Home() {
   const summary = weeklySummary(state.workouts, today);
   const trend = volumeTrend(state.workouts, today, chartWeeks);
   const maxVolume = Math.max(1, ...trend.map((week) => week.volume));
-  const planned = Object.values(state.week).reduce((total, sessions) => total + (sessions?.length ?? 0), 0);
+  const planned = Object.values(state.week).reduce(
+    (total, sessions) => total + (sessions?.length ?? 0),
+    0,
+  );
   const streak = streakWeeks(state);
   const recent = state.workouts
     .toSorted((a, b) => b.d.localeCompare(a.d) || b.start - a.start)
@@ -346,7 +354,10 @@ export default function Home() {
                 const sessions = effectiveSessions(state, iso);
                 const dayWorkouts = state.workouts.filter((workout) => workout.d === iso);
                 const sessionLabels = sessions
-                  .map((session) => state.routines.find((routine) => routine.id === session.routineId)?.name)
+                  .map(
+                    (session) =>
+                      state.routines.find((routine) => routine.id === session.routineId)?.name,
+                  )
                   .filter(Boolean);
                 const allCompleted =
                   sessions.length > 0 &&

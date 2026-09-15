@@ -1,6 +1,6 @@
 import { CURATED, curatedRoutines } from "@/features/plan/curated.js";
 import { weekdayFromNumber } from "@/shared/lib/format.js";
-import type { DaySession, Id, Routine, Unit, Weekday } from "@/shared/lib/types.js";
+import type { DaySession, Routine, Unit, Weekday } from "@/shared/lib/types.js";
 
 export type StrengthExperience = "new" | "some" | "confident";
 

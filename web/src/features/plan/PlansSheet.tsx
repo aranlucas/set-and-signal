@@ -19,7 +19,14 @@ import { PlanPrintDocument } from "@/shared/components/PlanPrintDocument";
 import { glyphOf } from "@/domain/exercises/glyphs";
 import { buildPlanBundle, parsePlan, mergePlan } from "@/features/plan/plan-share";
 import { MOBILE, shareExport } from "@/shared/lib/mobile";
-import type { DayPlanEntry, DaySession, Id, IsoDate, SheetClose, Weekday } from "@/shared/lib/types";
+import type {
+  DayPlanEntry,
+  DaySession,
+  Id,
+  IsoDate,
+  SheetClose,
+  Weekday,
+} from "@/shared/lib/types";
 import { getErrorMessage, updateAppState } from "@/features/exercises/sheet-shared";
 import { planImportFormSchema } from "@/shared/lib/form-schemas";
 
@@ -258,7 +265,10 @@ function cloneSessions(sessions: DaySession[]): DaySession[] {
 }
 
 function materializeDayOverride(
-  appState: { week: Partial<Record<Weekday, DaySession[]>>; dayPlan: Record<IsoDate, DayPlanEntry> },
+  appState: {
+    week: Partial<Record<Weekday, DaySession[]>>;
+    dayPlan: Record<IsoDate, DayPlanEntry>;
+  },
   iso: IsoDate,
   weekday: Weekday,
 ): DayPlanEntry {

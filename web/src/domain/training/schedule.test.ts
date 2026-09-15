@@ -42,10 +42,7 @@ describe("effectiveSessions", () => {
   });
 
   it("honors rest overrides with an empty session list", () => {
-    const state = scheduleState(
-      { 1: [{ routineId: "a" }] },
-      { "2026-09-14": { rest: true } },
-    );
+    const state = scheduleState({ 1: [{ routineId: "a" }] }, { "2026-09-14": { rest: true } });
     expect(effectiveSessions(state, "2026-09-14")).toEqual([]);
     expect(effectiveRoutineId(state, "2026-09-14")).toBeNull();
     expect(effectiveRoutine(state, "2026-09-14")).toBeNull();

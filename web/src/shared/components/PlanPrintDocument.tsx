@@ -153,7 +153,11 @@ export function PlanPrintDocument({ appState, contentRef, owner }: PlanPrintDocu
             <div className={styles.weekRow} key={weekday}>
               <div className={styles.weekday}>{weekdays[weekday]}</div>
               <div className={styles.scheduledRoutine}>
-                {routineNames.length ? routineNames.join(", ") : <span>{t("common.rest", "Rest")}</span>}
+                {routineNames.length ? (
+                  routineNames.join(", ")
+                ) : (
+                  <span>{t("common.rest", "Rest")}</span>
+                )}
               </div>
             </div>
           );

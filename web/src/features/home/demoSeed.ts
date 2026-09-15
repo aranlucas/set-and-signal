@@ -248,7 +248,9 @@ export function buildDemoState(): DemoState {
       sessions: [
         {
           routineId:
-            order[(order.findIndex((routine) => routine.name === lastRoutineName) + 1) % order.length].id,
+            order[
+              (order.findIndex((routine) => routine.name === lastRoutineName) + 1) % order.length
+            ].id,
         },
       ],
     };
