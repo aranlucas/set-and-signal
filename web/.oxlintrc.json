@@ -89,7 +89,6 @@
           "metric-name",
           "metric-bar",
           "metric-value",
-          "cn-input-otp",
           "chk",
           "icn",
           "toaster"
@@ -131,31 +130,13 @@
   "ignorePatterns": ["dist/**", "node_modules/**"],
   "overrides": [
     {
-      "files": [
-        "src/shared/ui/button.tsx",
-        "src/shared/ui/direction.tsx",
-        "src/shared/ui/message-scroller.tsx",
-        "src/shared/ui/combobox.tsx",
-        "src/shared/ui/carousel.tsx",
-        "src/shared/ui/sidebar.tsx",
-        "src/shared/ui/button-group.tsx",
-        "src/shared/ui/navigation-menu.tsx",
-        "src/shared/ui/marker.tsx",
-        "src/shared/ui/toast.tsx"
-      ],
+      "files": ["src/shared/ui/button.tsx"],
       "rules": {
         "react/only-export-components": "off"
       }
     },
     {
-      "files": [
-        "src/shared/ui/field.tsx",
-        "src/shared/ui/carousel.tsx",
-        "src/shared/ui/input-group.tsx",
-        "src/shared/ui/button-group.tsx",
-        "src/shared/ui/spinner.tsx",
-        "src/shared/ui/item.tsx"
-      ],
+      "files": ["src/shared/ui/field.tsx"],
       "rules": {
         "jsx-a11y/prefer-tag-over-role": "off"
       }
@@ -164,25 +145,6 @@
       "files": ["src/shared/ui/label.tsx"],
       "rules": {
         "jsx-a11y/label-has-associated-control": "off"
-      }
-    },
-    {
-      "files": ["src/shared/ui/calendar.tsx"],
-      "rules": {
-        "react/no-unstable-nested-components": "off"
-      }
-    },
-    {
-      "files": ["src/shared/ui/carousel.tsx"],
-      "rules": {
-        "react/set-state-in-effect": "off"
-      }
-    },
-    {
-      "files": ["src/shared/ui/input-group.tsx"],
-      "rules": {
-        "jsx-a11y/click-events-have-key-events": "off",
-        "jsx-a11y/no-noninteractive-element-interactions": "off"
       }
     }
   ]

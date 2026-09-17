@@ -34,7 +34,7 @@ const implementationFilesByElement = {
   tfoot: ["/src/shared/ui/table.tsx"],
   tr: ["/src/shared/ui/table.tsx"],
   th: ["/src/shared/ui/table.tsx"],
-  td: ["/src/shared/ui/table.tsx", "/src/shared/ui/calendar.tsx"],
+  td: ["/src/shared/ui/table.tsx"],
   caption: ["/src/shared/ui/table.tsx"],
 };
 
