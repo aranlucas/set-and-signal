@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/aranlucas/set-and-signal/internal/store"
+	"github.com/aranlucas/set-and-signal/internal/training"
 )
 
 // ---------- fake push service ----------
@@ -476,7 +477,7 @@ func TestReminderLoopSkipsWhenNothingPlanned(t *testing.T) {
 			name: "workout already logged today",
 			state: func() map[string]any {
 				d := reminderStateDoc("07:30")
-				d["workouts"] = []map[string]any{{"d": "2026-08-24"}}
+				d["workouts"] = []map[string]any{{"d": "2026-08-24", "routineId": "push"}}
 				return d
 			}(),
 			date: "2026-08-24", hhmm: "07:30", ok: true, subbed: true,
@@ -528,38 +529,38 @@ func TestReminderLoopSkipsWhenNothingPlanned(t *testing.T) {
 
 func TestReminderDayPlanOverrideWinsOverWeek(t *testing.T) {
 	doc := reminderStateDoc("07:30")
-	doc["dayPlan"] = map[string]any{"2026-08-25": "legs"}
-	s := &reminderState{}
+	doc["dayPlan"] = map[string]any{"2026-08-25": map[string]any{"sessions": []any{map[string]any{"routineId": "legs"}}}}
 	raw, _ := json.Marshal(doc)
-	if err := json.Unmarshal(raw, s); err != nil {
-		t.Fatalf("unmarshal: %v", err)
+	s, err := decodeReminderState(raw)
+	if err != nil {
+		t.Fatalf("decode: %v", err)
 	}
 
-	if got := effectiveRoutineId(s, "2026-08-25"); got != "legs" {
+	if got := effectiveRoutineId(&s, "2026-08-25"); got != "legs" {
 		t.Fatalf("override = %q, want legs", got)
 	}
 	// Unknown override id falls through to the week grid.
-	s.DayPlan["2026-08-25"] = "ghost"
-	if got := effectiveRoutineId(s, "2026-08-25"); got != "legs" {
+	s.DayPlan["2026-08-25"] = training.MCPDayPlan{Sessions: []training.MCPDaySession{{RoutineID: "ghost"}}}
+	if got := effectiveRoutineId(&s, "2026-08-25"); got != "legs" {
 		t.Fatalf("ghost override = %q, want week fallback legs", got)
 	}
 	// 'rest' always means nothing planned.
-	s.DayPlan["2026-08-25"] = "rest"
-	if got := effectiveRoutineId(s, "2026-08-25"); got != "" {
+	s.DayPlan["2026-08-25"] = training.MCPDayPlan{Rest: true}
+	if got := effectiveRoutineId(&s, "2026-08-25"); got != "" {
 		t.Fatalf("rest override = %q, want empty", got)
 	}
 	// JS getDay(): Sunday = 0. The current object-shaped state omits rest days;
 	// Monday is keyed by "1".
-	if got := effectiveRoutineId(s, "2026-08-23"); got != "" {
+	if got := effectiveRoutineId(&s, "2026-08-23"); got != "" {
 		t.Fatalf("sunday = %q, want no routine", got)
 	}
-	if got := effectiveRoutineId(s, "2026-08-24"); got != "push" {
+	if got := effectiveRoutineId(&s, "2026-08-24"); got != "push" {
 		t.Fatalf("monday = %q, want week[1]=push", got)
 	}
 	// A sparse object-shaped week grid still indexes by weekday.
 	s.DayPlan = nil
-	s.Week = map[string]string{"0": "mystery"}
-	if got := effectiveRoutineId(s, "2026-08-23"); got != "mystery" {
+	s.Week = map[string][]training.MCPDaySession{"0": {{RoutineID: "mystery"}}}
+	if got := effectiveRoutineId(&s, "2026-08-23"); got != "mystery" {
 		t.Fatalf("sparse fallback = %q, want mystery", got)
 	}
 }
@@ -581,5 +582,36 @@ func TestReminderUnknownRoutineUsesFallbackTitle(t *testing.T) {
 	}
 	if sends[0].Payload.Title != "Workout planned today" {
 		t.Fatalf("fallback title = %q", sends[0].Payload.Title)
+	}
+}
+
+func TestReminderKeepsRemainingSessionsAndHonorsEmptyOverride(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		plan     any
+		workouts []map[string]any
+		want     string
+	}{
+		{"second routine remains", nil, []map[string]any{{"d": "2026-08-24", "routineId": "push"}}, "legs"},
+		{"all complete", nil, []map[string]any{{"d": "2026-08-24", "routineId": "push"}, {"d": "2026-08-24", "routineId": "legs"}}, ""},
+		{"empty override", map[string]any{"sessions": []any{}}, nil, ""},
+		{"legacy empty object", map[string]any{}, nil, ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			doc := reminderStateDoc("07:30")
+			doc["week"] = training.WeekSchedule{"1": {{RoutineID: "push"}, {RoutineID: "legs"}}}
+			doc["workouts"] = tc.workouts
+			if tc.plan != nil {
+				doc["dayPlan"] = map[string]any{"2026-08-24": tc.plan}
+			}
+			raw, _ := json.Marshal(doc)
+			state, err := decodeReminderState(raw)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := effectiveRoutineId(&state, "2026-08-24"); got != tc.want {
+				t.Fatalf("got %q, want %q", got, tc.want)
+			}
+		})
 	}
 }

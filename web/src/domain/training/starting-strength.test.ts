@@ -37,6 +37,10 @@ describe("starting strength setup", () => {
       ["1456", 65],
       ["0032", 135],
     ]);
-    expect(week).toEqual({ 1: routines[0].id, 3: routines[1].id, 5: routines[0].id });
+    expect(week).toEqual({
+      1: [{ routineId: routines[0].id }],
+      3: [{ routineId: routines[1].id }],
+      5: [{ routineId: routines[0].id }],
+    });
   });
 });

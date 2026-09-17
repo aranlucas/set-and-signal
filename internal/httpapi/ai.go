@@ -18,7 +18,7 @@ const systemPrompt = "You are a strength coach planning the athlete's NEXT worko
 	"bodyweight exercises progress in reps or extra sets, not load; timed exercises change seconds, cardio changes minutes/speed. " +
 	"Keep the same exercises unless a swap is clearly better (then set swapTo to another exercise id). " +
 	"Return the structured workout plan requested by the response schema. Use null for adjustment fields that should stay unchanged. " +
-	"Every entry.id MUST be an exercise id from the digest's routine; include one entry per exercise you want to adjust."
+	"Every entry.id MUST be an exercise id from one of the digest's sessions; include one entry per exercise you want to adjust."
 
 // GET /api/ai/status — no auth upstream; the login screen probes it.
 func (s *Server) aiStatus(w http.ResponseWriter, _ *http.Request) {

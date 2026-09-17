@@ -105,8 +105,8 @@ interface DemoEntry {
 // the history was rated on pinned down.
 export interface DemoState {
   routines: Routine[];
-  week: Partial<Record<Weekday, Id>>;
-  dayPlan: Record<IsoDate, string>;
+  week: Partial<Record<Weekday, { routineId: Id }[]>>;
+  dayPlan: Record<IsoDate, { sessions?: { routineId: Id }[] }>;
   workouts: Workout[];
   bodyweight: BodyweightEntry[];
   exWeights: Record<Id, ExWeightHint>;
@@ -239,19 +239,31 @@ export function buildDemoState(): DemoState {
 
   // A visitor should always have something to press "Start" on, so if they land on a rest day
   // the next routine in the rotation is moved onto today — which also shows off rescheduling.
-  const dayPlan: Record<IsoDate, string> = {};
+  const dayPlan: Record<IsoDate, { sessions?: { routineId: Id }[] }> = {};
   const todayIso = isoOf(today);
   if (!byWeekday[today.getDay()] && !workouts.some((workout) => workout.d === todayIso)) {
     const order = [push, pull, legs];
     const lastRoutineName = workouts.at(-1)?.name ?? legs.name;
-    dayPlan[todayIso] =
-      order[(order.findIndex((routine) => routine.name === lastRoutineName) + 1) % order.length].id;
+    dayPlan[todayIso] = {
+      sessions: [
+        {
+          routineId:
+            order[
+              (order.findIndex((routine) => routine.name === lastRoutineName) + 1) % order.length
+            ].id,
+        },
+      ],
+    };
   }
 
   return {
     unit: "kg",
     routines: [push, pull, legs],
-    week: { 1: push.id, 3: pull.id, 5: legs.id },
+    week: {
+      1: [{ routineId: push.id }],
+      3: [{ routineId: pull.id }],
+      5: [{ routineId: legs.id }],
+    },
     dayPlan,
     workouts,
     bodyweight,

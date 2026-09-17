@@ -1,3 +1,4 @@
+import { PlannedSessions } from "@/features/workout/PlannedSessions";
 import { useState } from "react";
 import { Outlet, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -23,7 +24,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { useStore } from "@/app/store/useStore";
-import { effectiveRoutine, lastBW, streakWeeks } from "@/domain/training/history";
+import { lastBW, streakWeeks } from "@/domain/training/history";
 import { exerciseMetadata } from "@/domain/exercises/exercise-metadata";
 import { loadOfRoutine, rankOf } from "@/domain/exercises/muscles";
 import { fmtDate, fmtDur, fmtNum, formatDate, isoOf, todayISO } from "@/shared/lib/format";
@@ -33,6 +34,7 @@ import { estimateRoutineMinutes, latestProgress } from "./home-insights";
 import { Button } from "@/shared/ui/button";
 import BodySignals from "./BodySignals";
 import { NativeSelect, NativeSelectOption } from "@/shared/ui/native-select";
+import { sessionProgress } from "@/domain/training/schedule";
 import { weeklySummary, volumeTrend } from "./training-summary";
 
 export default function Home() {
@@ -45,7 +47,10 @@ export default function Home() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [chartWeeks, setChartWeeks] = useState(6);
   const today = todayISO();
-  const routine = effectiveRoutine(state, today);
+  const todaySessions = sessionProgress(state, today);
+  const routine = todaySessions.find((session) => !session.completed)?.routine ?? null;
+  const finishedToday =
+    todaySessions.length > 0 && todaySessions.every((session) => session.completed);
   const activeRoutine = state.active
     ? {
         id: state.active.routineId ?? state.active.id,
@@ -60,7 +65,10 @@ export default function Home() {
   const summary = weeklySummary(state.workouts, today);
   const trend = volumeTrend(state.workouts, today, chartWeeks);
   const maxVolume = Math.max(1, ...trend.map((week) => week.volume));
-  const planned = Object.values(state.week).filter(Boolean).length;
+  const planned = Object.values(state.week).reduce(
+    (total, sessions) => total + (sessions?.length ?? 0),
+    0,
+  );
   const streak = streakWeeks(state);
   const recent = state.workouts
     .toSorted((a, b) => b.d.localeCompare(a.d) || b.start - a.start)
@@ -223,7 +231,11 @@ export default function Home() {
                   : t("dashboard.todayWorkout", "Today's workout")}
               </p>
               <h2>
-                {state.active?.name || routine?.name || t("home.recoveryDay", "Recovery day")}
+                {state.active?.name ||
+                  routine?.name ||
+                  (finishedToday
+                    ? t("calendar.status.completed", "Done")
+                    : t("home.recoveryDay", "Recovery day"))}
               </h2>
               <p className="spotlight-muscles">
                 {targetMuscles.length
@@ -282,6 +294,24 @@ export default function Home() {
               </div>
             </div>
           </section>
+          {todaySessions.length > 0 && (
+            <section className="dashboard-panel">
+              <div className="panel-heading">
+                <h2>{t("workout.todaySPlan", "Today's plan")}</h2>
+              </div>
+              <PlannedSessions
+                sessions={todaySessions}
+                disabled={!!state.active}
+                onStart={(routineId) =>
+                  void navigate({
+                    to: "/home/pre-workout/$routineId",
+                    params: { routineId },
+                    resetScroll: false,
+                  })
+                }
+              />
+            </section>
+          )}
           {!state.routines.length && (
             <section className="dashboard-panel welcome-panel">
               <Sparkles size={24} />
@@ -343,8 +373,22 @@ export default function Home() {
             <div className="training-week">
               {dates.map((date) => {
                 const iso = isoOf(date);
-                const scheduled = effectiveRoutine(state, iso);
-                const completed = state.workouts.some((workout) => workout.d === iso);
+                const sessions = sessionProgress(state, iso);
+                const dayWorkouts = state.workouts.filter((workout) => workout.d === iso);
+                const sessionLabels = sessions
+                  .map(
+                    (session) =>
+                      state.routines.find((candidate) => candidate.id === session.routineId)?.name,
+                  )
+                  .filter(Boolean);
+                const allCompleted =
+                  sessions.length > 0 && sessions.every((session) => session.completed);
+                const statusLabel =
+                  allCompleted || (!sessions.length && dayWorkouts.length > 0)
+                    ? t("calendar.status.completed", "Done")
+                    : sessionLabels.length
+                      ? sessionLabels.join(", ")
+                      : t("home.recoveryDay", "Recovery day");
                 return (
                   <Button
                     variant="plain"
@@ -358,20 +402,37 @@ export default function Home() {
                         resetScroll: false,
                       })
                     }
-                    aria-label={`${formatDate(t, date, { weekday: "long", day: "numeric", month: "long" })}, ${completed ? t("calendar.status.completed", "Done") : scheduled?.name || t("home.recoveryDay", "Recovery day")}`}
+                    aria-label={`${formatDate(t, date, { weekday: "long", day: "numeric", month: "long" })}, ${statusLabel}`}
                     aria-current={iso === today ? "date" : undefined}
                   >
                     <span>{formatDate(t, date, { weekday: "short" })}</span>
                     <strong>{date.getDate()}</strong>
-                    <span
-                      className={`day-status ${completed ? "is-completed" : scheduled ? "is-planned" : ""}`}
-                    >
-                      {completed ? (
-                        <Check size={12} strokeWidth={3} />
-                      ) : scheduled ? (
-                        <Dumbbell size={13} />
+                    <span className="day-status-row">
+                      {sessions.length ? (
+                        sessions.map((session) => {
+                          const scheduled = state.routines.some(
+                            (candidate) => candidate.id === session.routineId,
+                          );
+                          const completed = session.completed;
+                          return (
+                            <span
+                              key={session.key}
+                              className={`day-status ${completed ? "is-completed" : scheduled ? "is-planned" : ""}`}
+                            >
+                              {completed ? (
+                                <Check size={12} strokeWidth={3} />
+                              ) : scheduled ? (
+                                <Dumbbell size={13} />
+                              ) : (
+                                <span />
+                              )}
+                            </span>
+                          );
+                        })
                       ) : (
-                        <span />
+                        <span className={`day-status ${dayWorkouts.length ? "is-completed" : ""}`}>
+                          {dayWorkouts.length ? <Check size={12} strokeWidth={3} /> : <span />}
+                        </span>
                       )}
                     </span>
                   </Button>

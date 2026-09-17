@@ -1,6 +1,7 @@
 package training
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"slices"
@@ -240,43 +241,56 @@ func nextTargetFrom(cfg MCPExConfig, prescription MCPProgression) MCPNextTarget 
 	return MCPNextTarget{Sets: filled.Sets, Reps: filled.Reps, Weight: filled.Weight, Sec: filled.Sec}
 }
 
-// sessionPrescription is the coaching read: today's routine, last working
+// sessionPrescription is the coaching read: today's sessions, last working
 // sets, next target, and why. Warm-ups are excluded from the decision.
-func sessionPrescription(view TrainingData, iso string) MCPSessionPrescription {
+func sessionPrescription(view TrainingData, iso string) MCPDayPrescription {
 	today := trainingDay(view, iso)
 	unit := view.Unit
 	if unit == "" {
 		unit = "lb"
 	}
-	out := MCPSessionPrescription{Iso: today.Iso, Unit: unit, Rest: today.Rest, RoutineID: today.RoutineID, Exercises: []MCPExercisePrescription{}}
-	if today.Routine == nil {
+	out := MCPDayPrescription{Iso: today.Iso, Unit: unit, Rest: today.Rest, Sessions: []MCPSessionPrescription{}}
+	if today.Rest || len(today.Sessions) == 0 {
 		return out
 	}
-	routine := *today.Routine
-	out.RoutineName = new(routine.Name)
-	out.Policy = cloneString(routine.Prog)
-	if out.Policy == nil {
-		linear := "linear"
-		out.Policy = &linear
-	}
-	out.Exercises = make([]MCPExercisePrescription, 0, len(routine.Ex))
-	for _, cfg := range routine.Ex {
-		prescription := NextProgression(view, cfg, routine)
-		reason := ""
-		if prescription.Reason != nil {
-			reason = *prescription.Reason
+	out.Sessions = make([]MCPSessionPrescription, 0, len(today.Sessions))
+	for _, session := range today.Sessions {
+		if session.Routine == nil {
+			continue
 		}
-		next := nextTargetFrom(cfg, prescription)
-		if floatPointerValue(next.Weight) == 0 {
-			if last := lastLoggedWorkingWeight(view, cfg.ID); last > 0 {
-				next.Weight = new(last)
+		routine := *session.Routine
+		row := MCPSessionPrescription{
+			RoutineID:   session.RoutineID,
+			RoutineName: routine.Name,
+			Start:       session.Start,
+			Label:       session.Label,
+			Policy:      cloneString(routine.Prog),
+			Exercises:   []MCPExercisePrescription{},
+		}
+		if row.Policy == nil {
+			linear := "linear"
+			row.Policy = &linear
+		}
+		row.Exercises = make([]MCPExercisePrescription, 0, len(routine.Ex))
+		for _, cfg := range routine.Ex {
+			prescription := NextProgression(view, cfg, routine)
+			reason := ""
+			if prescription.Reason != nil {
+				reason = *prescription.Reason
 			}
+			next := nextTargetFrom(cfg, prescription)
+			if floatPointerValue(next.Weight) == 0 {
+				if last := lastLoggedWorkingWeight(view, cfg.ID); last > 0 {
+					next.Weight = new(last)
+				}
+			}
+			row.Exercises = append(row.Exercises, MCPExercisePrescription{
+				ID: cfg.ID, Name: mcpExerciseName(cfg.ID, view.CustomEx),
+				Last: lastPerformance(view, cfg.ID, cfg), Next: next,
+				Decision: prescriptionDecision(prescription.Kind), Reason: reason,
+			})
 		}
-		out.Exercises = append(out.Exercises, MCPExercisePrescription{
-			ID: cfg.ID, Name: mcpExerciseName(cfg.ID, view.CustomEx),
-			Last: lastPerformance(view, cfg.ID, cfg), Next: next,
-			Decision: prescriptionDecision(prescription.Kind), Reason: reason,
-		})
+		out.Sessions = append(out.Sessions, row)
 	}
 	return out
 }
@@ -399,7 +413,10 @@ func logExerciseSets(data *TrainingData, input MCPLogExerciseSetsInput, now time
 		}
 	}
 	entry := MCPWorkoutEntry{ID: exerciseID, Sets: logged, Target: &cfg}
-	workout, found := findSameDayWorkout(data.Workouts, date, routineID)
+	workout, found, err := workoutForExerciseSets(data.Workouts, date, routineID, input.WorkoutID)
+	if err != nil {
+		return MCPWorkout{}, MCPProgression{}, err
+	}
 	if !found {
 		name := "Workout"
 		if routine.Name != "" {
@@ -407,8 +424,11 @@ func logExerciseSets(data *TrainingData, input MCPLogExerciseSetsInput, now time
 		}
 		nowMs := now.UnixMilli()
 		workout = MCPWorkout{
-			ID: fmt.Sprintf("w%x", nowMs), D: date, Start: nowMs, End: nowMs,
+			ID: "w" + rand.Text(), D: date, Start: nowMs, End: nowMs,
 			Name: name, Entries: []MCPWorkoutEntry{}, PRs: []string{},
+		}
+		if input.WorkoutID != nil {
+			workout.ID = strings.TrimSpace(*input.WorkoutID)
 		}
 		if routineID != "" {
 			workout.RoutineID = new(routineID)
@@ -448,9 +468,32 @@ func findSameDayWorkout(workouts []MCPWorkout, date, routineID string) (MCPWorko
 		if workout.D != date {
 			continue
 		}
-		if routineID == "" || stringPointerValue(workout.RoutineID) == routineID {
+		if stringPointerValue(workout.RoutineID) == routineID {
 			return workout, true
 		}
 	}
 	return MCPWorkout{}, false
+}
+
+// An explicit workout id makes repeated sessions distinguishable and retries
+// idempotent. Omitted ids retain the date-and-routine grouping for existing callers.
+func workoutForExerciseSets(workouts []MCPWorkout, date, routineID string, id *string) (MCPWorkout, bool, error) {
+	if id == nil {
+		workout, found := findSameDayWorkout(workouts, date, routineID)
+		return workout, found, nil
+	}
+	normalized := strings.TrimSpace(*id)
+	if normalized == "" || jsSlice(normalized, 40) != normalized {
+		return MCPWorkout{}, false, errors.New("workoutId must be a non-empty id up to 40 characters")
+	}
+	for _, workout := range workouts {
+		if workout.ID != normalized {
+			continue
+		}
+		if workout.D != date || stringPointerValue(workout.RoutineID) != routineID {
+			return MCPWorkout{}, false, errors.New("workoutId belongs to a different date or routine; use that workout's date and routineId, or a new workoutId")
+		}
+		return workout, true, nil
+	}
+	return MCPWorkout{}, false, nil
 }

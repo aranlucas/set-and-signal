@@ -171,7 +171,11 @@ func (r *TrainingDataRepository) PutWorkout(uid string, workout MCPWorkout) (MCP
 func decodeTrainingData(raw jsontext.Value) (TrainingData, error) {
 	data := TrainingData{}
 	if len(raw) != 0 {
-		if err := json.Unmarshal(raw, &data); err != nil {
+		migrated, err := migrateScheduleFields(raw)
+		if err != nil {
+			return TrainingData{}, err
+		}
+		if err := json.Unmarshal(migrated, &data); err != nil {
 			return TrainingData{}, err
 		}
 	}

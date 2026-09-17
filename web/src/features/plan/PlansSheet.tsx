@@ -7,7 +7,7 @@ import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useDateLabels } from "@/shared/hooks/use-date-labels";
 import { useStore } from "@/app/store/useStore";
 import { fmtDate, todayISO, exCount, weekdayOf } from "@/shared/lib/format";
-import { effectiveRoutineId } from "@/domain/training/history";
+import { effectiveRoutineIds, effectiveSessions } from "@/domain/training/history";
 import { toast } from "@/shared/lib/toast";
 import { Button } from "@/shared/ui/button";
 import { Field } from "@/shared/ui/field";
@@ -19,7 +19,7 @@ import { PlanPrintDocument } from "@/shared/components/PlanPrintDocument";
 import { glyphOf } from "@/domain/exercises/glyphs";
 import { buildPlanBundle, parsePlan, mergePlan } from "@/features/plan/plan-share";
 import { MOBILE, shareExport } from "@/shared/lib/mobile";
-import type { IsoDate, SheetClose, Weekday } from "@/shared/lib/types";
+import type { Id, IsoDate, SheetClose, Weekday } from "@/shared/lib/types";
 import { getErrorMessage, updateAppState } from "@/features/exercises/sheet-shared";
 import { planImportFormSchema } from "@/shared/lib/form-schemas";
 
@@ -257,35 +257,50 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
   const { t } = useTranslation();
   const st = useStore((store) => store.appState);
   const wd = weekdayOf(new Date(iso + "T12:00:00"));
-  const weeklyR = st.routines.find((r) => r.id === st.week[wd]);
+  const weeklyNames = (st.week[wd] ?? [])
+    .map((session) => st.routines.find((routine) => routine.id === session.routineId)?.name)
+    .filter(Boolean);
   const hasOvr = st.dayPlan[iso] !== undefined;
-  const effId = effectiveRoutineId(st, iso);
-  const set = (v: string) => {
+  const effIds = new Set(effectiveRoutineIds(st, iso));
+  const isRest = hasOvr && st.dayPlan[iso].rest === true;
+  const toggleRoutine = (routineId: Id) => {
     updateAppState((appState) => {
-      if (v) {
-        appState.dayPlan[iso] = v;
-      } else {
-        delete appState.dayPlan[iso];
-      }
+      const sessions = effectiveSessions(appState, iso).map((session) =>
+        Object.assign({}, session),
+      );
+      const index = sessions.findIndex((session) => session.routineId === routineId);
+      if (index >= 0) sessions.splice(index, 1);
+      else sessions.push({ routineId });
+      appState.dayPlan[iso] = { sessions };
     });
     void close();
     toast(
-      v === ""
-        ? t("calendar.backWeeklyPlan", "Back to weekly plan")
-        : v === "rest"
-          ? t("calendar.setRest", "{{date}} set to rest", { date: fmtDate(t, iso) })
-          : t("calendar.plannedFor", "{{routine}} planned for {{date}}", {
-              routine: st.routines.find((r) => r.id === v)?.name,
-              date: fmtDate(t, iso),
-            }),
+      t("calendar.plannedFor", "{{routine}} planned for {{date}}", {
+        routine: st.routines.find((routine) => routine.id === routineId)?.name,
+        date: fmtDate(t, iso),
+      }),
     );
+  };
+  const setRest = () => {
+    updateAppState((appState) => {
+      appState.dayPlan[iso] = { rest: true };
+    });
+    void close();
+    toast(t("calendar.setRest", "{{date}} set to rest", { date: fmtDate(t, iso) }));
+  };
+  const clearOverride = () => {
+    updateAppState((appState) => {
+      delete appState.dayPlan[iso];
+    });
+    void close();
+    toast(t("calendar.backWeeklyPlan", "Back to weekly plan"));
   };
   return (
     <>
       <h3>{fmtDate(t, iso, true)}</h3>
       <div className="mb-3 text-sm leading-snug text-foreground/60">
         {t("calendar.weeklyPlan", "Weekly plan:")}{" "}
-        {weeklyR ? weeklyR.name : t("common.rest", "Rest")}
+        {weeklyNames.length ? weeklyNames.join(", ") : t("common.rest", "Rest")}
         {hasOvr && (
           <span className="text-active"> · {t("calendar.changedDay", "changed for this day")}</span>
         )}
@@ -296,31 +311,31 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
         )}
       </div>
       <div className="flex flex-col gap-2">
-        {st.routines.map((r) => (
+        {st.routines.map((routine) => (
           <Button
             variant="plain"
             type="button"
-            key={r.id}
+            key={routine.id}
             className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
-            onClick={() => set(r.id)}
+            onClick={() => toggleRoutine(routine.id)}
           >
             <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-primary text-lg text-white">
-              <Icon name={glyphOf(r.emoji)} />
+              <Icon name={glyphOf(routine.emoji)} />
             </span>
             <span className="min-w-0 grow">
-              <span className="block text-base leading-tight tracking-tight">{r.name}</span>
+              <span className="block text-base leading-tight tracking-tight">{routine.name}</span>
               <span className="mt-0.5 block text-sm text-foreground/60">
-                {exCount(t, r.ex.length)}
+                {exCount(t, routine.ex.length)}
               </span>
             </span>
-            {effId === r.id && <Icon name="check" className="text-primary" />}
+            {effIds.has(routine.id) && <Icon name="check" className="text-primary" />}
           </Button>
         ))}
         <Button
           variant="plain"
           type="button"
           className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
-          onClick={() => set("rest")}
+          onClick={setRest}
         >
           <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-input text-lg text-white">
             <Icon name="moon" />
@@ -330,14 +345,14 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
               {t("calendar.restSkipDay", "Rest / skip this day")}
             </span>
           </span>
-          {effId === null && <Icon name="check" className="text-primary" />}
+          {isRest && <Icon name="check" className="text-primary" />}
         </Button>
         {hasOvr && (
           <Button
             variant="plain"
             type="button"
             className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
-            onClick={() => set("")}
+            onClick={clearOverride}
           >
             <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-input text-lg text-white">
               <Icon name="reset" />
@@ -357,10 +372,25 @@ export function DayAssign({ day, close }: { day: Weekday; close: SheetClose }) {
   const { t } = useTranslation();
   const { weekdays } = useDateLabels();
   const appState = useStore((state) => state.appState);
-  const setRoutine = (routineId: string) => {
+  const selected = appState.week[day] ?? [];
+  const selectedIds = new Set(selected.map((session) => session.routineId));
+  const clearDay = () => {
     updateAppState((state) => {
-      if (routineId) state.week[day] = routineId;
-      else delete state.week[day];
+      delete state.week[day];
+    });
+    void close();
+  };
+  const toggleRoutine = (routineId: Id) => {
+    updateAppState((state) => {
+      const current = state.week[day] ?? [];
+      const index = current.findIndex((session) => session.routineId === routineId);
+      if (index >= 0) {
+        const next = current.filter((session) => session.routineId !== routineId);
+        if (next.length) state.week[day] = next;
+        else delete state.week[day];
+      } else {
+        state.week[day] = [...current, { routineId }];
+      }
     });
     void close();
   };
@@ -372,7 +402,7 @@ export function DayAssign({ day, close }: { day: Weekday; close: SheetClose }) {
           variant="plain"
           type="button"
           className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
-          onClick={() => setRoutine("")}
+          onClick={clearDay}
         >
           <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-input text-lg text-white">
             <Icon name="moon" />
@@ -382,7 +412,7 @@ export function DayAssign({ day, close }: { day: Weekday; close: SheetClose }) {
               {t("calendar.restDay", "Rest day")}
             </span>
           </span>
-          {!appState.week[day] && <Icon name="check" className="text-primary" />}
+          {!selected.length && <Icon name="check" className="text-primary" />}
         </Button>
         {appState.routines.map((routine) => (
           <Button
@@ -390,7 +420,7 @@ export function DayAssign({ day, close }: { day: Weekday; close: SheetClose }) {
             type="button"
             key={routine.id}
             className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
-            onClick={() => setRoutine(routine.id)}
+            onClick={() => toggleRoutine(routine.id)}
           >
             <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-primary text-lg text-white">
               <Icon name={glyphOf(routine.emoji)} />
@@ -401,7 +431,7 @@ export function DayAssign({ day, close }: { day: Weekday; close: SheetClose }) {
                 {exCount(t, routine.ex.length)}
               </span>
             </span>
-            {appState.week[day] === routine.id && <Icon name="check" className="text-primary" />}
+            {selectedIds.has(routine.id) && <Icon name="check" className="text-primary" />}
           </Button>
         ))}
       </div>

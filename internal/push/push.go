@@ -6,6 +6,7 @@ package push
 
 import (
 	"context"
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"errors"
 	"fmt"
@@ -20,6 +21,7 @@ import (
 	webpush "github.com/SherClockHolmes/webpush-go"
 
 	"github.com/aranlucas/set-and-signal/internal/store"
+	"github.com/aranlucas/set-and-signal/internal/training"
 )
 
 // reminderInterval is the tick cadence of RunReminderLoop. Upstream ticks every
@@ -233,42 +235,82 @@ type reminderState struct {
 		TZ   string `json:"tz"`
 		Time string `json:"time"`
 	} `json:"reminder"`
-	DayPlan  map[string]string `json:"dayPlan"`
+	DayPlan  map[string]training.MCPDayPlan `json:"dayPlan"`
 	Routines []struct {
 		ID    string `json:"id"`
 		Name  string `json:"name"`
 		Emoji string `json:"emoji"`
 	} `json:"routines"`
-	Week     map[string]string `json:"week"`
+	Week     map[string][]training.MCPDaySession `json:"week"`
 	Workouts []struct {
-		D string `json:"d"`
+		D         string `json:"d"`
+		RoutineID string `json:"routineId"`
 	} `json:"workouts"`
 }
 
-// effectiveRoutineId decides which routine id is planned for iso. Ported from
-// web/src/domain/training/history.ts: a dayPlan override wins ('rest'
-// means nothing planned), otherwise fall back to the week grid indexed by JS
-// getDay() (Sunday = 0).
+// effectiveRoutineId returns the next unfinished planned routine. A daily
+// reminder is still sent at most once, even when several sessions remain.
 func effectiveRoutineId(s *reminderState, iso string) string {
-	if ov, ok := s.DayPlan[iso]; ok {
-		if ov == "rest" {
-			return ""
-		}
-		for _, r := range s.Routines {
-			if r.ID == ov {
-				return ov
-			}
-		}
-	}
 	t, err := time.Parse("2006-01-02", iso)
 	if err != nil {
 		return ""
 	}
-	wd := int(t.Weekday()) // Sunday = 0, matching Date#getDay
-	if routineID := s.Week[strconv.Itoa(wd)]; routineID != "" {
-		return routineID
+	sessions := s.Week[strconv.Itoa(int(t.Weekday()))]
+	if entry, ok := s.DayPlan[iso]; ok {
+		if entry.Rest || len(entry.Sessions) == 0 {
+			return ""
+		}
+		ids := knownRoutineIDs(s)
+		valid := make([]training.MCPDaySession, 0, len(entry.Sessions))
+		for _, session := range entry.Sessions {
+			if ids[session.RoutineID] {
+				valid = append(valid, session)
+			}
+		}
+		if len(valid) > 0 {
+			sessions = valid
+		}
+	}
+	completed := map[string]int{}
+	for _, workout := range s.Workouts {
+		if workout.D == iso && workout.RoutineID != "" {
+			completed[workout.RoutineID]++
+		}
+	}
+	for _, session := range sessions {
+		if completed[session.RoutineID] > 0 {
+			completed[session.RoutineID]--
+			continue
+		}
+		return session.RoutineID
 	}
 	return ""
+}
+
+func knownRoutineIDs(s *reminderState) map[string]bool {
+	ids := make(map[string]bool, len(s.Routines))
+	for _, r := range s.Routines {
+		ids[r.ID] = true
+	}
+	return ids
+}
+
+func decodeReminderState(raw jsontext.Value) (reminderState, error) {
+	migrated, err := training.MigrateScheduleFields(raw)
+	if err != nil {
+		return reminderState{}, err
+	}
+	var s reminderState
+	if err := json.Unmarshal(migrated, &s); err != nil {
+		return reminderState{}, err
+	}
+	if s.Week == nil {
+		s.Week = map[string][]training.MCPDaySession{}
+	}
+	if s.DayPlan == nil {
+		s.DayPlan = map[string]training.MCPDayPlan{}
+	}
+	return s, nil
 }
 
 // RunReminderLoop fires each subscribed user's day reminder at most once per
@@ -308,8 +350,8 @@ func (p *Service) reminderTick(nowFn func(tz string) (date, hhmm string, ok bool
 			p.log.Printf("read state %s: %v", user.ID, err)
 			continue
 		}
-		var s reminderState
-		if err := json.Unmarshal(raw, &s); err != nil {
+		s, err := decodeReminderState(raw)
+		if err != nil {
 			p.log.Printf("parse state %s: %v", user.ID, err)
 			continue
 		}
@@ -322,16 +364,6 @@ func (p *Service) reminderTick(nowFn func(tz string) (date, hhmm string, ok bool
 			continue
 		}
 		if user.LastReminder == now.date {
-			continue
-		}
-		planned := false
-		for _, w := range s.Workouts {
-			if w.D == now.date {
-				planned = true
-				break
-			}
-		}
-		if planned {
 			continue
 		}
 		rid := effectiveRoutineId(&s, now.date)

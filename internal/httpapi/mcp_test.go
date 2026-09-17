@@ -146,7 +146,7 @@ func TestMCPContractToolsAndRoundTrip(t *testing.T) {
 			t.Errorf("%s annotations = %v, want readOnlyHint=true", name, annotations)
 		}
 	}
-	for _, name := range []string{"set_program", "log_bodyweight", "log_workout", "log_exercise_sets"} {
+	for _, name := range []string{"set_program", "add_day_session", "remove_day_session", "log_bodyweight", "log_workout", "log_exercise_sets"} {
 		annotations, _ := toolByName[name]["annotations"].(map[string]any)
 		if annotations["readOnlyHint"] != false {
 			t.Errorf("%s annotations = %v, want readOnlyHint=false", name, annotations)
@@ -182,6 +182,8 @@ func TestMCPContractToolsAndRoundTrip(t *testing.T) {
 		"get_routines":             reflect.TypeFor[MCPEmptyInput](),
 		"preview_program":          reflect.TypeFor[MCPPreviewProgramInput](),
 		"set_program":              reflect.TypeFor[MCPSetProgramInput](),
+		"add_day_session":          reflect.TypeFor[MCPAddDaySessionInput](),
+		"remove_day_session":       reflect.TypeFor[MCPRemoveDaySessionInput](),
 		"get_bodyweight":           reflect.TypeFor[MCPBodyweightFilterInput](),
 		"log_bodyweight":           reflect.TypeFor[MCPLogBodyweightInput](),
 		"get_history":              reflect.TypeFor[MCPHistoryInput](),
@@ -199,7 +201,7 @@ func TestMCPContractToolsAndRoundTrip(t *testing.T) {
 	}
 	for _, want := range []string{
 		"search_exercises", "get_today", "get_training_digest",
-		"get_routines", "set_program",
+		"get_routines", "set_program", "add_day_session", "remove_day_session",
 		"preview_program",
 		"get_bodyweight", "log_bodyweight",
 		"get_history", "get_workouts", "log_workout", "log_exercise_sets",
