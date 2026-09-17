@@ -20,7 +20,7 @@ export function CuratedPlans({ close }: { close: SheetClose }) {
       for (const [day, routineIndex] of Object.entries(p.week)) {
         const weekday = weekdayFromNumber(Number(day));
         const routine = rs[routineIndex];
-        if (weekday != null && routine) appState.week[weekday] = routine.id;
+        if (weekday != null && routine) appState.week[weekday] = [{ routineId: routine.id }];
       }
     });
     void close();

@@ -16,7 +16,7 @@ import SyncStatus from "@/shared/components/SyncStatus";
 import BrandMark from "@/shared/components/BrandMark";
 import AppNavigation from "@/shared/components/AppNavigation";
 import { useNavigate } from "@tanstack/react-router";
-import { effectiveRoutine } from "@/domain/training/schedule";
+import { nextPlannedRoutine } from "@/domain/training/schedule";
 import { todayISO } from "@/shared/lib/format";
 
 const loadStartWorkoutSheet = () => import("@/shared/components/StartWorkoutSheet");
@@ -85,7 +85,7 @@ export default function AppShell() {
               void navigate({ to: "/workout" });
               return;
             }
-            const routine = effectiveRoutine(useStore.getState().appState, todayISO());
+            const routine = nextPlannedRoutine(useStore.getState().appState, todayISO());
             if (routine?.ex.length) setStartRoutineId(routine.id);
             else void navigate({ to: "/workout" });
           }}

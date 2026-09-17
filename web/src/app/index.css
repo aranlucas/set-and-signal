@@ -942,13 +942,20 @@ select {
 .training-day.is-today strong {
   color: var(--primary);
 }
+.day-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 2px;
+  min-height: 19px;
+}
 .day-status {
   display: grid;
   place-items: center;
   width: 19px;
   height: 19px;
   color: var(--muted-foreground);
-  margin-top: 2px;
 }
 .day-status > span {
   width: 5px;

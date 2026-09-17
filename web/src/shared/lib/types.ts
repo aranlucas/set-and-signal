@@ -23,6 +23,18 @@ export type IsoDate = string; // 'YYYY-MM-DD'
 export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6; // JS getDay(); JSON round-trips keys to strings
 export type Id = string; // uid(): Date.now().toString(36)+rand
 
+/** One planned workout on a weekday slot or calendar override. */
+export interface DaySession {
+  routineId: Id;
+  start?: string; // local HH:MM
+  label?: string;
+}
+
+/** One-off override for an ISO calendar date (rest or ordered sessions). */
+export type DayPlanEntry =
+  | { rest: true; sessions?: never }
+  | { rest?: false; sessions: DaySession[] };
+
 /* ============================ persisted state ============================ */
 
 export interface Reminder {
@@ -79,8 +91,8 @@ export interface AppState {
   measures: MeasuresEntry[];
   plates: PlateSetup | null; // null = never configured (unit defaults shown in Settings)
   routines: Routine[];
-  week: Partial<Record<Weekday, Id>>; // weekday -> routine id; missing = rest day
-  dayPlan: Record<IsoDate, string>; // one-off overrides (Calendar rescheduling), including "rest"
+  week: Partial<Record<Weekday, DaySession[]>>; // weekday -> ordered sessions; missing/empty = rest
+  dayPlan: Record<IsoDate, DayPlanEntry>; // one-off overrides (Calendar rescheduling)
   exWeights: Record<Id, ExWeightHint>; // exercise id -> last confirmed working weight
   workouts: Workout[];
   active: ActiveWorkout | null;
@@ -292,10 +304,10 @@ export interface PlanBundleCustom {
 }
 
 export interface PlanBundle {
-  opengym_plan: 1;
+  opengym_plan: 1 | 2;
   exported: IsoDate;
   name: string;
-  week: Partial<Record<string, Id>>;
+  week: Partial<Record<string, DaySession[]>>;
   routines: PlanBundleRoutine[];
   customEx: PlanBundleCustom[];
 }

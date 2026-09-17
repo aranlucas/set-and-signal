@@ -13,13 +13,16 @@ func mcpProgramContext(t *testing.T) context.Context {
 
 func TestProgramToolsSanitizeDiffAndPreserveState(t *testing.T) {
 	e := newTestEnv(t)
-	if err := e.st.WriteState("u1", []byte(`{"_ts":7,"note":"keep","routines":[{"id":"old","name":"Old","emoji":"","ex":[]}],"week":{"1":"old"}}`)); err != nil {
+	if err := e.st.WriteState("u1", []byte(`{"_ts":7,"note":"keep","routines":[{"id":"old","name":"Old","emoji":"","ex":[]}],"week":{"1":[{"routineId":"old"}]}}`)); err != nil {
 		t.Fatal(err)
 	}
 	id := "new"
 	input := MCPSetProgramInput{
 		Routines: []MCPRoutineInput{{ID: &id, Name: "New", Ex: []MCPExConfigInput{{ID: "bench", Sets: new(3.0), Reps: new(5.0), Weight: new(60.0)}}}},
-		Week:     map[string]*string{"2": &id, "6": new("ghost")},
+		Week: map[string][]MCPDaySession{
+			"2": {{RoutineID: id}},
+			"6": {{RoutineID: "ghost"}},
+		},
 	}
 	_, preview, err := e.srv.previewProgramTool(mcpProgramContext(t), nil, MCPPreviewProgramInput{
 		Routines: input.Routines,
@@ -32,7 +35,7 @@ func TestProgramToolsSanitizeDiffAndPreserveState(t *testing.T) {
 	if preview.Revision == nil || *preview.Revision != 7 || len(preview.Sanitized.Routines) != 1 || len(preview.Diff.AddedRoutines) != 1 || len(preview.Diff.RemovedRoutines) != 0 {
 		t.Fatalf("typed preview = %#v", preview)
 	}
-	if len(preview.Proposed.Week) != 1 || preview.Proposed.Week["2"] == nil || *preview.Proposed.Week["2"] != "new" {
+	if len(preview.Proposed.Week) != 1 || len(preview.Proposed.Week["2"]) != 1 || preview.Proposed.Week["2"][0].RoutineID != "new" {
 		t.Fatalf("typed proposed week = %#v", preview.Proposed.Week)
 	}
 
@@ -82,7 +85,7 @@ func TestTypedProgramFreshPreviewProvidesUsableZeroRevision(t *testing.T) {
 
 func TestTypedProgramReplacePrunesReferencesButPreservesRest(t *testing.T) {
 	e := newTestEnv(t)
-	if err := e.st.WriteState("u1", []byte(`{"routines":[{"id":"old","name":"Old","emoji":"","ex":[]}],"week":{"1":"old"},"dayPlan":{"2026-08-28":"old","2026-08-29":"rest"}}`)); err != nil {
+	if err := e.st.WriteState("u1", []byte(`{"routines":[{"id":"old","name":"Old","emoji":"","ex":[]}],"week":{"1":[{"routineId":"old"}]},"dayPlan":{"2026-08-28":{"sessions":[{"routineId":"old"}]},"2026-08-29":{"rest":true}}}`)); err != nil {
 		t.Fatal(err)
 	}
 	if _, _, err := e.srv.setProgramTool(mcpProgramContext(t), nil, MCPSetProgramInput{
@@ -95,7 +98,36 @@ func TestTypedProgramReplacePrunesReferencesButPreservesRest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(data.Routines) != 1 || len(data.Week) != 0 || len(data.DayPlan) != 1 || data.DayPlan["2026-08-29"] == nil || *data.DayPlan["2026-08-29"] != "rest" {
+	if len(data.Routines) != 1 || len(data.Week) != 0 || len(data.DayPlan) != 1 || !data.DayPlan["2026-08-29"].Rest {
 		t.Fatalf("training data = %#v", data)
+	}
+}
+
+func TestAddRemoveDaySessionTools(t *testing.T) {
+	e := newTestEnv(t)
+	if err := e.st.WriteState("u1", []byte(`{"routines":[{"id":"hip-rehab","name":"Hip","emoji":"","ex":[]},{"id":"fleet-feet-easy","name":"Run","emoji":"","ex":[]}],"week":{"2":[{"routineId":"hip-rehab"}]}}`)); err != nil {
+		t.Fatal(err)
+	}
+	_, added, err := e.srv.addDaySessionTool(mcpProgramContext(t), nil, MCPAddDaySessionInput{
+		Iso: "2026-09-15", RoutineID: "fleet-feet-easy", Start: new("18:00"),
+	})
+	if err != nil || !added.OK || len(added.Sessions) != 2 {
+		t.Fatalf("add_day_session = %#v err=%v", added, err)
+	}
+	if added.Sessions[0].RoutineID != "hip-rehab" || added.Sessions[1].RoutineID != "fleet-feet-easy" {
+		t.Fatalf("sessions = %#v", added.Sessions)
+	}
+	data, err := NewTrainingDataRepository(e.st).Load("u1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data.Week["2"]) != 1 || data.Week["2"][0].RoutineID != "hip-rehab" {
+		t.Fatalf("week replaced unexpectedly: %#v", data.Week)
+	}
+	_, removed, err := e.srv.removeDaySessionTool(mcpProgramContext(t), nil, MCPRemoveDaySessionInput{
+		Iso: "2026-09-15", RoutineID: "fleet-feet-easy",
+	})
+	if err != nil || !removed.OK || len(removed.Sessions) != 1 || removed.Sessions[0].RoutineID != "hip-rehab" {
+		t.Fatalf("remove_day_session = %#v err=%v", removed, err)
 	}
 }

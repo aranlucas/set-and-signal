@@ -92,14 +92,20 @@ func TestReadMCPStateDecodesTypedTrainingData(t *testing.T) {
 	if view.Unit != "kg" || view.TargetW == nil || *view.TargetW != 80.5 || view.Revision != 42 {
 		t.Fatalf("typed scalar state = %#v", view)
 	}
-	if got := view.Week["2"]; got != nil {
-		t.Fatalf("week null = %v, want nil", got)
+	if got := view.Week["2"]; len(got) != 0 {
+		t.Fatalf("week null = %v, want empty", got)
 	}
 	if view.ExWeights["bench"].W != 100 || view.CustomEx[0].Desc != "home" || !view.CustomEx[0].Custom {
 		t.Fatalf("typed nested state = %#v", view)
 	}
-	if view.DayPlan["2026-08-29"] == nil || *view.DayPlan["2026-08-29"] != "rest" {
+	if !view.DayPlan["2026-08-29"].Rest {
 		t.Fatalf("dayPlan = %#v", view.DayPlan)
+	}
+	if len(view.Week["1"]) != 1 || view.Week["1"][0].RoutineID != "r1" {
+		t.Fatalf("legacy week migrate = %#v", view.Week)
+	}
+	if len(view.DayPlan["2026-08-28"].Sessions) != 1 || view.DayPlan["2026-08-28"].Sessions[0].RoutineID != "r1" {
+		t.Fatalf("legacy dayPlan migrate = %#v", view.DayPlan)
 	}
 }
 

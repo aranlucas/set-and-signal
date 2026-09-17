@@ -9,6 +9,7 @@ import { translate } from "@/i18n/translate.js";
 import { parsePayload, planBundle } from "@/shared/lib/schemas.js";
 import type {
   AppState,
+  DaySession,
   ExConfig,
   Id,
   PlanBundle,
@@ -17,7 +18,7 @@ import type {
   Weekday,
 } from "@/shared/lib/types.js";
 
-const PLAN_FMT = 1;
+const PLAN_FMT = 2;
 const WEEK_ORDER: Weekday[] = [1, 2, 3, 4, 5, 6, 0]; // Mon-first, matching the Plan screen
 const WEEKDAY_BY_KEY: Readonly<Record<string, Weekday>> = {
   "0": 0,
@@ -33,7 +34,7 @@ const WEEKDAY_BY_KEY: Readonly<Record<string, Weekday>> = {
 export interface ParsedPlan {
   name: string;
   routines: PlanBundleRoutine[];
-  week: Partial<Record<string, Id>>;
+  week: Partial<Record<string, DaySession[]>>;
   customEx: PlanBundleCustom[];
   dropped: number;
   routineCount: number;
@@ -96,9 +97,10 @@ export function buildPlanBundle(
       ? [Object.assign({ id: c.id, n: c.n, bp: c.bp }, c.desc ? { desc: c.desc } : {})]
       : [],
   );
-  const week: Partial<Record<string, Id>> = {};
+  const week: Partial<Record<string, DaySession[]>> = {};
   WEEK_ORDER.forEach((d) => {
-    if (appState.week?.[d]) week[d] = appState.week[d];
+    const sessions = appState.week?.[d];
+    if (sessions?.length) week[d] = sessions.map((session) => Object.assign({}, session));
   });
   return {
     opengym_plan: PLAN_FMT,
@@ -150,7 +152,7 @@ export function parsePlan(raw: string | PlanBundle): ParsedPlan {
     dropped,
     routineCount: routines.length,
     exerciseCount: routines.reduce((n, r) => n + r.ex.length, 0),
-    scheduledDays: WEEK_ORDER.filter((weekday) => planData.week?.[weekday]).length,
+    scheduledDays: WEEK_ORDER.filter((weekday) => planData.week?.[weekday]?.length).length,
   };
 }
 
@@ -207,11 +209,15 @@ export function mergePlan(
     WEEK_ORDER.forEach((d) => {
       delete appStateDraft.week[d];
     });
-    Object.entries(bundle.week || {}).forEach(([d, oldId]) => {
+    Object.entries(bundle.week || {}).forEach(([d, sessions]) => {
       // bundle weeks are plain JSON keyed by weekday digits
       const weekday = WEEKDAY_BY_KEY[d];
-      if (weekday !== undefined && oldId && routineIdMap[oldId]) {
-        appStateDraft.week[weekday] = routineIdMap[oldId];
+      if (weekday !== undefined) {
+        const remapped = (sessions ?? []).flatMap((session) => {
+          const routineId = routineIdMap[session.routineId];
+          return routineId ? [{ ...session, routineId }] : [];
+        });
+        if (remapped.length) appStateDraft.week[weekday] = remapped;
       }
     });
   }

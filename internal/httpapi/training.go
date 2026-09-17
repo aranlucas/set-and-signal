@@ -11,12 +11,19 @@ import (
 // MCP DTO aliases keep the transport schema stable while the implementation
 // and persisted training graph live in the training package.
 type (
+	MCPAddDaySessionInput    = training.MCPAddDaySessionInput
 	MCPBestStrength          = training.MCPBestStrength
 	MCPBodyweightEntry       = training.MCPBodyweightEntry
 	MCPBodyweightFilterInput = training.MCPBodyweightFilterInput
 	MCPBodyweightOutput      = training.MCPBodyweightOutput
 	MCPCustomExercise        = training.MCPCustomExercise
 	MCPDateInput             = training.MCPDateInput
+	MCPDayPlan               = training.MCPDayPlan
+	MCPDayPlanMap            = training.DayPlanMap
+	MCPDayPrescription       = training.MCPDayPrescription
+	MCPDaySession            = training.MCPDaySession
+	MCPDaySessionsOutput     = training.MCPDaySessionsOutput
+	MCPWeekSchedule          = training.WeekSchedule
 	MCPDigestExerciseEntry   = training.MCPDigestExerciseEntry
 	MCPDigestWorkout         = training.MCPDigestWorkout
 	MCPDigestWorkoutEntry    = training.MCPDigestWorkoutEntry
@@ -50,6 +57,7 @@ type (
 	MCPProgramPreview        = training.MCPProgramPreview
 	MCPProgramState          = training.MCPProgramState
 	MCPProgression           = training.MCPProgression
+	MCPRemoveDaySessionInput = training.MCPRemoveDaySessionInput
 	MCPRoutine               = training.MCPRoutine
 	MCPRoutineChange         = training.MCPRoutineChange
 	MCPRoutineInput          = training.MCPRoutineInput
@@ -68,8 +76,9 @@ type (
 	MCPSuggestionEntry       = training.MCPSuggestionEntry
 	MCPSuggestionOutput      = training.MCPSuggestionOutput
 	MCPTodayResult           = training.MCPTodayResult
+	MCPTodaySession          = training.MCPTodaySession
 	MCPTrainingDigest        = training.MCPTrainingDigest
-	MCPTrainingDigestRoutine = training.MCPTrainingDigestRoutine
+	MCPTrainingDigestSession = training.MCPTrainingDigestSession
 	MCPWorkout               = training.MCPWorkout
 	MCPWorkoutEntry          = training.MCPWorkoutEntry
 	MCPWorkoutOutput         = training.MCPWorkoutOutput
@@ -106,20 +115,36 @@ func searchExercises(data TrainingData, query string, filters exercises.SearchFi
 	return training.SearchExercises(data, query, filters)
 }
 
-func buildTrainingDigest(data TrainingData, routine MCPRoutine, today string) MCPTrainingDigest {
-	return training.BuildDigest(data, routine, today)
+func buildTrainingDigest(data TrainingData, sessions []MCPDaySession, today string) MCPTrainingDigest {
+	return training.BuildDigest(data, sessions, today)
 }
 
 func buildHistory(data TrainingData, query historyQuery) []MCPHistoryRow {
 	return training.BuildHistory(data, query)
 }
 
-func sessionPrescription(data TrainingData, iso string) MCPSessionPrescription {
+func sessionPrescription(data TrainingData, iso string) MCPDayPrescription {
 	return training.SessionPrescription(data, iso)
 }
 
 func logExerciseSets(data *TrainingData, input MCPLogExerciseSetsInput, now time.Time) (MCPWorkout, MCPProgression, error) {
 	return training.LogExerciseSets(data, input, now)
+}
+
+func trainingNormalizeDaySession(session MCPDaySession) (MCPDaySession, error) {
+	return training.NormalizeDaySession(session)
+}
+
+func trainingCloneWeek(week map[string][]MCPDaySession) map[string][]MCPDaySession {
+	return training.CloneWeekSchedule(week)
+}
+
+func trainingCloneSessions(sessions []MCPDaySession) []MCPDaySession {
+	return training.CloneDaySessions(sessions)
+}
+
+func trainingDaySessionsEqual(a, b []MCPDaySession) bool {
+	return training.DaySessionsEqual(a, b)
 }
 
 var (

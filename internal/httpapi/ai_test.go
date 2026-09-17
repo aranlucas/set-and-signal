@@ -38,10 +38,11 @@ func TestNextWorkoutSuggestionMCPUsesClosedOutput(t *testing.T) {
 	digest := MCPTrainingDigest{
 		Unit:  "kg",
 		Today: "2026-08-28",
-		Routine: MCPTrainingDigestRoutine{
-			Name:    "Strength",
-			Entries: []MCPDigestExerciseEntry{{ID: "squat", Name: "Back squat", Sets: ptrFloat(3), Reps: ptrFloat(5)}},
-		},
+		Sessions: []MCPTrainingDigestSession{{
+			RoutineID: "strength",
+			Name:      "Strength",
+			Entries:   []MCPDigestExerciseEntry{{ID: "squat", Name: "Back squat", Sets: ptrFloat(3), Reps: ptrFloat(5)}},
+		}},
 		Bodyweight:   []MCPBodyweightEntry{{D: "2026-08-27", W: 80}},
 		LastWorkouts: []MCPDigestWorkout{},
 	}

@@ -14,6 +14,7 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/aranlucas/set-and-signal/internal/exercises"
+	"github.com/aranlucas/set-and-signal/internal/training"
 )
 
 type mcpCallerKey struct{}
@@ -368,20 +369,20 @@ func (s *Server) getNextProgressionTool(ctx context.Context, _ *mcp.CallToolRequ
 	return nil, NextProgression(view, config, selected), nil
 }
 
-func (s *Server) getSessionPrescriptionTool(ctx context.Context, _ *mcp.CallToolRequest, input MCPDateInput) (*mcp.CallToolResult, MCPSessionPrescription, error) {
+func (s *Server) getSessionPrescriptionTool(ctx context.Context, _ *mcp.CallToolRequest, input MCPDateInput) (*mcp.CallToolResult, MCPDayPrescription, error) {
 	view, err := s.loadTrainingData(mcpUID(ctx))
 	if err != nil {
-		return nil, MCPSessionPrescription{}, errors.New("server error")
+		return nil, MCPDayPrescription{}, errors.New("server error")
 	}
 	iso := ""
 	if input.Iso != nil {
 		iso = *input.Iso
 	}
 	if iso != "" && !isoDateRe.MatchString(iso) {
-		return nil, MCPSessionPrescription{}, errors.New("date must be YYYY-MM-DD")
+		return nil, MCPDayPrescription{}, errors.New("date must be YYYY-MM-DD")
 	}
 	if input.Tz != nil && strings.TrimSpace(*input.Tz) == "" {
-		return nil, MCPSessionPrescription{}, errors.New("timezone must not be empty")
+		return nil, MCPDayPrescription{}, errors.New("timezone must not be empty")
 	}
 	if iso == "" {
 		tz := ""
@@ -391,6 +392,46 @@ func (s *Server) getSessionPrescriptionTool(ctx context.Context, _ *mcp.CallTool
 		iso = todayISOLocal(tz, time.Now())
 	}
 	return nil, sessionPrescription(view, iso), nil
+}
+
+func (s *Server) addDaySessionTool(ctx context.Context, _ *mcp.CallToolRequest, input MCPAddDaySessionInput) (*mcp.CallToolResult, MCPDaySessionsOutput, error) {
+	iso := strings.TrimSpace(input.Iso)
+	if !isoDateRe.MatchString(iso) {
+		return nil, MCPDaySessionsOutput{}, errors.New("date must be YYYY-MM-DD")
+	}
+	repo := NewTrainingDataRepository(s.ST)
+	if err := repo.Mutate(mcpUID(ctx), input.ExpectedRevision, func(data *TrainingData) error {
+		return training.AddSessionToDayPlan(data, iso, MCPDaySession{
+			RoutineID: input.RoutineID, Start: input.Start, Label: input.Label,
+		})
+	}); err != nil {
+		return nil, MCPDaySessionsOutput{}, err
+	}
+	data, err := repo.Load(mcpUID(ctx))
+	if err != nil {
+		return nil, MCPDaySessionsOutput{}, errors.New("server error")
+	}
+	sessions, _, rest := training.ResolveDaySessions(data, iso)
+	return nil, MCPDaySessionsOutput{OK: true, Iso: iso, Rest: rest, Sessions: sessions, Revision: data.Revision}, nil
+}
+
+func (s *Server) removeDaySessionTool(ctx context.Context, _ *mcp.CallToolRequest, input MCPRemoveDaySessionInput) (*mcp.CallToolResult, MCPDaySessionsOutput, error) {
+	iso := strings.TrimSpace(input.Iso)
+	if !isoDateRe.MatchString(iso) {
+		return nil, MCPDaySessionsOutput{}, errors.New("date must be YYYY-MM-DD")
+	}
+	repo := NewTrainingDataRepository(s.ST)
+	if err := repo.Mutate(mcpUID(ctx), input.ExpectedRevision, func(data *TrainingData) error {
+		return training.RemoveSessionFromDayPlan(data, iso, input.RoutineID, input.Index)
+	}); err != nil {
+		return nil, MCPDaySessionsOutput{}, err
+	}
+	data, err := repo.Load(mcpUID(ctx))
+	if err != nil {
+		return nil, MCPDaySessionsOutput{}, errors.New("server error")
+	}
+	sessions, _, rest := training.ResolveDaySessions(data, iso)
+	return nil, MCPDaySessionsOutput{OK: true, Iso: iso, Rest: rest, Sessions: sessions, Revision: data.Revision}, nil
 }
 
 func (s *Server) logExerciseSetsTool(ctx context.Context, _ *mcp.CallToolRequest, input MCPLogExerciseSetsInput) (*mcp.CallToolResult, MCPLogExerciseSetsOutput, error) {
@@ -434,17 +475,20 @@ func (s *Server) mcpTrainingDigestFor(uid string, input MCPDateInput) (MCPTraini
 		iso = todayISOLocal(tz, time.Now())
 	}
 	today := trainingDay(view, iso)
-	if today.Rest {
+	if today.Rest || len(today.Sessions) == 0 {
 		return MCPTrainingDigest{}, errors.New("rest day — nothing scheduled")
 	}
-	if today.Routine == nil {
-		return MCPTrainingDigest{}, errors.New("nothing scheduled — assign a routine to this day first")
+	sessions := make([]MCPDaySession, 0, len(today.Sessions))
+	for _, session := range today.Sessions {
+		sessions = append(sessions, MCPDaySession{
+			RoutineID: session.RoutineID, Start: session.Start, Label: session.Label,
+		})
 	}
-	return buildTrainingDigest(view, *today.Routine, iso), nil
+	return buildTrainingDigest(view, sessions, iso), nil
 }
 
 func (s *Server) buildMCPServer() *mcp.Server {
-	srv := mcp.NewServer(&mcp.Implementation{Name: "Set & Signal", Version: mcpVersion()}, &mcp.ServerOptions{Instructions: "Set & Signal manages the authenticated user's training state. Preview changes before replacing programs; use expectedRevision when applying changes."})
+	srv := mcp.NewServer(&mcp.Implementation{Name: "Set & Signal", Version: mcpVersion()}, &mcp.ServerOptions{Instructions: "Set & Signal manages the authenticated user's training state. Preview changes before replacing programs; use expectedRevision when applying changes. Weekdays map to ordered session lists — use add_day_session / remove_day_session to pin one session onto a date without replacing the week."})
 	read := mcpReadAnnotations()
 	write := mcpWriteAnnotations(true, false)
 	bwWrite := mcpWriteAnnotations(true, true)
@@ -453,22 +497,24 @@ func (s *Server) buildMCPServer() *mcp.Server {
 	openWorld := true
 	openWorldRead.OpenWorldHint = &openWorld
 	mcp.AddTool(srv, &mcp.Tool{Name: "search_exercises", Description: "Search the exercise catalog and custom exercises by name, muscle, or equipment. Use returned ids in set_program.", Annotations: &read}, s.searchExercisesTool)
-	mcp.AddTool(srv, &mcp.Tool{Name: "get_today", Description: "Resolve today's or a supplied ISO date to a routine, override, weekday slot, or rest day. Planned weights are filled from history so a logged lift is not prescribed at 0.", Annotations: &read}, s.getTodayTool)
-	mcp.AddTool(srv, &mcp.Tool{Name: "get_training_digest", Description: "Build the compact training-log digest used for coaching. Routine entries include the next working weight when history exists.", Annotations: &read}, s.getTrainingDigestTool)
+	mcp.AddTool(srv, &mcp.Tool{Name: "get_today", Description: "Resolve today's or a supplied ISO date to ordered sessions (each with its own routine), override, weekday slots, or rest day. Planned weights are filled from history so a logged lift is not prescribed at 0.", Annotations: &read}, s.getTodayTool)
+	mcp.AddTool(srv, &mcp.Tool{Name: "get_training_digest", Description: "Build the compact training-log digest used for coaching. Returns every session for the day with its own exercise list; entries include the next working weight when history exists.", Annotations: &read}, s.getTrainingDigestTool)
 	mcp.AddTool(srv, &mcp.Tool{Name: "get_routines", Description: "List the caller's routines with their exercise entries.", Annotations: &read}, s.getRoutinesTool)
 	mcp.AddTool(srv, &mcp.Tool{Name: "preview_program", Description: "Validate and preview a program change; pass its revision as expectedRevision to set_program.", Annotations: &read}, s.previewProgramTool)
-	mcp.AddTool(srv, &mcp.Tool{Name: "set_program", Description: "Create or update a full training program. Preview first and pass its revision as expectedRevision for a guarded apply.", Annotations: &write}, s.setProgramTool)
+	mcp.AddTool(srv, &mcp.Tool{Name: "set_program", Description: "Create or update a full training program. Week values are ordered session lists per weekday. Preview first and pass its revision as expectedRevision for a guarded apply.", Annotations: &write}, s.setProgramTool)
+	mcp.AddTool(srv, &mcp.Tool{Name: "add_day_session", Description: "Append one routine as a session on a specific ISO date via day override, without replacing the weekly template. Use this to pin an extra workout onto an existing rehab or training day.", Annotations: &write}, s.addDaySessionTool)
+	mcp.AddTool(srv, &mcp.Tool{Name: "remove_day_session", Description: "Remove one session from a specific ISO date's day override (materializes the weekly plan into an override first when needed).", Annotations: &write}, s.removeDaySessionTool)
 	mcp.AddTool(srv, &mcp.Tool{Name: "get_bodyweight", Description: "Read bodyweight history, including profile unit and goal.", Annotations: &read}, s.getBodyweightTool)
 	mcp.AddTool(srv, &mcp.Tool{Name: "log_bodyweight", Description: "Log bodyweight in the profile's unit; optional tz controls today's local date.", Annotations: &bwWrite}, s.logBodyweightTool)
 	mcp.AddTool(srv, &mcp.Tool{Name: "get_history", Description: "Browse completed workout history newest first, with per-set weight×reps, last working weight, and whether the target was hit.", Annotations: &read}, s.getHistoryTool)
 	mcp.AddTool(srv, &mcp.Tool{Name: "get_workouts", Description: "List raw completed workouts newest first.", Annotations: &read}, s.getWorkoutsTool)
-	mcp.AddTool(srv, &mcp.Tool{Name: "log_workout", Description: "Append one completed workout object in the web app's stored shape. Working sets on loaded lifts need a weight greater than 0.", Annotations: &workoutWrite}, s.logWorkoutTool)
-	mcp.AddTool(srv, &mcp.Tool{Name: "log_exercise_sets", Description: "Log one exercise's working sets (exercise id, date, [{w, r, done}]). Updates the source routine's working weight. Prefer this over posting a full workout object.", Annotations: &workoutWrite}, s.logExerciseSetsTool)
+	mcp.AddTool(srv, &mcp.Tool{Name: "log_workout", Description: "Append one completed workout object in the web app's stored shape. Working sets on loaded lifts need a weight greater than 0. Progression stays keyed to routineId.", Annotations: &workoutWrite}, s.logWorkoutTool)
+	mcp.AddTool(srv, &mcp.Tool{Name: "log_exercise_sets", Description: "Log one exercise's working sets (exercise id, date, [{w, r, done}]). Updates the source routine's working weight. Supply a distinct workoutId for each separate session of the same routine on a date; reuse it for subsequent exercises or corrections. Without workoutId, updates the latest workout for that date and routine.", Annotations: &workoutWrite}, s.logExerciseSetsTool)
 	mcp.AddTool(srv, &mcp.Tool{Name: "next_workout_suggestion", Description: "Suggest a workout from a server-built training digest (requires OPENROUTER_API_KEY).", Annotations: &openWorldRead}, s.nextWorkoutSuggestionTool)
 	mcp.AddTool(srv, &mcp.Tool{Name: "get_strength_progress", Description: "Return the estimated one-rep-max trend and best source set for an exercise.", Annotations: &read}, s.getStrengthProgressTool)
 	mcp.AddTool(srv, &mcp.Tool{Name: "get_muscle_balance", Description: "Summarize recent muscle loading; days accepts 0, 7, 30, or 90 and defaults to 30.", Annotations: &read}, s.getMuscleBalanceTool)
 	mcp.AddTool(srv, &mcp.Tool{Name: "get_next_progression", Description: "Return the next actionable progression for an exercise; provide routineId when an exercise appears in multiple routines.", Annotations: &read}, s.getNextProgressionTool)
-	mcp.AddTool(srv, &mcp.Tool{Name: "get_session_prescription", Description: "Today's coaching prescription: last working-set performance, next sets×reps×weight, and increased/held/deload with a one-line reason. Warm-ups are ignored.", Annotations: &read}, s.getSessionPrescriptionTool)
+	mcp.AddTool(srv, &mcp.Tool{Name: "get_session_prescription", Description: "Today's coaching prescription for every session: last working-set performance, next sets×reps×weight, and increased/held/deload with a one-line reason. Warm-ups are ignored. Sessions are not flattened.", Annotations: &read}, s.getSessionPrescriptionTool)
 	return srv
 }
 

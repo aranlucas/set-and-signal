@@ -262,10 +262,21 @@ export default function RoutineEdit() {
                   s.routines = s.routines.filter((x) => x.id !== id);
                   Object.keys(s.week).forEach((weekdayKey) => {
                     const weekday = weekdayFromNumber(Number(weekdayKey));
-                    if (weekday != null && s.week[weekday] === id) delete s.week[weekday];
+                    if (weekday == null) return;
+                    const sessions = s.week[weekday];
+                    if (!sessions?.length) return;
+                    const next = sessions.filter((session) => session.routineId !== id);
+                    if (next.length) s.week[weekday] = next;
+                    else delete s.week[weekday];
                   });
                   Object.keys(s.dayPlan).forEach((k) => {
-                    if (s.dayPlan[k] === id) delete s.dayPlan[k];
+                    const entry = s.dayPlan[k];
+                    if (!entry || entry.rest || !entry.sessions?.length) return;
+                    const next = (entry.sessions ?? []).filter(
+                      (session) => session.routineId !== id,
+                    );
+                    if (!next.length) delete s.dayPlan[k];
+                    else s.dayPlan[k] = { sessions: next };
                   });
                 });
                 void nav({ to: "/plan" });

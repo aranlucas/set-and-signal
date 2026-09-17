@@ -103,4 +103,45 @@ describe("runtime payload schemas", () => {
       muscleWeights: { chest: 1 },
     });
   });
+
+  it("normalizes legacy single-id week and dayPlan values on read", () => {
+    const parsed = parseStoredState(
+      JSON.stringify({
+        week: { "1": "routine-a", "3": ["routine-b", "routine-c"] },
+        dayPlan: { "2026-09-14": "routine-a", "2026-09-15": "rest" },
+      }),
+    );
+    expect(parsed?.week).toEqual({
+      1: [{ routineId: "routine-a" }],
+      3: [{ routineId: "routine-b" }, { routineId: "routine-c" }],
+    });
+    expect(parsed?.dayPlan).toEqual({
+      "2026-09-14": { sessions: [{ routineId: "routine-a" }] },
+      "2026-09-15": { rest: true },
+    });
+  });
+});
+
+describe("empty schedule overrides", () => {
+  it("preserves empty days after server serialization and legacy empty objects", () => {
+    expect(
+      parseStoredState(
+        JSON.stringify({ dayPlan: { "2026-09-15": { sessions: [] }, "2026-09-16": {} } }),
+      )?.dayPlan,
+    ).toEqual({ "2026-09-15": { sessions: [] }, "2026-09-16": { sessions: [] } });
+  });
+});
+
+describe("typed day plans", () => {
+  it("requires a rest day or an explicit sessions list", () => {
+    expect(() =>
+      parsePayload(appStatePatch, { dayPlan: { "2026-09-16": { rest: false } } }),
+    ).toThrow(/Invalid server payload/u);
+    expect(
+      parsePayload(appStatePatch, { dayPlan: { "2026-09-16": { rest: true } } }).dayPlan,
+    ).toEqual({ "2026-09-16": { rest: true } });
+    expect(
+      parsePayload(appStatePatch, { dayPlan: { "2026-09-16": { sessions: [] } } }).dayPlan,
+    ).toEqual({ "2026-09-16": { sessions: [] } });
+  });
 });

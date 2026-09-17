@@ -143,14 +143,21 @@ export function PlanPrintDocument({ appState, contentRef, owner }: PlanPrintDocu
       <h3 className={styles.blockTitle}>{t("plan.weekSchedule", "Week schedule")}</h3>
       <div className={styles.week}>
         {WEEK_ORDER.map((weekday) => {
-          const routine = appState.routines.find(
-            (candidate) => candidate.id === appState.week[weekday],
-          );
+          const routineNames = (appState.week[weekday] ?? [])
+            .map(
+              (session) =>
+                appState.routines.find((candidate) => candidate.id === session.routineId)?.name,
+            )
+            .filter(Boolean);
           return (
             <div className={styles.weekRow} key={weekday}>
               <div className={styles.weekday}>{weekdays[weekday]}</div>
               <div className={styles.scheduledRoutine}>
-                {routine ? routine.name : <span>{t("common.rest", "Rest")}</span>}
+                {routineNames.length ? (
+                  routineNames.join(", ")
+                ) : (
+                  <span>{t("common.rest", "Rest")}</span>
+                )}
               </div>
             </div>
           );

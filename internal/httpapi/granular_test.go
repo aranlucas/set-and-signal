@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"encoding/json/v2"
+	"github.com/aranlucas/set-and-signal/internal/training"
 	"net/http"
 	"strings"
 	"testing"
@@ -102,8 +103,15 @@ func TestRoutineDeletePrunesWeekAndDayPlan(t *testing.T) {
 			map[string]any{"id": "gone", "name": "Gone", "emoji": "", "ex": []any{}},
 			map[string]any{"id": "kept", "name": "Kept", "emoji": "", "ex": []any{}},
 		},
-		"week":    map[string]any{"1": "gone", "2": "kept", "3": "gone"},
-		"dayPlan": map[string]any{"2026-08-24": "gone", "2026-08-25": "rest"},
+		"week": map[string]any{
+			"1": []any{map[string]any{"routineId": "gone"}},
+			"2": []any{map[string]any{"routineId": "kept"}},
+			"3": []any{map[string]any{"routineId": "gone"}},
+		},
+		"dayPlan": map[string]any{
+			"2026-08-24": map[string]any{"sessions": []any{map[string]any{"routineId": "gone"}}},
+			"2026-08-25": map[string]any{"rest": true},
+		},
 	}
 	raw, _ := json.Marshal(seed)
 	if err := e.st.WriteState("u1", raw); err != nil {
@@ -119,11 +127,19 @@ func TestRoutineDeletePrunesWeekAndDayPlan(t *testing.T) {
 		t.Fatalf("routines = %v", st["routines"])
 	}
 	week, _ := st["week"].(map[string]any)
-	if len(week) != 1 || week["2"] != "kept" {
+	if len(week) != 1 {
+		t.Fatalf("week = %v", week)
+	}
+	sessions, _ := week["2"].([]any)
+	if len(sessions) != 1 || sessions[0].(map[string]any)["routineId"] != "kept" {
 		t.Fatalf("week = %v", week)
 	}
 	dp, _ := st["dayPlan"].(map[string]any)
-	if len(dp) != 1 || dp["2026-08-25"] != "rest" {
+	if len(dp) != 1 {
+		t.Fatalf("dayPlan = %v", dp)
+	}
+	restEntry, _ := dp["2026-08-25"].(map[string]any)
+	if restEntry["rest"] != true {
 		t.Fatalf("dayPlan = %v", dp)
 	}
 }
@@ -139,20 +155,28 @@ func TestWeekReplacesAndPrunesGhosts(t *testing.T) {
 
 	e.post("/api/routine", `{"routine":{"id":"legs","name":"Legs"}}`, "cookie")
 
-	resp, body = e.post("/api/week", `{"week":{"0":"legs","2":null,"4":"ghost"}}`, "cookie")
+	resp, body = e.post("/api/week", `{"week":{"0":[{"routineId":"legs"}],"2":null,"4":[{"routineId":"ghost"}]}}`, "cookie")
 	wantOK(t, resp, body)
 
 	st := e.getState("cookie")
 	week, _ := st["week"].(map[string]any)
-	if len(week) != 1 || week["0"] != "legs" {
+	if len(week) != 1 {
 		t.Fatalf("week = %v (want only the real routine; null skipped, ghost pruned)", week)
+	}
+	sessions, _ := week["0"].([]any)
+	if len(sessions) != 1 || sessions[0].(map[string]any)["routineId"] != "legs" {
+		t.Fatalf("week = %v", week)
 	}
 
 	// A later full replacement drops stale entries too.
-	resp, body = e.post("/api/week", `{"week":{"1":"legs","5":"vanishing"}}`, "cookie")
+	resp, body = e.post("/api/week", `{"week":{"1":[{"routineId":"legs"}],"5":[{"routineId":"vanishing"}]}}`, "cookie")
 	wantOK(t, resp, body)
 	week, _ = e.getState("cookie")["week"].(map[string]any)
-	if len(week) != 1 || week["1"] != "legs" {
+	if len(week) != 1 {
+		t.Fatalf("week after replace = %v", week)
+	}
+	sessions, _ = week["1"].([]any)
+	if len(sessions) != 1 || sessions[0].(map[string]any)["routineId"] != "legs" {
 		t.Fatalf("week after replace = %v", week)
 	}
 }
@@ -166,8 +190,8 @@ func TestWeekValidation(t *testing.T) {
 		{"key 01", `{"week":{"01":"a"}}`, "week keys must be 0–6 (0=Sun)"},
 		{"key -1", `{"week":{"-1":"a"}}`, "week keys must be 0–6 (0=Sun)"},
 		{"non-numeric key", `{"week":{"mon":"a"}}`, "week keys must be 0–6 (0=Sun)"},
-		{"numeric value", `{"week":{"1":42}}`, "week values must be routine ids or null"},
-		{"overlong value", `{"week":{"1":"` + strings.Repeat("x", 41) + `"}}`, "week values must be routine ids or null"},
+		{"numeric value", `{"week":{"1":42}}`, "week values must be session arrays"},
+		{"overlong value", `{"week":{"1":[{"routineId":"` + strings.Repeat("x", 41) + `"}]}}`, "week session routineId required"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -184,18 +208,21 @@ func TestWeekValidation(t *testing.T) {
 func TestDayPlanRestSentinelAndClearing(t *testing.T) {
 	e := newTestEnv(t)
 
-	resp, body := e.post("/api/dayplan", `{"iso":"2026-08-24","plan":"rest"}`, "cookie")
+	resp, body := e.post("/api/dayplan", `{"iso":"2026-08-24","plan":{"rest":true}}`, "cookie")
 	wantOK(t, resp, body)
 	dp, _ := e.getState("cookie")["dayPlan"].(map[string]any)
-	if dp["2026-08-24"] != "rest" {
+	entry, _ := dp["2026-08-24"].(map[string]any)
+	if entry["rest"] != true {
 		t.Fatalf("rest sentinel lost: %v", dp)
 	}
 
-	// Coercible values stringify like JS String().
-	e.post("/api/dayplan", `{"iso":"2026-08-25","plan":5}`, "cookie")
+	resp, body = e.post("/api/dayplan", `{"iso":"2026-08-25","plan":{"sessions":[{"routineId":"legs"}]}}`, "cookie")
+	wantOK(t, resp, body)
 	dp, _ = e.getState("cookie")["dayPlan"].(map[string]any)
-	if dp["2026-08-25"] != "5" {
-		t.Fatalf("numeric plan not stringified: %v", dp)
+	sessionDay, _ := dp["2026-08-25"].(map[string]any)
+	sessions, _ := sessionDay["sessions"].([]any)
+	if len(sessions) != 1 || sessions[0].(map[string]any)["routineId"] != "legs" {
+		t.Fatalf("session plan = %v", dp)
 	}
 
 	// Empty-string plan clears the day.
@@ -216,8 +243,9 @@ func TestDayPlanValidation(t *testing.T) {
 	e := newTestEnv(t)
 	cases := []struct{ name, body, wantErr string }{
 		{"bad iso", `{"iso":"24-08-2026"}`, "iso date required (YYYY-MM-DD)"},
-		{"missing iso", `{"plan":"rest"}`, "iso date required (YYYY-MM-DD)"},
-		{"overlong plan", `{"iso":"2026-08-24","plan":"` + strings.Repeat("p", 41) + `"}`, "bad plan value"},
+		{"missing iso", `{"plan":{"rest":true}}`, "iso date required (YYYY-MM-DD)"},
+		{"bad plan shape", `{"iso":"2026-08-24","plan":5}`, "day plan must be {rest:true} or {sessions:[...]}"},
+		{"overlong routineId", `{"iso":"2026-08-24","plan":{"sessions":[{"routineId":"` + strings.Repeat("p", 41) + `"}]}}`, "week session routineId required"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -227,8 +255,7 @@ func TestDayPlanValidation(t *testing.T) {
 			}
 		})
 	}
-	// Exactly 40 chars passes.
-	resp, body := e.post("/api/dayplan", `{"iso":"2026-08-24","plan":"`+strings.Repeat("p", 40)+`"}`, "cookie")
+	resp, body := e.post("/api/dayplan", `{"iso":"2026-08-24","plan":{"sessions":[{"routineId":"`+strings.Repeat("p", 40)+`"}]}}`, "cookie")
 	wantOK(t, resp, body)
 }
 
@@ -395,7 +422,7 @@ func TestGranularRoutesAcceptBearer(t *testing.T) {
 	wantOK(t, resp, body)
 	for _, tc := range []struct{ name, path, body string }{
 		{"routine/delete", "/api/routine/delete", `{"id":"full"}`},
-		{"week", "/api/week", `{"week":{"1":"x"}}`},
+		{"week", "/api/week", `{"week":{"1":[{"routineId":"x"}]}}`},
 		{"dayplan", "/api/dayplan", `{"iso":"2026-08-24","plan":"rest"}`},
 		{"bodyweight", "/api/bodyweight", `{"w":90}`},
 		{"settings", "/api/settings", `{"settings":{"unit":"kg"}}`},
@@ -430,7 +457,7 @@ func TestSetProgramBatch(t *testing.T) {
 			{"name": "Push A", "ex": [{"id": "bench", "sets": 3, "reps": 5}]},
 			{"id": "pull", "name": "Pull", "ex": [{"id": "row", "sets": 3, "reps": 8}]}
 		],
-		"week": {"1": "pusha", "3": "pull", "5": "missing"}
+		"week": {"1": [{"routineId":"pusha"}], "3": [{"routineId":"pull"}], "5": [{"routineId":"missing"}]}
 	}`, "cookie")
 	wantOK(t, resp, body)
 
@@ -443,7 +470,7 @@ func TestSetProgramBatch(t *testing.T) {
 		t.Fatalf("auto id from name = %v", first)
 	}
 	week, _ := body["week"].(map[string]any)
-	if week["1"] != "pusha" || week["3"] != "pull" {
+	if week["1"].([]any)[0].(map[string]any)["routineId"] != "pusha" || week["3"].([]any)[0].(map[string]any)["routineId"] != "pull" {
 		t.Fatalf("week = %v", week)
 	}
 	if _, ghost := week["5"]; ghost {
@@ -456,7 +483,7 @@ func TestSetProgramBatch(t *testing.T) {
 		t.Fatalf("stored routines = %v", stored)
 	}
 	storedWeek, _ := st["week"].(map[string]any)
-	if storedWeek["1"] != "pusha" {
+	if storedWeek["1"].([]any)[0].(map[string]any)["routineId"] != "pusha" {
 		t.Fatalf("stored week = %v", storedWeek)
 	}
 
@@ -468,5 +495,17 @@ func TestSetProgramBatch(t *testing.T) {
 	st = e.getState("cookie")
 	if len(st["routines"].([]any)) != 3 {
 		t.Fatalf("after merge = %v", st["routines"])
+	}
+}
+
+func TestDeletingRoutinePreservesEmptyDayOverride(t *testing.T) {
+	st := map[string]any{"dayPlan": map[string]any{"2026-09-15": map[string]any{"sessions": []any{}}}}
+	pruneRoutineFromSchedule(st, "unrelated")
+	plan, err := training.DecodeDayPlanMap(st["dayPlan"])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := plan["2026-09-15"]; !ok {
+		t.Fatal("routine deletion removed explicit empty day")
 	}
 }

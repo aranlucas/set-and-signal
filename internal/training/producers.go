@@ -15,34 +15,41 @@ func trainingDay(view TrainingData, iso string) MCPTodayResult {
 		iso = todayISOLocal("", time.Now())
 	}
 	weekday := weekdayKey(iso)
-	out := MCPTodayResult{Iso: iso, Weekday: weekday}
-
-	if slot, ok := view.Week[weekday]; ok && slot != nil {
-		out.WeekSlot = new(*slot)
+	out := MCPTodayResult{
+		Iso:       iso,
+		Weekday:   weekday,
+		Sessions:  []MCPTodaySession{},
+		WeekSlots: weekSlotSessions(view.Week, weekday),
 	}
 
-	if override, ok := view.DayPlan[iso]; ok {
-		out.Override = true
-		if override != nil {
-			if *override == "rest" {
-				out.Rest = true
-				return out
-			}
-			if routine, found := findRoutineByID(view.Routines, *override); found {
-				prescribed := prescribeRoutine(view, routine)
-				out.RoutineID = new(routine.ID)
-				out.Routine = &prescribed
-				return out
-			}
-		}
+	sessions, override, rest := resolveDaySessions(view, iso)
+	out.Override = override
+	if rest {
+		out.Rest = true
+		return out
+	}
+	if len(sessions) == 0 {
+		out.Rest = true
+		return out
 	}
 
-	if out.WeekSlot != nil {
-		if routine, found := findRoutineByID(view.Routines, *out.WeekSlot); found {
-			prescribed := prescribeRoutine(view, routine)
-			out.RoutineID = new(routine.ID)
-			out.Routine = &prescribed
+	out.Sessions = make([]MCPTodaySession, 0, len(sessions))
+	for _, session := range sessions {
+		routine, found := findRoutineByID(view.Routines, session.RoutineID)
+		if !found {
+			continue
 		}
+		prescribed := prescribeRoutine(view, routine)
+		row := MCPTodaySession{
+			RoutineID: session.RoutineID,
+			Start:     session.Start,
+			Label:     session.Label,
+			Routine:   &prescribed,
+		}
+		out.Sessions = append(out.Sessions, row)
+	}
+	if len(out.Sessions) == 0 {
+		out.Rest = true
 	}
 	return out
 }
@@ -56,7 +63,7 @@ func findRoutineByID(routines []MCPRoutine, id string) (MCPRoutine, bool) {
 	return MCPRoutine{}, false
 }
 
-func buildTrainingDigest(view TrainingData, routine MCPRoutine, today string) MCPTrainingDigest {
+func buildTrainingDigest(view TrainingData, sessions []MCPDaySession, today string) MCPTrainingDigest {
 	unit := view.Unit
 	if unit == "" {
 		unit = "kg"
@@ -74,25 +81,39 @@ func buildTrainingDigest(view TrainingData, routine MCPRoutine, today string) MC
 		bodyweight = append(bodyweight, MCPBodyweightEntry{D: entry.D, W: entry.W})
 	}
 
-	entries := make([]MCPDigestExerciseEntry, 0, len(routine.Ex))
-	prescribed := prescribeRoutine(view, routine)
-	for _, config := range prescribed.Ex {
-		entry := MCPDigestExerciseEntry{
-			ID:         config.ID,
-			Name:       mcpExerciseName(config.ID, view.CustomEx),
-			Sets:       config.Sets,
-			Reps:       config.Reps,
-			Weight:     config.Weight,
-			Sec:        config.Sec,
-			Min:        config.Min,
-			Speed:      config.Speed,
-			Bodyweight: config.Bodyweight,
-			Side:       config.Side,
+	digestSessions := make([]MCPTrainingDigestSession, 0, len(sessions))
+	for _, session := range sessions {
+		routine, found := findRoutineByID(view.Routines, session.RoutineID)
+		if !found {
+			continue
 		}
-		if hint, ok := view.ExWeights[config.ID]; ok {
-			entry.LastWeight = new(hint.W)
+		prescribed := prescribeRoutine(view, routine)
+		entries := make([]MCPDigestExerciseEntry, 0, len(prescribed.Ex))
+		for _, config := range prescribed.Ex {
+			entry := MCPDigestExerciseEntry{
+				ID:         config.ID,
+				Name:       mcpExerciseName(config.ID, view.CustomEx),
+				Sets:       config.Sets,
+				Reps:       config.Reps,
+				Weight:     config.Weight,
+				Sec:        config.Sec,
+				Min:        config.Min,
+				Speed:      config.Speed,
+				Bodyweight: config.Bodyweight,
+				Side:       config.Side,
+			}
+			if hint, ok := view.ExWeights[config.ID]; ok {
+				entry.LastWeight = new(hint.W)
+			}
+			entries = append(entries, entry)
 		}
-		entries = append(entries, entry)
+		digestSessions = append(digestSessions, MCPTrainingDigestSession{
+			RoutineID: session.RoutineID,
+			Name:      routine.Name,
+			Start:     session.Start,
+			Label:     session.Label,
+			Entries:   entries,
+		})
 	}
 
 	workoutStart := 0
@@ -129,7 +150,7 @@ func buildTrainingDigest(view TrainingData, routine MCPRoutine, today string) MC
 		Today:          today,
 		BodyweightGoal: view.TargetW,
 		Bodyweight:     bodyweight,
-		Routine:        MCPTrainingDigestRoutine{Name: routine.Name, Entries: entries},
+		Sessions:       digestSessions,
 		LastWorkouts:   lastWorkouts,
 	}
 }
