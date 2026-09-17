@@ -1,3 +1,4 @@
+import { PlannedSessions } from "@/features/workout/PlannedSessions";
 import { useState } from "react";
 import { Outlet, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -33,7 +34,7 @@ import { estimateRoutineMinutes, latestProgress } from "./home-insights";
 import { Button } from "@/shared/ui/button";
 import BodySignals from "./BodySignals";
 import { NativeSelect, NativeSelectOption } from "@/shared/ui/native-select";
-import { nextPlannedRoutine, sessionProgress } from "@/domain/training/schedule";
+import { sessionProgress } from "@/domain/training/schedule";
 import { weeklySummary, volumeTrend } from "./training-summary";
 
 export default function Home() {
@@ -46,8 +47,10 @@ export default function Home() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [chartWeeks, setChartWeeks] = useState(6);
   const today = todayISO();
-  const routine = nextPlannedRoutine(state, today);
-  const finishedToday = !routine && sessionProgress(state, today).length > 0;
+  const todaySessions = sessionProgress(state, today);
+  const routine = todaySessions.find((session) => !session.completed)?.routine ?? null;
+  const finishedToday =
+    todaySessions.length > 0 && todaySessions.every((session) => session.completed);
   const activeRoutine = state.active
     ? {
         id: state.active.routineId ?? state.active.id,
@@ -291,6 +294,24 @@ export default function Home() {
               </div>
             </div>
           </section>
+          {todaySessions.length > 0 && (
+            <section className="dashboard-panel">
+              <div className="panel-heading">
+                <h2>{t("workout.todaySPlan", "Today's plan")}</h2>
+              </div>
+              <PlannedSessions
+                sessions={todaySessions}
+                disabled={!!state.active}
+                onStart={(routineId) =>
+                  void navigate({
+                    to: "/home/pre-workout/$routineId",
+                    params: { routineId },
+                    resetScroll: false,
+                  })
+                }
+              />
+            </section>
+          )}
           {!state.routines.length && (
             <section className="dashboard-panel welcome-panel">
               <Sparkles size={24} />

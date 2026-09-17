@@ -172,10 +172,10 @@ const daySession = v.object({
   start: v.optional(v.string()),
   label: v.optional(v.string()),
 });
-const dayPlanEntry = v.object({
-  rest: v.optional(v.boolean()),
-  sessions: v.optional(v.array(daySession)),
-});
+const dayPlanEntry = v.union([
+  v.object({ rest: v.literal(true) }),
+  v.object({ rest: v.optional(v.literal(false)), sessions: v.array(daySession) }),
+]);
 
 const appState = v.object({
   unit,

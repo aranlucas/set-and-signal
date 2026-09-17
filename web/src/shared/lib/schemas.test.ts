@@ -131,3 +131,17 @@ describe("empty schedule overrides", () => {
     ).toEqual({ "2026-09-15": { sessions: [] }, "2026-09-16": { sessions: [] } });
   });
 });
+
+describe("typed day plans", () => {
+  it("requires a rest day or an explicit sessions list", () => {
+    expect(() =>
+      parsePayload(appStatePatch, { dayPlan: { "2026-09-16": { rest: false } } }),
+    ).toThrow(/Invalid server payload/u);
+    expect(
+      parsePayload(appStatePatch, { dayPlan: { "2026-09-16": { rest: true } } }).dayPlan,
+    ).toEqual({ "2026-09-16": { rest: true } });
+    expect(
+      parsePayload(appStatePatch, { dayPlan: { "2026-09-16": { sessions: [] } } }).dayPlan,
+    ).toEqual({ "2026-09-16": { sessions: [] } });
+  });
+});

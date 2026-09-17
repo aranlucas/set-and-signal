@@ -41,11 +41,17 @@ export function effectiveRoutine(appState: ScheduleState, iso: IsoDate): Routine
   return id ? (appState.routines.find((routine) => routine.id === id) ?? null) : null;
 }
 
+export interface PlannedSession extends DaySession {
+  key: string;
+  routine: Routine;
+  completed: boolean;
+}
+
 /** Match each saved workout to one planned occurrence, including repeated routines. */
 export function sessionProgress(
   appState: ScheduleState & Pick<AppState, "workouts">,
   iso: IsoDate,
-): Array<DaySession & { completed: boolean; key: string }> {
+): PlannedSession[] {
   const remaining = new Map<Id, number>();
   for (const workout of appState.workouts) {
     if (workout.d === iso && workout.routineId) {
@@ -53,15 +59,21 @@ export function sessionProgress(
     }
   }
   const occurrences = new Map<Id, number>();
-  return effectiveSessions(appState, iso).map((session) => {
+  const routines = new Map(appState.routines.map((routine) => [routine.id, routine]));
+  return effectiveSessions(appState, iso).flatMap((session) => {
+    const routine = routines.get(session.routineId);
+    if (!routine) return [];
     const occurrence = (occurrences.get(session.routineId) ?? 0) + 1;
     occurrences.set(session.routineId, occurrence);
     const count = remaining.get(session.routineId) ?? 0;
     if (count > 0) remaining.set(session.routineId, count - 1);
-    return Object.assign({}, session, {
-      completed: count > 0,
-      key: `${session.routineId}:${occurrence}`,
-    });
+    return [
+      Object.assign({}, session, {
+        routine,
+        completed: count > 0,
+        key: `${session.routineId}:${occurrence}`,
+      }),
+    ];
   });
 }
 
@@ -70,5 +82,5 @@ export function nextPlannedRoutine(
   iso: IsoDate,
 ): Routine | null {
   const next = sessionProgress(appState, iso).find((session) => !session.completed);
-  return appState.routines.find((routine) => routine.id === next?.routineId) ?? null;
+  return next?.routine ?? null;
 }

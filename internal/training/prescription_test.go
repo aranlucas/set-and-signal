@@ -2,6 +2,7 @@ package training
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -243,5 +244,49 @@ func TestPutWorkoutPersistsNextWorkingWeight(t *testing.T) {
 	}
 	if got.Routines[0].Ex[0].Weight == nil || *got.Routines[0].Ex[0].Weight != 160 {
 		t.Fatalf("stored working weight = %#v", got.Routines[0].Ex[0])
+	}
+}
+
+func TestLogExerciseSetsSeparatesRepeatedRoutineSessions(t *testing.T) {
+	data := aptView()
+	data.Workouts = nil
+	now := time.Date(2026, 8, 24, 18, 0, 0, 0, time.UTC)
+	input := MCPLogExerciseSetsInput{ExerciseID: "1760", D: stringPtr("2026-08-24"), RoutineID: stringPtr("apt-full-body"), WorkoutID: stringPtr("morning"), Sets: []MCPLogExerciseSet{{W: f(155), R: 8}}}
+	if _, _, err := logExerciseSets(&data, input, now); err != nil {
+		t.Fatal(err)
+	}
+	input.WorkoutID = stringPtr("evening")
+	input.Sets = []MCPLogExerciseSet{{W: f(150), R: 6}}
+	if _, _, err := logExerciseSets(&data, input, now); err != nil {
+		t.Fatal(err)
+	}
+	// Retrying the second session corrects that session rather than creating a third.
+	if _, _, err := logExerciseSets(&data, input, now); err != nil {
+		t.Fatal(err)
+	}
+	if len(data.Workouts) != 2 || data.Workouts[0].ID != "morning" || data.Workouts[1].ID != "evening" {
+		t.Fatalf("sessions: %#v", data.Workouts)
+	}
+	if *data.Workouts[0].Entries[0].Sets[0].W != 155 || *data.Workouts[1].Entries[0].Sets[0].W != 150 {
+		t.Fatal("session results were merged")
+	}
+	input.D = stringPtr("2026-08-25")
+	if _, _, err := logExerciseSets(&data, input, now); err == nil {
+		t.Fatal("accepted a workout id from another day")
+	}
+}
+
+func TestWorkoutSelectionDoesNotMergeUnassignedLogsIntoRoutine(t *testing.T) {
+	workouts := []MCPWorkout{{ID: "existing", D: "2026-08-24", RoutineID: stringPtr("a")}}
+	if _, found := findSameDayWorkout(workouts, "2026-08-24", ""); found {
+		t.Fatal("unassigned exercise selected unrelated routine")
+	}
+	for _, id := range []string{"", " ", strings.Repeat("a", 41)} {
+		if _, _, err := workoutForExerciseSets(workouts, "2026-08-24", "a", &id); err == nil {
+			t.Fatalf("accepted id %q", id)
+		}
+	}
+	if _, _, err := workoutForExerciseSets(workouts, "2026-08-24", "b", stringPtr("existing")); err == nil {
+		t.Fatal("accepted id from another routine")
 	}
 }

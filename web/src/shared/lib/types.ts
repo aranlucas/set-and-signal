@@ -31,10 +31,9 @@ export interface DaySession {
 }
 
 /** One-off override for an ISO calendar date (rest or ordered sessions). */
-export interface DayPlanEntry {
-  rest?: boolean;
-  sessions?: DaySession[];
-}
+export type DayPlanEntry =
+  | { rest: true; sessions?: never }
+  | { rest?: false; sessions: DaySession[] };
 
 /* ============================ persisted state ============================ */
 

@@ -1,6 +1,7 @@
 package training
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"slices"
@@ -412,7 +413,10 @@ func logExerciseSets(data *TrainingData, input MCPLogExerciseSetsInput, now time
 		}
 	}
 	entry := MCPWorkoutEntry{ID: exerciseID, Sets: logged, Target: &cfg}
-	workout, found := findSameDayWorkout(data.Workouts, date, routineID)
+	workout, found, err := workoutForExerciseSets(data.Workouts, date, routineID, input.WorkoutID)
+	if err != nil {
+		return MCPWorkout{}, MCPProgression{}, err
+	}
 	if !found {
 		name := "Workout"
 		if routine.Name != "" {
@@ -420,8 +424,11 @@ func logExerciseSets(data *TrainingData, input MCPLogExerciseSetsInput, now time
 		}
 		nowMs := now.UnixMilli()
 		workout = MCPWorkout{
-			ID: fmt.Sprintf("w%x", nowMs), D: date, Start: nowMs, End: nowMs,
+			ID: "w" + rand.Text(), D: date, Start: nowMs, End: nowMs,
 			Name: name, Entries: []MCPWorkoutEntry{}, PRs: []string{},
+		}
+		if input.WorkoutID != nil {
+			workout.ID = strings.TrimSpace(*input.WorkoutID)
 		}
 		if routineID != "" {
 			workout.RoutineID = new(routineID)
@@ -461,9 +468,32 @@ func findSameDayWorkout(workouts []MCPWorkout, date, routineID string) (MCPWorko
 		if workout.D != date {
 			continue
 		}
-		if routineID == "" || stringPointerValue(workout.RoutineID) == routineID {
+		if stringPointerValue(workout.RoutineID) == routineID {
 			return workout, true
 		}
 	}
 	return MCPWorkout{}, false
+}
+
+// An explicit workout id makes repeated sessions distinguishable and retries
+// idempotent. Omitted ids retain the date-and-routine grouping for existing callers.
+func workoutForExerciseSets(workouts []MCPWorkout, date, routineID string, id *string) (MCPWorkout, bool, error) {
+	if id == nil {
+		workout, found := findSameDayWorkout(workouts, date, routineID)
+		return workout, found, nil
+	}
+	normalized := strings.TrimSpace(*id)
+	if normalized == "" || jsSlice(normalized, 40) != normalized {
+		return MCPWorkout{}, false, errors.New("workoutId must be a non-empty id up to 40 characters")
+	}
+	for _, workout := range workouts {
+		if workout.ID != normalized {
+			continue
+		}
+		if workout.D != date || stringPointerValue(workout.RoutineID) != routineID {
+			return MCPWorkout{}, false, errors.New("workoutId belongs to a different date or routine; use that workout's date and routineId, or a new workoutId")
+		}
+		return workout, true, nil
+	}
+	return MCPWorkout{}, false, nil
 }

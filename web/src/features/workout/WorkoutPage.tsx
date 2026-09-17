@@ -1,3 +1,4 @@
+import { PlannedSessions } from "./PlannedSessions";
 import { sessionProgress } from "@/domain/training/schedule";
 import { useEffect, useRef, useState } from "react";
 import type { TFunction } from "i18next";
@@ -92,10 +93,6 @@ function StartChooser() {
   const nav = useNavigate();
   const appState = useStore((state) => state.appState);
   const sessions = sessionProgress(appState, todayISO());
-  const planned = sessions.flatMap((session) => {
-    const routine = appState.routines.find((candidate) => candidate.id === session.routineId);
-    return routine ? [{ ...session, routine }] : [];
-  });
   const routineIdRef = useRef<Id | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const openStart = (nextRoutineId: Id | null) => {
@@ -114,9 +111,9 @@ function StartChooser() {
         description={
           <>
             {weekdays[new Date().getDay()]} —{" "}
-            {planned.length
+            {sessions.length
               ? t("workout.todayIs", "today is {{day}}", {
-                  day: planned.map(({ routine }) => routine.name).join(", "),
+                  day: sessions.map(({ routine }) => routine.name).join(", "),
                 })
               : t("workout.restDayNoOneS", "rest day, but no one’s stopping you")}
           </>
@@ -124,40 +121,15 @@ function StartChooser() {
       >
         {t("workout.startWorkout", "Start workout")}
       </Header>
-      {planned.map(({ routine: todayR, completed, start, label, key }) => (
-        <div key={key} className="mb-3 rounded-lg border border-primary bg-card p-4">
-          <h2 className="mb-3 text-sm font-normal tracking-tight text-foreground/60">
+      {sessions.length > 0 && (
+        <section className="mb-4">
+          <h2 className="mb-3 text-sm text-muted-foreground">
             {t("workout.todaySPlan", "Today's plan")}
             {todayOvr ? " · " + t("calendar.status.rescheduledLowercase", "rescheduled") : ""}
           </h2>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <div className="text-3xl leading-tight font-semibold tracking-tight">
-                {todayR.name}
-              </div>
-              <div className="text-sm leading-snug text-foreground/60">
-                {exCount(t, todayR.ex.length)}
-                {start ? ` · ${start}` : ""}
-                {label ? ` · ${label}` : ""}
-              </div>
-            </div>
-            <span className="flex size-9.5 flex-none items-center justify-center rounded-md bg-primary text-2xl text-white">
-              <Icon name={glyphOf(todayR.emoji)} />
-            </span>
-          </div>
-          <Button
-            className="w-full"
-            variant="default"
-            disabled={completed}
-            onClick={() => openStart(todayR.id)}
-          >
-            <Icon name="play" />
-            {completed
-              ? t("calendar.status.completed", "Done")
-              : t("common.startNamed", "Start {{routine}}", { routine: todayR.name })}
-          </Button>
-        </div>
-      ))}
+          <PlannedSessions sessions={sessions} onStart={openStart} />
+        </section>
+      )}
       {others.length > 0 && (
         <>
           <h2 className="mt-5.5 mb-2 px-1 text-sm font-normal tracking-tight text-foreground/60">

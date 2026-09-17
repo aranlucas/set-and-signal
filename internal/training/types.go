@@ -313,6 +313,7 @@ type MCPLogExerciseSet struct {
 }
 
 type MCPLogExerciseSetsInput struct {
+	WorkoutID  *string             `json:"workoutId,omitempty" jsonschema:"optional workout id up to 40 characters; reuse to update that workout, or supply a new id for a separate session of the same routine on the same date"`
 	ExerciseID string              `json:"exerciseId" jsonschema:"exercise catalog id"`
 	D          *string             `json:"d,omitempty" jsonschema:"date in YYYY-MM-DD; defaults to today"`
 	Tz         *string             `json:"tz,omitempty" jsonschema:"IANA timezone used when resolving today"`

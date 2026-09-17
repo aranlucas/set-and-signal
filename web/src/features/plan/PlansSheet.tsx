@@ -7,7 +7,7 @@ import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useDateLabels } from "@/shared/hooks/use-date-labels";
 import { useStore } from "@/app/store/useStore";
 import { fmtDate, todayISO, exCount, weekdayOf } from "@/shared/lib/format";
-import { effectiveRoutineIds } from "@/domain/training/history";
+import { effectiveRoutineIds, effectiveSessions } from "@/domain/training/history";
 import { toast } from "@/shared/lib/toast";
 import { Button } from "@/shared/ui/button";
 import { Field } from "@/shared/ui/field";
@@ -19,14 +19,7 @@ import { PlanPrintDocument } from "@/shared/components/PlanPrintDocument";
 import { glyphOf } from "@/domain/exercises/glyphs";
 import { buildPlanBundle, parsePlan, mergePlan } from "@/features/plan/plan-share";
 import { MOBILE, shareExport } from "@/shared/lib/mobile";
-import type {
-  DayPlanEntry,
-  DaySession,
-  Id,
-  IsoDate,
-  SheetClose,
-  Weekday,
-} from "@/shared/lib/types";
+import type { Id, IsoDate, SheetClose, Weekday } from "@/shared/lib/types";
 import { getErrorMessage, updateAppState } from "@/features/exercises/sheet-shared";
 import { planImportFormSchema } from "@/shared/lib/form-schemas";
 
@@ -260,27 +253,6 @@ export function PlanImport({ bundle, close }: { bundle: ParsedBundle; close: She
   );
 }
 
-function cloneSessions(sessions: DaySession[]): DaySession[] {
-  return sessions.map((session) => ({ ...session }));
-}
-
-function materializeDayOverride(
-  appState: {
-    week: Partial<Record<Weekday, DaySession[]>>;
-    dayPlan: Record<IsoDate, DayPlanEntry>;
-  },
-  iso: IsoDate,
-  weekday: Weekday,
-): DayPlanEntry {
-  const override = appState.dayPlan[iso];
-  if (override !== undefined) {
-    if (override.rest) return { rest: true };
-    return { sessions: cloneSessions(override.sessions ?? []) };
-  }
-  const weekly = appState.week[weekday] ?? [];
-  return weekly.length ? { sessions: cloneSessions(weekly) } : { sessions: [] };
-}
-
 export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose }) {
   const { t } = useTranslation();
   const st = useStore((store) => store.appState);
@@ -293,13 +265,13 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
   const isRest = hasOvr && st.dayPlan[iso].rest === true;
   const toggleRoutine = (routineId: Id) => {
     updateAppState((appState) => {
-      const entry = materializeDayOverride(appState, iso, wd);
-      entry.rest = false;
-      const sessions = entry.sessions ?? [];
+      const sessions = effectiveSessions(appState, iso).map((session) =>
+        Object.assign({}, session),
+      );
       const index = sessions.findIndex((session) => session.routineId === routineId);
       if (index >= 0) sessions.splice(index, 1);
       else sessions.push({ routineId });
-      appState.dayPlan[iso] = sessions.length ? { sessions } : { sessions: [] };
+      appState.dayPlan[iso] = { sessions };
     });
     void close();
     toast(
