@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  nextPlannedRoutine,
+  sessionProgress,
   effectiveRoutine,
   effectiveRoutineId,
   effectiveRoutineIds,
   effectiveSessions,
 } from "@/domain/training/schedule.js";
-import type { AppState, Routine } from "@/shared/lib/types.js";
+import type { AppState, Routine, Workout } from "@/shared/lib/types.js";
 
 const routines: Routine[] = [
   { id: "a", name: "Workout A", emoji: "dumbbell", ex: [] },
@@ -63,5 +65,48 @@ describe("effectiveSessions", () => {
     const state = scheduleState({});
     expect(effectiveSessions(state, "2026-09-15")).toEqual([]);
     expect(effectiveRoutineIds(state, "2026-09-15")).toEqual([]);
+  });
+});
+
+function logged(routineId: string, d = "2026-09-14"): Workout {
+  return {
+    id: `${routineId}-${d}`,
+    d,
+    routineId,
+    name: routineId,
+    start: 1,
+    end: 2,
+    entries: [],
+    prs: [],
+    vol: 0,
+  };
+}
+
+describe("session progress", () => {
+  it("advances to the second routine after finishing the first and counts duplicates separately", () => {
+    const state = {
+      ...scheduleState({ 1: [{ routineId: "a" }, { routineId: "b" }, { routineId: "b" }] }),
+      workouts: [logged("a"), logged("b", "2026-09-13")],
+    };
+    expect(nextPlannedRoutine(state, "2026-09-14")?.id).toBe("b");
+    state.workouts.push(logged("b"));
+    expect(sessionProgress(state, "2026-09-14").map((session) => session.completed)).toEqual([
+      true,
+      true,
+      false,
+    ]);
+    expect(nextPlannedRoutine(state, "2026-09-14")?.id).toBe("b");
+    state.workouts.push(logged("b"));
+    expect(nextPlannedRoutine(state, "2026-09-14")).toBeNull();
+  });
+
+  it("falls back for deleted override routines but preserves an explicitly empty day", () => {
+    const state = scheduleState(
+      { 1: [{ routineId: "a" }] },
+      { "2026-09-14": { sessions: [{ routineId: "deleted" }] } },
+    );
+    expect(effectiveRoutineIds(state, "2026-09-14")).toEqual(["a"]);
+    state.dayPlan["2026-09-14"] = { sessions: [] };
+    expect(effectiveRoutineIds(state, "2026-09-14")).toEqual([]);
   });
 });

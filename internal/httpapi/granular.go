@@ -490,7 +490,7 @@ func pruneRoutineFromSchedule(st map[string]any, id string) {
 	plan, err := training.DecodeDayPlanMap(st["dayPlan"])
 	if err == nil {
 		for day, entry := range plan {
-			if entry.Rest {
+			if entry.Rest || len(entry.Sessions) == 0 {
 				continue
 			}
 			kept := make([]MCPDaySession, 0, len(entry.Sessions))

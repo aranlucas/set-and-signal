@@ -243,34 +243,48 @@ type reminderState struct {
 	} `json:"routines"`
 	Week     map[string][]training.MCPDaySession `json:"week"`
 	Workouts []struct {
-		D string `json:"d"`
+		D         string `json:"d"`
+		RoutineID string `json:"routineId"`
 	} `json:"workouts"`
 }
 
-// effectiveRoutineId returns the first planned routine id for iso (empty when
-// rest / nothing planned). Multi-session days still trigger one reminder.
+// effectiveRoutineId returns the next unfinished planned routine. A daily
+// reminder is still sent at most once, even when several sessions remain.
 func effectiveRoutineId(s *reminderState, iso string) string {
-	ids := knownRoutineIDs(s)
-	if entry, ok := s.DayPlan[iso]; ok {
-		if entry.Rest {
-			return ""
-		}
-		for _, session := range entry.Sessions {
-			if ids[session.RoutineID] {
-				return session.RoutineID
-			}
-		}
-		// Invalid override falls through to the week grid.
-	}
 	t, err := time.Parse("2006-01-02", iso)
 	if err != nil {
 		return ""
 	}
 	sessions := s.Week[strconv.Itoa(int(t.Weekday()))]
-	if len(sessions) == 0 {
-		return ""
+	if entry, ok := s.DayPlan[iso]; ok {
+		if entry.Rest || len(entry.Sessions) == 0 {
+			return ""
+		}
+		ids := knownRoutineIDs(s)
+		valid := make([]training.MCPDaySession, 0, len(entry.Sessions))
+		for _, session := range entry.Sessions {
+			if ids[session.RoutineID] {
+				valid = append(valid, session)
+			}
+		}
+		if len(valid) > 0 {
+			sessions = valid
+		}
 	}
-	return sessions[0].RoutineID
+	completed := map[string]int{}
+	for _, workout := range s.Workouts {
+		if workout.D == iso && workout.RoutineID != "" {
+			completed[workout.RoutineID]++
+		}
+	}
+	for _, session := range sessions {
+		if completed[session.RoutineID] > 0 {
+			completed[session.RoutineID]--
+			continue
+		}
+		return session.RoutineID
+	}
+	return ""
 }
 
 func knownRoutineIDs(s *reminderState) map[string]bool {
@@ -350,16 +364,6 @@ func (p *Service) reminderTick(nowFn func(tz string) (date, hhmm string, ok bool
 			continue
 		}
 		if user.LastReminder == now.date {
-			continue
-		}
-		planned := false
-		for _, w := range s.Workouts {
-			if w.D == now.date {
-				planned = true
-				break
-			}
-		}
-		if planned {
 			continue
 		}
 		rid := effectiveRoutineId(&s, now.date)

@@ -261,7 +261,7 @@ export function PlanImport({ bundle, close }: { bundle: ParsedBundle; close: She
 }
 
 function cloneSessions(sessions: DaySession[]): DaySession[] {
-  return sessions.map((session) => ({ routineId: session.routineId }));
+  return sessions.map((session) => ({ ...session }));
 }
 
 function materializeDayOverride(

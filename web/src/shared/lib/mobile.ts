@@ -67,11 +67,11 @@ export async function syncReminder(appState: AppState, interactive = false): Pro
     if (permission.display !== "granted") return false;
     const [hour, minute] = (reminder.time || "08:00").split(":").map(Number);
     const notifications = Object.entries(appState.week).flatMap(([day, sessions]) => {
-      const routineId = sessions?.[0]?.routineId;
-      const routine = routineId
-        ? appState.routines.find((candidate) => candidate.id === routineId)
-        : undefined;
-      if (!routine) return [];
+      const names = (sessions ?? []).flatMap((session) => {
+        const routine = appState.routines.find((candidate) => candidate.id === session.routineId);
+        return routine ? [routine.name] : [];
+      });
+      if (!names.length) return [];
       return [
         {
           id: 100 + Number(day),
@@ -80,7 +80,7 @@ export async function syncReminder(appState: AppState, interactive = false): Pro
             "mobile.planTodayLetSGo",
             "{{routine}} is on the plan today — let’s go!",
             {
-              routine: routine.name,
+              routine: names.join(", "),
             },
           ),
           // Capacitor weekdays are 1 (Sunday) … 7 (Saturday); appState.week uses getDay() 0…6.

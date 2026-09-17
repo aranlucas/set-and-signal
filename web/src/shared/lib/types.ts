@@ -305,10 +305,10 @@ export interface PlanBundleCustom {
 }
 
 export interface PlanBundle {
-  opengym_plan: 1;
+  opengym_plan: 1 | 2;
   exported: IsoDate;
   name: string;
-  week: Partial<Record<string, Id>>;
+  week: Partial<Record<string, DaySession[]>>;
   routines: PlanBundleRoutine[];
   customEx: PlanBundleCustom[];
 }

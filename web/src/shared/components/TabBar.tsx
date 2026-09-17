@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useStore } from "@/app/store/useStore";
-import { effectiveRoutine } from "@/domain/training/schedule";
+import { nextPlannedRoutine } from "@/domain/training/schedule";
 import { todayISO } from "@/shared/lib/format";
 import Icon from "@/shared/components/Icon";
 import type { IconName } from "@/shared/components/Icon";
@@ -65,7 +65,7 @@ export default function TabBar({
 
   const startWorkout = () => {
     if (!appState.active) {
-      const routine = effectiveRoutine(appState, todayISO());
+      const routine = nextPlannedRoutine(appState, todayISO());
       if (routine && routine.ex.length > 0) {
         onStart(routine.id);
         return;

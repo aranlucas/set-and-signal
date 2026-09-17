@@ -121,3 +121,13 @@ describe("runtime payload schemas", () => {
     });
   });
 });
+
+describe("empty schedule overrides", () => {
+  it("preserves empty days after server serialization and legacy empty objects", () => {
+    expect(
+      parseStoredState(
+        JSON.stringify({ dayPlan: { "2026-09-15": { sessions: [] }, "2026-09-16": {} } }),
+      )?.dayPlan,
+    ).toEqual({ "2026-09-15": { sessions: [] }, "2026-09-16": { sessions: [] } });
+  });
+});

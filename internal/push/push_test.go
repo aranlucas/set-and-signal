@@ -477,7 +477,7 @@ func TestReminderLoopSkipsWhenNothingPlanned(t *testing.T) {
 			name: "workout already logged today",
 			state: func() map[string]any {
 				d := reminderStateDoc("07:30")
-				d["workouts"] = []map[string]any{{"d": "2026-08-24"}}
+				d["workouts"] = []map[string]any{{"d": "2026-08-24", "routineId": "push"}}
 				return d
 			}(),
 			date: "2026-08-24", hhmm: "07:30", ok: true, subbed: true,
@@ -582,5 +582,36 @@ func TestReminderUnknownRoutineUsesFallbackTitle(t *testing.T) {
 	}
 	if sends[0].Payload.Title != "Workout planned today" {
 		t.Fatalf("fallback title = %q", sends[0].Payload.Title)
+	}
+}
+
+func TestReminderKeepsRemainingSessionsAndHonorsEmptyOverride(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		plan     any
+		workouts []map[string]any
+		want     string
+	}{
+		{"second routine remains", nil, []map[string]any{{"d": "2026-08-24", "routineId": "push"}}, "legs"},
+		{"all complete", nil, []map[string]any{{"d": "2026-08-24", "routineId": "push"}, {"d": "2026-08-24", "routineId": "legs"}}, ""},
+		{"empty override", map[string]any{"sessions": []any{}}, nil, ""},
+		{"legacy empty object", map[string]any{}, nil, ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			doc := reminderStateDoc("07:30")
+			doc["week"] = training.WeekSchedule{"1": {{RoutineID: "push"}, {RoutineID: "legs"}}}
+			doc["workouts"] = tc.workouts
+			if tc.plan != nil {
+				doc["dayPlan"] = map[string]any{"2026-08-24": tc.plan}
+			}
+			raw, _ := json.Marshal(doc)
+			state, err := decodeReminderState(raw)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := effectiveRoutineId(&state, "2026-08-24"); got != tc.want {
+				t.Fatalf("got %q, want %q", got, tc.want)
+			}
+		})
 	}
 }

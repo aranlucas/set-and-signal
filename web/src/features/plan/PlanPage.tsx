@@ -71,11 +71,16 @@ export default function Plan() {
           <Header className="mb-2 px-1">{t("plan.weekSchedule", "Week schedule")}</Header>
           <SpaceBetween size="xs">
             {([1, 2, 3, 4, 5, 6, 0] as Weekday[]).map((d) => {
-              const routines = (state.week[d] ?? [])
-                .map((session) =>
-                  state.routines.find((candidate) => candidate.id === session.routineId),
-                )
-                .filter((routine): routine is NonNullable<typeof routine> => !!routine);
+              const occurrences = new Map<string, number>();
+              const routines = (state.week[d] ?? []).flatMap((session) => {
+                const routine = state.routines.find(
+                  (candidate) => candidate.id === session.routineId,
+                );
+                if (!routine) return [];
+                const occurrence = (occurrences.get(routine.id) ?? 0) + 1;
+                occurrences.set(routine.id, occurrence);
+                return [{ routine, key: `${routine.id}:${occurrence}` }];
+              });
               return (
                 <Button
                   variant="plain"
@@ -91,9 +96,9 @@ export default function Plan() {
                   </div>
                   {routines.length ? (
                     <span className="inline-flex max-w-3/5 flex-wrap justify-end gap-1">
-                      {routines.map((routine) => (
+                      {routines.map(({ routine, key }) => (
                         <span
-                          key={routine.id}
+                          key={key}
                           className="inline-flex items-center gap-1 rounded-sm bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary"
                         >
                           <Icon name={glyphOf(routine.emoji)} />

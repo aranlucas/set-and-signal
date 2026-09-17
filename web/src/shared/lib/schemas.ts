@@ -341,10 +341,16 @@ export const loginOptionsResponse = v.object({
 });
 
 export const planBundle = v.object({
-  opengym_plan: v.literal(1),
+  opengym_plan: v.union([v.literal(1), v.literal(2)]),
   exported: isoDate,
   name: v.string(),
-  week: v.record(v.string(), id),
+  week: v.record(
+    v.string(),
+    v.pipe(
+      v.union([id, v.array(daySession)]),
+      v.transform((value) => (typeof value === "string" ? [{ routineId: value }] : value)),
+    ),
+  ),
   routines: v.array(
     v.object({
       id,
@@ -447,6 +453,7 @@ function normalizeDayPlanEntry(value: unknown): DayPlanEntry | null {
   if (typeof value === "string" && value) return { sessions: [{ routineId: value }] };
   if (!isRecord(value)) return null;
   if (value.rest) return { rest: true };
+  if (!Array.isArray(value) && Object.keys(value).length === 0) return { sessions: [] };
   const sessions = normalizeSessions(Object.hasOwn(value, "sessions") ? value.sessions : value);
   if (!sessions) return null;
   return { sessions };

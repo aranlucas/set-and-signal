@@ -1,3 +1,4 @@
+import { sessionProgress } from "@/domain/training/schedule";
 import { useState, type ReactElement } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
@@ -6,7 +7,7 @@ import { useDateLabels } from "@/shared/hooks/use-date-labels";
 import { useStore } from "@/app/store/useStore";
 import { EXIDX } from "@/domain/exercises/exercises";
 import { fmtDate, fmtDur, fmtVol, durPart, todayISO } from "@/shared/lib/format";
-import { effectiveRoutineIds, setLabel, setsDone } from "@/domain/training/history";
+import { setLabel, setsDone } from "@/domain/training/history";
 import { toast } from "@/shared/lib/toast";
 import { Button } from "@/shared/ui/button";
 import { Textarea } from "@/shared/ui/textarea";
@@ -230,9 +231,14 @@ export function Calendar({
   for (let d = 1; d <= daysIn; d++) {
     const iso = y + "-" + String(mo + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0");
     const ws = byDay[iso];
-    const effIds = effectiveRoutineIds(st, iso);
+    const sessions = sessionProgress(st, iso);
     const ovr = st.dayPlan[iso] !== undefined;
-    const dotCls = ws ? "done" : ovr && effIds.length ? "ovr" : effIds.length ? "plan" : "";
+    const marks = sessions.length
+      ? sessions.map((session) => ({
+          key: session.key,
+          status: session.completed ? "done" : ovr ? "ovr" : "plan",
+        }))
+      : (ws ?? []).map((workout) => ({ key: workout.id, status: "done" }));
     cells.push(
       <Button
         variant="plain"
@@ -257,18 +263,21 @@ export function Calendar({
         }}
       >
         <span>{d}</span>
-        <i
-          className={
-            "size-1 rounded-full bg-transparent" +
-            (dotCls === "done"
-              ? " bg-primary"
-              : dotCls === "plan"
-                ? " bg-foreground/30"
-                : dotCls === "ovr"
-                  ? " bg-orange-500"
-                  : "")
-          }
-        />
+        <span className="flex flex-wrap justify-center gap-1">
+          {marks.map(({ key, status: mark }) => (
+            <i
+              key={key}
+              className={
+                "size-1 rounded-full " +
+                (mark === "done"
+                  ? "bg-primary"
+                  : mark === "ovr"
+                    ? "bg-orange-500"
+                    : "bg-foreground/30")
+              }
+            />
+          ))}
+        </span>
       </Button>,
     );
   }

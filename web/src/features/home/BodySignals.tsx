@@ -1,8 +1,9 @@
+import { nextPlannedRoutine } from "@/domain/training/schedule";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, HeartPulse, Plus, Target } from "lucide-react";
 import { useStore } from "@/app/store/useStore";
-import { effectiveRoutine, lastBW } from "@/domain/training/history";
+import { lastBW } from "@/domain/training/history";
 import { useMuscleLabels } from "@/shared/hooks/use-muscle-labels";
 import { useMeasurementFields } from "@/shared/hooks/use-measurement-fields";
 import { fmtNum, isoOf, todayISO } from "@/shared/lib/format";
@@ -26,7 +27,7 @@ export default function BodySignals() {
   );
   const recovery = recoveryForRoutine(
     state.workouts,
-    effectiveRoutine(state, todayISO()),
+    nextPlannedRoutine(state, todayISO()),
     todayISO(),
   );
   return (

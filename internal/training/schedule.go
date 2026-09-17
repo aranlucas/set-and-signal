@@ -26,7 +26,7 @@ type MCPDaySession struct {
 // (including an empty list, which clears the weekly template for that date).
 type MCPDayPlan struct {
 	Rest     bool            `json:"rest,omitzero" jsonschema:"when true, the date is a rest day"`
-	Sessions []MCPDaySession `json:"sessions,omitempty" jsonschema:"ordered sessions when not a rest day"`
+	Sessions []MCPDaySession `json:"sessions" jsonschema:"ordered sessions when not a rest day"`
 }
 
 func cloneDaySessions(sessions []MCPDaySession) []MCPDaySession {
@@ -292,9 +292,12 @@ func decodeFlexibleDayPlan(raw jsontext.Value) (MCPDayPlan, bool, error) {
 	}
 	var entry MCPDayPlan
 	if err := json.Unmarshal(raw, &entry); err == nil {
-		// Distinguishing a real object from other shapes: require rest or sessions key.
+		// Empty objects were emitted by older builds for an empty override.
 		var probe map[string]jsontext.Value
 		if err := json.Unmarshal(raw, &probe); err == nil {
+			if len(probe) == 0 {
+				return entry, false, nil
+			}
 			if _, hasRest := probe["rest"]; hasRest {
 				return entry, false, nil
 			}
@@ -313,11 +316,11 @@ func decodeFlexibleDayPlan(raw jsontext.Value) (MCPDayPlan, bool, error) {
 		}
 		return MCPDayPlan{Sessions: []MCPDaySession{sessionFromRoutineID(id)}}, true, nil
 	}
-	sessions, migrated, err := decodeFlexibleSessions(raw)
+	sessions, _, err := decodeFlexibleSessions(raw)
 	if err != nil {
 		return MCPDayPlan{}, false, err
 	}
-	return MCPDayPlan{Sessions: sessions}, migrated || true, nil
+	return MCPDayPlan{Sessions: sessions}, true, nil
 }
 
 func decodeWeekMap(value any) (map[string][]MCPDaySession, error) {

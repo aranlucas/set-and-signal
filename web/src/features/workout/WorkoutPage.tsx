@@ -1,3 +1,4 @@
+import { sessionProgress } from "@/domain/training/schedule";
 import { useEffect, useRef, useState } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
@@ -9,7 +10,6 @@ import { useStore } from "@/app/store/useStore";
 import { useWorkoutTimer } from "@/features/workout/useWorkoutTimer";
 import { exOr, isBarbellEq } from "@/domain/exercises/exercises";
 import {
-  effectiveRoutine,
   lastEntryFor,
   bestWeightFor,
   buildSets,
@@ -91,7 +91,11 @@ function StartChooser() {
   const { weekdays } = useDateLabels();
   const nav = useNavigate();
   const appState = useStore((state) => state.appState);
-  const todayR = effectiveRoutine(appState, todayISO());
+  const sessions = sessionProgress(appState, todayISO());
+  const planned = sessions.flatMap((session) => {
+    const routine = appState.routines.find((candidate) => candidate.id === session.routineId);
+    return routine ? [{ ...session, routine }] : [];
+  });
   const routineIdRef = useRef<Id | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const openStart = (nextRoutineId: Id | null) => {
@@ -99,7 +103,9 @@ function StartChooser() {
     setSheetOpen(true);
   };
   const todayOvr = appState.dayPlan[todayISO()] !== undefined;
-  const others = appState.routines.filter((r) => r !== todayR);
+  const others = appState.routines.filter(
+    (r) => !sessions.some((session) => session.routineId === r.id),
+  );
   return (
     <div className="mx-auto max-w-140">
       <Header
@@ -108,16 +114,18 @@ function StartChooser() {
         description={
           <>
             {weekdays[new Date().getDay()]} —{" "}
-            {todayR
-              ? t("workout.todayIs", "today is {{day}}", { day: todayR.name })
+            {planned.length
+              ? t("workout.todayIs", "today is {{day}}", {
+                  day: planned.map(({ routine }) => routine.name).join(", "),
+                })
               : t("workout.restDayNoOneS", "rest day, but no one’s stopping you")}
           </>
         }
       >
         {t("workout.startWorkout", "Start workout")}
       </Header>
-      {todayR && (
-        <div className="mb-3 rounded-lg border border-primary bg-card p-4">
+      {planned.map(({ routine: todayR, completed, start, label, key }) => (
+        <div key={key} className="mb-3 rounded-lg border border-primary bg-card p-4">
           <h2 className="mb-3 text-sm font-normal tracking-tight text-foreground/60">
             {t("workout.todaySPlan", "Today's plan")}
             {todayOvr ? " · " + t("calendar.status.rescheduledLowercase", "rescheduled") : ""}
@@ -129,18 +137,27 @@ function StartChooser() {
               </div>
               <div className="text-sm leading-snug text-foreground/60">
                 {exCount(t, todayR.ex.length)}
+                {start ? ` · ${start}` : ""}
+                {label ? ` · ${label}` : ""}
               </div>
             </div>
             <span className="flex size-9.5 flex-none items-center justify-center rounded-md bg-primary text-2xl text-white">
               <Icon name={glyphOf(todayR.emoji)} />
             </span>
           </div>
-          <Button className="w-full" variant="default" onClick={() => openStart(todayR.id)}>
+          <Button
+            className="w-full"
+            variant="default"
+            disabled={completed}
+            onClick={() => openStart(todayR.id)}
+          >
             <Icon name="play" />
-            {t("common.startNamed", "Start {{routine}}", { routine: todayR.name })}
+            {completed
+              ? t("calendar.status.completed", "Done")
+              : t("common.startNamed", "Start {{routine}}", { routine: todayR.name })}
           </Button>
         </div>
-      )}
+      ))}
       {others.length > 0 && (
         <>
           <h2 className="mt-5.5 mb-2 px-1 text-sm font-normal tracking-tight text-foreground/60">

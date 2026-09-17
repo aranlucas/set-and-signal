@@ -271,7 +271,7 @@ export default function RoutineEdit() {
                   });
                   Object.keys(s.dayPlan).forEach((k) => {
                     const entry = s.dayPlan[k];
-                    if (!entry || entry.rest) return;
+                    if (!entry || entry.rest || !entry.sessions?.length) return;
                     const next = (entry.sessions ?? []).filter(
                       (session) => session.routineId !== id,
                     );

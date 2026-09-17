@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"encoding/json/v2"
+	"github.com/aranlucas/set-and-signal/internal/training"
 	"net/http"
 	"strings"
 	"testing"
@@ -494,5 +495,17 @@ func TestSetProgramBatch(t *testing.T) {
 	st = e.getState("cookie")
 	if len(st["routines"].([]any)) != 3 {
 		t.Fatalf("after merge = %v", st["routines"])
+	}
+}
+
+func TestDeletingRoutinePreservesEmptyDayOverride(t *testing.T) {
+	st := map[string]any{"dayPlan": map[string]any{"2026-09-15": map[string]any{"sessions": []any{}}}}
+	pruneRoutineFromSchedule(st, "unrelated")
+	plan, err := training.DecodeDayPlanMap(st["dayPlan"])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := plan["2026-09-15"]; !ok {
+		t.Fatal("routine deletion removed explicit empty day")
 	}
 }
