@@ -84,15 +84,7 @@
     "tailwindcss/no-unknown-classes": [
       "error",
       {
-        "allowlist": [
-          "plain",
-          "metric-name",
-          "metric-bar",
-          "metric-value",
-          "chk",
-          "icn",
-          "toaster"
-        ]
+        "allowlist": ["plain", "metric-name", "metric-bar", "metric-value", "chk", "icn", "toaster"]
       }
     ],
     "tailwindcss/no-duplicate-classes": "error",
