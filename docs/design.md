@@ -57,8 +57,6 @@ single memorable movement on the page.
 - `BrandMark.tsx` is a one-color registration rail with three signal cuts. Use
   it beside the Set & Signal wordmark in Home, login, loading, and install
   metadata. Exercise icons remain exercise icons.
-- `WeekCalendar.tsx` keeps the seven-day grid, selected date, accessible status
-  labels, and legend. Its checks, diamonds, and rules use the proof palette.
 - `TabBar.tsx` remains a five-destination index. The center action keeps its
   large touch target and active workout behavior, but uses the Set & Signal
   registration treatment instead of a dumbbell logo.

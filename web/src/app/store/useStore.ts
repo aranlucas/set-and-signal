@@ -15,8 +15,6 @@ const USER_STORAGE_KEY = "gym_user@v1";
 const LEGACY_USER_STORAGE_KEY = "gym_user";
 
 export const DEFAULT_STATE = DEFAULT_APP_STATE;
-/** @deprecated Use DEFAULT_STATE in new code. Kept for existing view imports. */
-export const DEF = DEFAULT_STATE;
 
 // AppState is a structured-cloneable JSON document. Use the platform clone for
 // in-memory drafts so updates do not serialize and parse the entire profile on

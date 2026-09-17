@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useStore, DEF } from "@/app/store/useStore";
+import { useStore, DEFAULT_STATE } from "@/app/store/useStore";
 import { todayISO, localTZ, fmtPlate } from "@/shared/lib/format";
 import { ACCENT_NAMES, DEFAULT_ACCENT } from "@/shared/lib/accents";
 import { effortOf } from "@/domain/training/history";
@@ -691,7 +691,7 @@ function SettingsData({
               confirmLabel: t("settings.deleteEverything", "Delete everything"),
               danger: true,
               onConfirm: () => {
-                replaceState(structuredClone(DEF), true);
+                replaceState(structuredClone(DEFAULT_STATE), true);
                 void navigate({ to: "/home" });
                 toast(t("settings.allDataReset", "All data reset"));
               },
@@ -972,7 +972,7 @@ function MobileReminderCard({ appState, update, notify }: CardProps) {
   const setReminder = (patch: Partial<AppState["reminder"]>) =>
     update((state) => {
       state.reminder = {
-        ...(state.reminder || DEF.reminder),
+        ...(state.reminder || DEFAULT_STATE.reminder),
         ...patch,
         tz: localTZ(),
       };
@@ -983,7 +983,7 @@ function MobileReminderCard({ appState, update, notify }: CardProps) {
       const ok = await syncReminder(
         {
           ...appState,
-          reminder: { ...(appState.reminder || DEF.reminder), on: true },
+          reminder: { ...(appState.reminder || DEFAULT_STATE.reminder), on: true },
         },
         true,
       );
@@ -1031,7 +1031,7 @@ function MobileReminderCard({ appState, update, notify }: CardProps) {
           <Input
             aria-label={t("settings.reminderTime", "Reminder time")}
             className="w-auto rounded-lg border-0 bg-muted px-2.5 py-1.5 text-base text-foreground tabular-nums outline-none"
-            value={appState.reminder?.time || DEF.reminder.time}
+            value={appState.reminder?.time || DEFAULT_STATE.reminder.time}
             onChange={(e) => setReminder({ time: e.target.value })}
           />
         </Row>
@@ -1140,7 +1140,7 @@ function PushCard({ appState, update, notify }: CardProps) {
               onCheckedChange={() =>
                 update((state) => {
                   state.reminder = {
-                    ...(state.reminder || DEF.reminder),
+                    ...(state.reminder || DEFAULT_STATE.reminder),
                     on: !state.reminder?.on,
                     tz: localTZ(),
                   };
@@ -1158,11 +1158,11 @@ function PushCard({ appState, update, notify }: CardProps) {
             <Input
               aria-label={t("settings.reminderTime", "Reminder time")}
               className="w-auto rounded-lg border-0 bg-muted px-2.5 py-1.5 text-base text-foreground tabular-nums outline-none"
-              value={appState.reminder?.time || DEF.reminder.time}
+              value={appState.reminder?.time || DEFAULT_STATE.reminder.time}
               onChange={(event) =>
                 update((state) => {
                   state.reminder = {
-                    ...(state.reminder || DEF.reminder),
+                    ...(state.reminder || DEFAULT_STATE.reminder),
                     time: event.target.value,
                     tz: localTZ(),
                   };
