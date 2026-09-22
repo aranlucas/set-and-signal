@@ -11,7 +11,7 @@ require (
 	github.com/invopop/jsonschema v0.14.0
 	github.com/modelcontextprotocol/go-sdk v1.8.0
 	github.com/openai/openai-go/v3 v3.63.1
-	github.com/pressly/goose/v3 v3.27.3
+	github.com/pressly/goose/v3 v3.28.0
 	golang.org/x/oauth2 v0.37.0
 	modernc.org/sqlite v1.57.0
 )
