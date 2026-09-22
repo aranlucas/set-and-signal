@@ -10,7 +10,7 @@ require (
 	github.com/google/jsonschema-go v0.4.3
 	github.com/invopop/jsonschema v0.14.0
 	github.com/modelcontextprotocol/go-sdk v1.8.0
-	github.com/openai/openai-go/v3 v3.54.0
+	github.com/openai/openai-go/v3 v3.63.1
 	github.com/pressly/goose/v3 v3.27.3
 	golang.org/x/oauth2 v0.37.0
 	modernc.org/sqlite v1.57.0
@@ -19,6 +19,7 @@ require (
 require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
+	github.com/coder/websocket v1.8.15 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.3 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
