@@ -11,7 +11,7 @@ go test -race ./...
 go vet ./...
 go fix -diff ./...
 pnpm install --frozen-lockfile
-pnpm infra:check
+(cd .railway && go test ./... && go vet ./...)
 cd web
 pnpm format
 pnpm lint:tailwind
@@ -31,7 +31,7 @@ Describe the user-visible behavior, the routes or storage contracts touched,
 and the verification you ran. If a change depends on a provider, CDN, or
 environment variable, document the fallback and the privacy implication.
 
-Infrastructure changes must include the output of `pnpm infra:check` and a
-reviewed `pnpm infra:plan`. Never commit a pinned Railway plan or decrypted
+Infrastructure changes must include the output of `(cd .railway && go test ./... && go vet ./...)` and a
+reviewed `railway config plan`. Never commit a pinned Railway plan or decrypted
 variable value, and never rename a data-bearing resource without an explicit
 migration and rollback procedure.
