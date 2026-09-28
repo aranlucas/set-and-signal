@@ -1,10 +1,22 @@
-# Set & Signal
+<p align="center">
+  <img src="web/public/icon-512.png" alt="Set & Signal icon" width="112" />
+</p>
+
+# Set & Signal 🏋️ · Make the next set obvious
+
+[![TypeScript checks](https://github.com/aranlucas/set-and-signal/actions/workflows/typecheck.yml/badge.svg)](https://github.com/aranlucas/set-and-signal/actions/workflows/typecheck.yml)
+[![Go checks](https://github.com/aranlucas/set-and-signal/actions/workflows/go.yml/badge.svg)](https://github.com/aranlucas/set-and-signal/actions/workflows/go.yml)
+[![License](https://img.shields.io/github/license/aranlucas/set-and-signal)](LICENSE)
 
 Set & Signal is a self-hostable workout planner and training log for planning
 sessions, recording sets, reviewing history, and asking an AI assistant about
 training data. The product ships as a React/Vite web app embedded in a Go
 server, with passkeys/OIDC sign-in, Convex-backed training records, SQLite for
 identity and operational state, and an MCP endpoint for assistant clients.
+
+> **A session in the real world:** plan a push day, log the working sets as you
+> go, then ask the assistant what to train next. Your history, prescription,
+> and account boundary stay in the same self-hosted system.
 
 The project is designed for a single deployment you control. It includes an
 exercise catalogue, progression and prescription helpers, workout history,
