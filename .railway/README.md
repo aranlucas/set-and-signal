@@ -1,8 +1,13 @@
 # Railway infrastructure
 
 [`railway.go`](railway.go) declares the production Set & Signal project: one
-Dockerfile-built Go service and the persistent SQLite volume mounted at `/data`.
+Railpack-built Go service and the persistent SQLite volume mounted at `/data`.
 Railway-generated domains remain attached but are not managed by the IaC API.
+
+The root [`railpack.json`](../railpack.json) installs Node 24 and pnpm 12.6.0,
+uses the Go version from `go.mod`, builds the `web` workspace, and embeds its
+output in `./cmd/opengym-api`. The runtime starts `./out` and retains the
+`/data` storage path. There is no root Dockerfile, so Railway can use Railpack.
 
 The service and volume retain their original Railway resource addresses so the
 declaration can adopt the existing deployment without recreating or detaching

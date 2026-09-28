@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "provider": "golang",
+  "packages": {
+    "node": "24",
+    "pnpm": "12.6.0"
+  },
+  "steps": {
+    "install-frontend": {
+      "inputs": [{ "step": "install" }],
+      "commands": [
+        { "src": ".", "dest": "." },
+        "pnpm install --frozen-lockfile --filter set-and-signal-web..."
+      ]
+    },
+    "build-frontend": {
+      "inputs": [{ "step": "install-frontend" }],
+      "commands": [
+        "pnpm --dir web run build",
+        "test -s web/dist/index.html"
+      ]
+    },
+    "build": {
+      "inputs": [{ "step": "build-frontend" }],
+      "commands": [
+        { "cmd": "CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o out ./cmd/opengym-api" }
+      ]
+    }
+  },
+  "deploy": {
+    "inputs": [{ "step": "build", "include": ["out"] }],
+    "aptPackages": ["...", "ca-certificates", "tzdata"],
+    "variables": {
+      "DATA_DIR": "/data",
+      "RP_NAME": "Set & Signal"
+    },
+    "startCommand": "./out"
+  }
+}

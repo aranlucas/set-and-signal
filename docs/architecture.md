@@ -87,7 +87,7 @@ pnpm --dir web build
 (cd .railway && go test ./... && go vet ./...)
 ```
 
-The Dockerfile installs both root and web dependencies from that lockfile,
+The Railpack configuration installs frontend dependencies from that lockfile,
 builds the SPA, then embeds `web/dist` into the Go binary. Runtime state belongs
 under `/data`; it is not part of the image or repository.
 

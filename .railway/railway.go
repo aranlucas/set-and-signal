@@ -24,8 +24,7 @@ func Railway() railway.Project {
 	app := railway.ServiceNamed("opengym2-demo", railway.ServiceConfig{
 		"source": railway.Github("aranlucas/set-and-signal", map[string]any{"branch": "main"}),
 		"build": map[string]any{
-			"builder":          "DOCKERFILE",
-			"dockerfilePath":   "Dockerfile",
+			"builder":          "RAILPACK",
 			"buildEnvironment": "V3",
 		},
 		"deploy": map[string]any{
