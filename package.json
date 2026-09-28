@@ -1,18 +1,9 @@
 {
-  "name": "set-and-signal-infrastructure",
+  "name": "set-and-signal",
   "private": true,
   "type": "module",
   "scripts": {
-    "infra:check": "tsc -p .railway/tsconfig.json",
-    "infra:plan": "railway config plan",
-    "infra:apply": "railway config apply",
-    "typecheck": "pnpm infra:check && pnpm --dir web typecheck"
+    "typecheck": "pnpm --dir web typecheck"
   },
-  "dependencies": {
-    "railway": "3.11.0"
-  },
-  "devDependencies": {
-    "typescript": "7.0.2"
-  },
-  "packageManager": "pnpm@12.3.1"
+  "packageManager": "pnpm@12.6.0"
 }

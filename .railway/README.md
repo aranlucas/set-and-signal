@@ -1,6 +1,6 @@
 # Railway infrastructure
 
-[`railway.ts`](railway.ts) declares the production Set & Signal project: one
+[`railway.go`](railway.go) declares the production Set & Signal project: one
 Dockerfile-built Go service and the persistent SQLite volume mounted at `/data`.
 Railway-generated domains remain attached but are not managed by the IaC API.
 
@@ -10,15 +10,19 @@ its data. Those names are infrastructure identifiers, not product branding.
 
 ## Prerequisites
 
-- Node.js 24+ and pnpm 11+
-- Railway CLI 5.42.1 or newer
+- Go 1.22+
+- A current Railway CLI with Go IaC support (verified with 5.62.1)
 - Access to the linked Railway project and its `production` environment
 
-Install the authoring SDK and type-check the declaration:
+The declaration uses the [Railway Go SDK](https://github.com/railwayapp/railway-go-sdk)
+in its own Go module. Install dependencies and check it:
 
 ```bash
-pnpm install --frozen-lockfile
-pnpm infra:check
+cd .railway
+go mod download
+go test ./...
+go vet ./...
+cd ..
 ```
 
 Always review a plan before applying it:
@@ -26,11 +30,11 @@ Always review a plan before applying it:
 ```bash
 railway link
 railway environment production
-pnpm infra:plan
-pnpm infra:apply
+railway config plan
+railway config apply
 ```
 
-`OPENROUTER_API_KEY` uses `preserve()`: Railway retains the value already stored
+`OPENROUTER_API_KEY` uses `railway.Preserve()`: Railway retains the value already stored
 in the environment and never writes it to this repository. Before applying the
 file to a brand-new Railway project, create that optional variable or remove its
 entry if AI suggestions should remain disabled.
@@ -39,3 +43,19 @@ The generated `opengym2.up.railway.app` hostname is kept as a compatibility
 boundary for existing OAuth clients, passkeys, and bookmarks. Add and verify a
 custom domain before changing `domains`, `ORIGIN`, `PUBLIC_URL`, or `RP_ID`
 together.
+
+## GitHub Actions
+
+[The Railway workflow](../.github/workflows/railway-config.yml) checks the Go
+module and saves a plan for pull requests that change `.railway/`. When the pull
+request merges, it applies that reviewed plan artifact. A changed environment
+or a different `.railway/` tree causes the apply to fail and requires a new plan.
+Fork pull requests run the Go checks but skip authenticated plan and apply jobs.
+
+Set the repository secret `RAILWAY_TOKEN` to a Railway project token scoped to
+production. The workflow grants the permissions required by the
+[Railway Config Action](https://github.com/railwayapp/config), including OIDC
+for Railway bot comments when the Railway GitHub App is installed.
+
+Go authoring is currently in beta; see the
+[Railway IaC documentation](https://docs.railway.com/infrastructure-as-code).

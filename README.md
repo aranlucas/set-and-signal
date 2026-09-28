@@ -53,7 +53,7 @@ Git.
 ```bash
 go test -race ./...
 go vet ./...
-pnpm infra:check
+(cd .railway && go test ./... && go vet ./...)
 ```
 
 The service is licensed under the [GNU AGPL v3 or later](LICENSE). See [`SECURITY.md`](SECURITY.md) for vulnerability reports.

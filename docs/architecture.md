@@ -75,15 +75,16 @@ behavior.
 
 ## Workspace and build
 
-The repository has one pnpm workspace and one lockfile at the root. Root scripts
-manage Railway infrastructure; the `web` workspace owns frontend commands.
+The repository has one pnpm workspace and one lockfile at the root. The `web`
+workspace owns frontend commands. Railway infrastructure uses a separate Go
+module in `.railway` and the Railway CLI.
 Examples:
 
 ```bash
 pnpm install --frozen-lockfile
 pnpm --dir web test
 pnpm --dir web build
-pnpm infra:check
+(cd .railway && go test ./... && go vet ./...)
 ```
 
 The Dockerfile installs both root and web dependencies from that lockfile,
