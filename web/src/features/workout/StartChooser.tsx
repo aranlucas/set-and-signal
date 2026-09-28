@@ -1,11 +1,12 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDateLabels } from "@/shared/hooks/use-date-labels";
+import { useToday } from "@/shared/hooks/use-today";
 import { useNavigate } from "@tanstack/react-router";
 import { useStore } from "@/app/store/useStore";
 import { sessionProgress } from "@/domain/training/schedule";
 import { PlannedSessions } from "./PlannedSessions";
-import { todayISO, exCount } from "@/shared/lib/format";
+import { exCount } from "@/shared/lib/format";
 import { Header } from "@/shared/components/Header";
 import Icon from "@/shared/components/Icon";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
@@ -21,14 +22,15 @@ export function StartChooser() {
   const { weekdays } = useDateLabels();
   const nav = useNavigate();
   const appState = useStore((state) => state.appState);
-  const sessions = sessionProgress(appState, todayISO());
+  const today = useToday();
+  const sessions = sessionProgress(appState, today);
   const routineIdRef = useRef<Id | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const openStart = (nextRoutineId: Id | null) => {
     routineIdRef.current = nextRoutineId;
     setSheetOpen(true);
   };
-  const todayOvr = appState.dayPlan[todayISO()] !== undefined;
+  const todayOvr = appState.dayPlan[today] !== undefined;
   const others = appState.routines.filter(
     (r) => !sessions.some((session) => session.routineId === r.id),
   );
@@ -39,7 +41,7 @@ export function StartChooser() {
         className="mt-2 mb-4.5"
         description={
           <>
-            {weekdays[new Date().getDay()]} —{" "}
+            {weekdays[new Date(today + "T12:00:00").getDay()]} —{" "}
             {sessions.length
               ? t("workout.todayIs", "today is {{day}}", {
                   day: sessions.map(({ routine }) => routine.name).join(", "),

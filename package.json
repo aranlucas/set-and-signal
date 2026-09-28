@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "lint": "pnpm --dir web lint",
+    "lint:strict": "pnpm --dir web lint:strict",
+    "format": "pnpm --dir web format",
+    "format:write": "pnpm --dir web format:write",
     "typecheck": "pnpm --dir web typecheck"
   },
   "packageManager": "pnpm@12.6.0"
