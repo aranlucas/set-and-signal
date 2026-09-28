@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useDateLabels } from "@/shared/hooks/use-date-labels";
-import { fmtVol, isoOf, todayISO } from "@/shared/lib/format";
+import { useToday } from "@/shared/hooks/use-today";
+import { fmtVol, isoOf } from "@/shared/lib/format";
 import type { AppState, IsoDate } from "@/shared/lib/types";
 import { Button } from "@/shared/ui/button";
 
@@ -37,6 +38,7 @@ export default function Heatmap({
 }) {
   const { t } = useTranslation();
   const { monthsShort } = useDateLabels();
+  const todayKey = useToday();
   const wrapRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (wrapRef.current) wrapRef.current.scrollLeft = wrapRef.current.scrollWidth;
@@ -80,8 +82,7 @@ export default function Heatmap({
     return 1;
   };
 
-  const today = new Date();
-  today.setHours(12, 0, 0, 0);
+  const today = new Date(todayKey + "T12:00:00");
   const end = new Date(today);
   end.setDate(today.getDate() - ((today.getDay() + 6) % 7));
   const start = new Date(end);
@@ -108,7 +109,7 @@ export default function Heatmap({
       const activity = activityByDate[dateKey];
       const cellClassName = activityCellClass(
         levelForActivity(activity),
-        dateKey === todayISO(),
+        dateKey === todayKey,
         date > today,
       );
       const cellTitle =

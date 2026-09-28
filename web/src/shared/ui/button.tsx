@@ -4,24 +4,24 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/shared/lib/utils";
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-transparent bg-muted px-4.5 py-3.5 text-lg font-semibold tracking-tight whitespace-nowrap text-foreground transition duration-150 ease-out outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:scale-95 disabled:pointer-events-none disabled:opacity-30 aria-invalid:ring-3 aria-invalid:ring-destructive/20 [&_.icn]:text-xl [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-transparent bg-muted px-4.5 py-3.5 text-lg font-semibold tracking-tight whitespace-nowrap text-foreground transition duration-150 ease-out outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50 not-aria-[haspopup]:active:scale-95 disabled:pointer-events-none disabled:opacity-30 aria-invalid:ring-3 aria-invalid:ring-destructive/20 [&_.icn]:text-xl [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         plain:
-          "shrink rounded-none border-0 bg-transparent p-0 text-base font-normal tracking-normal whitespace-normal text-foreground hover:bg-transparent active:not-aria-[haspopup]:scale-100",
+          "shrink rounded-none border-0 bg-transparent p-0 text-base font-normal tracking-normal whitespace-normal text-foreground hover:bg-transparent not-aria-[haspopup]:active:scale-100",
         primary: "bg-primary text-primary-foreground active:bg-primary",
         tinted: "bg-primary/15 text-primary",
         danger: "bg-destructive/15 text-destructive",
         default: "bg-primary text-primary-foreground hover:bg-primary/80",
         outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 hover:dark:bg-input/50",
+          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-muted aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground hover:dark:bg-muted/50",
+          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 hover:dark:bg-destructive/30 focus-visible:dark:ring-destructive/40",
+          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

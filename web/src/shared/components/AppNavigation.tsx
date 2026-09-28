@@ -21,10 +21,12 @@ import {
 import { useStore } from "@/app/store/useStore";
 import { DEMO } from "@/shared/lib/demo";
 import { formatDate } from "@/shared/lib/format";
+import { useToday } from "@/shared/hooks/use-today";
 import { Button } from "@/shared/ui/button";
 
 export default function AppNavigation({ onStart }: { onStart: () => void }) {
   const { t } = useTranslation();
+  const today = useToday();
   const navigate = useNavigate();
   const pathname = useLocation({ select: (location) => location.pathname });
   const user = useStore((store) => store.user);
@@ -219,7 +221,11 @@ export default function AppNavigation({ onStart }: { onStart: () => void }) {
           </Button>
           <span className="topbar-date">
             <CalendarDays size={17} />
-            {formatDate(t, new Date(), { weekday: "short", day: "numeric", month: "short" })}
+            {formatDate(t, new Date(today + "T12:00:00"), {
+              weekday: "short",
+              day: "numeric",
+              month: "short",
+            })}
           </span>
           <Button
             variant="plain"

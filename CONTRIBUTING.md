@@ -15,10 +15,14 @@ pnpm install --frozen-lockfile
 cd web
 pnpm format
 pnpm lint:tailwind
-pnpm lint
+pnpm lint:strict
 pnpm test
 pnpm build
 ```
+
+`pnpm lint` runs the same strict checks as `pnpm lint:strict`: type-aware Oxlint,
+TypeScript diagnostics, zero warnings, errors for unused lint suppressions, and
+the design-system rules. Both commands also work from the repository root.
 
 For visual work, check a narrow phone viewport and a desktop viewport, including
 keyboard focus and dark mode. Use semantic theme tokens and the existing icon

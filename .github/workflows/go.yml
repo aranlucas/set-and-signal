@@ -69,8 +69,8 @@ jobs:
       - name: Lint Tailwind classes
         run: pnpm --dir web lint:tailwind
 
-      - name: Lint
-        run: pnpm --dir web lint
+      - name: Strict lint
+        run: pnpm --dir web lint:strict
 
       - name: Type-check Convex functions
         run: pnpm --dir web convex:check
