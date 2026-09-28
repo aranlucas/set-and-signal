@@ -23,7 +23,7 @@
     "build": {
       "inputs": [{ "step": "build-frontend" }],
       "commands": [
-        { "cmd": "CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o out ./cmd/opengym-api" }
+        { "cmd": "go build -o out ./cmd/opengym-api" }
       ]
     }
   },
