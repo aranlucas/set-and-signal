@@ -11,7 +11,7 @@ import { barWeightFor } from "@/domain/training/plates";
 import { Button } from "@/shared/ui/button";
 import { Field } from "@/shared/ui/field";
 import { Switch } from "@/shared/ui/switch";
-import { Segmented } from "@/shared/components/Segmented";
+import { Segmented } from "@/shared/ui/segmented";
 import { SelectRow } from "@/shared/components/SelectRow";
 import { Row } from "@/shared/components/layout";
 import { Stepper } from "@/shared/components/Stepper";

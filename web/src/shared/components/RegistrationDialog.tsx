@@ -90,7 +90,7 @@ function RegistrationDialogContent({ open, onOpenChange }: RegistrationDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-xs rounded-xl bg-modal p-5 shadow-2xl">
+      <DialogContent className="w-full max-w-xs">
         <form onSubmit={(event) => void handleSubmit(registerProfile)(event)}>
           <DialogHeader>
             <DialogTitle>{t("account.createProfile", "Create your profile")}</DialogTitle>
@@ -110,7 +110,7 @@ function RegistrationDialogContent({ open, onOpenChange }: RegistrationDialogPro
               )}
             </p>
           )}
-          <FieldGroup className="mt-4 gap-3">
+          <FieldGroup className="mt-4">
             <Field data-invalid={!!errors.name}>
               <FieldLabel htmlFor="registration-name">
                 {t("account.yourName", "Your name")}
@@ -139,7 +139,7 @@ function RegistrationDialogContent({ open, onOpenChange }: RegistrationDialogPro
                       shouldValidate: true,
                     })
                   }
-                  className="text-center font-semibold tracking-widest"
+                  className="text-center"
                 />
                 <FieldDescription>
                   {t(

@@ -53,9 +53,9 @@ export function WeightInput({
     <>
       <div className="my-3.5 mb-1.5 flex items-center justify-center gap-4.5">
         <Button
-          variant="plain"
+          variant="circle"
           type="button"
-          className="flex size-11.5 shrink-0 items-center justify-center rounded-full bg-card text-xl text-foreground transition active:scale-95 active:bg-muted"
+          className="flex size-11.5 shrink-0 items-center justify-center active:scale-95"
           onClick={() => onSlide(value - step)}
           aria-label={`minus ${step} ${unit}`}
         >
@@ -66,9 +66,9 @@ export function WeightInput({
           <span className="text-xl font-normal tracking-tight text-foreground/60"> {unit}</span>
         </div>
         <Button
-          variant="plain"
+          variant="circle"
           type="button"
-          className="flex size-11.5 shrink-0 items-center justify-center rounded-full bg-card text-xl text-foreground transition active:scale-95 active:bg-muted"
+          className="flex size-11.5 shrink-0 items-center justify-center active:scale-95"
           onClick={() => onSlide(value + step)}
           aria-label={`plus ${step} ${unit}`}
         >
@@ -78,10 +78,10 @@ export function WeightInput({
       <div className="my-2 flex scrollbar-none justify-center gap-2 overflow-x-auto pb-0.5">
         {weightJumps(unit).map((increment) => (
           <Button
-            variant="plain"
+            variant="chip"
             type="button"
             key={increment}
-            className="shrink-0 rounded-full bg-card px-3 py-1.5 text-sm tracking-tight text-foreground transition-colors active:bg-muted"
+            className="shrink-0"
             onClick={() => onSlide(value + increment)}
           >
             {increment > 0 ? "+" : "−"}
@@ -190,12 +190,12 @@ export function PreWorkoutBodyweightSheet({
         }}
       />
       <div className="mt-2 flex flex-col gap-0.5">
-        <Button variant="ghost" className="text-muted-foreground" onClick={() => void onDone(null)}>
+        <Button variant="quiet" onClick={() => void onDone(null)}>
           {t("weight.startWithoutWeighing", "Start without weighing in")}
         </Button>
         <Button
-          variant="ghost"
-          className="text-muted-foreground"
+          variant="quiet"
+
           onClick={() => void onChooseDifferentWorkout()}
         >
           <Icon name="reset" />
@@ -247,12 +247,12 @@ export function BodyweightLogSheet({ close }: { close: SheetClose }) {
                     {fmtNum(b.w)} {state.unit}
                   </b>
                   <Button
-                    variant="plain"
-                    className="flex h-7.5 w-8 shrink-0 items-center justify-center rounded-lg bg-card text-base text-destructive"
+                    variant="square"
+                    className="flex h-7.5 w-8 shrink-0 items-center justify-center"
                     onClick={() => delEntry(b.d)}
                     aria-label="delete"
                   >
-                    <Icon name="trash" />
+                    <Icon name="trash" className="text-destructive" />
                   </Button>
                 </span>
               </div>

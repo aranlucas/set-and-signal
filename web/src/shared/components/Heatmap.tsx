@@ -125,11 +125,13 @@ export default function Heatmap({
             variant="plain"
             key={dateKey}
             type="button"
-            className={cellClassName}
+            className="size-2.5 shrink-0"
             title={cellTitle}
             aria-label={cellTitle}
             onClick={() => onDay(dateKey)}
-          />
+          >
+            <span className={cellClassName} />
+          </Button>
         ) : (
           <div key={dateKey} className={cellClassName} title={cellTitle} aria-hidden="true" />
         ),

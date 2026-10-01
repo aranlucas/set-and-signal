@@ -114,13 +114,13 @@ export function MeasuresSheet({ close }: { close: SheetClose }) {
                       </span>
                     ))}
                   <Button
-                    variant="plain"
+                    variant="square"
                     type="button"
-                    className="flex h-7.5 w-8 shrink-0 items-center justify-center rounded-lg bg-card text-base text-destructive"
+                    className="flex h-7.5 w-8 shrink-0 items-center justify-center"
                     onClick={() => del(entryMeasure.d)}
                     aria-label={t("common.delete", "Delete")}
                   >
-                    <Icon name="trash" />
+                    <Icon name="trash" className="text-destructive" />
                   </Button>
                 </span>
               </div>

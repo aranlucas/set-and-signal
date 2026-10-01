@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { InputHTMLAttributes } from "react";
 import { Input } from "@/shared/ui/input";
-import { cn } from "@/shared/lib/utils";
 
 // Numeric input accepting "," as decimal separator. Keeps a local string draft
 // while focused so partial input like "33," survives on mobile keypads.
@@ -10,6 +9,7 @@ export function NumberField({
   onChange,
   decimal = true,
   nullable = false,
+  density,
   className = "",
   ...rest
 }: {
@@ -17,6 +17,7 @@ export function NumberField({
   onChange: (n: number | null) => void;
   decimal?: boolean;
   nullable?: boolean;
+  density?: "default" | "compact";
   className?: string;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type">) {
   const [draft, setDraft] = useState<string | null>(null);
@@ -44,10 +45,9 @@ export function NumberField({
     <Input
       type="text"
       inputMode={decimal ? "decimal" : "numeric"}
-      className={cn(
-        "w-full min-w-0 border-0 bg-transparent p-0 text-center text-lg font-medium tracking-tight outline-none [&::-webkit-inner-spin-button]:hidden",
-        className,
-      )}
+      variant="bare"
+      density={density}
+      className={className}
       value={draft ?? value ?? ""}
       onFocus={(event) => event.target.select()}
       onChange={(event) => commit(event.target.value)}

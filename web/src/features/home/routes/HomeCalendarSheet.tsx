@@ -15,11 +15,7 @@ export default function HomeCalendarSheet() {
         if (!open) void close();
       }}
     >
-      <SheetContent
-        side="bottom"
-        className="max-h-screen touch-pan-y overflow-y-auto overscroll-contain rounded-2xl bg-sheet p-2 px-4.5 pb-5 lg:inset-x-auto lg:left-1/2 lg:w-160 lg:-translate-x-1/2"
-        showCloseButton={false}
-      >
+      <SheetContent side="bottom" variant="panel" showCloseButton={false}>
         <SheetTitle className="sr-only">
           {t("calendar.workoutCalendar", "Workout calendar")}
         </SheetTitle>

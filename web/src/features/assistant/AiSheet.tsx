@@ -106,11 +106,7 @@ export function AiPlan({ close }: { close: SheetClose }) {
           <div className="mb-3.5 min-w-0 text-sm leading-snug wrap-break-word text-foreground/60">
             {getErrorMessage(planQuery.error)}
           </div>
-          <Button
-            variant="ghost"
-            className="w-full text-muted-foreground"
-            onClick={() => void close()}
-          >
+          <Button variant="quiet" className="w-full" onClick={() => void close()}>
             {t("common.close", "Close")}
           </Button>
         </>
@@ -165,11 +161,7 @@ export function AiPlan({ close }: { close: SheetClose }) {
                 {t("ai.applyToRoutine", "Apply to today's routine")}
               </Button>
             )}
-            <Button
-              variant="ghost"
-              className="w-full text-muted-foreground"
-              onClick={() => void close()}
-            >
+            <Button variant="quiet" className="w-full" onClick={() => void close()}>
               {applied ? t("common.close", "Close") : t("common.dismiss", "Dismiss")}
             </Button>
           </SpaceBetween>

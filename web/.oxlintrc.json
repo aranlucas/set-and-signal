@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["eslint", "typescript", "oxc", "unicorn", "react", "import", "jsx-a11y", "vitest"],
-  "jsPlugins": ["oxlint-tailwindcss"],
+  "jsPlugins": ["oxlint-tailwindcss", "@shadcn/lint"],
   "env": {
     "browser": true,
     "es2022": true
@@ -91,12 +91,6 @@
         "allowConstantExport": true
       }
     ],
-    "tailwindcss/no-unknown-classes": [
-      "error",
-      {
-        "allowlist": ["plain", "metric-name", "metric-bar", "metric-value", "chk", "icn", "toaster"]
-      }
-    ],
     "tailwindcss/no-duplicate-classes": "error",
     "tailwindcss/no-conflicting-classes": "error",
     "tailwindcss/no-deprecated-classes": "error",
@@ -126,7 +120,6 @@
         ]
       }
     ],
-    "tailwindcss/no-arbitrary-value": "error",
     "tailwindcss/prefer-theme-tokens": "error",
     "react/forbid-elements": [
       "error",
@@ -210,6 +203,47 @@
           }
         ]
       }
+    ],
+    "shadcn/no-restyle": [
+      "error",
+      {
+        "allow": [
+          "layout",
+          "panel-link",
+          "preview-link",
+          "dashboard-metric",
+          "dashboard-start",
+          "nav-backdrop",
+          "nav-close",
+          "topbar-menu",
+          "topbar-search",
+          "theme-toggle",
+          "spotlight-start",
+          "spotlight-adjust",
+          "week-current",
+          "training-day",
+          "is-today",
+          "exercise-preview-row",
+          "recent-workout",
+          "progress-highlight",
+          "ai-dashboard-link"
+        ]
+      }
+    ],
+    "shadcn/no-raw-colors": [
+      "error",
+      {
+        "allow": ["fill-none"]
+      }
+    ],
+    "shadcn/no-arbitrary-values": "error",
+    "shadcn/no-inline-styles": "error",
+    "shadcn/require-static-classes": "error",
+    "shadcn/no-unknown-classes": [
+      "error",
+      {
+        "allow": ["plain", "metric-name", "metric-bar", "metric-value", "chk", "icn", "toaster"]
+      }
     ]
   },
   "ignorePatterns": ["dist/**", "node_modules/**"],
@@ -242,6 +276,13 @@
       ],
       "rules": {
         "react/forbid-elements": "off"
+      }
+    },
+    {
+      "files": ["src/shared/ui/**"],
+      "rules": {
+        "shadcn/no-restyle": "off",
+        "shadcn/require-static-classes": "off"
       }
     }
   ]

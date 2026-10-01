@@ -18,7 +18,7 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/shared/ui/native-select";
 import { Label } from "@/shared/ui/label";
-import { Segmented } from "@/shared/components/Segmented";
+import { Segmented } from "@/shared/ui/segmented";
 import Icon from "@/shared/components/Icon";
 
 const DEFAULT_FILTERS: HistoryFilters = { query: "", routineId: "all", range: "all" };
@@ -69,8 +69,8 @@ export default function History() {
           </p>
         </div>
         <Button
-          variant="plain"
-          className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
+          variant="circle"
+          className="flex size-9 flex-none items-center justify-center active:scale-95"
           onClick={() => void nav({ to: "/stats" })}
           aria-label={t("navigation.stats", "Stats")}
         >
@@ -99,11 +99,11 @@ export default function History() {
                   "history.searchPlaceholder",
                   "Search workouts, exercises, or notes…",
                 )}
-                className="rounded-lg bg-muted py-2.5 pl-9 text-base"
+                variant="search"
               />
             </div>
             <div className="mt-3 flex flex-col gap-2.5 sm:flex-row sm:items-center">
-              <Label className="flex min-w-0 flex-1 items-center gap-2 text-sm text-foreground/60">
+              <Label tone="muted" className="flex min-w-0 flex-1 items-center">
                 <span className="shrink-0">{t("history.routine", "Routine")}</span>
                 <NativeSelect
                   aria-label={t("history.routine", "Routine")}
@@ -147,8 +147,9 @@ export default function History() {
               {activeFilters && (
                 <Button
                   type="button"
-                  variant="plain"
-                  className="self-start rounded-md px-2 py-1 text-sm text-primary hover:bg-primary/10 sm:self-auto"
+                  size="xs"
+                  variant="link"
+                  className="self-start sm:self-auto"
                   onClick={() => setFilters(DEFAULT_FILTERS)}
                 >
                   {t("history.resetFilters", "Reset")}
@@ -224,11 +225,7 @@ export default function History() {
           if (!open) setWorkout(null);
         }}
       >
-        <SheetContent
-          side="bottom"
-          className="max-h-screen touch-pan-y overflow-y-auto overscroll-contain rounded-2xl bg-sheet p-2 px-4.5 pb-5 lg:inset-x-auto lg:left-1/2 lg:w-160 lg:-translate-x-1/2"
-          showCloseButton={false}
-        >
+        <SheetContent side="bottom" variant="panel" showCloseButton={false}>
           <SheetTitle className="sr-only">
             {workout?.name || t("history.workoutDetails", "Workout details")}
           </SheetTitle>

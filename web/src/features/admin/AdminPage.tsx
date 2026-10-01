@@ -11,6 +11,7 @@ import { Grid } from "@/shared/components/Grid";
 import { MetricCard } from "@/shared/components/MetricCard";
 import { Button } from "@/shared/ui/button";
 import { toast } from "@/shared/lib/toast";
+import { cn } from "@/shared/lib/utils";
 import {
   adminInviteResponse,
   adminInvitesResponse,
@@ -255,21 +256,21 @@ function InvitesCard({ invites }: { invites: AdminInvite[] | undefined }) {
           <Button
             variant="plain"
             type="button"
-            className="h-min font-mono font-medium tracking-wider"
+            className="h-min"
             onClick={() => {
               navigator.clipboard?.writeText(invite.code).catch(() => {});
               toast("Copied " + invite.code);
             }}
           >
-            {invite.code}
+            <span className="font-mono font-medium tracking-wider">{invite.code}</span>
           </Button>
           <Button
-            variant="plain"
-            className="flex h-7.5 w-8 flex-none items-center justify-center rounded-lg text-base text-destructive transition duration-140 active:scale-95 active:bg-muted"
+            variant="square"
+            className="flex h-7.5 w-8 flex-none items-center justify-center active:scale-95"
             onClick={() => revokeInviteMutation.mutate(invite.code)}
             aria-label="revoke"
           >
-            <Icon name="trash" />
+            <Icon name="trash" className="text-destructive" />
           </Button>
         </div>
       ))}
@@ -324,8 +325,8 @@ function AdminContent() {
     <div className="mx-auto w-full max-w-160">
       <div className="mt-2 mb-4.5 flex items-end justify-between gap-3">
         <Button
-          variant="plain"
-          className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
+          variant="circle"
+          className="flex size-9 flex-none items-center justify-center active:scale-95"
           onClick={() => void navigate({ to: "/settings" })}
           aria-label="Back"
         >
@@ -338,8 +339,8 @@ function AdminContent() {
           </div>
         </div>
         <Button
-          variant="plain"
-          className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
+          variant="circle"
+          className="flex size-9 flex-none items-center justify-center active:scale-95"
           onClick={() => {
             void usersQuery.refetch();
             void invitesQuery.refetch();
@@ -390,15 +391,15 @@ function AdminContent() {
       {liveUsers.length > 0 && (
         <div className="mb-3 rounded-lg border border-primary bg-card p-4">
           <h2 className="mb-2 flex items-center gap-1.5 text-sm font-normal tracking-tight text-foreground/60">
-            <Icon name="dot" className="text-xs text-green-500" />
+            <Icon name="dot" className="text-xs text-success" />
             Training now
           </h2>
           {liveUsers.map((userRecord) => (
             <Button
-              variant="plain"
+              variant="row"
               type="button"
               key={userRecord.id}
-              className="flex w-full items-center justify-between gap-3 border-b border-border/60 px-0.5 py-2 text-left"
+              className="flex w-full items-center justify-between text-left"
               onClick={() => openUser(userRecord.id)}
             >
               <div>
@@ -424,16 +425,16 @@ function AdminContent() {
       <Grid columns={{ default: 1, lg: 2 }} gap="xs">
         {userList.map((userRecord) => (
           <Button
-            variant="plain"
+            variant="row"
             type="button"
             key={userRecord.id}
-            className={`flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors duration-140 active:bg-muted ${userRecord.disabled ? "opacity-50" : ""}`}
+            className="flex min-h-15 w-full items-center text-left"
             onClick={() => openUser(userRecord.id)}
           >
-            <div className="min-w-0 flex-1">
+            <div className={cn("min-w-0 flex-1", userRecord.disabled && "opacity-50")}>
               <div className="text-base leading-tight tracking-tight">
                 {userRecord.live && (
-                  <Icon name="dot" className="mr-1.5 inline-block text-xs text-green-500" />
+                  <Icon name="dot" className="mr-1.5 inline-block text-xs text-success" />
                 )}
                 {userRecord.name}{" "}
                 {userRecord.admin && (
@@ -479,11 +480,7 @@ function AdminContent() {
           if (!open) setDetailUserId(null);
         }}
       >
-        <SheetContent
-          side="bottom"
-          className="max-h-screen touch-pan-y overflow-y-auto overscroll-contain rounded-2xl bg-sheet p-2 px-4.5 pb-5 lg:inset-x-auto lg:left-1/2 lg:w-160 lg:-translate-x-1/2"
-          showCloseButton={false}
-        >
+        <SheetContent side="bottom" variant="panel" showCloseButton={false}>
           <SheetTitle className="sr-only">User details</SheetTitle>
           <div className="mx-auto mt-1.5 mb-3.5 h-1 w-9 rounded-full bg-foreground/20" />
           {detailUserId && (

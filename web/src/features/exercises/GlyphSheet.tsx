@@ -29,21 +29,18 @@ export function GlyphPicker({
           <div className="grid grid-cols-5 gap-2.5">
             {group.items.map((iconName) => (
               <Button
-                variant="plain"
+                variant="tile"
                 type="button"
                 key={iconName}
-                className={
-                  iconName === currentGlyph
-                    ? "flex aspect-square items-center justify-center rounded-lg bg-primary text-2xl text-primary-foreground transition active:scale-95"
-                    : "flex aspect-square items-center justify-center rounded-lg bg-card text-2xl text-foreground transition active:scale-95"
-                }
+                aria-pressed={iconName === currentGlyph}
+                className="flex aspect-square items-center justify-center active:scale-95"
                 onClick={() => {
                   void close();
                   onPick(iconName);
                 }}
                 aria-label={iconName}
               >
-                <Icon name={iconName} />
+                <Icon name={iconName} className="text-2xl" />
               </Button>
             ))}
           </div>

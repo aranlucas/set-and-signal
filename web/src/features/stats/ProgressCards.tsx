@@ -4,7 +4,7 @@ import { fmtNum, fmtDate } from "@/shared/lib/format";
 import LineChart from "@/shared/components/LineChart";
 import Icon from "@/shared/components/Icon";
 import { Button } from "@/shared/ui/button";
-import { Segmented } from "@/shared/components/Segmented";
+import { Segmented } from "@/shared/ui/segmented";
 import { SelectRow } from "@/shared/components/SelectRow";
 import type { AppState, EffortKind, ExConfig, LoggedSet } from "@/shared/lib/types";
 import type { StatsSheet } from "@/features/stats/stats-types";

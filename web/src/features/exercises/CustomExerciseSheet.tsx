@@ -111,7 +111,7 @@ export function CustomExerciseForm({
           "Name it and pick a body part — it behaves like any other exercise, just without an animation.",
         )}
       </div>
-      <FieldGroup className="gap-3">
+      <FieldGroup>
         <Field data-invalid={!!errors.name}>
           <FieldLabel htmlFor="custom-exercise-name">
             {t("customExercise.exerciseName", "Exercise name")}
@@ -128,28 +128,23 @@ export function CustomExerciseForm({
           <FieldLabel id="custom-exercise-body-part">
             {t("customExercise.pickBodyPart", "Pick a body part")}
           </FieldLabel>
-          <FieldSet
-            aria-labelledby="custom-exercise-body-part"
-            className="scrollbar-none flex-row gap-2 overflow-x-auto pb-0.5"
-          >
-            {BODYPARTS.map((option) => (
-              <Button
-                variant="plain"
-                key={option}
-                type="button"
-                aria-pressed={bodyPart === option}
-                className={
-                  bodyPart === option
-                    ? "shrink-0 rounded-full bg-primary px-3 py-1.5 text-sm font-medium tracking-tight text-primary-foreground"
-                    : "shrink-0 rounded-full bg-card px-3 py-1.5 text-sm tracking-tight text-foreground"
-                }
-                onClick={() =>
-                  setValue("bodyPart", option, { shouldDirty: true, shouldValidate: true })
-                }
-              >
-                {metadata.bodyPart(option)}
-              </Button>
-            ))}
+          <FieldSet aria-labelledby="custom-exercise-body-part">
+            <div className="flex scrollbar-none gap-2 overflow-x-auto pb-0.5">
+              {BODYPARTS.map((option) => (
+                <Button
+                  variant="chip"
+                  key={option}
+                  type="button"
+                  aria-pressed={bodyPart === option}
+                  className="shrink-0"
+                  onClick={() =>
+                    setValue("bodyPart", option, { shouldDirty: true, shouldValidate: true })
+                  }
+                >
+                  {metadata.bodyPart(option)}
+                </Button>
+              ))}
+            </div>
           </FieldSet>
           {bodyPart === "cardio" && (
             <div className="flex items-center gap-1.5 text-sm leading-snug text-muted-foreground">

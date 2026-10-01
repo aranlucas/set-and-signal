@@ -129,9 +129,9 @@ export default function RoutineEdit() {
       <h1 className="sr-only">{routine.name}</h1>
       <div className="mt-2 mb-4.5 flex items-end justify-between gap-3">
         <Button
-          variant="plain"
+          variant="circle"
           type="button"
-          className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
+          className="flex size-9 flex-none items-center justify-center active:scale-95"
           onClick={() => void nav({ to: "/plan" })}
           aria-label={t("navigation.plan", "Plan")}
         >
@@ -143,7 +143,6 @@ export default function RoutineEdit() {
         >
           <Input
             aria-label={t("routine.name", "Routine name")}
-            className="w-full rounded-lg bg-card px-4 py-3 text-xl font-semibold tracking-tight transition-shadow duration-140 outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary"
             {...register("name")}
             onBlur={() => void handleSubmit(saveName)()}
             onKeyDown={(event) => {
@@ -155,9 +154,9 @@ export default function RoutineEdit() {
           />
         </form>
         <Button
-          variant="plain"
+          variant="circle"
           type="button"
-          className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
+          className="flex size-9 flex-none items-center justify-center active:scale-95"
           aria-label={t("exercise.pickIcon", "Pick an icon")}
           onClick={() =>
             setSheet({
@@ -396,9 +395,9 @@ function RoutineExerciseList({
               )}
             >
               <Button
-                variant="plain"
+                variant="bare"
                 type="button"
-                className="flex min-w-0 flex-1 items-center gap-3 bg-transparent p-0 text-left"
+                className="flex min-w-0 flex-1 items-center text-left"
                 onClick={openExerciseEditor}
               >
                 <Thumb exercise={exercise} />
@@ -414,12 +413,10 @@ function RoutineExerciseList({
               <div className="flex flex-none flex-col items-center gap-0.5">
                 {index > 0 && (
                   <Button
-                    variant="plain"
+                    variant="square"
                     type="button"
-                    className={cn(
-                      "flex h-7 w-8 flex-none items-center justify-center rounded-sm bg-card text-base text-foreground transition duration-140 active:scale-95 active:bg-muted",
-                      linkedPrevious && "bg-primary/15 text-primary",
-                    )}
+                    aria-pressed={Boolean(linkedPrevious)}
+                    className="flex h-7 w-8 flex-none items-center justify-center active:scale-95"
                     title={t("routine.supersetExerciseAbove", "Superset with exercise above")}
                     onClick={(event) => {
                       event.stopPropagation();
@@ -431,28 +428,28 @@ function RoutineExerciseList({
                 )}
                 <div className="flex gap-0.5">
                   <Button
-                    variant="plain"
+                    variant="square"
                     type="button"
-                    className="flex h-6 w-7 flex-none items-center justify-center rounded-sm bg-card text-xs text-foreground transition duration-140 active:scale-95 active:bg-muted"
+                    className="flex h-6 w-7 flex-none items-center justify-center active:scale-95"
                     aria-label="Move up"
                     onClick={(event) => {
                       event.stopPropagation();
                       move(index, -1);
                     }}
                   >
-                    <Icon name="chevronUp" />
+                    <Icon name="chevronUp" className="text-xs" />
                   </Button>
                   <Button
-                    variant="plain"
+                    variant="square"
                     type="button"
-                    className="flex h-6 w-7 flex-none items-center justify-center rounded-sm bg-card text-xs text-foreground transition duration-140 active:scale-95 active:bg-muted"
+                    className="flex h-6 w-7 flex-none items-center justify-center active:scale-95"
                     aria-label="Move down"
                     onClick={(event) => {
                       event.stopPropagation();
                       move(index, 1);
                     }}
                   >
-                    <Icon name="chevronDown" />
+                    <Icon name="chevronDown" className="text-xs" />
                   </Button>
                 </div>
               </div>
@@ -501,11 +498,7 @@ function RoutineSheet({ sheet, setSheet, closeSheet, setConfirmation }: RoutineS
   const { t } = useTranslation();
   return (
     <Sheet open={sheet !== null} onOpenChange={(open) => !open && setSheet(null)}>
-      <SheetContent
-        side="bottom"
-        className="max-h-screen touch-pan-y overflow-y-auto overscroll-contain rounded-2xl bg-sheet p-2 px-4.5 pb-5 lg:inset-x-auto lg:left-1/2 lg:w-160 lg:-translate-x-1/2"
-        showCloseButton={false}
-      >
+      <SheetContent side="bottom" variant="panel" showCloseButton={false}>
         <SheetTitle className="sr-only">{t("routine.editorTitle", "Routine editor")}</SheetTitle>
         <div className="mx-auto mt-1.5 mb-3.5 h-1 w-9 rounded-full bg-foreground/20" />
         {sheet?.kind === "glyph" && (

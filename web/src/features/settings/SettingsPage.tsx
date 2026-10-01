@@ -54,8 +54,8 @@ function SettingsContent() {
     <div className="mx-auto w-full max-w-160">
       <PageHeader>
         <Button
-          variant="plain"
-          className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
+          variant="circle"
+          className="flex size-9 flex-none items-center justify-center active:scale-95"
           onClick={() => void navigate({ to: "/home" })}
           aria-label={t("navigation.home", "Home")}
         >
@@ -207,11 +207,7 @@ function SettingsContent() {
           if (!open) setActiveSheet(null);
         }}
       >
-        <SheetContent
-          side="bottom"
-          className="max-h-screen touch-pan-y overflow-y-auto overscroll-contain rounded-2xl bg-sheet p-2 px-4.5 pb-5 lg:inset-x-auto lg:left-1/2 lg:w-160 lg:-translate-x-1/2"
-          showCloseButton={false}
-        >
+        <SheetContent side="bottom" variant="panel" showCloseButton={false}>
           <SheetTitle className="sr-only">
             {activeSheet?.kind === "curated"
               ? t("plans.curated.title", "Curated plans")

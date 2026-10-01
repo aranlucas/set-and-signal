@@ -81,8 +81,8 @@ export function Row({
       {icon && (
         <span
           data-row-icon
-          className="flex size-7 shrink-0 items-center justify-center rounded-sm text-lg text-white"
-          style={{ backgroundColor: iconTint || "var(--primary)" }}
+          className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-(--row-tint) text-lg text-white"
+          style={{ "--row-tint": iconTint || "var(--primary)" }}
         >
           <Icon name={icon} />
         </span>
@@ -104,18 +104,28 @@ export function Row({
     </>
   );
 
-  const rowClassName = cn(
-    "relative flex min-h-12 w-full items-center gap-3 bg-transparent px-3.5 py-3 text-left text-foreground before:pointer-events-none before:absolute before:top-0 before:right-0 before:left-3.5 before:hidden before:h-px before:bg-border/60 [&+&]:before:block [&:has([data-row-icon])+&:has([data-row-icon])]:before:left-14",
-    onClick && "active:bg-muted",
-    danger && "text-destructive",
-    className,
-  );
+  const layoutClassName = cn("relative flex min-h-12 w-full items-center text-left", className);
 
   return onClick ? (
-    <Button variant="plain" type="button" className={rowClassName} onClick={onClick}>
+    <Button
+      variant="listItem"
+      type="button"
+      data-tone={danger ? "danger" : undefined}
+      className={layoutClassName}
+      onClick={onClick}
+    >
       {content}
     </Button>
   ) : (
-    <div className={rowClassName}>{content}</div>
+    // Mirrors Button's `listItem` variant so static and tappable rows share dividers.
+    <div
+      className={cn(
+        "gap-3 bg-transparent px-3.5 py-3 text-foreground before:pointer-events-none before:absolute before:top-0 before:right-0 before:left-3.5 before:hidden before:h-px before:bg-border/60 [&+&]:before:block [&:has([data-row-icon])+&:has([data-row-icon])]:before:left-14",
+        danger && "text-destructive",
+        layoutClassName,
+      )}
+    >
+      {content}
+    </div>
   );
 }

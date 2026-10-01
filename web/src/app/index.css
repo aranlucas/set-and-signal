@@ -43,6 +43,7 @@
   --color-sheet: var(--sheet);
   --color-modal: var(--modal);
   --color-warning: var(--warning);
+  --color-success: var(--success);
   --color-active: var(--active);
   --color-accent-swatch: var(--brand-dark);
   --color-system-blue: var(--system-blue);
@@ -125,6 +126,7 @@
   --sheet: var(--background);
   --modal: #ffffff;
   --warning: #806510;
+  --success: #15803d;
   --active: #e84a35;
   --foreground-subtle: #a1a7b8;
   --chart-grid: #e7e9f1;
@@ -235,6 +237,7 @@
   --sheet: var(--popover);
   --modal: var(--popover);
   --warning: #f2c45a;
+  --success: #4ade80;
   --active: #ff7865;
   --foreground-subtle: #737e9c;
   --chart-grid: #34394d;

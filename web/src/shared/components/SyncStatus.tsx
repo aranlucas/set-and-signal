@@ -153,7 +153,7 @@ export default function SyncStatus() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-dvh overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="pr-8 font-heading text-2xl">
+            <DialogTitle className="mr-8">
               {t("sync.reviewTitle", "Two versions. Your choice.")}
             </DialogTitle>
             <DialogDescription>
@@ -175,28 +175,28 @@ export default function SyncStatus() {
               <div className="overflow-x-auto">
                 <Table className="table-fixed text-left">
                   <TableHeader>
-                    <TableRow className="border-b border-foreground">
-                      <TableHead className="w-1/3 p-2 whitespace-normal">
+                    <TableRow>
+                      <TableHead className="w-1/3 whitespace-normal">
                         {t("sync.detail", "Detail")}
                       </TableHead>
-                      <TableHead className="p-2 whitespace-normal">
+                      <TableHead className="whitespace-normal">
                         {t("sync.thisDevice", "This device")}
                       </TableHead>
-                      <TableHead className="p-2 whitespace-normal">
+                      <TableHead className="whitespace-normal">
                         {t("sync.otherVersion", "Other version")}
                       </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {conflictRows(conflict).map((row) => (
-                      <TableRow key={row.label} className="border-b border-border">
-                        <TableHead className="p-2 align-top font-normal wrap-anywhere whitespace-normal text-muted-foreground">
+                      <TableRow key={row.label}>
+                        <TableHead className="align-top wrap-anywhere whitespace-normal">
                           {row.label}
                         </TableHead>
-                        <TableCell className="p-2 align-top wrap-anywhere whitespace-normal">
+                        <TableCell className="align-top wrap-anywhere whitespace-normal">
                           {row.local}
                         </TableCell>
-                        <TableCell className="p-2 align-top wrap-anywhere whitespace-normal">
+                        <TableCell className="align-top wrap-anywhere whitespace-normal">
                           {row.remote}
                         </TableCell>
                       </TableRow>

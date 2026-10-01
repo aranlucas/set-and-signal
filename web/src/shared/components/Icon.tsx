@@ -383,25 +383,19 @@ const P = {
   done: BASE.check,
 };
 
-/**
- * <Icon name="flame" />           — inherits font-size via `1em` sizing
- * <Icon name="flame" size={28} /> — explicit pixel size
- */
+/** <Icon name="flame" /> — sized by `className` (defaults to `size-4`). */
 export default function Icon({
   name,
-  size,
   className = "",
   style,
   ...rest
 }: {
   name: IconName;
-  size?: number;
   className?: string;
   style?: CSSProperties;
 } & SVGProps<SVGSVGElement>) {
   const iconContent = P[name];
   if (!iconContent) return null;
-  const sizeStyle = size ? { width: size, height: size } : null;
   return (
     <svg
       data-icon
@@ -411,7 +405,7 @@ export default function Icon({
       strokeLinejoin="round"
       aria-hidden="true"
       focusable="false"
-      style={sizeStyle ? { ...sizeStyle, ...style } : style}
+      style={style}
       {...rest}
     >
       {iconContent}

@@ -54,8 +54,8 @@ export default function Plan() {
         description={t("plan.weeklyRoutine", "Your weekly routine")}
         actions={
           <Button
-            variant="plain"
-            className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
+            variant="circle"
+            className="flex size-9 flex-none items-center justify-center active:scale-95"
             onClick={() => setSheet({ kind: "tools" })}
             aria-label={t("sharing.sharePlan", "Share your plan")}
             title={t("sharing.sharePlan", "Share your plan")}
@@ -83,10 +83,10 @@ export default function Plan() {
               });
               return (
                 <Button
-                  variant="plain"
+                  variant="row"
                   type="button"
                   key={d}
-                  className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2 text-left transition-colors duration-140 active:bg-muted"
+                  className="flex min-h-15 w-full items-center text-left"
                   onClick={() => setSheet({ kind: "assign", day: d })}
                 >
                   <div className="min-w-0 flex-1">
@@ -133,10 +133,10 @@ export default function Plan() {
             <SpaceBetween size="xs">
               {state.routines.map((routine) => (
                 <Button
-                  variant="plain"
+                  variant="row"
                   type="button"
                   key={routine.id}
-                  className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2 text-left transition-colors duration-140 active:bg-muted"
+                  className="flex min-h-15 w-full items-center text-left"
                   onClick={() => void nav({ to: "/plan/r/$id", params: { id: routine.id } })}
                 >
                   <span className="flex size-7 flex-none items-center justify-center rounded-sm bg-primary text-lg text-white">
@@ -173,11 +173,7 @@ export default function Plan() {
         </div>
       </Grid>
       <Sheet open={sheet !== null} onOpenChange={(open) => !open && setSheet(null)}>
-        <SheetContent
-          side="bottom"
-          className="max-h-screen touch-pan-y overflow-y-auto overscroll-contain rounded-2xl bg-sheet p-2 px-4.5 pb-5 lg:inset-x-auto lg:left-1/2 lg:w-160 lg:-translate-x-1/2"
-          showCloseButton={false}
-        >
+        <SheetContent side="bottom" variant="panel" showCloseButton={false}>
           <SheetTitle className="sr-only">
             {sheet?.kind === "tools"
               ? t("sharing.sharePlan", "Share your plan")

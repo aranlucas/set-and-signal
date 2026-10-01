@@ -12,7 +12,7 @@ import {
   effortHistogram,
   HARD_RIR,
 } from "@/domain/training/effort";
-import { Segmented } from "@/shared/components/Segmented";
+import { Segmented } from "@/shared/ui/segmented";
 import type { AppState } from "@/shared/lib/types";
 
 // How hard the training was — the half of the picture a volume chart cannot show. Everything
@@ -133,8 +133,8 @@ export function EffortCard({ appState }: { appState: AppState }) {
               </span>
               <span className="h-1 w-18.5 flex-none overflow-hidden rounded-none bg-muted">
                 <i
-                  className={`block h-full rounded-none ${b.rir <= HARD_RIR ? "bg-yellow-400" : "bg-foreground/30"}`}
-                  style={{ width: Math.round((b.n / maxBin) * 100) + "%" }}
+                  className={`block h-full w-(--share) rounded-none ${b.rir <= HARD_RIR ? "bg-warning" : "bg-foreground/30"}`}
+                  style={{ "--share": Math.round((b.n / maxBin) * 100) + "%" }}
                 />
               </span>
               <span className="min-w-13 flex-none text-right text-xs text-foreground/60">

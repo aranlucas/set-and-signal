@@ -153,8 +153,8 @@ export function TopWeight({
             </Button>
             <Button
               type="button"
-              variant="ghost"
-              className="text-muted-foreground"
+              variant="quiet"
+
               onClick={() =>
                 void handleSubmit(
                   (values) => commit(values, false),
@@ -331,7 +331,7 @@ export function FinishSummary({
           "workout.notes.placeholder",
           "How did it go? Aches, cues, what to try next time…",
         )}
-        className="min-h-20 resize-none bg-card text-base"
+        className="min-h-20 resize-none"
         aria-label={t("workout.notes.title", "Notes")}
       />
       <h4 className="mt-5.5 mb-2 px-1 text-left text-sm font-normal tracking-tight text-foreground/60">

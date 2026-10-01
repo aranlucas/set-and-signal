@@ -30,7 +30,7 @@ import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import { Segmented } from "@/shared/components/Segmented";
+import { Segmented } from "@/shared/ui/segmented";
 import {
   clampToolNumber,
   formatTimer,
@@ -191,9 +191,8 @@ export default function ToolsPage() {
     <div className="mx-auto w-full max-w-285">
       <header className="mt-2 mb-6 flex items-center gap-3 border-b border-border pb-4">
         <Button
-          variant="outline"
-          size="icon"
-          className="size-11 rounded-full"
+          variant="circle"
+          className="flex size-11 items-center justify-center"
           onClick={() => void navigate({ to: "/home" })}
           aria-label={t("tools.backHome", "Back to home")}
         >
@@ -227,7 +226,7 @@ export default function ToolsPage() {
           />
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="sm:col-span-2">
-              <Label htmlFor="tools-target-weight" className="mb-2 text-muted-foreground">
+              <Label htmlFor="tools-target-weight" tone="muted" className="mb-2">
                 {t("tools.targetWeight", "Target weight")}
               </Label>
               <div className="relative">
@@ -237,7 +236,9 @@ export default function ToolsPage() {
                   step={unit === "lb" ? 5 : 2.5}
                   value={targetWeight}
                   onChange={setTargetWeight}
-                  className="h-14 rounded-lg border border-input bg-background pr-14 text-2xl font-semibold tabular-nums"
+                  variant="numeric"
+                  data-suffix=""
+                  className="h-14"
                 />
                 <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-medium text-muted-foreground">
                   {unit}
@@ -245,7 +246,7 @@ export default function ToolsPage() {
               </div>
             </div>
             <div>
-              <Label htmlFor="tools-bar-weight" className="mb-2 text-muted-foreground">
+              <Label htmlFor="tools-bar-weight" tone="muted" className="mb-2">
                 {t("tools.barWeight", "Bar weight")}
               </Label>
               <ToolNumberField
@@ -259,16 +260,15 @@ export default function ToolsPage() {
                     state.plates.bar = normalizeToolWeight(bar);
                   });
                 }}
-                className="h-14 rounded-lg border border-input bg-background text-2xl font-semibold tabular-nums"
+                variant="numeric"
+                className="h-14"
               />
             </div>
           </div>
 
           <div className="mt-5 border-t border-border pt-4">
             <div className="mb-2 flex items-center justify-between gap-3">
-              <Label className="text-muted-foreground">
-                {t("tools.availablePlates", "Available plates per side")}
-              </Label>
+              <Label tone="muted">{t("tools.availablePlates", "Available plates per side")}</Label>
               <span className="text-xs text-muted-foreground">
                 {t("tools.tapToToggle", "Tap to toggle")}
               </span>
@@ -280,15 +280,10 @@ export default function ToolsPage() {
                   <Button
                     key={plate}
                     type="button"
-                    variant="plain"
+                    variant="toggle"
                     aria-pressed={active}
                     onClick={() => togglePlate(plate)}
-                    className={cn(
-                      "min-h-11 min-w-14 rounded-lg border px-3 py-2 text-sm font-semibold tabular-nums transition-colors",
-                      active
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-muted text-muted-foreground hover:text-foreground",
-                    )}
+                    className="min-h-11 min-w-14"
                   >
                     {fmtPlate(plate)}
                   </Button>
@@ -316,7 +311,7 @@ export default function ToolsPage() {
                     <p
                       className={cn(
                         "mt-1 text-lg font-semibold tabular-nums",
-                        !plateResult.exact && "text-amber-600 dark:text-amber-400",
+                        !plateResult.exact && "text-warning",
                       )}
                     >
                       {plateResult.exact ? "" : "≈ "}
@@ -339,9 +334,9 @@ export default function ToolsPage() {
                           {Array.from({ length: Math.min(count, 4) }, (_, index) => (
                             <i
                               key={index}
-                              className="block w-1.5 rounded-sm bg-primary"
+                              className="block h-(--plate-height) w-1.5 rounded-sm bg-primary"
                               style={{
-                                height: `${12 + Math.round((w / Math.max(...plateResult.perSide.map((plate) => plate.w))) * 10)}px`,
+                                "--plate-height": `${12 + Math.round((w / Math.max(...plateResult.perSide.map((plate) => plate.w))) * 10)}px`,
                               }}
                             />
                           ))}
@@ -357,7 +352,7 @@ export default function ToolsPage() {
                   )}
                 </div>
                 {!plateResult.exact && (
-                  <p className="mt-3 flex items-start gap-1.5 text-xs leading-snug text-amber-700 dark:text-amber-300">
+                  <p className="mt-3 flex items-start gap-1.5 text-xs leading-snug text-warning">
                     <Info className="mt-0.5 size-3.5 shrink-0" />
                     {t(
                       "tools.closestLoad",
@@ -388,7 +383,7 @@ export default function ToolsPage() {
             title={t("tools.warmupTitle", "Warm-up builder")}
             description={t("tools.warmupDescription", "A simple ramp into your working sets.")}
           />
-          <Label htmlFor="tools-warmup-weight" className="mb-2 text-muted-foreground">
+          <Label htmlFor="tools-warmup-weight" tone="muted" className="mb-2">
             {t("tools.workingWeight", "Working weight")}
           </Label>
           <div className="relative">
@@ -398,7 +393,9 @@ export default function ToolsPage() {
               step={unit === "lb" ? 5 : 2.5}
               value={warmupWeight}
               onChange={setWarmupWeight}
-              className="h-12 rounded-lg border border-input bg-background pr-14 text-xl font-semibold tabular-nums"
+              variant="numeric"
+              data-suffix=""
+              className="h-12"
             />
             <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm font-medium text-muted-foreground">
               {unit}
@@ -438,7 +435,7 @@ export default function ToolsPage() {
           />
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label htmlFor="tools-onerm-weight" className="mb-2 text-muted-foreground">
+              <Label htmlFor="tools-onerm-weight" tone="muted" className="mb-2">
                 {t("tools.setWeight", "Set weight")}
               </Label>
               <ToolNumberField
@@ -447,11 +444,12 @@ export default function ToolsPage() {
                 step={unit === "lb" ? 5 : 2.5}
                 value={oneRmWeight}
                 onChange={setOneRmWeight}
-                className="h-12 rounded-lg border border-input bg-background text-lg font-semibold tabular-nums"
+                variant="numeric"
+                className="h-12"
               />
             </div>
             <div>
-              <Label htmlFor="tools-onerm-reps" className="mb-2 text-muted-foreground">
+              <Label htmlFor="tools-onerm-reps" tone="muted" className="mb-2">
                 {t("tools.reps", "Reps")}
               </Label>
               <ToolNumberField
@@ -461,7 +459,8 @@ export default function ToolsPage() {
                 integer
                 value={oneRmReps}
                 onChange={(reps) => setOneRmReps(normalizeToolReps(reps))}
-                className="h-12 rounded-lg border border-input bg-background text-lg font-semibold tabular-nums"
+                variant="numeric"
+                className="h-12"
               />
             </div>
           </div>
@@ -470,15 +469,10 @@ export default function ToolsPage() {
               <Button
                 key={formulaId}
                 type="button"
-                variant="plain"
+                variant="toggle"
                 onClick={() => setFormula(formulaId)}
                 aria-pressed={formula === formulaId}
-                className={cn(
-                  "min-h-10 rounded-md px-3 text-xs font-medium",
-                  formula === formulaId
-                    ? "bg-primary/10 text-primary"
-                    : "bg-muted text-muted-foreground",
-                )}
+                className="min-h-10"
               >
                 {formulaLabel(formulaId, t)}
               </Button>
@@ -493,9 +487,7 @@ export default function ToolsPage() {
                 {oneRm === null ? "—" : `${fmtNum(oneRm)} ${unit}`}
               </p>
             </div>
-            {oneRm !== null && (
-              <Check className="mb-1 size-5 text-emerald-600 dark:text-emerald-400" />
-            )}
+            {oneRm !== null && <Check className="mb-1 size-5 text-success" />}
           </div>
           {oneRm !== null ? (
             <div className="mt-4">
@@ -582,7 +574,9 @@ export default function ToolsPage() {
               step={15}
               value={customRest}
               onChange={(seconds) => setCustomRest(normalizeRestSeconds(seconds))}
-              className="h-11 min-w-0 flex-1 rounded-lg border border-input bg-background text-sm tabular-nums sm:w-25 sm:flex-none"
+              variant="numeric"
+              density="compact"
+              className="h-11 min-w-0 flex-1 sm:w-25 sm:flex-none"
             />
             <Button
               type="button"
@@ -597,9 +591,9 @@ export default function ToolsPage() {
         {timer && (
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <Button
-              variant="plain"
+              variant="secondary"
               size="sm"
-              className="min-h-10 rounded-md bg-muted px-2"
+              className="min-h-10"
               onClick={() => addRest(-15)}
               aria-label={t("tools.decreaseTimer", "Decrease timer by 15 seconds")}
             >
@@ -607,9 +601,9 @@ export default function ToolsPage() {
               {t("tools.minusSeconds", "−15s")}
             </Button>
             <Button
-              variant="plain"
+              variant="secondary"
               size="sm"
-              className="min-h-10 rounded-md bg-muted px-2"
+              className="min-h-10"
               onClick={() => addRest(15)}
               aria-label={t("tools.increaseTimer", "Increase timer by 15 seconds")}
             >

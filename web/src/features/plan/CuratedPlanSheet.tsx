@@ -45,10 +45,10 @@ export function CuratedPlans({ close }: { close: SheetClose }) {
             const n = p.routines.reduce((a, r) => a + r[2].length, 0);
             return (
               <Button
-                variant="plain"
+                variant="row"
                 type="button"
                 key={p.key}
-                className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
+                className="flex min-h-15 w-full items-center text-left"
                 onClick={() => load(p)}
               >
                 <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-primary text-lg text-white">
@@ -87,11 +87,7 @@ export function CuratedPlans({ close }: { close: SheetClose }) {
             );
           })}
         </SpaceBetween>
-        <Button
-          variant="ghost"
-          className="w-full text-muted-foreground"
-          onClick={() => void close()}
-        >
+        <Button variant="quiet" className="w-full" onClick={() => void close()}>
           {t("common.cancel", "Cancel")}
         </Button>
       </SpaceBetween>

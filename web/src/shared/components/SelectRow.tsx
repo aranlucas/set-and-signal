@@ -42,20 +42,16 @@ export function SelectRow<V extends string>({
         onClick={() => setIsOpen(true)}
       />
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetContent
-          side="bottom"
-          className="max-h-screen touch-pan-y overflow-y-auto overscroll-contain rounded-2xl bg-sheet p-2 px-4.5 pb-5 lg:inset-x-auto lg:left-1/2 lg:w-160 lg:-translate-x-1/2"
-          showCloseButton={false}
-        >
+        <SheetContent side="bottom" variant="panel" showCloseButton={false}>
           <div className="mx-auto mt-1.5 mb-3.5 h-1 w-9 rounded-full bg-foreground/20" />
           <SheetTitle>{sheetTitle || title}</SheetTitle>
           <div className="overflow-hidden rounded-lg bg-card">
-            {options.map((option, optionIndex) => (
+            {options.map((option) => (
               <Button
-                variant="plain"
+                variant="listItem"
                 type="button"
                 key={option.value}
-                className={`relative flex min-h-11.5 w-full items-center gap-3 bg-transparent px-3.5 py-3 text-left text-foreground active:bg-muted ${optionIndex === 0 ? "" : "before:absolute before:top-0 before:right-0 before:left-3.5 before:h-px before:bg-border/60"}`}
+                className="relative flex min-h-11.5 w-full items-center text-left"
                 onClick={() => {
                   setIsOpen(false);
                   onChange(option.value);

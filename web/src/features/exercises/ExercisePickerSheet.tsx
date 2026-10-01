@@ -17,7 +17,6 @@ import { Thumb } from "@/shared/components/Media";
 import Icon from "@/shared/components/Icon";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { glyphOf } from "@/domain/exercises/glyphs";
-import { cn } from "@/shared/lib/utils";
 import type { CustomEx, ExConfig, Routine, SheetClose } from "@/shared/lib/types";
 import {
   getAppState,
@@ -110,10 +109,10 @@ export function AddToRoutine({
       <SpaceBetween size="xs">
         {appState.routines.map((routine) => (
           <Button
-            variant="plain"
+            variant="row"
             type="button"
             key={routine.id}
-            className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
+            className="flex min-h-15 w-full items-center text-left"
             onClick={() => void chooseRoutine(routine.id)}
           >
             <span className="flex size-7.25 shrink-0 items-center justify-center rounded-sm bg-primary text-lg text-white">
@@ -134,9 +133,9 @@ export function AddToRoutine({
           </Button>
         ))}
         <Button
-          variant="plain"
+          variant="row"
           type="button"
-          className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
+          className="flex min-h-15 w-full items-center text-left"
           onClick={() => void chooseRoutine("_new")}
         >
           <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-input text-lg text-white">
@@ -216,7 +215,7 @@ export function ExercisePicker({
           <path d="m21 21-4.3-4.3" />
         </svg>
         <Input
-          className="rounded-md bg-muted pl-9"
+          variant="search"
           aria-label={t("exercise.searchLabel", "Search exercises")}
           placeholder={t("exercise.searchExercises", "Search {{count}} exercises…", {
             count: allCatalogExercises.length,
@@ -237,13 +236,10 @@ export function ExercisePicker({
       >
         {chosenExerciseCount > 0 && (
           <Button
-            variant="plain"
+            variant="chip"
             type="button"
             aria-pressed={bodyPart === "★"}
-            className={cn(
-              "inline-flex shrink-0 items-center gap-1 rounded-full bg-card px-3 py-1.5 text-sm text-foreground outline-none focus-visible:underline focus-visible:underline-offset-2",
-              bodyPart === "★" && "bg-primary font-medium text-primary-foreground",
-            )}
+            className="shrink-0"
             onClick={() => {
               setBodyPart("★");
               setEquipment("");
@@ -255,13 +251,10 @@ export function ExercisePicker({
           </Button>
         )}
         <Button
-          variant="plain"
+          variant="chip"
           type="button"
           aria-pressed={!bodyPart}
-          className={cn(
-            "shrink-0 rounded-full bg-card px-3 py-1.5 text-sm text-foreground outline-none focus-visible:underline focus-visible:underline-offset-2",
-            !bodyPart && "bg-primary font-medium text-primary-foreground",
-          )}
+          className="shrink-0"
           onClick={() => {
             setBodyPart("");
             setEquipment("");
@@ -272,14 +265,11 @@ export function ExercisePicker({
         </Button>
         {BODYPARTS.map((option) => (
           <Button
-            variant="plain"
+            variant="chip"
             type="button"
             key={option}
             aria-pressed={bodyPart === option}
-            className={cn(
-              "shrink-0 rounded-full bg-card px-3 py-1.5 text-sm text-foreground outline-none focus-visible:underline focus-visible:underline-offset-2",
-              bodyPart === option && "bg-primary font-medium text-primary-foreground",
-            )}
+            className="shrink-0"
             onClick={() => {
               setBodyPart(option);
               setEquipment("");
@@ -293,13 +283,10 @@ export function ExercisePicker({
       {equipmentOptions.length > 1 && (
         <div className="mb-2.5 flex shrink-0 scrollbar-none gap-2 overflow-x-auto pb-0.5">
           <Button
-            variant="plain"
+            variant="chip"
             type="button"
             aria-pressed={!activeEquipment}
-            className={cn(
-              "shrink-0 rounded-full bg-card px-3 py-1.5 text-sm text-foreground outline-none focus-visible:underline focus-visible:underline-offset-2",
-              !activeEquipment && "bg-primary font-medium text-primary-foreground",
-            )}
+            className="shrink-0"
             onClick={() => {
               setEquipment("");
               resetVisibleCount();
@@ -309,14 +296,11 @@ export function ExercisePicker({
           </Button>
           {equipmentOptions.map((option) => (
             <Button
-              variant="plain"
+              variant="chip"
               type="button"
               key={option}
               aria-pressed={activeEquipment === option}
-              className={cn(
-                "shrink-0 rounded-full bg-card px-3 py-1.5 text-sm text-foreground outline-none focus-visible:underline focus-visible:underline-offset-2",
-                activeEquipment === option && "bg-primary font-medium text-primary-foreground",
-              )}
+              className="shrink-0"
               onClick={() => {
                 setEquipment(option);
                 resetVisibleCount();
@@ -331,9 +315,9 @@ export function ExercisePicker({
         <SpaceBetween size="xs">
           {bodyPart !== "★" && (
             <Button
-              variant="plain"
+              variant="row"
               type="button"
-              className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
+              className="flex min-h-15 w-full items-center text-left"
               onClick={() =>
                 openCustom(
                   null,
@@ -360,10 +344,10 @@ export function ExercisePicker({
           )}
           {filteredExercises.slice(0, visibleCount).map((exercise) => (
             <Button
-              variant="plain"
+              variant="row"
               type="button"
               key={exercise.id}
-              className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
+              className="flex min-h-15 w-full items-center text-left"
               onClick={() => void pickExercise(exercise)}
             >
               <Thumb exercise={toCatalogExercise(exercise)} />

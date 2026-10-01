@@ -79,10 +79,10 @@ export default function TabBar({
       aria-label="Main navigation"
       className="fixed inset-x-0 bottom-0 z-50 overflow-visible border-t border-foreground bg-background pt-2 pr-safe-tab-right pb-safe-tab-bottom pl-safe-tab-left contain-layout lg:inset-x-auto lg:bottom-4 lg:left-1/2 lg:w-130 lg:-translate-x-1/2 lg:border lg:px-2.5 lg:pb-2.5"
     >
-      <Tabs value={activeTab} className="w-full gap-0">
+      <Tabs value={activeTab} className="w-full">
         <TabsList
           variant="line"
-          className="grid w-full grid-cols-5 items-end gap-0 p-0 group-data-horizontal/tabs:h-auto"
+          className="grid w-full grid-cols-5 items-end group-data-horizontal/tabs:h-auto"
         >
           <NavigationTab
             value="home"
@@ -98,10 +98,9 @@ export default function TabBar({
           />
           <TabsTrigger
             value="workout"
-            className={cn(
-              "-mt-6 h-auto min-h-11 flex-col justify-end gap-1 rounded-sm px-1 py-0.5 text-xs leading-none font-medium text-primary after:hidden data-active:bg-transparent dark:data-active:bg-transparent",
-              appState.active && "text-active",
-            )}
+            variant="action"
+            data-running={appState.active ? "" : undefined}
+            className="-mt-6 min-h-11 flex-col justify-end"
             onClick={startWorkout}
             onPointerEnter={onStartIntent}
             onFocus={onStartIntent}

@@ -554,8 +554,10 @@ export default function Home() {
                         : fmtNum(week.volume)}
                     </span>
                     <div
-                      className={`volume-bar ${index === trend.length - 1 ? "is-current" : ""}`}
-                      style={{ height: `${Math.max(1, (week.volume / maxVolume) * 132)}px` }}
+                      className={`volume-bar h-(--bar-height) ${index === trend.length - 1 ? "is-current" : ""}`}
+                      style={{
+                        "--bar-height": `${Math.max(1, (week.volume / maxVolume) * 132)}px`,
+                      }}
                     />
                     <span className="bar-date">
                       {formatDate(t, new Date(week.date + "T12:00:00"), {

@@ -115,7 +115,7 @@ export default function Library() {
         </Label>
         <Input
           id="library-search"
-          className="w-full rounded-md bg-muted px-4 py-3 pl-9 text-lg tracking-tight transition-shadow duration-140 outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary"
+          variant="search"
           placeholder={t("library.search", "Search…")}
           value={searchQuery}
           onChange={(event) => {
@@ -131,13 +131,10 @@ export default function Library() {
         )}
       >
         <Button
-          variant="plain"
+          variant="chip"
           type="button"
           aria-pressed={!bodyPart}
-          className={cn(
-            "flex-none rounded-full bg-card px-3 py-1.5 text-sm tracking-tight text-foreground transition-colors duration-140 outline-none focus-visible:underline focus-visible:underline-offset-2 active:bg-muted",
-            !bodyPart && "bg-primary font-medium text-primary-foreground",
-          )}
+          className="flex-none"
           onClick={() => {
             setBodyPart("");
             setEquipment("");
@@ -148,35 +145,28 @@ export default function Library() {
         </Button>
         {BODYPARTS.map((b) => (
           <Button
-            variant="plain"
+            variant="chip"
             key={b}
             type="button"
             aria-pressed={bodyPart === b}
-            className={cn(
-              "flex-none rounded-full bg-card px-3 py-1.5 text-sm tracking-tight text-foreground transition-colors duration-140 outline-none focus-visible:underline focus-visible:underline-offset-2 active:bg-muted",
-              bodyPart === b && "bg-primary font-medium text-primary-foreground",
-              "capitalize",
-            )}
+            className="flex-none"
             onClick={() => {
               setBodyPart(b);
               setEquipment("");
               setVisibleCount(40);
             }}
           >
-            {metadata.bodyPart(b)}
+            <span className="capitalize">{metadata.bodyPart(b)}</span>
           </Button>
         ))}
       </div>
       {equipmentOptions.length > 1 && (
         <div className="mb-3 flex scrollbar-none gap-2 overflow-x-auto pb-0.5 [&::-webkit-scrollbar]:hidden">
           <Button
-            variant="plain"
+            variant="chip"
             type="button"
             aria-pressed={!selectedEquipment}
-            className={cn(
-              "flex-none rounded-full bg-card px-3 py-1.5 text-sm tracking-tight text-foreground transition-colors duration-140 outline-none focus-visible:underline focus-visible:underline-offset-2 active:bg-muted",
-              !selectedEquipment && "bg-primary font-medium text-primary-foreground",
-            )}
+            className="flex-none"
             onClick={() => {
               setEquipment("");
               setVisibleCount(40);
@@ -186,31 +176,26 @@ export default function Library() {
           </Button>
           {equipmentOptions.map((equipmentOption) => (
             <Button
-              variant="plain"
+              variant="chip"
               key={equipmentOption}
               type="button"
               aria-pressed={selectedEquipment === equipmentOption}
-              className={cn(
-                "flex-none rounded-full bg-card px-3 py-1.5 text-sm tracking-tight text-foreground transition-colors duration-140 outline-none focus-visible:underline focus-visible:underline-offset-2 active:bg-muted",
-                selectedEquipment === equipmentOption &&
-                  "bg-primary font-medium text-primary-foreground",
-                "capitalize",
-              )}
+              className="flex-none"
               onClick={() => {
                 setEquipment(equipmentOption);
                 setVisibleCount(40);
               }}
             >
-              {metadata.equipment(equipmentOption)}
+              <span className="capitalize">{metadata.equipment(equipmentOption)}</span>
             </Button>
           ))}
         </div>
       )}
       <SpaceBetween size="xs">
         <Button
-          variant="plain"
+          variant="row"
           type="button"
-          className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2 text-left transition-colors duration-140 active:bg-muted"
+          className="flex min-h-15 w-full items-center text-left"
           onClick={() =>
             setSheet({
               kind: "custom",
@@ -243,9 +228,9 @@ export default function Library() {
               className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2 text-left transition-colors duration-140 active:bg-muted"
             >
               <Button
-                variant="plain"
+                variant="bare"
                 type="button"
-                className="flex min-w-0 flex-1 items-center gap-3 border-0 bg-transparent p-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="flex min-w-0 flex-1 items-center text-left"
                 onPointerEnter={() => {
                   if ("img" in exercise)
                     preloadExerciseInstructions(
@@ -343,11 +328,7 @@ function LibrarySheetOverlay({
   return (
     <>
       <Sheet open={sheet !== null} onOpenChange={(open) => !open && setSheet(null)}>
-        <SheetContent
-          side="bottom"
-          className="max-h-screen touch-pan-y overflow-y-auto overscroll-contain rounded-2xl bg-sheet p-2 px-4.5 pb-5 lg:inset-x-auto lg:left-1/2 lg:w-160 lg:-translate-x-1/2"
-          showCloseButton={false}
-        >
+        <SheetContent side="bottom" variant="panel" showCloseButton={false}>
           <SheetTitle className="sr-only">
             {sheet?.kind === "detail"
               ? sheet.exercise.n

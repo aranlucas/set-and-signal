@@ -42,7 +42,7 @@ export default function Media({
       <Button
         variant="plain"
         type="button"
-        className="block w-full cursor-pointer bg-transparent p-0 text-left"
+        className="block w-full cursor-pointer text-left"
         aria-label={
           playing
             ? t("media.pauseAnimation", "Pause animation")
@@ -63,9 +63,9 @@ export default function Media({
       </Button>
       {minimizable && (
         <Button
-          variant="plain"
+          variant="overlay"
           type="button"
-          className="absolute bottom-2.5 left-2.5 inline-flex min-h-11 items-center gap-1 rounded-full bg-black/45 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-md"
+          className="absolute bottom-2.5 left-2.5 inline-flex min-h-11 items-center"
           onClick={toggleSize}
           aria-label={
             isMinimized

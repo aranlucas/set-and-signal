@@ -94,7 +94,7 @@ export function WorkoutDetail({
                 "workout.notes.placeholder",
                 "How did it go? Aches, cues, what to try next time…",
               )}
-              className="min-h-20 resize-none bg-card text-base"
+              className="min-h-20 resize-none"
               aria-label={t("workout.notes.title", "Notes")}
             />
             <div className="mt-2 flex gap-2">
@@ -116,9 +116,9 @@ export function WorkoutDetail({
           </form>
         ) : (
           <Button
-            variant="plain"
+            variant="row"
             type="button"
-            className="flex w-full items-start gap-2 rounded-lg bg-card px-4 py-3 text-left transition-colors active:bg-muted"
+            className="flex w-full items-start text-left"
             onClick={() => {
               reset({ note: workout.note ?? "" });
               setEditingNoteFor(workout.id);
@@ -152,7 +152,7 @@ export function WorkoutDetail({
               <div className="text-base leading-tight font-semibold tracking-tight capitalize">
                 {exercise ? exercise.n : legacy.n || entry.muscleSnapshot?.n || entry.id}{" "}
                 {prSet.has(entry.id) && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-yellow-400/15 px-1.5 py-0.5 text-xs font-medium text-warning">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-1.5 py-0.5 text-xs font-medium text-warning">
                     <Icon name="trophy" />
                     PR
                   </span>
@@ -241,13 +241,11 @@ export function Calendar({
       : (ws ?? []).map((workout) => ({ key: workout.id, status: "done" }));
     cells.push(
       <Button
-        variant="plain"
+        variant="tile"
         key={d}
-        className={
-          "flex aspect-square flex-col items-center justify-center gap-1 rounded-md bg-card text-base text-foreground transition-colors active:bg-muted" +
-          (ws ? " bg-primary/15 text-primary" : "") +
-          (iso === todayISO() ? " ring-2 ring-primary" : "")
-        }
+        data-highlighted={ws ? "" : undefined}
+        aria-current={iso === todayISO() ? "date" : undefined}
+        className="flex aspect-square flex-col items-center justify-center"
         onClick={() => {
           void close().then(() => {
             if (!ws) {
@@ -269,11 +267,7 @@ export function Calendar({
               key={key}
               className={
                 "size-1 rounded-full " +
-                (mark === "done"
-                  ? "bg-primary"
-                  : mark === "ovr"
-                    ? "bg-orange-500"
-                    : "bg-foreground/30")
+                (mark === "done" ? "bg-primary" : mark === "ovr" ? "bg-active" : "bg-foreground/30")
               }
             />
           ))}
@@ -285,8 +279,8 @@ export function Calendar({
     <>
       <div className="mb-0.5 flex items-center justify-between">
         <Button
-          variant="plain"
-          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-lg text-foreground transition active:scale-95 active:bg-muted"
+          variant="circle"
+          className="flex size-9 shrink-0 items-center justify-center active:scale-95"
           onClick={() => setCur(new Date(y, mo - 1, 1))}
           aria-label="Previous month"
         >
@@ -296,8 +290,8 @@ export function Calendar({
           {monthsLong[mo]} {y}
         </h3>
         <Button
-          variant="plain"
-          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-lg text-foreground transition active:scale-95 active:bg-muted"
+          variant="circle"
+          className="flex size-9 shrink-0 items-center justify-center active:scale-95"
           onClick={() => setCur(new Date(y, mo + 1, 1))}
           aria-label="Next month"
         >
@@ -330,7 +324,7 @@ export function Calendar({
           {t("calendar.status.planned", "Planned")}
         </span>
         <span>
-          <i className="mr-1.5 inline-block size-1.5 rounded-full bg-orange-500" />
+          <i className="mr-1.5 inline-block size-1.5 rounded-full bg-active" />
           {t("calendar.status.rescheduled", "Rescheduled")}
         </span>
       </div>
@@ -373,7 +367,7 @@ export function WorkoutRow({
         </span>
       </span>
       {workout.prs && workout.prs.length > 0 && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-yellow-400/15 px-1.5 py-0.5 text-xs font-medium text-warning">
+        <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-1.5 py-0.5 text-xs font-medium text-warning">
           <Icon name="trophy" />
           {workout.prs.length} PR
         </span>
@@ -386,9 +380,9 @@ export function WorkoutRow({
   );
   return onClick ? (
     <Button
-      variant="plain"
+      variant="row"
       type="button"
-      className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
+      className="flex min-h-15 w-full items-center text-left"
       onClick={onClick}
     >
       {content}

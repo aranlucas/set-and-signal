@@ -242,8 +242,8 @@ export function PlanImport({ bundle, close }: { bundle: ParsedBundle; close: She
         </Button>
         <Button
           type="button"
-          variant="ghost"
-          className="text-muted-foreground"
+          variant="quiet"
+
           onClick={() => void close()}
         >
           {t("common.cancel", "Cancel")}
@@ -313,10 +313,10 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
       <div className="flex flex-col gap-2">
         {st.routines.map((routine) => (
           <Button
-            variant="plain"
+            variant="row"
             type="button"
             key={routine.id}
-            className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
+            className="flex min-h-15 w-full items-center text-left"
             onClick={() => toggleRoutine(routine.id)}
           >
             <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-primary text-lg text-white">
@@ -332,9 +332,9 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
           </Button>
         ))}
         <Button
-          variant="plain"
+          variant="row"
           type="button"
-          className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
+          className="flex min-h-15 w-full items-center text-left"
           onClick={setRest}
         >
           <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-input text-lg text-white">
@@ -349,9 +349,9 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
         </Button>
         {hasOvr && (
           <Button
-            variant="plain"
+            variant="row"
             type="button"
-            className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
+            className="flex min-h-15 w-full items-center text-left"
             onClick={clearOverride}
           >
             <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-input text-lg text-white">
@@ -399,9 +399,9 @@ export function DayAssign({ day, close }: { day: Weekday; close: SheetClose }) {
       <h3>{weekdays[day]}</h3>
       <div className="flex flex-col gap-2">
         <Button
-          variant="plain"
+          variant="row"
           type="button"
-          className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
+          className="flex min-h-15 w-full items-center text-left"
           onClick={clearDay}
         >
           <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-input text-lg text-white">
@@ -416,10 +416,10 @@ export function DayAssign({ day, close }: { day: Weekday; close: SheetClose }) {
         </Button>
         {appState.routines.map((routine) => (
           <Button
-            variant="plain"
+            variant="row"
             type="button"
             key={routine.id}
-            className="flex min-h-15 w-full items-center gap-3 rounded-lg bg-card px-3 py-2.5 text-left transition-colors active:bg-muted"
+            className="flex min-h-15 w-full items-center text-left"
             onClick={() => toggleRoutine(routine.id)}
           >
             <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-primary text-lg text-white">
