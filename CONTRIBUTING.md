@@ -14,7 +14,6 @@ pnpm install --frozen-lockfile
 (cd .railway && go test ./... && go vet ./...)
 cd web
 pnpm format
-pnpm lint:tailwind
 pnpm lint:strict
 pnpm test
 pnpm build
