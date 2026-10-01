@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["eslint", "typescript", "oxc", "unicorn", "react", "import", "jsx-a11y", "vitest"],
-  "jsPlugins": ["oxlint-tailwindcss", "./lint/design-system.mjs"],
+  "jsPlugins": ["oxlint-tailwindcss"],
   "env": {
     "browser": true,
     "es2022": true
@@ -47,7 +47,12 @@
     "eslint/max-lines": "off",
     "eslint/no-inline-comments": "off",
     "eslint/require-unicode-regexp": "off",
-    "eslint/no-underscore-dangle": ["error", { "allow": ["_ts"] }],
+    "eslint/no-underscore-dangle": [
+      "error",
+      {
+        "allow": ["_ts"]
+      }
+    ],
     "typescript/prefer-readonly-parameter-types": "off",
     "typescript/strict-boolean-expressions": "off",
     "typescript/prefer-nullish-coalescing": "off",
@@ -80,7 +85,12 @@
     "react/react-in-jsx-scope": "off",
     "react/rules-of-hooks": "error",
     "react/exhaustive-deps": "error",
-    "react/only-export-components": ["error", { "allowConstantExport": true }],
+    "react/only-export-components": [
+      "error",
+      {
+        "allowConstantExport": true
+      }
+    ],
     "tailwindcss/no-unknown-classes": [
       "error",
       {
@@ -118,7 +128,89 @@
     ],
     "tailwindcss/no-arbitrary-value": "error",
     "tailwindcss/prefer-theme-tokens": "error",
-    "design-system/prefer-components": "error"
+    "react/forbid-elements": [
+      "error",
+      {
+        "forbid": [
+          {
+            "element": "button",
+            "message": "Use Button from \"@/shared/ui/button\" instead."
+          },
+          {
+            "element": "input",
+            "message": "Use Input from \"@/shared/ui/input\" instead."
+          },
+          {
+            "element": "textarea",
+            "message": "Use Textarea from \"@/shared/ui/textarea\" instead."
+          },
+          {
+            "element": "select",
+            "message": "Use NativeSelect from \"@/shared/ui/native-select\" instead."
+          },
+          {
+            "element": "option",
+            "message": "Use NativeSelectOption from \"@/shared/ui/native-select\" instead."
+          },
+          {
+            "element": "optgroup",
+            "message": "Use NativeSelectOptGroup from \"@/shared/ui/native-select\" instead."
+          },
+          {
+            "element": "label",
+            "message": "Use Label from \"@/shared/ui/label\" instead."
+          },
+          {
+            "element": "fieldset",
+            "message": "Use FieldSet from \"@/shared/ui/field\" instead."
+          },
+          {
+            "element": "legend",
+            "message": "Use FieldLegend from \"@/shared/ui/field\" instead."
+          },
+          {
+            "element": "table",
+            "message": "Use Table from \"@/shared/ui/table\" instead."
+          },
+          {
+            "element": "thead",
+            "message": "Use TableHeader from \"@/shared/ui/table\" instead."
+          },
+          {
+            "element": "tbody",
+            "message": "Use TableBody from \"@/shared/ui/table\" instead."
+          },
+          {
+            "element": "tfoot",
+            "message": "Use TableFooter from \"@/shared/ui/table\" instead."
+          },
+          {
+            "element": "tr",
+            "message": "Use TableRow from \"@/shared/ui/table\" instead."
+          },
+          {
+            "element": "th",
+            "message": "Use TableHead from \"@/shared/ui/table\" instead."
+          },
+          {
+            "element": "td",
+            "message": "Use TableCell from \"@/shared/ui/table\" instead."
+          },
+          {
+            "element": "caption",
+            "message": "Use TableCaption from \"@/shared/ui/table\" instead."
+          },
+          {
+            "element": "hr",
+            "message": "Use Separator from \"@/shared/ui/separator\" instead."
+          },
+          {
+            "element": "progress",
+            "message": "Use Progress from \"@/shared/ui/progress\" instead."
+          }
+        ]
+      }
+    ]
   },
   "ignorePatterns": ["dist/**", "node_modules/**"],
   "overrides": [
@@ -138,6 +230,18 @@
       "files": ["src/shared/ui/label.tsx"],
       "rules": {
         "jsx-a11y/label-has-associated-control": "off"
+      }
+    },
+    {
+      "files": [
+        "src/shared/ui/textarea.tsx",
+        "src/shared/ui/native-select.tsx",
+        "src/shared/ui/label.tsx",
+        "src/shared/ui/field.tsx",
+        "src/shared/ui/table.tsx"
+      ],
+      "rules": {
+        "react/forbid-elements": "off"
       }
     }
   ]
