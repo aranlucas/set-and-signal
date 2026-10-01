@@ -15,7 +15,7 @@ its data. Those names are infrastructure identifiers, not product branding.
 
 ## Prerequisites
 
-- Go 1.22+
+- Go 1.27.1+ (aligned with the application toolchain)
 - A current Railway CLI with Go IaC support (verified with 5.62.1)
 - Access to the linked Railway project and its `production` environment
 
