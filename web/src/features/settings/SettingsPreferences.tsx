@@ -18,8 +18,7 @@ import Icon from "@/shared/components/Icon";
 import { Row, Section } from "@/shared/components/layout";
 import { SelectRow } from "@/shared/components/SelectRow";
 import { Switch } from "@/shared/ui/switch";
-import { cn } from "@/shared/lib/utils";
-import { Segmented } from "@/shared/components/Segmented";
+import { Segmented } from "@/shared/ui/segmented";
 import { Stepper } from "@/shared/components/Stepper";
 import { Button } from "@/shared/ui/button";
 import type { Unit, Theme, Body, EffortScale } from "@/shared/lib/types";
@@ -63,7 +62,8 @@ export function SettingsPreferences({ onEffortHelp }: { onEffortHelp: () => void
           title={t("settings.weightUnit", "Weight unit")}
         >
           <Segmented<Unit>
-            className="min-w-33 flex-none [&_button]:min-h-7 [&_button]:px-2.5 [&_button]:py-1.5 [&_button_[data-icon]]:text-sm"
+            size="sm"
+            className="min-w-33 flex-none"
             options={[
               { value: "lb", label: "lb" },
               { value: "kg", label: "kg" },
@@ -132,15 +132,16 @@ export function SettingsPreferences({ onEffortHelp }: { onEffortHelp: () => void
           title={t("effort.effortPerSet", "Effort per set")}
         >
           <Button
-            variant="plain"
-            className="-mx-px -my-3 flex-none bg-transparent px-1 py-3 text-base leading-none text-muted-foreground active:text-foreground"
+            variant="stepper"
+            className="-my-3 flex h-11 w-6 flex-none items-center justify-center"
             aria-label={t("effort.whatRirRpe", "What are RIR and RPE?")}
             onClick={onEffortHelp}
           >
-            <Icon name="info" />
+            <Icon name="info" className="text-muted-foreground" />
           </Button>
           <Segmented<EffortScale>
-            className="min-w-33 flex-none [&_button]:min-h-7 [&_button]:px-2.5 [&_button]:py-1.5 [&_button_[data-icon]]:text-sm"
+            size="sm"
+            className="min-w-33 flex-none"
             options={[
               { value: "none", label: t("common.off", "Off") },
               { value: "rir", label: t("effort.rir", "RIR") },
@@ -213,15 +214,11 @@ export function SettingsPreferences({ onEffortHelp }: { onEffortHelp: () => void
                   const active = setup.avail.includes(plate);
                   return (
                     <Button
-                      variant="plain"
+                      variant="toggle"
                       key={plate}
                       type="button"
                       aria-pressed={active}
-                      className={`min-w-11 rounded-md px-2 py-1.5 text-sm font-medium tabular-nums transition-colors active:bg-input ${
-                        active
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-foreground/60"
-                      }`}
+                      className="min-w-11"
                       onClick={() =>
                         update((state) => {
                           if (!state.plates) state.plates = defaultPlateSetup(state.unit);
@@ -249,7 +246,8 @@ export function SettingsPreferences({ onEffortHelp }: { onEffortHelp: () => void
       >
         <Row icon="moon" iconTint="var(--system-indigo)" title={t("settings.theme", "Theme")}>
           <Segmented<Theme>
-            className="min-w-33 flex-none [&_button]:min-h-7 [&_button]:px-2.5 [&_button]:py-1.5 [&_button_[data-icon]]:text-sm"
+            size="sm"
+            className="min-w-33 flex-none"
             options={[
               { value: "dark", icon: "moon", label: t("settings.dark", "Dark") },
               { value: "light", icon: "sun", label: t("settings.light", "Light") },
@@ -264,7 +262,8 @@ export function SettingsPreferences({ onEffortHelp }: { onEffortHelp: () => void
           title={t("muscleMap.bodyDiagram", "Body diagram")}
         >
           <Segmented<Body>
-            className="min-w-33 flex-none [&_button]:min-h-7 [&_button]:px-2.5 [&_button]:py-1.5 [&_button_[data-icon]]:text-sm"
+            size="sm"
+            className="min-w-33 flex-none"
             options={[
               { value: "male", label: t("muscleMap.male", "Male") },
               { value: "female", label: t("muscleMap.female", "Female") },
@@ -280,15 +279,11 @@ export function SettingsPreferences({ onEffortHelp }: { onEffortHelp: () => void
           <div className="flex flex-wrap gap-3">
             {ACCENT_NAMES.map((accentName) => (
               <Button
-                variant="plain"
+                variant="swatch"
                 type="button"
                 key={accentName}
                 data-accent-swatch={accentName}
-                className={cn(
-                  "relative size-8 flex-none rounded-full bg-accent-swatch transition-transform duration-140 active:scale-90",
-                  (appState.accent || DEFAULT_ACCENT) === accentName &&
-                    "after:absolute after:-inset-1 after:rounded-full after:ring-2 after:ring-foreground",
-                )}
+                className="relative size-8 flex-none active:scale-90"
                 onClick={() => update((state) => void (state.accent = accentName))}
                 aria-label={accentName}
                 aria-pressed={(appState.accent || DEFAULT_ACCENT) === accentName}

@@ -38,8 +38,8 @@ export default function RestTimer() {
           )}
           <div className="h-1 flex-1 overflow-hidden rounded-full bg-input">
             <i
-              className="block h-full bg-primary transition-all duration-1000 ease-linear"
-              style={{ width: pct + "%" }}
+              className="block h-full w-(--progress) bg-primary transition-all duration-1000 ease-linear"
+              style={{ "--progress": pct + "%" }}
             />
           </div>
         </div>
@@ -68,15 +68,15 @@ export default function RestTimer() {
         </div>
         <div className="h-1 flex-1 overflow-hidden rounded-full bg-input">
           <i
-            className="block h-full bg-primary transition-all duration-1000 ease-linear"
-            style={{ width: pct + "%" }}
+            className="block h-full w-(--progress) bg-primary transition-all duration-1000 ease-linear"
+            style={{ "--progress": pct + "%" }}
           />
         </div>
       </div>
       <div className="flex items-center gap-2">
         <Button
           size="sm"
-          className="min-h-11 w-auto py-3"
+          className="min-h-11 w-auto"
           aria-label={t("restTimer.reduce15Seconds", "Reduce rest by 15 seconds")}
           onClick={() => addRest(-15)}
         >
@@ -85,7 +85,7 @@ export default function RestTimer() {
         </Button>
         <Button
           size="sm"
-          className="min-h-11 w-auto py-3"
+          className="min-h-11 w-auto"
           aria-label={t("restTimer.add15Seconds", "Add 15 seconds")}
           onClick={() => addRest(15)}
         >
@@ -95,7 +95,7 @@ export default function RestTimer() {
         <Button
           size="sm"
           variant="default"
-          className="ml-auto w-auto min-w-21 py-3"
+          className="ml-auto min-h-11 w-auto min-w-21"
           onClick={stopRest}
         >
           {t("common.skip", "Skip")}

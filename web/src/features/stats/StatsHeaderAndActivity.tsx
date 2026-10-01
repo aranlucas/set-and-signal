@@ -42,8 +42,8 @@ export function StatsHeaderAndActivity({
         description={t("stats.progressHistory", "Progress & history")}
         actions={
           <Button
-            variant="plain"
-            className="flex size-9 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted"
+            variant="circle"
+            className="flex size-9 flex-none items-center justify-center active:scale-95"
             onClick={() => void nav({ to: "/history" })}
             aria-label={t("navigation.history", "History")}
           >
@@ -122,8 +122,8 @@ function StatsTile({
         {label}
       </div>
       <div
-        className="mt-1 text-3xl leading-tight font-semibold tracking-tight"
-        style={{ color: valueColor }}
+        className="mt-1 text-3xl leading-tight font-semibold tracking-tight text-(--value-color)"
+        style={{ "--value-color": valueColor }}
       >
         {value}
       </div>

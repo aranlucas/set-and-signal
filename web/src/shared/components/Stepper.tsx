@@ -25,9 +25,9 @@ export function Stepper({
   const inner = (
     <div className={cn("flex min-w-0 items-center overflow-hidden rounded-md bg-muted", className)}>
       <Button
-        variant="plain"
+        variant="stepper"
         type="button"
-        className="flex size-11 shrink-0 items-center justify-center text-base text-foreground transition-colors duration-150 active:bg-input"
+        className="flex size-11 shrink-0 items-center justify-center"
         onClick={() => set(cur - step)}
         aria-label={label ? `Decrease ${label}` : "Decrease"}
       >
@@ -38,9 +38,9 @@ export function Stepper({
         {unit && <i className="flex-none text-xs text-foreground/60 not-italic">{unit}</i>}
       </span>
       <Button
-        variant="plain"
+        variant="stepper"
         type="button"
-        className="flex size-11 shrink-0 items-center justify-center text-base text-foreground transition-colors duration-150 active:bg-input"
+        className="flex size-11 shrink-0 items-center justify-center"
         onClick={() => set(cur + step)}
         aria-label={label ? `Increase ${label}` : "Increase"}
       >

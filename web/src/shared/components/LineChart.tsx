@@ -261,7 +261,8 @@ export default function LineChart({
         ref={svgRef}
         viewBox={`0 0 ${VIEWBOX_WIDTH} ${chartHeight}`}
         preserveAspectRatio="none"
-        style={{ aspectRatio: `${VIEWBOX_WIDTH}/${chartHeight}` }}
+        className="aspect-(--chart-ratio)"
+        style={{ "--chart-ratio": `${VIEWBOX_WIDTH}/${chartHeight}` }}
       >
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">

@@ -8,7 +8,7 @@ import { loadOfWorkouts, rankOf } from "@/domain/exercises/muscles";
 import type { MuscleSlug } from "@/domain/exercises/muscles";
 import { isHardSet } from "@/domain/training/effort";
 import { Button } from "@/shared/ui/button";
-import { Segmented } from "@/shared/components/Segmented";
+import { Segmented } from "@/shared/ui/segmented";
 import type { AppState, LoggedSet } from "@/shared/lib/types";
 import { ratingOf } from "@/features/stats/stats-types";
 
@@ -115,9 +115,9 @@ export function MuscleBalance({ appState }: { appState: AppState }) {
                 </span>
                 <span className="h-1 w-18.5 flex-none overflow-hidden rounded-none bg-muted">
                   <i
-                    className={`block h-full rounded-none ${on ? "bg-yellow-400" : "bg-primary"}`}
+                    className={`block h-full w-(--share) rounded-none ${on ? "bg-warning" : "bg-primary"}`}
                     style={{
-                      width: Math.round(((load[m] || 0) / max) * 100) + "%",
+                      "--share": Math.round(((load[m] || 0) / max) * 100) + "%",
                     }}
                   />
                 </span>
@@ -137,7 +137,7 @@ export function MuscleBalance({ appState }: { appState: AppState }) {
                 {missed.map((m) => (
                   <span
                     key={m}
-                    className="rounded-full bg-orange-500/15 px-2.5 py-1 text-xs text-active"
+                    className="rounded-full bg-active/15 px-2.5 py-1 text-xs text-active"
                   >
                     {muscleLabels[m]}
                   </span>

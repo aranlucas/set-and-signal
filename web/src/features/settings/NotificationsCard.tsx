@@ -88,7 +88,7 @@ function MobileReminderCard({ appState, update, notify }: CardProps) {
         >
           <Input
             aria-label={t("settings.reminderTime", "Reminder time")}
-            className="w-auto rounded-lg border-0 bg-muted px-2.5 py-1.5 text-base text-foreground tabular-nums outline-none"
+            variant="inline"
             value={appState.reminder?.time || DEFAULT_STATE.reminder.time}
             onChange={(e) => setReminder({ time: e.target.value })}
           />
@@ -215,7 +215,7 @@ function PushCard({ appState, update, notify }: CardProps) {
           >
             <Input
               aria-label={t("settings.reminderTime", "Reminder time")}
-              className="w-auto rounded-lg border-0 bg-muted px-2.5 py-1.5 text-base text-foreground tabular-nums outline-none"
+              variant="inline"
               value={appState.reminder?.time || DEFAULT_STATE.reminder.time}
               onChange={(event) =>
                 update((state) => {

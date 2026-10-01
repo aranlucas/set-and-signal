@@ -15,8 +15,8 @@ function PlateGroup({ w, count, max }: { w: number; count: number; max: number }
         {Array.from({ length: Math.min(count, 5) }, (_, i) => (
           <i
             key={i}
-            className="block w-1.5 rounded-full bg-primary"
-            style={{ height: `${height}px` }}
+            className="block h-(--plate-height) w-1.5 rounded-full bg-primary"
+            style={{ "--plate-height": `${height}px` }}
           />
         ))}
       </span>

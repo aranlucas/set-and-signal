@@ -90,7 +90,7 @@ export function EffortHelpDialog({
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-xs rounded-xl bg-modal p-5 shadow-lg">
+      <DialogContent className="w-full max-w-xs">
         <DialogHeader>
           <DialogTitle>{t("effort.effortPerSet", "Effort per set")}</DialogTitle>
           <DialogDescription>

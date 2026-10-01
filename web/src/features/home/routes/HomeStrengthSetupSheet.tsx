@@ -195,7 +195,8 @@ export default function HomeStrengthSetupSheet() {
     >
       <SheetContent
         side="bottom"
-        className="h-dvh max-h-dvh touch-pan-y overflow-y-auto overscroll-contain rounded-none bg-popover px-4.5 pt-3 pb-5 in-data-[theme='light']:bg-background lg:inset-x-auto lg:left-1/2 lg:h-auto lg:max-h-screen lg:w-160 lg:-translate-x-1/2 lg:rounded-2xl"
+        variant="panel"
+        className="h-dvh max-h-dvh lg:h-auto lg:max-h-screen"
         showCloseButton={false}
       >
         <SheetTitle className="sr-only">
@@ -211,9 +212,9 @@ export default function HomeStrengthSetupSheet() {
         >
           <div className="mb-5 flex items-center justify-between gap-3">
             <Button
-              variant="plain"
+              variant="circle"
               type="button"
-              className="flex size-9 items-center justify-center rounded-full text-lg transition-colors hover:bg-muted active:bg-muted"
+              className="flex size-9 items-center justify-center"
               onClick={() => {
                 if (step === 0) void close();
                 else setStep(previousStep(step));
@@ -247,14 +248,12 @@ export default function HomeStrengthSetupSheet() {
                     const selected = experience === option.value;
                     return (
                       <Button
-                        variant="plain"
+                        variant="tile"
+                        size="block"
                         type="button"
                         key={option.value}
                         aria-pressed={selected}
-                        className={cn(
-                          "flex w-full items-start gap-3 rounded-xl bg-card p-4 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                          selected && "bg-primary/15 ring-1 ring-primary/40",
-                        )}
+                        className="flex w-full items-start text-left"
                         onClick={() => chooseExperience(option.value)}
                       >
                         <span
@@ -300,16 +299,11 @@ export default function HomeStrengthSetupSheet() {
                 <div className="my-5 grid grid-cols-2 rounded-lg bg-card p-1">
                   {(["lb", "kg"] as const).map((candidate) => (
                     <Button
-                      variant="plain"
+                      variant="toggle"
                       type="button"
                       key={candidate}
                       aria-pressed={unit === candidate}
-                      className={cn(
-                        "rounded-md py-2 text-base font-medium transition-colors",
-                        unit === candidate
-                          ? "bg-primary text-primary-foreground"
-                          : "text-foreground/60",
-                      )}
+
                       onClick={() => chooseUnit(candidate)}
                     >
                       {candidate}
@@ -319,37 +313,39 @@ export default function HomeStrengthSetupSheet() {
 
                 <div className="overflow-hidden rounded-xl bg-card">
                   {liftRows.map((lift, index) => (
-                    <Label
+                    <div
                       key={lift.id}
                       className={cn(
-                        "min-h-15 px-4 py-2 leading-normal",
+                        "flex min-h-15 items-center px-4 py-2",
                         index > 0 && "border-t border-border/60",
                       )}
                     >
-                      <span className="grow text-base font-medium tracking-tight">
-                        {lift.label}
-                      </span>
-                      <span className="flex w-28 items-center gap-2 rounded-lg bg-muted px-3 py-2">
-                        <Controller
-                          control={control}
-                          name={`weights.${lift.id}`}
-                          render={({ field, fieldState }) => (
-                            <NumberField
-                              value={field.value}
-                              onChange={(value) => field.onChange(value ?? 0)}
-                              decimal={unit === "kg"}
-                              aria-invalid={fieldState.invalid}
-                              aria-label={t(
-                                "startingSetup.weightFor",
-                                "Starting weight for {{lift}}",
-                                { lift: lift.label },
-                              )}
-                            />
-                          )}
-                        />
-                        <span className="text-sm font-medium text-foreground/60">{unit}</span>
-                      </span>
-                    </Label>
+                      <Label className="w-full">
+                        <span className="grow text-base font-medium tracking-tight">
+                          {lift.label}
+                        </span>
+                        <span className="flex w-28 items-center gap-2 rounded-lg bg-muted px-3 py-2">
+                          <Controller
+                            control={control}
+                            name={`weights.${lift.id}`}
+                            render={({ field, fieldState }) => (
+                              <NumberField
+                                value={field.value}
+                                onChange={(value) => field.onChange(value ?? 0)}
+                                decimal={unit === "kg"}
+                                aria-invalid={fieldState.invalid}
+                                aria-label={t(
+                                  "startingSetup.weightFor",
+                                  "Starting weight for {{lift}}",
+                                  { lift: lift.label },
+                                )}
+                              />
+                            )}
+                          />
+                          <span className="text-sm font-medium text-foreground/60">{unit}</span>
+                        </span>
+                      </Label>
+                    </div>
                   ))}
                 </div>
                 <p className="mt-3 flex gap-2 text-sm leading-snug text-foreground/60">

@@ -44,7 +44,14 @@ function TabsList({
   );
 }
 
-function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
+function TabsTrigger({
+  className,
+  variant = "default",
+  ...props
+}: TabsPrimitive.Tab.Props & {
+  // `action`: the raised primary button in the tab bar; `data-running` switches it to the active colour.
+  variant?: "default" | "action";
+}) {
   return (
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
@@ -53,6 +60,8 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
         "group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-active:bg-transparent dark:group-data-[variant=line]/tabs-list:data-active:border-transparent dark:group-data-[variant=line]/tabs-list:data-active:bg-transparent",
         "data-active:bg-background data-active:text-foreground dark:data-active:border-input dark:data-active:bg-input/30 dark:data-active:text-foreground",
         "after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:-bottom-1 group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-right-1 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100",
+        variant === "action" &&
+          "h-auto gap-1 rounded-sm px-1 py-0.5 text-xs leading-none font-medium text-primary after:hidden data-running:text-active data-active:bg-transparent dark:data-active:bg-transparent",
         className,
       )}
       {...props}

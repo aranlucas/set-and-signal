@@ -161,7 +161,8 @@ export default function AppNavigation({ onStart }: { onStart: () => void }) {
             </p>
           </div>
           <Button
-            className="w-full text-sm"
+            size="sm"
+            className="w-full"
             onClick={() => {
               setOpen(false);
               onStart();

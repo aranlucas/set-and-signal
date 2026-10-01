@@ -195,11 +195,7 @@ export function ImportSummary({ parsed, close }: { parsed: ParsedOk; close: Shee
             ? t("common.import", "Import")
             : t("import.nothingNewImport", "Nothing new to import")}
         </Button>
-        <Button
-          variant="ghost"
-          className="w-full text-muted-foreground"
-          onClick={() => void close()}
-        >
+        <Button variant="quiet" className="w-full" onClick={() => void close()}>
           {t("common.cancel", "Cancel")}
         </Button>
       </SpaceBetween>

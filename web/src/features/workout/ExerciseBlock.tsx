@@ -184,9 +184,9 @@ export function ExerciseBlock({
       </span>
       <div className="flex min-w-0 items-center overflow-hidden rounded-md bg-muted">
         <Button
-          variant="plain"
+          variant="stepper"
           type="button"
-          className={`${col3 ? (cls === "eff" ? "sm:w-5" : "sm:w-6") : "sm:w-8"} flex size-11 flex-none items-center justify-center text-foreground transition-colors duration-140 active:bg-input sm:h-10`}
+          className={`${col3 ? (cls === "eff" ? "sm:w-5" : "sm:w-6") : "sm:w-8"} flex size-11 flex-none items-center justify-center sm:h-10`}
           aria-label={`Decrease ${ex.n}, ${t("exercise.sets", "Sets")} ${i + 1}, ${col.hd}`}
           onClick={() => bump(s, i, col, -1)}
         >
@@ -198,7 +198,7 @@ export function ExerciseBlock({
             decimal={col.dec}
             nullable={col.opt}
             value={fieldOf(s, col.f)}
-            className={col3 ? "text-sm" : undefined}
+            density={col3 ? "compact" : "default"}
             onChange={(v) =>
               onField(
                 i,
@@ -209,9 +209,9 @@ export function ExerciseBlock({
           />
         </span>
         <Button
-          variant="plain"
+          variant="stepper"
           type="button"
-          className={`${col3 ? (cls === "eff" ? "sm:w-5" : "sm:w-6") : "sm:w-8"} flex size-11 flex-none items-center justify-center text-foreground transition-colors duration-140 active:bg-input sm:h-10`}
+          className={`${col3 ? (cls === "eff" ? "sm:w-5" : "sm:w-6") : "sm:w-8"} flex size-11 flex-none items-center justify-center sm:h-10`}
           aria-label={`Increase ${ex.n}, ${t("exercise.sets", "Sets")} ${i + 1}, ${col.hd}`}
           onClick={() => bump(s, i, col, 1)}
         >
@@ -230,8 +230,8 @@ export function ExerciseBlock({
           {ex.n}
         </div>
         <Button
-          variant="plain"
-          className="flex size-11 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted sm:size-9"
+          variant="circle"
+          className="flex size-11 flex-none items-center justify-center active:scale-95 sm:size-9"
           aria-label={t("common.details", "Details")}
           onClick={() => setWorkoutSheet({ type: "detail", exercise: ex })}
         >
@@ -328,13 +328,13 @@ export function ExerciseBlock({
             set off itself. The checkbox stays for anyone who timed it on their own watch. */}
             {timed && (
               <Button
-                variant="plain"
-                className="absolute top-2.5 right-10 flex size-11 flex-none items-center justify-center rounded-full bg-muted text-sm text-primary transition duration-140 active:bg-input disabled:cursor-default disabled:opacity-30 sm:static sm:size-7.5"
+                variant="circle"
+                className="absolute top-2.5 right-10 flex size-11 flex-none items-center justify-center sm:static sm:size-7.5"
                 aria-label={t("progression.startSet", "Start set")}
                 disabled={s.done || !!working}
                 onClick={() => onStartTimed(index)}
               >
-                <Icon name="play" />
+                <Icon name="play" className="text-sm text-primary" />
               </Button>
             )}
             <Checkbox

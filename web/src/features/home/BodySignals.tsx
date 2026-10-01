@@ -43,7 +43,7 @@ export default function BodySignals() {
               <div className="recovery-row" key={item.muscle}>
                 <span>{labels[item.muscle]}</span>
                 <div className="recovery-track">
-                  <span style={{ width: `${item.recovery}%` }} />
+                  <span className="w-(--recovery)" style={{ "--recovery": `${item.recovery}%` }} />
                 </div>
                 <strong>{item.recovery}%</strong>
               </div>

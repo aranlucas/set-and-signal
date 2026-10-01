@@ -74,8 +74,8 @@ function WorkoutSessionHeader({
   return (
     <div className="mt-2 mb-4.5 flex items-end justify-between gap-3">
       <Button
-        variant="plain"
-        className="flex size-11 flex-none items-center justify-center rounded-full bg-card text-lg text-foreground transition duration-140 active:scale-95 active:bg-muted sm:size-9"
+        variant="circle"
+        className="flex size-11 flex-none items-center justify-center active:scale-95 sm:size-9"
         aria-label={t("common.discard", "Discard")}
         onClick={onDiscard}
       >
@@ -96,12 +96,12 @@ function WorkoutSessionHeader({
         </div>
       </div>
       <Button
-        variant="plain"
-        className="flex size-11 flex-none items-center justify-center rounded-full bg-card text-lg text-primary transition duration-140 active:scale-95 active:bg-muted sm:size-9"
+        variant="circle"
+        className="flex size-11 flex-none items-center justify-center active:scale-95 sm:size-9"
         aria-label={t("common.finish", "Finish")}
         onClick={onFinish}
       >
-        <Icon name="check" />
+        <Icon name="check" className="text-primary" />
       </Button>
     </div>
   );
@@ -167,11 +167,7 @@ function WorkoutProgressSummary({
           </div>
         </div>
       </div>
-      <Progress
-        className="mt-4 block h-2 w-full overflow-hidden rounded-full bg-muted accent-primary"
-        value={percentage}
-        aria-label={setProgressLabel}
-      />
+      <Progress className="mt-4 block w-full" value={percentage} aria-label={setProgressLabel} />
       <div className="mt-4 grid grid-cols-3 divide-x divide-border/70">
         <div className="pr-3">
           <div className="text-base font-semibold tracking-tight tabular-nums">
@@ -236,16 +232,11 @@ function WorkoutExerciseNavigator({
           return (
             <Button
               key={unit[0]}
-              variant="plain"
+              variant="row"
               type="button"
               aria-current={index === currentUnit ? "step" : undefined}
               aria-label={`${t("workout.sessionSummary.exerciseLabel", "Exercise")} ${index + 1}: ${label}`}
-              className={cn(
-                "flex w-52 shrink-0 snap-start items-center gap-2 rounded-lg border px-3 py-2.5 text-left transition-colors duration-150",
-                index === currentUnit
-                  ? "border-primary bg-primary text-primary-foreground hover:bg-primary"
-                  : "border-border/70 bg-card hover:bg-muted",
-              )}
+              className="flex w-52 shrink-0 snap-start items-center text-left"
               onClick={() => onSelect(unit[0])}
             >
               <span
@@ -640,8 +631,8 @@ export function WorkoutSessionView({
             const allDone = A.entries.length > 0 && exDone === A.entries.length;
             return (
               <Button
-                variant={allDone ? "default" : "ghost"}
-                className={cn("w-full", !allDone && "text-muted-foreground")}
+                variant={allDone ? "default" : "quiet"}
+                className="w-full"
                 onClick={requestFinish}
               >
                 {allDone
