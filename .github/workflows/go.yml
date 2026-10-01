@@ -66,9 +66,6 @@ jobs:
       - name: Check formatting
         run: pnpm --dir web format
 
-      - name: Lint Tailwind classes
-        run: pnpm --dir web lint:tailwind
-
       - name: Strict lint
         run: pnpm --dir web lint:strict
 

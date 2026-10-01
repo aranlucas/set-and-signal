@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["eslint", "typescript", "oxc", "unicorn", "react", "import", "jsx-a11y", "vitest"],
-  "jsPlugins": ["oxlint-tailwindcss"],
+  "jsPlugins": ["oxlint-tailwindcss", "./lint/design-system.mjs"],
   "env": {
     "browser": true,
     "es2022": true
@@ -117,7 +117,8 @@
       }
     ],
     "tailwindcss/no-arbitrary-value": "error",
-    "tailwindcss/prefer-theme-tokens": "error"
+    "tailwindcss/prefer-theme-tokens": "error",
+    "design-system/prefer-components": "error"
   },
   "ignorePatterns": ["dist/**", "node_modules/**"],
   "overrides": [
