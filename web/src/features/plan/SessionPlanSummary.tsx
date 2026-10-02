@@ -10,8 +10,8 @@ export function SessionPlanSummary({ plan, unit }: { plan: SessionPlan; unit: Un
   const labels = useSessionPlannerLabels();
   const occurrences = new Map<string, number>();
   return (
-    <details className="my-3 rounded-lg bg-card p-4">
-      <summary className="cursor-pointer text-sm font-medium">
+    <details className="session-snapshot my-3">
+      <summary className="min-h-11 cursor-pointer py-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-ring">
         {t("sessionPlan.snapshot", "Adapted from {{name}} · {{minutes}} min budget", {
           name: plan.sourceName,
           minutes: plan.budgetMin,
@@ -44,11 +44,15 @@ export function SessionPlanSummary({ plan, unit }: { plan: SessionPlan; unit: Un
           const occurrence = (occurrences.get(row.original.id) ?? 0) + 1;
           occurrences.set(row.original.id, occurrence);
           return (
-            <li key={`${row.original.id}:${occurrence}`}>
-              <div>
+            <li key={`${row.original.id}:${occurrence}`} className="border-t border-border pt-3">
+              <div className="text-muted-foreground">
+                <span className="font-medium">{t("sessionPlan.source", "Source routine")}: </span>
                 {exOr(row.original.id).n} · {exLine(row.original, unit)}
               </div>
-              <div className="text-muted-foreground">
+              <div className="mt-1">
+                <span className="font-medium">
+                  {t("sessionPlan.acceptedCopy", "Accepted copy")}:{" "}
+                </span>
                 {row.planned
                   ? `${exOr(row.planned.id).n} · ${exLine(row.planned, unit)}`
                   : t("sessionPlan.omitted", "Omitted from this copy")}

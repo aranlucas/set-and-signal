@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "@tanstack/react-router";
 import { useStore } from "@/app/store/useStore";
@@ -16,9 +16,11 @@ import {
 } from "@/domain/training/session-planner";
 import type { SessionChoice, SessionRow } from "@/domain/training/session-planner";
 import { uid } from "@/shared/lib/format";
+import Icon from "@/shared/components/Icon";
 import { Header } from "@/shared/components/Header";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
+import { FieldSet } from "@/shared/ui/field";
 import { Label } from "@/shared/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/shared/ui/native-select";
 import { loadSessionDraft, saveSessionDraft } from "./session-draft";
@@ -37,6 +39,7 @@ function SessionPlanner({ account }: { account: string | null }) {
   const nav = useNavigate();
   const state = useStore((store) => store.appState);
   const update = useStore((store) => store.update);
+  const reviewRef = useRef<HTMLHeadingElement>(null);
   const [draft, setDraft] = useState<SessionDraft | null>(
     () =>
       loadSessionDraft(account) ??
@@ -148,10 +151,19 @@ function SessionPlanner({ account }: { account: string | null }) {
     }
   };
   return (
-    <div className="mx-auto w-full max-w-180">
+    <div className="session-planner mx-auto w-full max-w-260">
+      <Button
+        variant="plain"
+        size="sm"
+        className="min-h-11"
+        onClick={() => void nav({ to: "/plan" })}
+      >
+        <Icon name="chevronLeft" />
+        {t("sessionPlan.back", "Back to Plan")}
+      </Button>
       <Header
         variant="h1"
-        className="mt-2 mb-4"
+        className="planner-title mt-2 mb-4"
         description={t(
           "sessionPlan.intro",
           "Adapt a routine to the equipment and time you have today. Review every change, then save a separate copy.",
@@ -159,23 +171,24 @@ function SessionPlanner({ account }: { account: string | null }) {
       >
         {t("sessionPlan.title", "Equipment & time")}
       </Header>
-      <Button variant="link" onClick={() => void nav({ to: "/plan" })}>
-        {t("sessionPlan.back", "Back to Plan")}
-      </Button>
       {state.routines.length === 0 && !draft ? (
         <p className="mt-4">
           {t("sessionPlan.noSource", "Add a routine or a curated plan first, then adapt it here.")}
         </p>
       ) : (
-        <>
+        <div className="planner-layout">
           <section
-            className="my-4 space-y-4"
+            className="planner-constraints space-y-5"
             aria-label={t("sessionPlan.constraints", "Session constraints")}
           >
+            <h2 className="planner-section-title">
+              {t("sessionPlan.constraints", "Session constraints")}
+            </h2>
             <div className="space-y-2">
               <Label htmlFor="session-source">{t("sessionPlan.source", "Source routine")}</Label>
               <NativeSelect
                 id="session-source"
+                aria-describedby="session-source-help"
                 className="w-full"
                 value={draft?.source.id ?? ""}
                 disabled={!!saved}
@@ -194,7 +207,7 @@ function SessionPlanner({ account }: { account: string | null }) {
                     </NativeSelectOption>
                   ))}
               </NativeSelect>
-              <p className="text-sm text-muted-foreground">
+              <p id="session-source-help" className="text-sm text-muted-foreground">
                 {t(
                   "sessionPlan.draftHelp",
                   "Drafts resume on this device for this profile. The source snapshot stays as it was when selected.",
@@ -209,6 +222,7 @@ function SessionPlanner({ account }: { account: string | null }) {
                 <Input
                   id="session-minutes"
                   type="number"
+                  inputMode="numeric"
                   min={5}
                   max={180}
                   value={draft?.constraints.budgetMin ?? 30}
@@ -229,6 +243,7 @@ function SessionPlanner({ account }: { account: string | null }) {
                 <Input
                   id="session-rest"
                   type="number"
+                  inputMode="numeric"
                   min={0}
                   max={600}
                   value={draft?.constraints.restSec ?? 90}
@@ -243,6 +258,32 @@ function SessionPlanner({ account }: { account: string | null }) {
                 />
               </div>
             </div>
+            <div className="planner-budget-feedback text-sm">
+              <p aria-live="polite">
+                {t("sessionPlan.estimate", "Approximately {{estimate}} / {{budget}} min", {
+                  estimate,
+                  budget: draft?.constraints.budgetMin ?? 30,
+                })}
+              </p>
+              <p className="mt-1 text-muted-foreground" aria-live="polite">
+                {t("sessionPlan.consequence", "Included: {{included}} · omitted: {{omitted}}", {
+                  included: configs.length,
+                  omitted: rows.length - configs.length,
+                })}
+              </p>
+              <Button
+                variant="link"
+                size="sm"
+                className="mt-2 min-h-11"
+                onClick={() => {
+                  reviewRef.current?.scrollIntoView({ block: "start", behavior: "instant" });
+                  reviewRef.current?.focus({ preventScroll: true });
+                }}
+              >
+                {t("sessionPlan.review", "Review changes")}
+                <Icon name="chevronRight" />
+              </Button>
+            </div>
             <div>
               <h2 className="mb-2 font-medium">
                 {t("sessionPlan.available", "Available equipment")}
@@ -253,184 +294,271 @@ function SessionPlanner({ account }: { account: string | null }) {
                   "No equipment is needed for floor movements. Select each machine you actually have; benches, racks and bars must be selected separately.",
                 )}
               </p>
-              <div className="flex flex-wrap gap-2">
-                {SESSION_EQUIPMENT.map((equipment) => (
-                  <Button
-                    key={equipment}
-                    variant="chip"
-                    disabled={!!saved}
-                    aria-pressed={draft?.constraints.equipment.includes(equipment) ?? false}
-                    onClick={() =>
-                      draft &&
-                      changeDraft({
-                        ...draft,
-                        constraints: {
-                          ...draft.constraints,
-                          equipment: draft.constraints.equipment.includes(equipment)
-                            ? draft.constraints.equipment.filter((item) => item !== equipment)
-                            : [...draft.constraints.equipment, equipment],
-                        },
-                      })
-                    }
-                  >
-                    {labels.equipment(equipment)}
-                  </Button>
+              <div className="space-y-4">
+                {[
+                  {
+                    label: t("sessionPlan.group.basics", "Weights, bars & supports"),
+                    equipment: [...SESSION_EQUIPMENT.slice(0, 8), SESSION_EQUIPMENT[16]],
+                  },
+                  {
+                    label: t("sessionPlan.group.machines", "Machines & cables"),
+                    equipment: [
+                      ...SESSION_EQUIPMENT.slice(8, 16),
+                      ...SESSION_EQUIPMENT.slice(17, 19),
+                    ],
+                  },
+                  {
+                    label: t("sessionPlan.group.cardio", "Cardio"),
+                    equipment: SESSION_EQUIPMENT.slice(19),
+                  },
+                ].map((group, groupIndex) => (
+                  <details key={group.label} className="planner-kit" open={groupIndex === 0}>
+                    <summary>
+                      {group.label}
+                      <span className="text-muted-foreground">
+                        {t("sessionPlan.equipmentSelection", "{{selected}} selected", {
+                          selected: group.equipment.filter((equipment) =>
+                            draft?.constraints.equipment.includes(equipment),
+                          ).length,
+                        })}
+                      </span>
+                    </summary>
+                    <FieldSet className="min-w-0" aria-label={group.label}>
+                      <div className="flex flex-wrap gap-2">
+                        {group.equipment.map((equipment) => (
+                          <Button
+                            key={equipment}
+                            variant="equipment"
+                            disabled={!!saved}
+                            aria-pressed={draft?.constraints.equipment.includes(equipment) ?? false}
+                            onClick={() =>
+                              draft &&
+                              changeDraft({
+                                ...draft,
+                                constraints: {
+                                  ...draft.constraints,
+                                  equipment: draft.constraints.equipment.includes(equipment)
+                                    ? draft.constraints.equipment.filter(
+                                        (item) => item !== equipment,
+                                      )
+                                    : [...draft.constraints.equipment, equipment],
+                                },
+                              })
+                            }
+                          >
+                            <Icon
+                              name={
+                                draft?.constraints.equipment.includes(equipment) ? "check" : "plus"
+                              }
+                              className="text-sm"
+                            />
+                            {labels.equipment(equipment)}
+                          </Button>
+                        ))}
+                      </div>
+                    </FieldSet>
+                  </details>
                 ))}
               </div>
             </div>
           </section>
-          <section className="space-y-3" aria-label={t("sessionPlan.review", "Review changes")}>
-            <h2 className="text-lg font-semibold">{t("sessionPlan.review", "Review changes")}</h2>
-            <p className="text-sm text-muted-foreground">
-              {t(
-                "sessionPlan.alternativesHelp",
-                "Suggestions share a general movement pattern, not identical training effects. Swaps reset load and speed. Review targets; automatic progression and supersets are off for this copy.",
+          <div className="planner-review">
+            <section
+              className="planner-estimate space-y-3"
+              aria-label={t("sessionPlan.timeReview", "Time review")}
+            >
+              <div className="planner-time-score" aria-live="polite" aria-atomic="true">
+                <h2 className="text-sm text-muted-foreground">
+                  {t("sessionPlan.approximateDuration", "Approximate duration")}
+                </h2>
+                <p>
+                  <strong>{estimate}</strong>
+                  <span>
+                    {" "}
+                    / {draft?.constraints.budgetMin ?? 30} {t("sessionPlan.minuteUnit", "min")}
+                  </span>
+                </p>
+                <p className="planner-consequence">
+                  {t("sessionPlan.consequence", "Included: {{included}} · omitted: {{omitted}}", {
+                    included: configs.length,
+                    omitted: rows.length - configs.length,
+                  })}
+                </p>
+              </div>
+              <details className="planner-assumptions">
+                <summary>{t("sessionPlan.estimateDetails", "How time is estimated")}</summary>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {t(
+                    "sessionPlan.estimateHelp",
+                    "Assumes 5 min preparation, 1 min setup per exercise, 3 sec per rep, and your selected rest between sets. Actual duration varies. Extra work or rests will change it.",
+                  )}
+                </p>
+              </details>
+              {!valid && (
+                <p className="text-sm text-destructive">
+                  {t(
+                    "sessionPlan.invalid",
+                    "Use a 5–180 min budget, 0–600 sec rest, 1–12 sets, and positive targets (up to 100 reps, 600 sec or 180 min).",
+                  )}
+                </p>
               )}
-            </p>
-            {rows.map((row, index) => (
-              <SessionPlannerRow
-                key={row.key}
-                row={row}
-                index={index}
-                choice={draft?.choices[index]}
-                unit={state.unit}
-                disabled={!!saved}
-                onChange={(change) => changeChoice(index, change)}
-              />
-            ))}
-            {!rows.length && (
-              <p>
-                {t(
-                  "sessionPlan.noExercises",
-                  "This source has no exercises. Choose another routine.",
-                )}
-              </p>
-            )}
-          </section>
-          <section className="my-5 space-y-3 rounded-lg bg-card p-4">
-            <p className="font-semibold" aria-live="polite">
-              {t("sessionPlan.estimate", "Approximately {{estimate}} / {{budget}} min", {
-                estimate,
-                budget: draft?.constraints.budgetMin ?? 30,
-              })}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {t(
-                "sessionPlan.estimateHelp",
-                "Assumes 5 min preparation, 1 min setup per exercise, 3 sec per rep, and your selected rest between sets. Actual duration varies. Extra work or rests will change it.",
+              {duplicate && (
+                <p className="text-sm text-destructive">
+                  {t(
+                    "sessionPlan.duplicate",
+                    "Two rows use the same exercise. Choose a different alternative or omit one before saving.",
+                  )}
+                </p>
               )}
-            </p>
-            {!valid && (
-              <p className="text-sm text-destructive">
-                {t(
-                  "sessionPlan.invalid",
-                  "Use a 5–180 min budget, 0–600 sec rest, 1–12 sets, and positive targets (up to 100 reps, 600 sec or 180 min).",
-                )}
-              </p>
-            )}
-            {duplicate && (
-              <p className="text-sm text-destructive">
-                {t(
-                  "sessionPlan.duplicate",
-                  "Two rows use the same exercise. Choose a different alternative or omit one before saving.",
-                )}
-              </p>
-            )}
-            {!configs.length && (
+              {!configs.length && (
+                <p className="text-sm text-muted-foreground">
+                  {t(
+                    "sessionPlan.empty",
+                    "No exercises fit the current equipment or choices. Add equipment, choose an alternative, or return to the source routine.",
+                  )}
+                </p>
+              )}
+              {draft && !saved && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    className="min-h-11 whitespace-normal"
+                    disabled={!valid || duplicate || !configs.length}
+                    onClick={() =>
+                      changeDraft({ ...draft, choices: fitSession(rows, draft.constraints) })
+                    }
+                  >
+                    {t("sessionPlan.fit", "Fit to time budget")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="plain"
+                    className="min-h-11 whitespace-normal"
+                    onClick={() => changeDraft({ ...draft, choices: [] })}
+                  >
+                    {t("sessionPlan.reset", "Undo suggestions & edits")}
+                  </Button>
+                </div>
+              )}
+              {!saved && estimate > (draft?.constraints.budgetMin ?? 30) && (
+                <p className="text-sm text-destructive">
+                  {t(
+                    "sessionPlan.overBudget",
+                    "Over budget. Reduce work, omit an exercise, or increase the available time before saving.",
+                  )}
+                </p>
+              )}
+            </section>
+            <section className="space-y-3" aria-label={t("sessionPlan.review", "Review changes")}>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2
+                  ref={reviewRef}
+                  tabIndex={-1}
+                  className="planner-section-title planner-review-heading"
+                >
+                  {t("sessionPlan.review", "Review changes")}
+                </h2>
+                <span className="text-sm text-muted-foreground">
+                  {t("sessionPlan.included", "{{included}} of {{total}} exercises included", {
+                    included: configs.length,
+                    total: rows.length,
+                  })}
+                </span>
+              </div>
               <p className="text-sm text-muted-foreground">
                 {t(
-                  "sessionPlan.empty",
-                  "No exercises fit the current equipment or choices. Add equipment, choose an alternative, or return to the source routine.",
+                  "sessionPlan.alternativesHelp",
+                  "Suggestions share a general movement pattern, not identical training effects. Swaps reset load and speed. Review targets; automatic progression and supersets are off for this copy.",
                 )}
               </p>
-            )}
-            {draft && !saved && (
-              <div className="flex flex-wrap gap-2">
+              {rows.map((row, index) => (
+                <SessionPlannerRow
+                  key={row.key}
+                  row={row}
+                  index={index}
+                  choice={draft?.choices[index]}
+                  unit={state.unit}
+                  disabled={!!saved}
+                  onChange={(change) => changeChoice(index, change)}
+                />
+              ))}
+              {!rows.length && (
+                <p>
+                  {t(
+                    "sessionPlan.noExercises",
+                    "This source has no exercises. Choose another routine.",
+                  )}
+                </p>
+              )}
+            </section>
+            <section className="planner-save space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="session-name">{t("sessionPlan.copyName", "Copy name")}</Label>
+                <Input
+                  id="session-name"
+                  maxLength={60}
+                  value={draft?.name ?? ""}
+                  disabled={!!saved}
+                  onChange={(event) => draft && changeDraft({ ...draft, name: event.target.value })}
+                />
+              </div>
+              {saved ? (
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={() => void nav({ to: "/plan/r/$id", params: { id: saved.id } })}>
+                    {t("sessionPlan.editCopy", "Edit saved copy")}
+                  </Button>
+                  <Button variant="secondary" disabled={!undoable} onClick={undo}>
+                    {t("sessionPlan.undoSave", "Undo save")}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => draft && selectSource(draft.source.id)}
+                  >
+                    {t("sessionPlan.newDraft", "Plan another copy")}
+                  </Button>
+                </div>
+              ) : (
                 <Button
-                  size="sm"
-                  disabled={!valid || duplicate || !configs.length}
-                  onClick={() =>
-                    changeDraft({ ...draft, choices: fitSession(rows, draft.constraints) })
+                  disabled={
+                    !valid ||
+                    duplicate ||
+                    !configs.length ||
+                    estimate > (draft?.constraints.budgetMin ?? 30) ||
+                    !draft?.name.trim() ||
+                    draft.name.trim().length > 60
                   }
+                  onClick={save}
                 >
-                  {t("sessionPlan.fit", "Fit to time budget")}
+                  {t("sessionPlan.saveCopy", "Save separate copy")}
                 </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => changeDraft({ ...draft, choices: [] })}
-                >
-                  {t("sessionPlan.reset", "Undo suggestions & edits")}
-                </Button>
-              </div>
+              )}
+              {saved && !undoable && (
+                <p className="text-sm text-muted-foreground">
+                  {t(
+                    "sessionPlan.undoFailed",
+                    "The copy was edited, scheduled or used, so it cannot be undone here. Logged history is preserved.",
+                  )}
+                </p>
+              )}
+              {message && (
+                <output aria-live="polite" className="planner-feedback block text-sm">
+                  {message}
+                </output>
+              )}
+              {draftError && (
+                <p role="alert" className="text-sm text-destructive">
+                  {t(
+                    "sessionPlan.draftFailed",
+                    "Device storage is unavailable. This planning draft cannot resume after closing the page.",
+                  )}
+                </p>
+              )}
+            </section>
+            {draft?.savedCopy?.sessionPlan && (
+              <SessionPlanSummary plan={draft.savedCopy.sessionPlan} unit={state.unit} />
             )}
-            {!saved && estimate > (draft?.constraints.budgetMin ?? 30) && (
-              <p className="text-sm text-destructive">
-                {t(
-                  "sessionPlan.overBudget",
-                  "Over budget. Reduce work, omit an exercise, or increase the available time before saving.",
-                )}
-              </p>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="session-name">{t("sessionPlan.copyName", "Copy name")}</Label>
-              <Input
-                id="session-name"
-                maxLength={60}
-                value={draft?.name ?? ""}
-                disabled={!!saved}
-                onChange={(event) => draft && changeDraft({ ...draft, name: event.target.value })}
-              />
-            </div>
-            {saved ? (
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={() => void nav({ to: "/plan/r/$id", params: { id: saved.id } })}>
-                  {t("sessionPlan.editCopy", "Edit saved copy")}
-                </Button>
-                <Button variant="secondary" disabled={!undoable} onClick={undo}>
-                  {t("sessionPlan.undoSave", "Undo save")}
-                </Button>
-                <Button variant="secondary" onClick={() => draft && selectSource(draft.source.id)}>
-                  {t("sessionPlan.newDraft", "Plan another copy")}
-                </Button>
-              </div>
-            ) : (
-              <Button
-                disabled={
-                  !valid ||
-                  duplicate ||
-                  !configs.length ||
-                  estimate > (draft?.constraints.budgetMin ?? 30) ||
-                  !draft?.name.trim() ||
-                  draft.name.trim().length > 60
-                }
-                onClick={save}
-              >
-                {t("sessionPlan.saveCopy", "Save separate copy")}
-              </Button>
-            )}
-            {saved && !undoable && (
-              <p className="text-sm text-muted-foreground">
-                {t(
-                  "sessionPlan.undoFailed",
-                  "The copy was edited, scheduled or used, so it cannot be undone here. Logged history is preserved.",
-                )}
-              </p>
-            )}
-            {message && <output className="block text-sm">{message}</output>}
-            {draftError && (
-              <p role="alert" className="text-sm text-destructive">
-                {t(
-                  "sessionPlan.draftFailed",
-                  "Device storage is unavailable. This planning draft cannot resume after closing the page.",
-                )}
-              </p>
-            )}
-          </section>
-          {draft?.savedCopy?.sessionPlan && (
-            <SessionPlanSummary plan={draft.savedCopy.sessionPlan} unit={state.unit} />
-          )}
-        </>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -505,14 +633,33 @@ function SessionPlannerRow({
                     },
                   );
   return (
-    <article className="space-y-3 rounded-lg bg-card p-4">
-      <div>
-        <h3 className="font-medium">{exOr(row.original.id).n}</h3>
-        <p className="text-sm text-muted-foreground">
-          {t("sessionPlan.original", "Original: {{target}}", {
-            target: exLine(row.original, unit),
-          })}
-        </p>
+    <article
+      className="planner-row space-y-3"
+      aria-labelledby={`session-row-${index}`}
+      data-omitted={!row.planned}
+    >
+      <span className="planner-row-number" aria-hidden="true">
+        {String(index + 1).padStart(2, "0")}
+      </span>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 id={`session-row-${index}`} className="font-semibold wrap-anywhere capitalize">
+            {row.planned ? exOr(row.planned.id).n : exOr(row.original.id).n}
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("sessionPlan.sourceTarget", "Source: {{exercise}} · {{target}}", {
+              exercise: exOr(row.original.id).n,
+              target: exLine(row.original, unit),
+            })}
+          </p>
+        </div>
+        <span className="planner-row-status">
+          {!row.planned
+            ? t("sessionPlan.status.omitted", "Omitted")
+            : row.planned.id === row.original.id
+              ? t("sessionPlan.status.kept", "Kept")
+              : t("sessionPlan.status.swap", "Alternative")}
+        </span>
       </div>
       <p className="text-sm text-muted-foreground">{reason}</p>
       <div className="space-y-2">
@@ -549,6 +696,7 @@ function SessionPlannerRow({
             <Input
               id={`session-sets-${index}`}
               type="number"
+              inputMode="numeric"
               min={1}
               max={12}
               disabled={disabled}
@@ -567,6 +715,7 @@ function SessionPlannerRow({
             <Input
               id={`session-amount-${index}`}
               type="number"
+              inputMode="numeric"
               min={1}
               max={mode === "cardio" ? 180 : mode === "time" ? 600 : 100}
               disabled={disabled}

@@ -2,6 +2,324 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Planning and training records share the app's semantic palette. */
+.planner-layout {
+  display: grid;
+  gap: 2rem;
+  margin-top: 1.75rem;
+}
+.planner-constraints,
+.planner-review {
+  min-width: 0;
+}
+.planner-section-title {
+  font-size: 1.125rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+.session-planner select {
+  min-height: 44px;
+  font-size: 1rem;
+  background: var(--card);
+}
+.planner-estimate {
+  margin-bottom: 1.75rem;
+  border-block: 1px solid var(--border);
+  padding-block: 1rem;
+}
+.planner-assumptions {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+.planner-assumptions summary {
+  min-height: 44px;
+  align-content: center;
+  cursor: pointer;
+}
+.planner-assumptions summary:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+.planner-row {
+  position: relative;
+  border-top: 1px solid var(--border);
+  padding: 1.5rem 0 1.5rem 3rem;
+}
+.planner-row-status {
+  flex-shrink: 0;
+  max-width: 40%;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  overflow-wrap: anywhere;
+}
+.planner-save {
+  margin-top: 1.75rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1.5rem;
+}
+.planner-save > button,
+.planner-save > div > button {
+  min-height: 44px;
+  white-space: normal;
+}
+.planner-feedback {
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background: var(--card);
+}
+.session-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-block: 0.75rem 1.5rem;
+}
+.session-header-actions {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+.session-progress {
+  margin-bottom: 1.25rem;
+  border-block: 1px solid var(--border);
+  padding-block: 1rem;
+}
+.history-filters {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1rem;
+}
+.history-totals {
+  border-block: 1px solid var(--border);
+  padding-block: 1rem;
+}
+.history-metric {
+  padding-inline: 1rem;
+}
+.history-metric:first-child {
+  padding-inline-start: 0;
+}
+.history-metric:last-child {
+  padding-inline-end: 0;
+}
+.history-metric + .history-metric {
+  border-inline-start: 1px solid var(--border);
+}
+.session-snapshot {
+  border-block: 1px solid var(--border);
+  padding-block: 0.25rem 1rem;
+}
+.planner-title h1,
+.history-title,
+.session-title {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+.planner-title p {
+  max-width: 65ch;
+}
+.planner-time-score p,
+.session-score > p {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.planner-time-score strong {
+  font-size: 5rem;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.planner-time-score p > span {
+  font-size: 1.5rem;
+  color: var(--muted-foreground);
+}
+.planner-budget-feedback {
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+  font-weight: 600;
+}
+.planner-time-score .planner-consequence {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0.75rem;
+}
+.planner-review-heading {
+  scroll-margin-top: 6rem;
+}
+.planner-review-heading:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+}
+.planner-kit {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+.planner-kit summary {
+  min-height: 44px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.planner-kit summary > span {
+  float: inline-end;
+  font-weight: 400;
+}
+.planner-kit fieldset {
+  padding-block: 0.5rem;
+}
+.planner-kit summary:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+.planner-row-number {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 1.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+.planner-row h3 {
+  font-size: 1.25rem;
+  line-height: 1.3;
+}
+.planner-row[data-omitted="true"] h3 {
+  color: var(--muted-foreground);
+}
+.session-layout {
+  display: grid;
+  gap: 1.5rem;
+}
+.session-overview,
+.session-working-block {
+  min-width: 0;
+}
+.session-score {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.session-score strong {
+  font-size: 3.5rem;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+.session-score > p > span {
+  color: var(--muted-foreground);
+}
+.session-set-tally {
+  display: flex;
+  gap: 3px;
+  margin-top: 1rem;
+}
+.session-set-tally > span {
+  flex: 1;
+  min-width: 0;
+  height: 10px;
+  background: var(--border);
+  border-radius: 2px;
+}
+.session-set-tally > span[data-done="true"] {
+  background: var(--primary);
+}
+.history-metric-value {
+  font-size: clamp(1.25rem, 2.5vw, 2.25rem);
+  line-height: 1.2;
+}
+.history-ledger {
+  gap: 0;
+}
+.workout-session {
+  width: 100%;
+}
+.session-exercise-flow {
+  min-width: 0;
+}
+.history-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 3rem;
+  color: var(--muted-foreground);
+}
+.history-date strong {
+  font-size: 1.75rem;
+  line-height: 1.1;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+.history-date > span {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+.history-log select {
+  min-height: 44px;
+  font-size: 1rem;
+}
+@media (min-width: 1200px) {
+  .session-layout {
+    grid-template-columns: minmax(0, 19rem) minmax(0, 1fr);
+    gap: 3rem;
+  }
+  .session-overview {
+    min-width: 0;
+  }
+  .session-working-block {
+    min-width: 0;
+  }
+  .session-overview .session-exercise-flow > div:last-child {
+    flex-direction: column;
+    overflow: visible;
+  }
+  .session-overview .session-exercise-flow button {
+    width: 100%;
+    min-height: 64px;
+  }
+  .planner-layout {
+    grid-template-columns: minmax(0, 21rem) minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+  .planner-constraints {
+    border-inline-end: 1px solid var(--border);
+    padding-inline-end: 2rem;
+  }
+  .planner-estimate {
+    margin-top: 0;
+  }
+}
+@media (max-width: 639px) {
+  .planner-time-score strong {
+    font-size: 4rem;
+  }
+  .planner-row {
+    padding-inline-start: 2.5rem;
+  }
+  .session-header-actions {
+    max-width: 7rem;
+    justify-content: flex-end;
+  }
+  .history-metric {
+    padding-inline: 0.625rem;
+  }
+  .history-totals {
+    grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.3fr) minmax(0, 1fr);
+  }
+  .history-metric-value {
+    font-size: clamp(1rem, 4.5vw, 1.25rem);
+  }
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
