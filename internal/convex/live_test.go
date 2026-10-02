@@ -20,7 +20,7 @@ func TestLiveDevelopment(t *testing.T) {
 		t.Fatal(err)
 	}
 	uid := fmt.Sprintf("integration-test-%d", time.Now().UnixNano())
-	if err := c.Import(uid, jsontext.Value(`{"unit":"lb","restSec":60,"workouts":[]}`)); err != nil {
+	if err := c.WriteState(uid, jsontext.Value(`{"unit":"lb","restSec":60,"workouts":[]}`)); err != nil {
 		t.Fatal(err)
 	}
 	if err := c.MutateState(uid, func(raw jsontext.Value) (jsontext.Value, error) {

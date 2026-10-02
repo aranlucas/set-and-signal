@@ -1,7 +1,4 @@
-// Set & Signal domain model — the single source of truth for every persisted and
-// runtime data shape. Transcribed from the JS original's construction sites
-// (store/useStore.js DEF, sheets.jsx begin/doFinishWorkout, lib/demoSeed.js,
-// lib/import-csv.js) so all migrated modules agree on one contract.
+// Set & Signal domain contracts for persisted state and runtime data.
 import type { TranslationKey } from "@/i18n/i18n-types.js";
 import type { Accent } from "@/shared/lib/accents.js";
 
@@ -83,7 +80,7 @@ export interface AppState {
   body: Body;
   targetW: number | null; // goal bodyweight
   gifSize: GifSize;
-  effort: EffortScale | null; // null = never chose (legacy showRir fallback)
+  effort: EffortScale | null; // null = no scale chosen
   reminder: Reminder;
 
   // data
@@ -99,8 +96,6 @@ export interface AppState {
   customEx: CustomEx[];
 
   _ts?: number; // stamped by persist(); sync ordering
-  // legacy tolerated-on-read:
-  showRir?: boolean;
 }
 
 /* ============================ routines & config ============================ */
@@ -182,9 +177,8 @@ export interface MuscleSnapshot {
 export interface WorkoutEntry {
   id: Id;
   sets: LoggedSet[];
-  topW?: number | null; // user-confirmed working weight; older workouts lack the field
-  target?: ExConfig | null; // prescription the session started from; ABSENT in pre-v1.2.2 history
-  n?: string; // legacy/display fallback for custom exercises deleted after logging
+  topW?: number | null; // optional user-confirmed working weight
+  target?: ExConfig | null; // prescription captured for planned sessions; omitted for CSV imports
   muscleSnapshot?: MuscleSnapshot | null;
 }
 
@@ -269,7 +263,6 @@ export interface Exercise {
   tg: string; // primary target muscle
   mg: string; // main secondary
   sm: string[]; // secondary muscles
-  st?: string[]; // source-only legacy field; runtime instructions are loaded by id
   img: string;
   gif: string;
 }
@@ -304,7 +297,7 @@ export interface PlanBundleCustom {
 }
 
 export interface PlanBundle {
-  opengym_plan: 1 | 2;
+  opengym_plan: 2;
   exported: IsoDate;
   name: string;
   week: Partial<Record<string, DaySession[]>>;

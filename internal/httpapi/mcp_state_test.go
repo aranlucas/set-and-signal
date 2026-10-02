@@ -3,6 +3,7 @@ package httpapi
 import (
 	"encoding/json/v2"
 	"errors"
+	"github.com/aranlucas/set-and-signal/internal/training"
 	"reflect"
 	"strings"
 	"testing"
@@ -38,7 +39,7 @@ func assertMCPStateConcrete(t *testing.T, typ reflect.Type, path string) {
 	}
 }
 
-func TestReadMCPStateAppliesLegacyDefaults(t *testing.T) {
+func TestReadMCPStateAppliesDefaults(t *testing.T) {
 	e := newTestEnv(t)
 	if err := e.st.WriteState("u1", []byte(`{"routines":[{"id":"r1","name":"Push","ex":[{"id":"bench","sets":3}]}]}`)); err != nil {
 		t.Fatal(err)
@@ -70,8 +71,8 @@ func TestReadMCPStateDecodesTypedTrainingData(t *testing.T) {
 	state := map[string]any{
 		"unit": "kg", "targetW": 80.5, "_ts": 42,
 		"bodyweight": []any{map[string]any{"d": "2026-08-20", "w": 81.2}},
-		"week":       map[string]any{"1": "r1", "2": nil},
-		"dayPlan":    map[string]any{"2026-08-28": "r1", "2026-08-29": "rest"},
+		"week":       training.WeekSchedule{"1": {{RoutineID: "r1"}}, "2": {}},
+		"dayPlan":    training.DayPlanMap{"2026-08-28": {Sessions: []training.MCPDaySession{{RoutineID: "r1"}}}, "2026-08-29": {Rest: true}},
 		"exWeights":  map[string]any{"bench": map[string]any{"w": 100, "d": "2026-08-20"}},
 		"customEx":   []any{map[string]any{"id": "custom-1", "n": "Cable Press", "bp": "chest", "desc": "home", "custom": true}},
 		"routines":   []any{map[string]any{"id": "r1", "name": "Push", "emoji": "bolt", "ex": []any{map[string]any{"id": "bench", "sets": 3, "reps": 5}}}},
@@ -93,7 +94,7 @@ func TestReadMCPStateDecodesTypedTrainingData(t *testing.T) {
 		t.Fatalf("typed scalar state = %#v", view)
 	}
 	if got := view.Week["2"]; len(got) != 0 {
-		t.Fatalf("week null = %v, want empty", got)
+		t.Fatalf("empty week = %v, want empty", got)
 	}
 	if view.ExWeights["bench"].W != 100 || view.CustomEx[0].Desc != "home" || !view.CustomEx[0].Custom {
 		t.Fatalf("typed nested state = %#v", view)
@@ -102,10 +103,10 @@ func TestReadMCPStateDecodesTypedTrainingData(t *testing.T) {
 		t.Fatalf("dayPlan = %#v", view.DayPlan)
 	}
 	if len(view.Week["1"]) != 1 || view.Week["1"][0].RoutineID != "r1" {
-		t.Fatalf("legacy week migrate = %#v", view.Week)
+		t.Fatalf("week = %#v", view.Week)
 	}
 	if len(view.DayPlan["2026-08-28"].Sessions) != 1 || view.DayPlan["2026-08-28"].Sessions[0].RoutineID != "r1" {
-		t.Fatalf("legacy dayPlan migrate = %#v", view.DayPlan)
+		t.Fatalf("dayPlan = %#v", view.DayPlan)
 	}
 }
 

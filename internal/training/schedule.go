@@ -6,19 +6,21 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+
+	"github.com/aranlucas/set-and-signal/internal/validation"
 )
 
 // WeekSchedule is the persisted weekday → ordered sessions map.
-type WeekSchedule = map[string][]MCPDaySession
+type WeekSchedule map[string][]MCPDaySession
 
 // DayPlanMap is the persisted ISO-date → day override map.
-type DayPlanMap = map[string]MCPDayPlan
+type DayPlanMap map[string]MCPDayPlan
 
 // MCPDaySession is one planned workout on a calendar day or weekday slot.
 type MCPDaySession struct {
-	RoutineID string  `json:"routineId" jsonschema:"routine id for this session"`
-	Start     *string `json:"start,omitempty" jsonschema:"optional local start time HH:MM"`
-	Label     *string `json:"label,omitempty" jsonschema:"optional coach-facing label"`
+	RoutineID string  `json:"routineId" jsonschema:"routine id for this session" validate:"required,max=40"`
+	Start     *string `json:"start,omitempty" jsonschema:"optional local start time HH:MM" validate:"omitempty,datetime=15:04"`
+	Label     *string `json:"label,omitempty" jsonschema:"optional coach-facing label" validate:"omitempty,max=80"`
 }
 
 // MCPDayPlan is a one-off override for an ISO calendar date.
@@ -26,7 +28,7 @@ type MCPDaySession struct {
 // (including an empty list, which clears the weekly template for that date).
 type MCPDayPlan struct {
 	Rest     bool            `json:"rest,omitzero" jsonschema:"when true, the date is a rest day"`
-	Sessions []MCPDaySession `json:"sessions" jsonschema:"ordered sessions when not a rest day"`
+	Sessions []MCPDaySession `json:"sessions" jsonschema:"ordered sessions when not a rest day" validate:"required_if=Rest false,dive"`
 }
 
 func cloneDaySessions(sessions []MCPDaySession) []MCPDaySession {
@@ -46,22 +48,22 @@ func cloneDaySessions(sessions []MCPDaySession) []MCPDaySession {
 	return out
 }
 
-func cloneWeekSchedule(week map[string][]MCPDaySession) map[string][]MCPDaySession {
+func cloneWeekSchedule(week WeekSchedule) WeekSchedule {
 	if week == nil {
 		return nil
 	}
-	out := make(map[string][]MCPDaySession, len(week))
+	out := make(WeekSchedule, len(week))
 	for day, sessions := range week {
 		out[day] = cloneDaySessions(sessions)
 	}
 	return out
 }
 
-func cloneDayPlan(plan map[string]MCPDayPlan) map[string]MCPDayPlan {
+func cloneDayPlan(plan DayPlanMap) DayPlanMap {
 	if plan == nil {
 		return nil
 	}
-	out := make(map[string]MCPDayPlan, len(plan))
+	out := make(DayPlanMap, len(plan))
 	for day, entry := range plan {
 		out[day] = MCPDayPlan{Rest: entry.Rest, Sessions: cloneDaySessions(entry.Sessions)}
 	}
@@ -93,7 +95,7 @@ func stringPtrValue(value *string) string {
 	return *value
 }
 
-func weekSlotSessions(week map[string][]MCPDaySession, weekday string) []MCPDaySession {
+func weekSlotSessions(week WeekSchedule, weekday string) []MCPDaySession {
 	if week == nil {
 		return nil
 	}
@@ -117,8 +119,7 @@ func resolveDaySessions(view TrainingData, iso string) (sessions []MCPDaySession
 			}
 		}
 		// Invalid override ids are dropped; if nothing remains and the override
-		// listed sessions, fall back to the weekly template (same spirit as the
-		// old single-id ghost override behavior).
+		// listed sessions, fall back to the weekly template.
 		if len(resolved) == 0 && len(entry.Sessions) > 0 {
 			return weekSlots, true, false
 		}
@@ -133,244 +134,52 @@ func resolveDaySessions(view TrainingData, iso string) (sessions []MCPDaySession
 	return resolved, false, false
 }
 
-func sessionFromRoutineID(routineID string) MCPDaySession {
-	return MCPDaySession{RoutineID: strings.TrimSpace(routineID)}
-}
-
 func normalizeDaySession(session MCPDaySession) (MCPDaySession, error) {
 	session.RoutineID = strings.TrimSpace(session.RoutineID)
-	if session.RoutineID == "" || jsSlice(session.RoutineID, 40) != session.RoutineID {
-		return MCPDaySession{}, fmt.Errorf("session routineId must be a non-empty id up to 40 characters")
-	}
-	if session.Start != nil {
-		start := strings.TrimSpace(*session.Start)
-		if start == "" {
-			session.Start = nil
-		} else if !looksLikeHHMM(start) {
-			return MCPDaySession{}, fmt.Errorf("session start must be HH:MM")
-		} else {
-			session.Start = &start
+	for _, field := range []**string{&session.Start, &session.Label} {
+		if *field != nil {
+			value := strings.TrimSpace(**field)
+			if value == "" {
+				*field = nil
+			} else {
+				*field = new(value)
+			}
 		}
 	}
-	if session.Label != nil {
-		label := jsSlice(strings.TrimSpace(*session.Label), 80)
-		if label == "" {
-			session.Label = nil
-		} else {
-			session.Label = &label
-		}
+	if err := validation.Validator.Struct(session); err != nil {
+		return MCPDaySession{}, err
 	}
 	return session, nil
 }
 
-func looksLikeHHMM(value string) bool {
-	if len(value) != 5 || value[2] != ':' {
-		return false
-	}
-	h1, h2, m1, m2 := value[0], value[1], value[3], value[4]
-	if h1 < '0' || h1 > '9' || h2 < '0' || h2 > '9' || m1 < '0' || m1 > '9' || m2 < '0' || m2 > '9' {
-		return false
-	}
-	hour := int(h1-'0')*10 + int(h2-'0')
-	minute := int(m1-'0')*10 + int(m2-'0')
-	return hour <= 23 && minute <= 59
+// ValidateSchedule enforces the current stored schedule shape through shared validation tags.
+func ValidateSchedule(week WeekSchedule, dayPlan DayPlanMap) error {
+	return validation.Validator.Struct(struct {
+		Week    WeekSchedule `validate:"dive,keys,oneof=0 1 2 3 4 5 6,endkeys,required,dive"`
+		DayPlan DayPlanMap   `validate:"dive,keys,datetime=2006-01-02,endkeys"`
+	}{week, dayPlan})
 }
 
-// migrateScheduleFields rewrites legacy single-id week/dayPlan values into the
-// sessions-array shape so existing profiles are not wiped on load.
-func migrateScheduleFields(raw jsontext.Value) (jsontext.Value, error) {
-	if len(raw) == 0 || string(raw) == "null" {
-		return raw, nil
+func decodeWeekMap(value jsontext.Value) (WeekSchedule, error) {
+	out := WeekSchedule{}
+	if len(value) == 0 || value.Kind() == 'n' {
+		return out, nil
 	}
-	var doc map[string]jsontext.Value
-	if err := json.Unmarshal(raw, &doc); err != nil {
+	if err := json.Unmarshal(value, &out); err != nil {
 		return nil, err
 	}
-	if weekRaw, ok := doc["week"]; ok {
-		migrated, changed, err := migrateWeekValue(weekRaw)
-		if err != nil {
-			return nil, err
-		}
-		if changed {
-			doc["week"] = migrated
-		}
-	}
-	if planRaw, ok := doc["dayPlan"]; ok {
-		migrated, changed, err := migrateDayPlanValue(planRaw)
-		if err != nil {
-			return nil, err
-		}
-		if changed {
-			doc["dayPlan"] = migrated
-		}
-	}
-	return json.Marshal(doc)
+	return out, ValidateSchedule(out, nil)
 }
 
-func migrateWeekValue(raw jsontext.Value) (jsontext.Value, bool, error) {
-	var week map[string]jsontext.Value
-	if err := json.Unmarshal(raw, &week); err != nil {
-		return nil, false, nil // leave non-objects alone; typed decode will fail
+func decodeDayPlanMap(value jsontext.Value) (DayPlanMap, error) {
+	out := DayPlanMap{}
+	if len(value) == 0 || value.Kind() == 'n' {
+		return out, nil
 	}
-	out := make(map[string][]MCPDaySession, len(week))
-	changed := false
-	for day, value := range week {
-		sessions, migrated, err := decodeFlexibleSessions(value)
-		if err != nil {
-			return nil, false, fmt.Errorf("week[%s]: %w", day, err)
-		}
-		if migrated {
-			changed = true
-		}
-		if sessions != nil {
-			out[day] = sessions
-		}
-	}
-	if !changed {
-		return raw, false, nil
-	}
-	encoded, err := json.Marshal(out)
-	return encoded, true, err
-}
-
-func migrateDayPlanValue(raw jsontext.Value) (jsontext.Value, bool, error) {
-	var plan map[string]jsontext.Value
-	if err := json.Unmarshal(raw, &plan); err != nil {
-		return nil, false, nil
-	}
-	out := make(map[string]MCPDayPlan, len(plan))
-	changed := false
-	for day, value := range plan {
-		entry, migrated, err := decodeFlexibleDayPlan(value)
-		if err != nil {
-			return nil, false, fmt.Errorf("dayPlan[%s]: %w", day, err)
-		}
-		if migrated {
-			changed = true
-		}
-		out[day] = entry
-	}
-	if !changed {
-		return raw, false, nil
-	}
-	encoded, err := json.Marshal(out)
-	return encoded, true, err
-}
-
-func decodeFlexibleSessions(raw jsontext.Value) ([]MCPDaySession, bool, error) {
-	if len(raw) == 0 || string(raw) == "null" {
-		return nil, false, nil
-	}
-	var sessions []MCPDaySession
-	if err := json.Unmarshal(raw, &sessions); err == nil {
-		return sessions, false, nil
-	}
-	var ids []string
-	if err := json.Unmarshal(raw, &ids); err == nil {
-		out := make([]MCPDaySession, 0, len(ids))
-		for _, id := range ids {
-			if strings.TrimSpace(id) == "" {
-				continue
-			}
-			out = append(out, sessionFromRoutineID(id))
-		}
-		return out, true, nil
-	}
-	var id string
-	if err := json.Unmarshal(raw, &id); err == nil {
-		if strings.TrimSpace(id) == "" {
-			return nil, true, nil
-		}
-		return []MCPDaySession{sessionFromRoutineID(id)}, true, nil
-	}
-	return nil, false, fmt.Errorf("expected sessions array")
-}
-
-func decodeFlexibleDayPlan(raw jsontext.Value) (MCPDayPlan, bool, error) {
-	if len(raw) == 0 || string(raw) == "null" {
-		return MCPDayPlan{}, false, nil
-	}
-	var entry MCPDayPlan
-	if err := json.Unmarshal(raw, &entry); err == nil {
-		// Empty objects were emitted by older builds for an empty override.
-		var probe map[string]jsontext.Value
-		if err := json.Unmarshal(raw, &probe); err == nil {
-			if len(probe) == 0 {
-				return entry, false, nil
-			}
-			if _, hasRest := probe["rest"]; hasRest {
-				return entry, false, nil
-			}
-			if _, hasSessions := probe["sessions"]; hasSessions {
-				return entry, false, nil
-			}
-		}
-	}
-	var id string
-	if err := json.Unmarshal(raw, &id); err == nil {
-		if id == "rest" {
-			return MCPDayPlan{Rest: true}, true, nil
-		}
-		if strings.TrimSpace(id) == "" {
-			return MCPDayPlan{}, true, nil
-		}
-		return MCPDayPlan{Sessions: []MCPDaySession{sessionFromRoutineID(id)}}, true, nil
-	}
-	sessions, _, err := decodeFlexibleSessions(raw)
-	if err != nil {
-		return MCPDayPlan{}, false, err
-	}
-	return MCPDayPlan{Sessions: sessions}, true, nil
-}
-
-func decodeWeekMap(value any) (map[string][]MCPDaySession, error) {
-	if value == nil {
-		return map[string][]MCPDaySession{}, nil
-	}
-	encoded, err := json.Marshal(value)
-	if err != nil {
+	if err := json.Unmarshal(value, &out); err != nil {
 		return nil, err
 	}
-	migrated, changed, err := migrateWeekValue(encoded)
-	if err != nil {
-		return nil, err
-	}
-	if !changed {
-		migrated = encoded
-	}
-	out := map[string][]MCPDaySession{}
-	if err := json.Unmarshal(migrated, &out); err != nil {
-		return nil, err
-	}
-	if out == nil {
-		out = map[string][]MCPDaySession{}
-	}
-	return out, nil
-}
-
-func decodeDayPlanMap(value any) (map[string]MCPDayPlan, error) {
-	if value == nil {
-		return map[string]MCPDayPlan{}, nil
-	}
-	encoded, err := json.Marshal(value)
-	if err != nil {
-		return nil, err
-	}
-	migrated, changed, err := migrateDayPlanValue(encoded)
-	if err != nil {
-		return nil, err
-	}
-	if !changed {
-		migrated = encoded
-	}
-	out := map[string]MCPDayPlan{}
-	if err := json.Unmarshal(migrated, &out); err != nil {
-		return nil, err
-	}
-	if out == nil {
-		out = map[string]MCPDayPlan{}
-	}
-	return out, nil
+	return out, ValidateSchedule(nil, out)
 }
 
 func materializeDayPlan(view TrainingData, iso string) MCPDayPlan {
@@ -396,7 +205,7 @@ func addSessionToDayPlan(data *TrainingData, iso string, session MCPDaySession) 
 	}
 	entry.Sessions = append(entry.Sessions, normalized)
 	if data.DayPlan == nil {
-		data.DayPlan = map[string]MCPDayPlan{}
+		data.DayPlan = DayPlanMap{}
 	}
 	data.DayPlan[iso] = entry
 	return nil
@@ -433,7 +242,7 @@ func removeSessionFromDayPlan(data *TrainingData, iso, routineID string, index *
 	}
 	entry.Sessions = slices.Delete(entry.Sessions, removeAt, removeAt+1)
 	if data.DayPlan == nil {
-		data.DayPlan = map[string]MCPDayPlan{}
+		data.DayPlan = DayPlanMap{}
 	}
 	data.DayPlan[iso] = entry
 	return nil

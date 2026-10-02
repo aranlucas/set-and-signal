@@ -32,31 +32,6 @@ const (
 	testOrigin = "http://localhost:8080"
 )
 
-func TestDataUploadPreservesUnknownJSONNumbers(t *testing.T) {
-	e := newTestEnv(t)
-	resp, _ := e.do("PUT", "/api/data",
-		`{"state":{"future":{"id":9007199254740993,"decimal":0.1234567890123456789},"active":{"private":true}}}`, "cookie")
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("upload = %d", resp.StatusCode)
-	}
-	raw, err := e.st.ReadState("u1")
-	if err != nil {
-		t.Fatal(err)
-	}
-	var doc map[string]jsontext.Value
-	if err := json.Unmarshal(raw, &doc); err != nil {
-		t.Fatal(err)
-	}
-	if string(doc["future"]) != `{"id":9007199254740993,"decimal":0.1234567890123456789}` {
-		t.Fatalf("unknown numbers changed: %s", doc["future"])
-	}
-	if _, ok := doc["active"]; ok {
-		t.Fatal("device-local workout was uploaded")
-	}
-}
-
-// ---------- harness ----------
-
 type testEnv struct {
 	t      *testing.T
 	url    string
@@ -248,9 +223,6 @@ func TestRouteContract(t *testing.T) {
 				}
 			},
 		},
-		{"data PUT unauthenticated", "PUT", "/api/data", `{"state":{}}`, "", 401, "not signed in", nil},
-		{"data PUT rejects bearer (readSession upstream)", "PUT", "/api/data", `{"state":{"unit":"kg"}}`, "bearer", 401, "not signed in", nil},
-		{"data PUT requires a state object", "PUT", "/api/data", `{}`, "cookie", 400, "state required", nil},
 
 		// granular edits: any credential
 		{"routine unauthenticated", "POST", "/api/routine", `{}`, "", 401, "not signed in", nil},
@@ -279,32 +251,6 @@ func TestRouteContract(t *testing.T) {
 				tc.check(t, resp, body)
 			}
 		})
-	}
-}
-
-// ---------- whole-state PUT ----------
-
-func TestPutDataStripsActiveAndEchoesTs(t *testing.T) {
-	e := newTestEnv(t)
-
-	resp, body := e.do("PUT", "/api/data",
-		`{"state":{"unit":"lb","active":{"ex":[1]},"_ts":1724438400000}}`, "cookie")
-	if resp.StatusCode != 200 || body["ok"] != true || body["ts"] != float64(1724438400000) {
-		t.Fatalf("PUT data = %d %v", resp.StatusCode, body)
-	}
-
-	st := e.getState("cookie")
-	if st["unit"] != "lb" {
-		t.Fatalf("unit not persisted: %v", st)
-	}
-	if _, present := st["active"]; present {
-		t.Fatalf("active key survived: %v", st)
-	}
-
-	// _ts falsy (0 / absent) echoes null, like `body.state._ts || null`.
-	resp, body = e.do("PUT", "/api/data", `{"state":{"_ts":0}}`, "cookie")
-	if resp.StatusCode != 200 || body["ts"] != nil {
-		t.Fatalf("PUT data falsy ts = %d %v", resp.StatusCode, body)
 	}
 }
 
@@ -744,12 +690,11 @@ func TestRouteContractAdminActivityPush(t *testing.T) {
 		{"activity rejects bearer (cookie-only)", "POST", "/api/activity", `{"active":true}`, "bearer", 401, "not signed in", false},
 		{"activity unauthenticated", "POST", "/api/activity", `{}`, "", 401, "not signed in", false},
 		{"push subscribe rejects bearer", "POST", "/api/push/subscribe", `{"subscription":{}}`, "bearer", 401, "not signed in", false},
-		{"push subscribe invalid payload", "POST", "/api/push/subscribe", `{"subscription":{"endpoint":"https://x"}}`, "cookie", 400, "invalid subscription", false},
+		{"push subscribe invalid payload", "POST", "/api/push/subscribe", `{"subscription":{"endpoint":"https://x"}}`, "cookie", 400, "", false},
 		{"push unsubscribe rejects bearer", "POST", "/api/push/unsubscribe", `{}`, "bearer", 401, "not signed in", false},
-		// Upstream's `+body.seconds || 0` collapses garbage to 0 before the
-		// clamp, so missing/garbage seconds schedule a 1s timer and answer ok.
-		{"rest-timer garbage seconds schedules 1s", "POST", "/api/push/rest-timer", `{"seconds":"soon"}`, "cookie", 200, "", false},
-		{"rest-timer missing seconds schedules 1s", "POST", "/api/push/rest-timer", `{}`, "cookie", 200, "", false},
+		// Rest timers require a numeric duration within the supported range.
+		{"rest-timer rejects nonnumeric seconds", "POST", "/api/push/rest-timer", `{"seconds":"soon"}`, "cookie", 400, "bad json", false},
+		{"rest-timer requires seconds", "POST", "/api/push/rest-timer", `{}`, "cookie", 400, "", false},
 		{"rest-timer cancel ok", "POST", "/api/push/rest-timer/cancel", `{}`, "cookie", 200, "", false},
 		{"admin users unauthenticated", "GET", "/api/admin/users", "", "", 401, "not signed in", false},
 		{"admin users rejects bearer", "GET", "/api/admin/users", "", "bearer", 401, "not signed in", false},
@@ -1026,8 +971,8 @@ func TestPushSubscribeUnsubscribe(t *testing.T) {
 	if resp, b := e.do("POST", "/api/push/rest-timer", `{"seconds":90}`, "cookie"); resp.StatusCode != 200 || b["ok"] != true {
 		t.Fatalf("rest-timer = %d %v", resp.StatusCode, b)
 	}
-	if resp, b := e.do("POST", "/api/push/rest-timer", `{"seconds":"45"}`, "cookie"); resp.StatusCode != 200 {
-		t.Fatalf("rest-timer numeric string = %d %v", resp.StatusCode, b)
+	if resp, b := e.do("POST", "/api/push/rest-timer", `{"seconds":45}`, "cookie"); resp.StatusCode != 200 {
+		t.Fatalf("rest-timer numeric duration = %d %v", resp.StatusCode, b)
 	}
 	if resp, b := e.do("POST", "/api/push/rest-timer/cancel", `{}`, "cookie"); resp.StatusCode != 200 || b["ok"] != true {
 		t.Fatalf("rest-timer cancel = %d %v", resp.StatusCode, b)
@@ -1071,7 +1016,7 @@ func TestAINextWorkoutWithStub(t *testing.T) {
 	var lastBody map[string]any
 	var called int
 	var mu sync.Mutex
-	mode := "" // "", "bad", "garbage"
+	mode := "" // success, provider error, or an invalid plan
 	writeReply := func(w http.ResponseWriter, content string) {
 		body, err := json.Marshal(map[string]any{
 			"id":         "resp_test",
@@ -1112,17 +1057,26 @@ func TestAINextWorkoutWithStub(t *testing.T) {
 		case "garbage":
 			// A well-formed reply whose content has no braces at all.
 			writeReply(w, "I cannot help with that.")
+		case "invalid":
+			writeReply(w, `{"summary":"Invalid plan","entries":[{"id":"squat","sets":99}]}`)
+		case "fenced":
+			writeReply(w, "```json\n{\"summary\":\"Plan\",\"entries\":[]}\n```")
+		case "wrongType":
+			writeReply(w, `{"summary":"Invalid plan","entries":[{"id":"squat","weight":"100"}]}`)
+		case "unknown":
+			writeReply(w, `{"summary":"Invalid plan","entries":[{"id":"squat","junk":true}]}`)
+		case "empty":
+			writeReply(w, `{"summary":"","entries":[]}`)
+
 		default:
 			reply, _ := json.Marshal(map[string]any{
 				"summary": "Go easy today.",
 				"entries": []map[string]any{
-					{"id": "squat", "sets": 3, "reps": 5, "weight": 100, "junk": true},
-					{"id": "", "sets": 9},         // dropped: no id
-					{"id": "plank", "sec": 60},    // kept
-					{"id": "nothing", "note": ""}, // dropped: nothing to say
+					{"id": "squat", "sets": 3, "reps": 5, "weight": 100},
+					{"id": "plank", "sec": 60},
 				},
 			})
-			content := "Sure!\n```json\n" + string(reply) + "\n```\nGood luck!"
+			content := string(reply)
 			writeReply(w, content)
 		}
 	}))
@@ -1130,7 +1084,7 @@ func TestAINextWorkoutWithStub(t *testing.T) {
 	e.srv.AI = &ai.Client{APIKey: "k", Model: "m", BaseURL: stub.URL, HTTP: stubClient}
 	e.srv.Cfg.OpenRouterModel = "m"
 
-	// Fenced JSON is unwrapped; entries are cleaned and capped.
+	// Structured Outputs decode directly into the validated response DTO.
 	resp, body := e.do("POST", "/api/ai/next-workout", `{"digest":{"recent":["w1"]}}`, "cookie")
 	if resp.StatusCode != 200 {
 		t.Fatalf("next-workout = %d %v", resp.StatusCode, body)
@@ -1176,6 +1130,20 @@ func TestAINextWorkoutWithStub(t *testing.T) {
 		errOf(b) != "AI reply was not valid JSON — try again" {
 		t.Fatalf("garbage reply = %d %v", resp.StatusCode, b)
 	}
+	for _, test := range []struct{ mode, message string }{
+		{"invalid", "AI reply failed validation — try again"},
+		{"wrongType", "AI reply was not valid JSON — try again"},
+		{"fenced", "AI reply was not valid JSON — try again"},
+		{"unknown", "AI reply was not valid JSON — try again"},
+		{"empty", "AI reply was empty — try again"},
+	} {
+		mode = test.mode
+		resp, body := e.do("POST", "/api/ai/next-workout", `{"digest":{}}`, "bearer")
+		if resp.StatusCode != 502 || errOf(body) != test.message {
+			t.Fatalf("invalid plan %s = %d %v", mode, resp.StatusCode, body)
+		}
+	}
+
 	mode = ""
 
 	// Oversized digests are refused before any provider call.

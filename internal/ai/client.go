@@ -1,6 +1,5 @@
 // Package ai provides the OpenRouter-backed workout-planning client. It uses
-// the OpenAI Responses API with strict Structured Outputs, while retaining the
-// legacy fenced-JSON extractor as a defensive parsing boundary.
+// the OpenAI Responses API with strict Structured Outputs.
 package ai
 
 import (
@@ -9,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -22,8 +20,8 @@ import (
 
 // Message is one chat turn.
 type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Role    responses.EasyInputMessageRole `json:"role"`
+	Content string                         `json:"content"`
 }
 
 // Client talks to OpenRouter's OpenAI-compatible Responses API. Create with New;
@@ -50,22 +48,22 @@ func New(apiKey, model, origin string) *Client {
 
 // workoutPlan is the model-facing contract. Every adjustment field is required
 // and nullable because strict Structured Outputs does not support optional
-// object properties. The HTTP layer still sanitizes values before use.
+// object properties. The HTTP layer validates the decoded response before use.
 type workoutPlan struct {
 	Summary string             `json:"summary" jsonschema:"maxLength=800" jsonschema_description:"Two or three sentences explaining the next workout"`
 	Entries []workoutPlanEntry `json:"entries" jsonschema:"maxItems=30" jsonschema_description:"One entry per exercise that should be adjusted"`
 }
 
 type workoutPlanEntry struct {
-	ID     string   `json:"id" jsonschema_description:"Exercise id from the supplied routine"`
-	Sets   *float64 `json:"sets" jsonschema:"nullable" jsonschema_description:"Working sets, or null when unchanged"`
-	Reps   *float64 `json:"reps" jsonschema:"nullable" jsonschema_description:"Target repetitions, or null when unchanged"`
-	Weight *float64 `json:"weight" jsonschema:"nullable" jsonschema_description:"Target weight, or null when unchanged"`
-	Sec    *float64 `json:"sec" jsonschema:"nullable" jsonschema_description:"Target seconds, or null when unchanged"`
-	Min    *float64 `json:"min" jsonschema:"nullable" jsonschema_description:"Target minutes, or null when unchanged"`
-	Speed  *float64 `json:"speed" jsonschema:"nullable" jsonschema_description:"Target speed, or null when unchanged"`
-	SwapTo *string  `json:"swapTo" jsonschema:"nullable" jsonschema_description:"Replacement exercise id, or null when no swap is needed"`
-	Note   *string  `json:"note" jsonschema:"nullable,maxLength=300" jsonschema_description:"Short coaching note, or null when no note is needed"`
+	ID     string   `json:"id" jsonschema:"minLength=1,maxLength=40" jsonschema_description:"Exercise id from the supplied routine"`
+	Sets   *float64 `json:"sets" jsonschema:"nullable,minimum=1,maximum=12" jsonschema_description:"Working sets, or null when unchanged"`
+	Reps   *float64 `json:"reps" jsonschema:"nullable,minimum=1,maximum=500" jsonschema_description:"Target repetitions, or null when unchanged"`
+	Weight *float64 `json:"weight" jsonschema:"nullable,minimum=0,maximum=1000" jsonschema_description:"Target weight, or null when unchanged"`
+	Sec    *float64 `json:"sec" jsonschema:"nullable,minimum=1,maximum=7200" jsonschema_description:"Target seconds, or null when unchanged"`
+	Min    *float64 `json:"min" jsonschema:"nullable,minimum=1,maximum=600" jsonschema_description:"Target minutes, or null when unchanged"`
+	Speed  *float64 `json:"speed" jsonschema:"nullable,minimum=0,maximum=80" jsonschema_description:"Target speed, or null when unchanged"`
+	SwapTo *string  `json:"swapTo" jsonschema:"nullable,maxLength=40" jsonschema_description:"Replacement exercise id, or null when no swap is needed"`
+	Note   *string  `json:"note" jsonschema:"nullable,maxLength=240" jsonschema_description:"Short coaching note, or null when no note is needed"`
 }
 
 func generateSchema[T any]() (map[string]any, error) {
@@ -91,14 +89,14 @@ var workoutPlanSchema = sync.OnceValues(generateSchema[workoutPlan])
 // Provider-side failures surface as errors carrying the provider's own
 // message when available ("OpenRouter HTTP <status>" otherwise); an empty
 // reply is an error too, like upstream.
-func (c *Client) Chat(messages []Message) (string, error) {
+func (c *Client) Chat(ctx context.Context, messages []Message) (string, error) {
 	schema, err := workoutPlanSchema()
 	if err != nil {
 		return "", err
 	}
 	input := make(responses.ResponseInputParam, 0, len(messages))
 	for _, message := range messages {
-		role := responses.EasyInputMessageRole(message.Role)
+		role := message.Role
 		switch role {
 		case responses.EasyInputMessageRoleUser,
 			responses.EasyInputMessageRoleAssistant,
@@ -143,7 +141,7 @@ func (c *Client) Chat(messages []Message) (string, error) {
 		},
 	}
 	response, err := client.Responses.New(
-		context.Background(),
+		ctx,
 		params,
 		option.WithJSONSet("provider.require_parameters", true),
 	)
@@ -161,27 +159,4 @@ func (c *Client) Chat(messages []Message) (string, error) {
 		return "", errors.New("empty response")
 	}
 	return text, nil
-}
-
-var fencedRe = regexp.MustCompile(`(?s)` + "```(?:json)?\\s*([\\s\\S]*?)```")
-
-// ExtractJSON recovers the JSON object from a model reply: a fenced ```json
-// block wins when present, else the outermost braces of the raw text.
-// Mirrors extractJSON (server.js lines 356–363).
-func ExtractJSON(text string) (map[string]any, error) {
-	raw := text
-	if m := fencedRe.FindStringSubmatch(text); m != nil {
-		raw = m[1]
-	}
-	a := strings.Index(raw, "{")
-	beforeLastBrace, _, ok := strings.CutLast(raw, "}")
-	b := len(beforeLastBrace)
-	if a < 0 || !ok || b <= a {
-		return nil, errors.New("no JSON object in reply")
-	}
-	var obj map[string]any
-	if err := json.Unmarshal([]byte(raw[a:b+1]), &obj); err != nil {
-		return nil, err
-	}
-	return obj, nil
 }

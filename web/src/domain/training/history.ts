@@ -130,20 +130,9 @@ export function stepEffort(
 // the first keystroke into the floor and fight the input.
 export const capEffort = (kind: EffortScale | undefined, v?: number | null) =>
   v == null || !kind || kind === "none" ? v : Math.min(EFFORT[kind].max, v);
-// Which scale a profile logs. `showRir` is the boolean this replaced and is only consulted
-// when the profile has no answer of its own — an explicit 'none' has to win over it, or a
-// backup or another device that still carries the old flag would switch the column back on.
-// Junk values ('rpe10', 'RIR', …) fall through to the fallback exactly as they always did.
-export const effortOf = (
-  profile?: { effort?: string | null; showRir?: boolean } | null,
-): EffortScale => {
-  const configuredEffort = profile && profile.effort;
-  const known: EffortScale | null =
-    configuredEffort === "none" || configuredEffort === "rir" || configuredEffort === "rpe"
-      ? configuredEffort
-      : null;
-  return known || (profile && profile.showRir ? "rir" : "none");
-};
+/** The configured scale, or no effort column until a scale is chosen. */
+export const effortOf = (profile?: { effort?: EffortScale | null } | null): EffortScale =>
+  profile?.effort ?? "none";
 // The "(RIR 2)" / "(RPE 8)" tail on a set summary, empty when nothing was logged.
 const effortTail = (s: SetFields): string => {
   const k = s.rir == null ? (s.rpe != null ? "rpe" : null) : "rir";
@@ -213,7 +202,7 @@ export function cleanupSg<T extends { sg?: string }>(ex: T[]) {
 }
 
 // What lastEntryFor hands back: the confirmed sets of the most recent session that has one,
-// plus the prescription it was logged against (`target`, absent in pre-v1.2.2 history).
+// plus its prescription (`target`, omitted for imported CSV history).
 export interface LastEntry {
   d: IsoDate;
   sets: SetFields[];

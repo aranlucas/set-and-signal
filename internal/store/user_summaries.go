@@ -32,13 +32,7 @@ func (s *Store) UserSummaries(ctx context.Context) ([]UserSummary, error) {
 			if err := ctx.Err(); err != nil {
 				return nil, err
 			}
-			source, ok := s.Training.(interface {
-				Summary(string) (TrainingSummary, error)
-			})
-			if !ok {
-				return nil, fmt.Errorf("training backend does not provide summaries")
-			}
-			projection, err := source.Summary(user.ID)
+			projection, err := s.Training.Summary(user.ID)
 			if err != nil {
 				return nil, err
 			}

@@ -32,9 +32,4 @@ func weekdayKey(iso string) string {
 	return strconv.Itoa(int(t.Weekday()))
 }
 
-type historyQuery struct {
-	Since      string
-	Until      string
-	ExerciseID string
-	Limit      int
-}
+type historyQuery = HistoryQuery

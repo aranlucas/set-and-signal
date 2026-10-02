@@ -30,7 +30,7 @@ describe("runtime payload schemas", () => {
     expect(parseStoredState("not json")).toBeNull();
   });
 
-  it("accepts a valid state patch without requiring unrelated legacy fields", () => {
+  it("accepts a valid state patch without requiring unrelated fields", () => {
     expect(parsePayload(appStatePatch, { unit: "lb", sound: false })).toEqual({
       unit: "lb",
       sound: false,
@@ -104,31 +104,26 @@ describe("runtime payload schemas", () => {
     });
   });
 
-  it("normalizes legacy single-id week and dayPlan values on read", () => {
-    const parsed = parseStoredState(
-      JSON.stringify({
-        week: { "1": "routine-a", "3": ["routine-b", "routine-c"] },
-        dayPlan: { "2026-09-14": "routine-a", "2026-09-15": "rest" },
-      }),
-    );
-    expect(parsed?.week).toEqual({
-      1: [{ routineId: "routine-a" }],
-      3: [{ routineId: "routine-b" }, { routineId: "routine-c" }],
-    });
-    expect(parsed?.dayPlan).toEqual({
-      "2026-09-14": { sessions: [{ routineId: "routine-a" }] },
-      "2026-09-15": { rest: true },
-    });
+  it.each([
+    { week: { "1": "routine-a" } },
+    { week: { "3": ["routine-b", "routine-c"] } },
+    { dayPlan: { "2026-09-14": "routine-a" } },
+    { dayPlan: { "2026-09-15": "rest" } },
+    { dayPlan: { "2026-09-16": {} } },
+  ])("rejects obsolete schedule formats: %j", (state) => {
+    expect(parseStoredState(JSON.stringify(state))).toBeNull();
+  });
+
+  it("rejects an unknown effort scale at the validation boundary", () => {
+    expect(parseStoredState('{"effort":"rpe10"}')).toBeNull();
   });
 });
 
 describe("empty schedule overrides", () => {
-  it("preserves empty days after server serialization and legacy empty objects", () => {
+  it("preserves explicit empty session lists", () => {
     expect(
-      parseStoredState(
-        JSON.stringify({ dayPlan: { "2026-09-15": { sessions: [] }, "2026-09-16": {} } }),
-      )?.dayPlan,
-    ).toEqual({ "2026-09-15": { sessions: [] }, "2026-09-16": { sessions: [] } });
+      parseStoredState(JSON.stringify({ dayPlan: { "2026-09-15": { sessions: [] } } }))?.dayPlan,
+    ).toEqual({ "2026-09-15": { sessions: [] } });
   });
 });
 

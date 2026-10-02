@@ -8,6 +8,7 @@ import (
 
 	"github.com/aranlucas/set-and-signal/internal/auth"
 	"github.com/aranlucas/set-and-signal/internal/store"
+	"github.com/go-webauthn/webauthn/protocol"
 )
 
 // cidCredential is the body shape of both verify endpoints: the challenge id
@@ -40,7 +41,10 @@ func (s *Server) registerOptions(w http.ResponseWriter, r *http.Request) {
 		serverError(w)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"cid": cid, "options": opts})
+	writeJSON(w, http.StatusOK, struct {
+		CID     string                       `json:"cid"`
+		Options *protocol.CredentialCreation `json:"options"`
+	}{CID: cid, Options: opts})
 }
 
 // POST /api/register/verify — verifies the attestation, creates user +
@@ -71,7 +75,7 @@ func (s *Server) registerVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Add("Set-Cookie", s.setCookie(&user))
-	writeJSON(w, http.StatusOK, map[string]any{"user": s.userPayload(user)})
+	writeJSON(w, http.StatusOK, userResponse{User: s.userPayload(user)})
 }
 
 // POST /api/login/options — discoverable-credential assertion options.
@@ -81,7 +85,10 @@ func (s *Server) loginOptions(w http.ResponseWriter, _ *http.Request) {
 		serverError(w)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"cid": cid, "options": opts})
+	writeJSON(w, http.StatusOK, struct {
+		CID     string                        `json:"cid"`
+		Options *protocol.CredentialAssertion `json:"options"`
+	}{CID: cid, Options: opts})
 }
 
 // POST /api/login/verify — verifies the assertion for whichever stored
@@ -112,7 +119,7 @@ func (s *Server) loginVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Add("Set-Cookie", s.setCookie(&user))
-	writeJSON(w, http.StatusOK, map[string]any{"user": s.userPayload(user)})
+	writeJSON(w, http.StatusOK, userResponse{User: s.userPayload(user)})
 }
 
 // waMsg strips internal prefixes so the client sees the underlying error
@@ -132,7 +139,7 @@ func waMsg(err error) string {
 // POST /api/logout — clears the caller's cookie; no session required.
 func (s *Server) logout(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Add("Set-Cookie", s.clearCookie())
-	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+	writeJSON(w, http.StatusOK, okResponse{OK: true})
 }
 
 // POST /api/logout/all — bumps the account's session version, invalidating
@@ -147,5 +154,5 @@ func (s *Server) logoutAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Add("Set-Cookie", s.clearCookie())
-	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+	writeJSON(w, http.StatusOK, okResponse{OK: true})
 }

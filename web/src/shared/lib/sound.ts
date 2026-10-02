@@ -1,4 +1,4 @@
-// WebAudio beeps + haptics (ported from the vanilla app). `enabled` gates sound.
+// WebAudio beeps + haptics. `enabled` gates sound.
 let audioCtx: AudioContext | null = null;
 export function beep(
   enabled: boolean,
@@ -8,14 +8,7 @@ export function beep(
 ) {
   if (!enabled) return;
   try {
-    if (!audioCtx) {
-      const legacyWindow: Window & {
-        webkitAudioContext?: typeof AudioContext;
-      } = window;
-      const AudioContextConstructor = window.AudioContext || legacyWindow.webkitAudioContext;
-      if (!AudioContextConstructor) return;
-      audioCtx = new AudioContextConstructor();
-    }
+    audioCtx ??= new AudioContext();
     const oscillator = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
     oscillator.connect(gainNode);

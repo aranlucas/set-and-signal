@@ -104,12 +104,10 @@ export const replace = mutation({
   args: {
     state: v.string(),
     expected: v.union(v.number(), v.null()),
-    onlyIfMissing: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const uid = await owner(ctx, true);
     const { profile, records } = await load(ctx, uid);
-    if (args.onlyIfMissing && profile) return false;
     if (args.expected !== null && (profile?.revision ?? 0) !== args.expected) return false;
     const value = JSON.parse(args.state);
     if (!value || Array.isArray(value) || typeof value !== "object")

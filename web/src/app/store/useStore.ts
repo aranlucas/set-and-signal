@@ -12,7 +12,6 @@ import { parseStoredState, parseUser } from "@/shared/lib/schemas.js";
 const STATE_STORAGE_KEY = "gym_state_v1";
 
 const USER_STORAGE_KEY = "gym_user@v1";
-const LEGACY_USER_STORAGE_KEY = "gym_user";
 
 export const DEFAULT_STATE = DEFAULT_APP_STATE;
 
@@ -23,7 +22,6 @@ const cloneValue = <T>(value: T): T => structuredClone(value);
 
 function loadState(): AppState {
   try {
-    migrateUserKey();
     const rawUser = localStorage.getItem(USER_STORAGE_KEY);
     const user = rawUser ? parseUser(JSON.parse(rawUser)) : null;
     const storedState = parseStoredState(
@@ -37,20 +35,6 @@ function loadState(): AppState {
     /* ignore */
   }
   return cloneValue(DEFAULT_STATE);
-}
-
-// One-time migration: move the pre-versioned user record under the versioned
-// key so every reader below sees a single format. Runs before the store reads it.
-function migrateUserKey() {
-  try {
-    if (localStorage.getItem(USER_STORAGE_KEY) !== null) return;
-    const legacyUser = localStorage.getItem(LEGACY_USER_STORAGE_KEY);
-    if (legacyUser === null) return;
-    localStorage.setItem(USER_STORAGE_KEY, legacyUser);
-    localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
-  } catch {
-    /* ignore */
-  }
 }
 
 export const hasData = (appState: Partial<AppState>) =>
@@ -151,7 +135,6 @@ export const useStore = create<Store>()((set, get) => {
       return savedState;
     })(),
     user: (() => {
-      migrateUserKey();
       try {
         const rawUser = localStorage.getItem(USER_STORAGE_KEY);
         return rawUser ? parseUser(JSON.parse(rawUser)) : null;

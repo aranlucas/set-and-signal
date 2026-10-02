@@ -2,12 +2,11 @@ package httpapi
 
 import (
 	"encoding/json/jsontext"
-	"encoding/json/v2"
 	"net/http"
 )
 
 // GET /api/data — whole-state read; cookie session OR bearer token.
-// No state on file serializes as {"state":null}, like upstream's catch arm.
+// A user with no stored state receives {"state":null}.
 func (s *Server) getData(w http.ResponseWriter, r *http.Request) {
 	u := s.requireAnyAuth(w, r)
 	if u == nil {
@@ -18,49 +17,7 @@ func (s *Server) getData(w http.ResponseWriter, r *http.Request) {
 		serverError(w)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]jsontext.Value{"state": raw})
-}
-
-// PUT /api/data — whole-state write. Deliberately cookie-ONLY (upstream uses
-// readSession): an LLM with a bad day should never be able to overwrite an
-// entire profile. The in-progress-workout `active` key is stripped — those
-// stay device-local.
-func (s *Server) putData(w http.ResponseWriter, r *http.Request) {
-	if s.Convex != nil {
-		if s.requireSession(w, r) == nil {
-			return
-		}
-		writeErr(w, http.StatusGone, "Training edits now use Convex. Reload the application.")
-		return
-	}
-	u := s.requireSession(w, r)
-	if u == nil {
-		return
-	}
-	var body struct {
-		State map[string]jsontext.Value `json:"state"`
-	}
-	if !readJSON(w, r, &body) {
-		return
-	}
-	if body.State == nil {
-		writeErr(w, http.StatusBadRequest, "state required")
-		return
-	}
-	delete(body.State, "active")
-	raw, err := json.Marshal(body.State)
-	if err != nil {
-		serverError(w)
-		return
-	}
-	if err := s.ST.WriteState(u.ID, raw); err != nil {
-		serverError(w)
-		return
-	}
-	var ts any // upstream: body.state._ts || null
-	var f float64
-	if json.Unmarshal(body.State["_ts"], &f) == nil && f != 0 {
-		ts = f
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "ts": ts})
+	writeJSON(w, http.StatusOK, struct {
+		State jsontext.Value `json:"state"`
+	}{State: raw})
 }

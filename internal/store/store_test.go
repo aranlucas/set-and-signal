@@ -12,7 +12,7 @@ func TestWALWriterCommitsWhileReaderKeepsSnapshot(t *testing.T) {
 	if err := st.CreateUser(User{ID: "u1", Name: "before"}); err != nil {
 		t.Fatal(err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
 	defer cancel()
 	reader, err := st.DB.Conn(ctx)
 	if err != nil {

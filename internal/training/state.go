@@ -37,7 +37,7 @@ type MCPExWeightHint struct {
 // through typed MCP producers and to use as the source for output DTOs.
 type TrainingData struct {
 	Unit       string                     `json:"unit"`
-	TargetW    *float64                   `json:"targetW,omitempty"`
+	TargetW    *float64                   `json:"targetW,omitzero"`
 	Bodyweight []MCPBodyweightEntry       `json:"bodyweight"`
 	Routines   []MCPRoutine               `json:"routines"`
 	Week       WeekSchedule               `json:"week"`

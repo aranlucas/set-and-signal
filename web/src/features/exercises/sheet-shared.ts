@@ -24,7 +24,6 @@ export const toCatalogExercise = (exercise: SheetEx): CatalogExercise => {
     gif: "",
     mg: "",
     sm: [],
-    st: [],
   };
 };
 

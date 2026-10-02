@@ -151,7 +151,6 @@ export function SettingsPreferences({ onEffortHelp }: { onEffortHelp: () => void
             onChange={(effortScale) =>
               update((state) => {
                 state.effort = effortScale;
-                delete state.showRir;
               })
             }
           />

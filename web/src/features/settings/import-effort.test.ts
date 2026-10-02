@@ -141,7 +141,7 @@ describe("effort in a backup", () => {
   it("exports and re-imports both scales and the setting", () => {
     const appState = {
       unit: "kg",
-      effort: "rpe",
+      effort: "rpe" as const,
       routines: [],
       workouts: [
         {
@@ -170,17 +170,9 @@ describe("effort in a backup", () => {
     expect(setLabel("0025", c)).toBe("60×12");
   });
 
-  it("restores a backup written before the setting existed", () => {
-    // the old flag survives the round trip and still decides the column
-    expect(effortOf(roundTrip({ showRir: true, workouts: [], routines: [] }))).toBe("rir");
-    const legacyProfile: {
-      effort?: string | null;
-      workouts: never[];
-      routines: never[];
-    } = {
-      workouts: [],
-      routines: [],
-    };
-    expect(effortOf(roundTrip(legacyProfile))).toBe("none");
+  it("preserves an explicit choice to hide effort in a backup", () => {
+    expect(effortOf(roundTrip({ effort: "none" as const, workouts: [], routines: [] }))).toBe(
+      "none",
+    );
   });
 });

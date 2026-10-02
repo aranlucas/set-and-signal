@@ -1,5 +1,4 @@
-// Package auth ports session-cookie signing from upstream api/server.js
-// §"sessions": HMAC-SHA256 signed `uid:expiry:sv` cookies.
+// Package auth implements passkey authentication and signed session cookies.
 package auth
 
 import (
@@ -8,8 +7,8 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
-	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -18,8 +17,7 @@ import (
 )
 
 // Sessions signs and verifies `gymsid` cookie values. Secret is the raw
-// (trimmed) contents of $DATA_DIR/secret — the same bytes server.js uses as
-// its HMAC key, so cookies stay interoperable across both implementations.
+// contents of $DATA_DIR/secret.
 type Sessions struct {
 	Secret []byte
 	Days   int
@@ -46,7 +44,7 @@ func NewSessions(dataDir string, days int) (*Sessions, error) {
 		if err := f.Close(); err != nil {
 			return nil, fmt.Errorf("auth: close secret: %w", err)
 		}
-	} else if !os.IsExist(err) {
+	} else if !errors.Is(err, os.ErrExist) {
 		return nil, fmt.Errorf("auth: open secret: %w", err)
 	}
 	raw, err := os.ReadFile(path)
@@ -100,67 +98,27 @@ func (s *Sessions) Make(uid string, sv int) (cookieValue string, maxAge int) {
 	return s.sign(fmt.Sprintf("%s:%d:%d", uid, exp, sv)), s.Days * 86400
 }
 
-// Read verifies a cookie value and resolves its user via lookup, which must
-// report the user's current sv counter and disabled flag; report unknown
-// users as disabled. Mirrors readSession (server.js lines 177–195):
-// signature → non-empty uid → expiry → user exists → not disabled → sv match,
-// with a missing third payload field meaning version 0 (legacy cookies).
+// Read verifies a current three-field cookie and checks expiry and session version.
 func (s *Sessions) Read(cookieVal string, lookup func(uid string) (sv int, disabled bool)) (uid string, ok bool) {
 	payload, ok := s.verifySig(cookieVal)
 	if !ok {
 		return "", false
 	}
 	parts := strings.Split(payload, ":")
-	uid = parts[0]
-	if uid == "" {
+	if len(parts) != 3 || parts[0] == "" {
 		return "", false
 	}
-	// +exp < Date.now(): junk exp coerces to NaN, which fails the comparison
-	// and falls through to the sv check, exactly like upstream.
-	expStr := ""
-	if len(parts) > 1 {
-		expStr = parts[1]
-	}
-	if exp, ok := jsToNumber(expStr); ok && exp < float64(time.Now().UnixMilli()) {
+	expiry, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil || expiry < time.Now().UnixMilli() {
 		return "", false
 	}
-	sv, disabled := lookup(uid)
-	if disabled {
+	claimed, err := strconv.Atoi(parts[2])
+	if err != nil || claimed < 0 {
 		return "", false
 	}
-	var claimed float64
-	if len(parts) > 2 {
-		n, ok := jsToNumber(parts[2])
-		if !ok || n != math.Trunc(n) { // Number.isInteger: NaN/±Inf/fractions fail
-			return "", false
-		}
-		claimed = n
-	} // missing third field ⇒ pre-versioning cookie ⇒ version 0
-	if claimed != float64(sv) {
+	version, disabled := lookup(parts[0])
+	if disabled || version != claimed {
 		return "", false
 	}
-	return uid, true
-}
-
-// jsToNumber approximates JS unary + on a decimal string: pure whitespace is
-// zero, anything else parses as a float; garbage reports !ok (NaN).
-func jsToNumber(s string) (float64, bool) {
-	t := strings.TrimFunc(s, isJSWhitespace)
-	if t == "" {
-		return 0, true
-	}
-	f, err := strconv.ParseFloat(t, 64)
-	if err != nil {
-		return 0, false
-	}
-	return f, true
-}
-
-func isJSWhitespace(r rune) bool {
-	switch r {
-	case '\t', '\n', '\v', '\f', '\r', ' ', 0x00A0, 0x1680, 0x2028, 0x2029,
-		0x202F, 0x205F, 0x3000, 0xFEFF:
-		return true
-	}
-	return r >= 0x2000 && r <= 0x200A
+	return parts[0], true
 }

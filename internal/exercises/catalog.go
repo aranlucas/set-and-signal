@@ -26,13 +26,9 @@ type Exercise struct {
 }
 
 var (
-	loadOnce sync.Once
-	all      []Exercise
-	byID     map[string]Exercise
-)
-
-func load() {
-	loadOnce.Do(func() {
+	all  []Exercise
+	byID map[string]Exercise
+	load = sync.OnceFunc(func() {
 		if err := json.Unmarshal(catalogJSON, &all); err != nil {
 			panic("exercises catalog: " + err.Error())
 		}
@@ -41,7 +37,7 @@ func load() {
 			byID[e.ID] = e
 		}
 	})
-}
+)
 
 // All returns the full catalog (read-only; do not mutate).
 func All() []Exercise {
@@ -57,15 +53,11 @@ func Lookup(id string) (Exercise, bool) {
 }
 
 // NameOf resolves an exercise id to a display name; customEx entries win over the catalog.
-func NameOf(id string, customEx []any) string {
-	for _, c := range customEx {
-		m, ok := c.(map[string]any)
-		if !ok {
-			continue
-		}
-		if str(m["id"]) == id {
-			if n := str(m["n"]); n != "" {
-				return n
+func NameOf(id string, customEx []Exercise) string {
+	for _, exercise := range customEx {
+		if exercise.ID == id {
+			if exercise.N != "" {
+				return exercise.N
 			}
 			break
 		}
@@ -176,11 +168,6 @@ func filterNonEmpty(in []string) []string {
 		}
 	}
 	return out
-}
-
-func str(v any) string {
-	s, _ := v.(string)
-	return s
 }
 
 // normalizeSearchText mirrors web/src/domain/exercises/exercises.ts (NFD strip + separators).

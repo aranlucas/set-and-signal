@@ -12,7 +12,10 @@ func (s *Server) health(w http.ResponseWriter, _ *http.Request) {
 		serverError(w)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "users": len(users)})
+	writeJSON(w, http.StatusOK, struct {
+		OK    bool `json:"ok"`
+		Users int  `json:"users"`
+	}{OK: true, Users: len(users)})
 }
 
 // GET /api/config — public config the login screen needs before anyone is
@@ -22,10 +25,13 @@ func (s *Server) config(w http.ResponseWriter, _ *http.Request) {
 	if s.OAuth != nil {
 		providers = s.OAuth.ProviderIDs()
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"invite_only":    s.Cfg.InviteOnly,
-		"oidc_providers": providers,
-		"mcp_url":        strings.TrimRight(s.Cfg.PublicURL, "/") + "/mcp",
+	writeJSON(w, http.StatusOK, struct {
+		InviteOnly    bool     `json:"invite_only"`
+		OIDCProviders []string `json:"oidc_providers"`
+		MCPURL        string   `json:"mcp_url"`
+	}{
+		InviteOnly: s.Cfg.InviteOnly, OIDCProviders: providers,
+		MCPURL: strings.TrimRight(s.Cfg.PublicURL, "/") + "/mcp",
 	})
 }
 
@@ -35,5 +41,5 @@ func (s *Server) me(w http.ResponseWriter, r *http.Request) {
 	if u == nil {
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"user": s.userPayload(*u)})
+	writeJSON(w, http.StatusOK, userResponse{User: s.userPayload(*u)})
 }

@@ -135,7 +135,7 @@ func trainingNormalizeDaySession(session MCPDaySession) (MCPDaySession, error) {
 	return training.NormalizeDaySession(session)
 }
 
-func trainingCloneWeek(week map[string][]MCPDaySession) map[string][]MCPDaySession {
+func trainingCloneWeek(week MCPWeekSchedule) MCPWeekSchedule {
 	return training.CloneWeekSchedule(week)
 }
 

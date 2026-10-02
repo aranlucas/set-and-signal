@@ -155,7 +155,6 @@ export const exOr = (id: string): CatalogExercise => {
       tg: found.tg || found.bp,
       mg: "",
       sm: [],
-      st: [],
       img: "",
       gif: "",
     };
@@ -167,7 +166,6 @@ export const exOr = (id: string): CatalogExercise => {
     eq: "",
     mg: "",
     sm: [],
-    st: [],
     img: "",
     gif: "",
     missing: true,

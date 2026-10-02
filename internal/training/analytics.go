@@ -49,7 +49,7 @@ type e1rmSet struct {
 
 type e1rmPoint struct {
 	Date     string
-	Start    float64
+	Start    int64
 	Estimate float64
 	Weight   float64
 	Reps     float64
@@ -131,7 +131,7 @@ func collectE1RM(st TrainingData, exerciseID, formula string) []e1rmPoint {
 			continue
 		}
 		rows = append(rows, workoutPoint{point: e1rmPoint{
-			Date: workout.D, Start: float64(workout.Start),
+			Date: workout.D, Start: workout.Start,
 			Estimate: best.est, Weight: best.weight, Reps: math.Round(best.reps),
 		}, idx: idx})
 	}
@@ -298,11 +298,10 @@ func muscleBalanceResult(days int, asOf string, all, hard map[string]float64, ra
 		}
 		return out
 	}
-	available := rated && hardCount > 0
 	return MCPMuscleBalance{
 		AsOf: asOf, Days: days, Rated: rated, HardSets: hardCount,
 		All:  MCPMuscleLoadView{Load: loads(all), Levels: levels(all), Worked: worked, Missed: missed},
-		Hard: MCPMuscleLoadView{Load: loads(hard), Levels: levels(hard), Worked: hardWorked, Missed: hardMissed, Available: &available},
+		Hard: MCPMuscleLoadView{Load: loads(hard), Levels: levels(hard), Worked: hardWorked, Missed: hardMissed, Available: new(rated && hardCount > 0)},
 	}
 }
 
@@ -486,12 +485,12 @@ func nextProgressionTyped(st TrainingData, cfg progressionConfig, routinePolicy 
 			return out
 		}
 		if top := cfg.repsMax; top > 0 && goal >= top {
-			sets := math.Max(1, cfg.sets)
+			sets := max(1, cfg.sets)
 			if sets < float64(last.count) {
 				sets = float64(last.count)
 			}
 			sets++
-			bottom := math.Max(1, math.Min(cfg.reps, top))
+			bottom := max(1, min(cfg.reps, top))
 			if bottom == 1 && cfg.reps == 0 {
 				bottom = top
 			}
@@ -524,7 +523,7 @@ func nextProgressionTyped(st TrainingData, cfg progressionConfig, routinePolicy 
 		}
 		bottom := cfg.repsMin
 		if bottom == 0 {
-			bottom = math.Max(1, top-2)
+			bottom = max(1, top-2)
 		}
 		if bottom > top {
 			bottom = top
@@ -539,7 +538,7 @@ func nextProgressionTyped(st TrainingData, cfg progressionConfig, routinePolicy 
 			out.Weight, out.Reps = new(analyticsDeload(last.weight, step)), new(bottom)
 			return out
 		}
-		aim := math.Min(top, math.Max(bottom, last.low+analyticsRepStep(cfg)))
+		aim := min(top, max(bottom, last.low+analyticsRepStep(cfg)))
 		out := progressionResult(policy, "hold", "Same weight — aim for more reps this time.")
 		out.Weight, out.Reps = new(last.weight), new(aim)
 		return out
