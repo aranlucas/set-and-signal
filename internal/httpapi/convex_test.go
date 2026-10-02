@@ -31,7 +31,7 @@ func TestConvexTokenUsesCookieIdentity(t *testing.T) {
 	if response, _ := e.do("GET", "/api/convex/token", "", "raw:"); response.StatusCode != 401 {
 		t.Fatalf("anonymous token = %d", response.StatusCode)
 	}
-	if response, _ := e.do("PUT", "/api/data", `{"state":{}}`, "admin"); response.StatusCode != 410 {
-		t.Fatalf("legacy upload still writable: %d", response.StatusCode)
+	if response, _ := e.do("PUT", "/api/data", `{"state":{}}`, "admin"); response.StatusCode != 404 {
+		t.Fatalf("removed upload route: %d", response.StatusCode)
 	}
 }

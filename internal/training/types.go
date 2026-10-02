@@ -52,7 +52,7 @@ type MCPRoutine struct {
 type MCPRoutineInput struct {
 	ID    *string            `json:"id,omitempty" jsonschema:"stable routine id; generated from name when omitted" validate:"omitempty,min=1,max=40"`
 	Name  string             `json:"name" jsonschema:"human-readable routine name" validate:"required,max=60"`
-	Emoji *string            `json:"emoji,omitempty" jsonschema:"optional routine emoji" validate:"omitempty,max=24"`
+	Emoji *string            `json:"emoji,omitempty" jsonschema:"optional routine icon key" validate:"omitempty,max=24"`
 	Prog  *string            `json:"prog,omitempty" jsonschema:"default progression policy for the routine" validate:"omitempty,oneof=off linear greyskull double time"`
 	Ex    []MCPExConfigInput `json:"ex,omitempty" jsonschema:"ordered planned exercises" validate:"max=30,dive"`
 }
@@ -72,20 +72,28 @@ type MCPLoggedSet struct {
 	WU    *bool    `json:"wu,omitzero" jsonschema:"whether this was a warm-up set"`
 }
 
+// MCPMuscleSnapshot retains custom-exercise metadata after the exercise is deleted.
+type MCPMuscleSnapshot struct {
+	N             string             `json:"n,omitempty"`
+	BP            string             `json:"bp,omitempty"`
+	MuscleWeights map[string]float64 `json:"muscleWeights,omitempty"`
+}
+
 type MCPWorkoutEntry struct {
-	ID     string         `json:"id" jsonschema:"exercise id"`
-	Sets   []MCPLoggedSet `json:"sets" jsonschema:"performed sets"`
-	TopW   *float64       `json:"topW,omitzero" jsonschema:"top performed weight"`
-	Target *MCPExConfig   `json:"target,omitempty" jsonschema:"planned target captured with the workout"`
+	ID             string             `json:"id" jsonschema:"exercise id"`
+	Sets           []MCPLoggedSet     `json:"sets" jsonschema:"performed sets"`
+	TopW           *float64           `json:"topW,omitzero" jsonschema:"top performed weight"`
+	Target         *MCPExConfig       `json:"target,omitempty" jsonschema:"planned target captured with the workout"`
+	MuscleSnapshot *MCPMuscleSnapshot `json:"muscleSnapshot,omitempty" jsonschema:"exercise name and muscle weights retained for history"`
 }
 
 type MCPWorkout struct {
-	ID        string            `json:"id" jsonschema:"stable workout id; an existing id is replaced"`
-	D         string            `json:"d" jsonschema:"workout date in YYYY-MM-DD"`
+	ID        string            `json:"id" jsonschema:"stable workout id; an existing id is replaced" validate:"required,max=40"`
+	D         string            `json:"d" jsonschema:"workout date in YYYY-MM-DD" validate:"required,datetime=2006-01-02"`
 	Start     int64             `json:"start" jsonschema:"start time as unix milliseconds"`
 	End       int64             `json:"end" jsonschema:"end time as unix milliseconds"`
 	RoutineID *string           `json:"routineId,omitempty" jsonschema:"source routine id"`
-	Name      string            `json:"name" jsonschema:"workout name"`
+	Name      string            `json:"name" jsonschema:"workout name" validate:"max=80"`
 	BW        *float64          `json:"bw,omitzero" jsonschema:"bodyweight at workout time"`
 	Entries   []MCPWorkoutEntry `json:"entries" jsonschema:"exercise results"`
 	PRs       []string          `json:"prs" jsonschema:"exercise ids with personal records"`
@@ -94,8 +102,8 @@ type MCPWorkout struct {
 }
 
 type MCPBodyweightEntry struct {
-	D string  `json:"d"`
-	W float64 `json:"w"`
+	D string  `json:"d" validate:"required,datetime=2006-01-02"`
+	W float64 `json:"w" validate:"gte=20,lte=500"`
 	T *int64  `json:"t,omitzero"`
 }
 

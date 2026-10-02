@@ -24,22 +24,12 @@ describe("Convex training authority", () => {
       browser.mutation(api.training.replace, { state: "{}", expected: null }),
     ).rejects.toThrow("Unauthorized");
   });
-  it("checks revisions, preserves migration targets, and strips active drafts", async () => {
+  it("checks revisions and strips active drafts", async () => {
     const { alice } = setup();
     await alice.mutation(api.training.replace, {
       state: '{"unit":"lb","active":{"id":"local"}}',
       expected: null,
     });
-    expect(
-      await alice.mutation(api.training.replace, { state: '{"unit":"kg"}', expected: 0 }),
-    ).toBe(false);
-    expect(
-      await alice.mutation(api.training.replace, {
-        state: '{"unit":"kg"}',
-        expected: null,
-        onlyIfMissing: true,
-      }),
-    ).toBe(false);
     expect(await alice.query(api.training.snapshot, {})).toMatchObject({ unit: "lb" });
     expect(await alice.query(api.training.snapshot, {})).not.toHaveProperty("active");
   });

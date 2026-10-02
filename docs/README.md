@@ -10,4 +10,4 @@ Contributor workflow lives in [CONTRIBUTING.md](../CONTRIBUTING.md), deployment
 operations live in [the Railway guide](../.railway/README.md), and attribution
 lives in [NOTICE.md](../NOTICE.md).
 
-- [Convex training backend, setup, and migration](convex.md)
+- [Convex training backend, setup, and storage](convex.md)

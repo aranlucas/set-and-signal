@@ -22,8 +22,8 @@ func newStubClient(t *testing.T, handler http.HandlerFunc) *Client {
 	return c
 }
 
-// fenceJSON is the fenced reply body: ```json\n{"a":1}\n```.
-const fenceJSON = "```json\n{\"a\":1}\n```"
+// fenceJSON is the fenced reply body: {"a":1}.
+const fenceJSON = "{\"a\":1}"
 
 func writeResponseReply(t *testing.T, w http.ResponseWriter, content string) {
 	t.Helper()
@@ -168,10 +168,7 @@ func TestChatLiveStructuredOutput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("live structured response: %v", err)
 	}
-	obj, err := ExtractJSON(text)
-	if err != nil {
-		t.Fatalf("parse live structured response: %v", err)
-	}
+	obj := jsontext.Value(text)
 	var reply struct {
 		Summary *string           `json:"summary"`
 		Entries *[]jsontext.Value `json:"entries"`
@@ -183,30 +180,4 @@ func TestChatLiveStructuredOutput(t *testing.T) {
 		t.Fatalf("missing summary or entries: %s", obj)
 	}
 
-}
-
-func TestExtractJSON(t *testing.T) {
-	// Fenced block wins over surrounding prose.
-	obj, err := ExtractJSON("Sure! Here you go:\n```json\n{\"summary\":\"s\",\"entries\":[]}\n```\nhope that helps {not json}")
-	if err != nil || string(obj) != `{"summary":"s","entries":[]}` {
-		t.Fatalf("fenced = %v %v", obj, err)
-	}
-	// Unlabelled fences count too.
-	obj, err = ExtractJSON("```\n{\"a\":true}\n```")
-	if err != nil || string(obj) != `{"a":true}` {
-		t.Fatalf("unlabelled fence = %v %v", obj, err)
-	}
-	// Otherwise the outermost braces.
-	obj, err = ExtractJSON(`prefix {"nested":{"x":1},"tail":2} suffix`)
-	if err != nil || string(obj) != `{"nested":{"x":1},"tail":2}` {
-		t.Fatalf("braces = %v %v", obj, err)
-	}
-	// No object at all.
-	if _, err := ExtractJSON("no braces here"); err == nil || err.Error() != "no JSON object in reply" {
-		t.Fatalf("err = %v", err)
-	}
-	// Malformed JSON inside braces propagates the parse error.
-	if _, err := ExtractJSON("{oops}"); err == nil {
-		t.Fatal("malformed braces accepted")
-	}
 }

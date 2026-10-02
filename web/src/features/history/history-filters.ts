@@ -56,7 +56,6 @@ function workoutSearchText(workout: Workout, exerciseName?: (id: string) => stri
       workout.name,
       workout.note,
       ...workout.entries.flatMap((entry) => [
-        entry.n,
         entry.muscleSnapshot?.n,
         exerciseName?.(entry.id),
         entry.id,

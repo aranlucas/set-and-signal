@@ -25,7 +25,7 @@ func TestInvalidRequestsLeaveStateUnchanged(t *testing.T) {
 		{"session time", "/api/week", `{"week":{"1":[{"routineId":"existing","start":"25:00"}]}}`, "start"},
 		{"missing day sessions", "/api/dayplan", `{"iso":"2026-09-01","plan":{}}`, "sessions"},
 		{"invalid calendar date", "/api/dayplan", `{"iso":"2026-02-30","plan":{"rest":true}}`, "iso"},
-		{"legacy string plan", "/api/dayplan", `{"iso":"2026-09-01","plan":"rest"}`, "bad json"},
+		{"obsolete string plan", "/api/dayplan", `{"iso":"2026-09-01","plan":"rest"}`, "bad json"},
 		{"settings range", "/api/settings", `{"settings":{"sound":false,"restSec":601}}`, "restSec"},
 		{"settings enum", "/api/settings", `{"settings":{"unit":"stone"}}`, "unit"},
 		{"settings length", "/api/settings", `{"settings":{"theme":"` + strings.Repeat("x", 25) + `"}}`, "theme"},

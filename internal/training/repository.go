@@ -7,12 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"maps"
-	"math"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/aranlucas/set-and-signal/internal/store"
+	"github.com/aranlucas/set-and-signal/internal/validation"
 )
 
 var ErrTrainingDataRevisionConflict = errors.New("training data revision conflict")
@@ -32,9 +32,8 @@ func (e *RevisionConflictError) Is(target error) bool {
 	return target == ErrTrainingDataRevisionConflict
 }
 
-// TrainingDataRepository owns the JSON-document details of the SQLite
-// user_state table. It deliberately exposes only typed training data and one
-// atomic mutation primitive; callers do not need to know about SQL, JSON
+// TrainingDataRepository owns the training JSON document. It exposes typed
+// training data and one atomic mutation primitive; callers do not need to know about SQL, JSON
 // encoding, or how unrelated application fields are stored.
 type TrainingDataRepository struct {
 	st *store.Store
@@ -65,9 +64,8 @@ func (r *TrainingDataRepository) Load(uid string) (TrainingData, error) {
 	return data, nil
 }
 
-// Mutate loads, checks, and persists one typed document while Store holds its
-// BEGIN IMMEDIATE transaction. The callback must only change the supplied
-// typed graph. The repository merges that graph into the original raw JSON
+// Mutate loads, checks, and persists one typed document atomically. The callback
+// must only change the supplied typed graph. The repository merges that graph into the original raw JSON
 // object, preserving fields owned by settings, devices, and future clients.
 func (r *TrainingDataRepository) Mutate(uid string, expectedRevision *int64, fn func(*TrainingData) error) error {
 	if r == nil || r.st == nil {
@@ -94,11 +92,8 @@ func (r *TrainingDataRepository) Mutate(uid string, expectedRevision *int64, fn 
 // PutBodyweight upserts one dated measurement through the typed repository.
 // The MCP handler never needs to inspect or rebuild the persisted JSON blob.
 func (r *TrainingDataRepository) PutBodyweight(uid, date string, weight float64) (TrainingData, error) {
-	if !isoDateRe.MatchString(date) {
-		return TrainingData{}, errors.New("bodyweight date must be YYYY-MM-DD")
-	}
-	if math.IsNaN(weight) || math.IsInf(weight, 0) || weight < 20 || weight > 500 {
-		return TrainingData{}, errors.New("bodyweight must be 20–500")
+	if err := validation.Validator.Struct(MCPBodyweightEntry{D: date, W: weight}); err != nil {
+		return TrainingData{}, err
 	}
 
 	var updated TrainingData
@@ -129,18 +124,16 @@ func (r *TrainingDataRepository) PutBodyweight(uid, date string, weight float64)
 // PutWorkout validates and upserts one completed workout by id. Typed MCP
 // inputs make the stored graph closed before it reaches persistence.
 func (r *TrainingDataRepository) PutWorkout(uid string, workout MCPWorkout) (MCPWorkout, error) {
-	workout.ID = jsSlice(strings.TrimSpace(workout.ID), 40)
-	if workout.ID == "" {
-		return MCPWorkout{}, errors.New("workout id required")
-	}
-	workout.D = jsSlice(strings.TrimSpace(workout.D), 16)
-	if !isoDateRe.MatchString(workout.D) {
-		return MCPWorkout{}, errors.New("workout date must be YYYY-MM-DD")
-	}
-	workout.Name = jsSlice(strings.TrimSpace(workout.Name), 80)
+	workout.ID = strings.TrimSpace(workout.ID)
+	workout.D = strings.TrimSpace(workout.D)
+	workout.Name = strings.TrimSpace(workout.Name)
 	if workout.Name == "" {
 		workout.Name = "Workout"
 	}
+	if err := validation.Validator.Struct(workout); err != nil {
+		return MCPWorkout{}, err
+	}
+
 	if err := validateLoadedWorkingSets(workout); err != nil {
 		return MCPWorkout{}, err
 	}
@@ -170,13 +163,12 @@ func (r *TrainingDataRepository) PutWorkout(uid string, workout MCPWorkout) (MCP
 func decodeTrainingData(raw jsontext.Value) (TrainingData, error) {
 	data := TrainingData{}
 	if len(raw) != 0 {
-		migrated, err := migrateScheduleFields(raw)
-		if err != nil {
+		if err := json.Unmarshal(raw, &data); err != nil {
 			return TrainingData{}, err
 		}
-		if err := json.Unmarshal(migrated, &data); err != nil {
-			return TrainingData{}, err
-		}
+	}
+	if err := ValidateSchedule(data.Week, data.DayPlan); err != nil {
+		return TrainingData{}, err
 	}
 	normalizeTrainingData(&data)
 	return data, nil

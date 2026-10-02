@@ -13,11 +13,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -151,24 +149,16 @@ func (c *Client) ReadState(uid string) (jsontext.Value, error) {
 	// Convex serializes integral numbers as 1.0; the typed Go model expects 1.
 	return json.Marshal(value)
 }
-func (c *Client) replace(uid string, raw jsontext.Value, expected *int64, onlyMissing bool) (bool, error) {
+func (c *Client) replace(uid string, raw jsontext.Value, expected *int64) (bool, error) {
 	var ok bool
 	err := c.call(uid, "mutation", "training:replace", struct {
-		State         string `json:"state"`
-		Expected      *int64 `json:"expected"`
-		OnlyIfMissing bool   `json:"onlyIfMissing"`
-	}{State: string(raw), Expected: expected, OnlyIfMissing: onlyMissing}, &ok)
+		State    string `json:"state"`
+		Expected *int64 `json:"expected"`
+	}{State: string(raw), Expected: expected}, &ok)
 	return ok, err
 }
-func (c *Client) Import(uid string, raw jsontext.Value) error {
-	if err := checkJSONNumbers(raw); err != nil {
-		return err
-	}
-	_, err := c.replace(uid, raw, nil, true)
-	return err
-}
 func (c *Client) WriteState(uid string, raw jsontext.Value) error {
-	_, err := c.replace(uid, raw, nil, false)
+	_, err := c.replace(uid, raw, nil)
 	return err
 }
 func (c *Client) MutateState(uid string, fn func(jsontext.Value) (jsontext.Value, error)) error {
@@ -187,7 +177,7 @@ func (c *Client) MutateState(uid string, fn func(jsontext.Value) (jsontext.Value
 		if err != nil {
 			return err
 		}
-		ok, err := c.replace(uid, next, &state.TS, false)
+		ok, err := c.replace(uid, next, &state.TS)
 		if err != nil {
 			return err
 		}
@@ -206,34 +196,4 @@ func (c *Client) Summary(uid string) (store.TrainingSummary, error) {
 	}
 	err := c.call(uid, "query", "training:summary", struct{}{}, &value)
 	return store.TrainingSummary{Workouts: int(value.Workouts), LastWorkout: value.LastWorkout, LastSync: value.LastSync}, err
-}
-
-// Reject a lossy legacy import instead of silently rounding unknown JSON fields.
-func checkJSONNumbers(raw jsontext.Value) error {
-	decoder := jsontext.NewDecoder(bytes.NewReader(raw))
-	for {
-		token, err := decoder.ReadToken()
-		if errors.Is(err, io.EOF) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		if token.Kind() != '0' {
-			continue
-		}
-		source := token.String()
-		value, err := strconv.ParseFloat(source, 64)
-		if err != nil {
-			return fmt.Errorf("Convex migration number: %w", err)
-		}
-		before, ok := new(big.Rat).SetString(source)
-		if !ok {
-			return errors.New("invalid JSON number")
-		}
-		after, ok := new(big.Rat).SetString(strconv.FormatFloat(value, 'g', -1, 64))
-		if !ok || before.Cmp(after) != 0 {
-			return errors.New("Convex migration would lose JSON numeric precision; source snapshot retained")
-		}
-	}
 }

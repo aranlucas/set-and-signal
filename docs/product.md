@@ -65,7 +65,7 @@ media terms visible in [NOTICE.md](../NOTICE.md).
 ## Compatibility boundary
 
 The public Go import path is `github.com/aranlucas/set-and-signal`. The rebrand
-keeps the runtime and migration identifiers `opengym-api`, `opengym-import`,
+keeps the runtime identifiers `opengym-api`,
 `opengym.db`, `gym_state_v1`, `opengym_plan`, `workset-state.json`,
 `ch.duarte-santos.opengym2`, and the OAuth `workset` scope. Those identifiers
 protect existing installations and data; they are not public product copy.

@@ -1,16 +1,13 @@
 // Package ai provides the OpenRouter-backed workout-planning client. It uses
-// the OpenAI Responses API with strict Structured Outputs, while retaining the
-// legacy fenced-JSON extractor as a defensive parsing boundary.
+// the OpenAI Responses API with strict Structured Outputs.
 package ai
 
 import (
 	"context"
-	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"errors"
 	"fmt"
 	"net/http"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -162,27 +159,4 @@ func (c *Client) Chat(ctx context.Context, messages []Message) (string, error) {
 		return "", errors.New("empty response")
 	}
 	return text, nil
-}
-
-var fencedRe = regexp.MustCompile(`(?s)` + "```(?:json)?\\s*([\\s\\S]*?)```")
-
-// ExtractJSON recovers the JSON object from a model reply: a fenced ```json
-// block wins when present, else the outermost braces of the raw text.
-// Mirrors extractJSON (server.js lines 356–363).
-func ExtractJSON(text string) (jsontext.Value, error) {
-	raw := text
-	if m := fencedRe.FindStringSubmatch(text); m != nil {
-		raw = m[1]
-	}
-	a := strings.Index(raw, "{")
-	beforeLastBrace, _, ok := strings.CutLast(raw, "}")
-	b := len(beforeLastBrace)
-	if a < 0 || !ok || b <= a {
-		return nil, errors.New("no JSON object in reply")
-	}
-	var obj map[string]jsontext.Value
-	if err := json.Unmarshal([]byte(raw[a:b+1]), &obj); err != nil {
-		return nil, err
-	}
-	return jsontext.Value(raw[a : b+1]), nil
 }

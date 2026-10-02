@@ -4,7 +4,7 @@ import type { AppState } from "@/shared/lib/types";
 
 // Backups are full state exports, unlike a sync patch. Keep these fields required so an
 // unrelated JSON file cannot be accepted as an empty profile, while appStatePatch owns the
-// nested runtime validation and legacy-optional fields.
+// nested runtime validation of current state fields.
 const REQUIRED_BACKUP_KEYS = [
   "unit",
   "theme",

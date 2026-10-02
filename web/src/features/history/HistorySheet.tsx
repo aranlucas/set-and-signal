@@ -14,7 +14,7 @@ import { Textarea } from "@/shared/ui/textarea";
 import Icon from "@/shared/components/Icon";
 import { glyphOf } from "@/domain/exercises/glyphs";
 import { Thumb } from "@/shared/components/Media";
-import type { IsoDate, SheetClose, Workout, WorkoutEntry } from "@/shared/lib/types";
+import type { IsoDate, SheetClose, Workout } from "@/shared/lib/types";
 import { toCatalogExercise, updateAppState } from "@/features/exercises/sheet-shared";
 import {
   AlertDialog,
@@ -141,7 +141,6 @@ export function WorkoutDetail({
       </div>
       {workout.entries.map((entry) => {
         const exercise = EXIDX[entry.id];
-        const legacy = entry as WorkoutEntry & { n?: string };
         return (
           <div
             key={`${workout.id}-${entry.id}-${entry.topW ?? ""}`}
@@ -150,7 +149,7 @@ export function WorkoutDetail({
             {exercise && <Thumb exercise={toCatalogExercise(exercise)} />}
             <div className="min-w-0 grow">
               <div className="text-base leading-tight font-semibold tracking-tight capitalize">
-                {exercise ? exercise.n : legacy.n || entry.muscleSnapshot?.n || entry.id}{" "}
+                {exercise ? exercise.n : entry.muscleSnapshot?.n || entry.id}{" "}
                 {prSet.has(entry.id) && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 px-1.5 py-0.5 text-xs font-medium text-warning">
                     <Icon name="trophy" />

@@ -56,7 +56,7 @@ describe("exercise catalog", () => {
       expect(exercise.bp).not.toBe("");
       expect(exercise.eq).not.toBe("");
       expect(exercise.tg).not.toBe("");
-      expect(exercise.st).toBeUndefined();
+      expect(exercise).not.toHaveProperty("st");
       expect(exercise.img).toMatch(/\.jpg$/u);
       expect(exercise.gif).toMatch(/\.gif$/u);
     }

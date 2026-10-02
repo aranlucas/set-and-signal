@@ -238,9 +238,8 @@ type reminderState struct {
 	} `json:"reminder"`
 	DayPlan  training.DayPlanMap `json:"dayPlan"`
 	Routines []struct {
-		ID    string `json:"id"`
-		Name  string `json:"name"`
-		Emoji string `json:"emoji"`
+		ID   string `json:"id"`
+		Name string `json:"name"`
 	} `json:"routines"`
 	Week     training.WeekSchedule `json:"week"`
 	Workouts []struct {
@@ -297,12 +296,11 @@ func knownRoutineIDs(s *reminderState) map[string]bool {
 }
 
 func decodeReminderState(raw jsontext.Value) (reminderState, error) {
-	migrated, err := training.MigrateScheduleFields(raw)
-	if err != nil {
+	var s reminderState
+	if err := json.Unmarshal(raw, &s); err != nil {
 		return reminderState{}, err
 	}
-	var s reminderState
-	if err := json.Unmarshal(migrated, &s); err != nil {
+	if err := training.ValidateSchedule(s.Week, s.DayPlan); err != nil {
 		return reminderState{}, err
 	}
 	if s.Week == nil {
@@ -374,7 +372,7 @@ func (p *Service) reminderTick(nowFn func(tz string) (date, hhmm string, ok bool
 		title := "Workout planned today"
 		for _, r := range s.Routines {
 			if r.ID == rid {
-				title = cmp.Or(r.Emoji, "🏋️") + " " + r.Name + " today"
+				title = r.Name + " today"
 				break
 			}
 		}

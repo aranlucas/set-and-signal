@@ -131,28 +131,23 @@ export function parsePlan(raw: string | PlanBundle): ParsedPlan {
   const customEx = planData.customEx;
   const known = new Set(customEx.map((c) => c.id));
   let dropped = 0;
-  const routines = planData.routines.flatMap((r) =>
-    r && Array.isArray(r.ex)
-      ? [
-          Object.assign(r, {
-            ex: r.ex.filter((e) => {
-              const ok = !!e && (known.has(e.id) || !!EXIDX[e.id]);
-              if (!ok) dropped++;
-              return ok;
-            }),
-          }),
-        ]
-      : [],
-  );
+  const routines = planData.routines.map((routine) => ({
+    ...routine,
+    ex: routine.ex.filter((exercise) => {
+      const ok = known.has(exercise.id) || !!EXIDX[exercise.id];
+      if (!ok) dropped++;
+      return ok;
+    }),
+  }));
   return {
-    name: (planData.name || "").trim(),
+    name: planData.name.trim(),
     routines,
-    week: planData.week || {},
+    week: planData.week,
     customEx,
     dropped,
     routineCount: routines.length,
     exerciseCount: routines.reduce((n, r) => n + r.ex.length, 0),
-    scheduledDays: WEEK_ORDER.filter((weekday) => planData.week?.[weekday]?.length).length,
+    scheduledDays: WEEK_ORDER.filter((weekday) => planData.week[weekday]?.length).length,
   };
 }
 

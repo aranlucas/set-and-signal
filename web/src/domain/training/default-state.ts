@@ -21,8 +21,7 @@ export const DEFAULT_APP_STATE: AppState = {
   active: null,
   customEx: [],
   gifSize: "full",
-  // null means the user has not chosen a scale yet, so legacy showRir can still
-  // preserve its former behavior when older profiles are loaded.
-  reminder: { on: false, time: "08:00", tz: null },
+  // null means the user has not chosen a scale yet.
   effort: null,
+  reminder: { on: false, time: "08:00", tz: null },
 };

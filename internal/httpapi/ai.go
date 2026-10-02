@@ -100,12 +100,8 @@ func (s *Server) nextWorkoutSuggestionJSON(ctx context.Context, raw []byte) (MCP
 		return MCPSuggestionOutput{}, http.StatusBadGateway, "AI provider error: " + err.Error()
 	}
 
-	reply, err := ai.ExtractJSON(text)
-	if err != nil {
-		return MCPSuggestionOutput{}, http.StatusBadGateway, "AI reply was not valid JSON — try again"
-	}
 	var plan MCPSuggestionOutput
-	if err := json.Unmarshal(reply, &plan, json.RejectUnknownMembers(true)); err != nil {
+	if err := json.Unmarshal([]byte(text), &plan, json.RejectUnknownMembers(true)); err != nil {
 		return MCPSuggestionOutput{}, http.StatusBadGateway, "AI reply was not valid JSON — try again"
 	}
 	if err := validation.Validator.Struct(plan); err != nil {

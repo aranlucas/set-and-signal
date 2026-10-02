@@ -2,6 +2,7 @@ package training
 
 import (
 	"encoding/json/jsontext"
+	"github.com/aranlucas/set-and-signal/internal/validation"
 	"time"
 
 	"github.com/aranlucas/set-and-signal/internal/exercises"
@@ -20,7 +21,7 @@ func TodayISO(timezone string, now time.Time) string {
 }
 
 func ValidISODate(value string) bool {
-	return isoDateRe.MatchString(value)
+	return validation.Validator.Var(value, "datetime=2006-01-02") == nil
 }
 
 func Day(data TrainingData, iso string) MCPTodayResult {
@@ -71,18 +72,12 @@ func ResolveDaySessions(data TrainingData, iso string) (sessions []MCPDaySession
 	return resolveDaySessions(data, iso)
 }
 
-// MigrateScheduleFields rewrites legacy single-id week/dayPlan JSON into the
-// sessions-array shape without changing other document fields.
-func MigrateScheduleFields(raw jsontext.Value) (jsontext.Value, error) {
-	return migrateScheduleFields(raw)
-}
-
-// DecodeWeekMap coerces a JSON-decoded week value into the typed schedule map.
+// DecodeWeekMap decodes the current typed schedule map.
 func DecodeWeekMap(value jsontext.Value) (WeekSchedule, error) {
 	return decodeWeekMap(value)
 }
 
-// DecodeDayPlanMap coerces a JSON-decoded dayPlan value into typed overrides.
+// DecodeDayPlanMap decodes current typed day overrides.
 func DecodeDayPlanMap(value jsontext.Value) (DayPlanMap, error) {
 	return decodeDayPlanMap(value)
 }

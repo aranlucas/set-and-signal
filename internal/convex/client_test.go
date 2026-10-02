@@ -59,14 +59,3 @@ func TestTokenAndCompareAndSwapRetry(t *testing.T) {
 		t.Fatalf("retry counts %d %d %d", reads, writes, calls)
 	}
 }
-
-func TestMigrationRejectsLossyNumbers(t *testing.T) {
-	for _, raw := range []string{`{"future":9007199254740993}`, `{"future":0.1234567890123456789}`} {
-		if err := checkJSONNumbers(jsontext.Value(raw)); err == nil {
-			t.Fatalf("accepted lossy input %s", raw)
-		}
-	}
-	if err := checkJSONNumbers(jsontext.Value(`{"w":0.1,"t":1780000000000,"n":1e3}`)); err != nil {
-		t.Fatal(err)
-	}
-}

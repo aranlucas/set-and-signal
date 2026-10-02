@@ -25,7 +25,7 @@ func TestNextWorkoutSuggestionMCPUsesClosedOutput(t *testing.T) {
 				"role":   "assistant",
 				"content": []map[string]any{{
 					"type":        "output_text",
-					"text":        "```json\n{\"summary\":\"Keep the effort steady.\",\"entries\":[{\"id\":\"squat\",\"sets\":3,\"weight\":100,\"swapTo\":\"bench\",\"note\":\"Add one rep\"}]}\n```",
+					"text":        "{\"summary\":\"Keep the effort steady.\",\"entries\":[{\"id\":\"squat\",\"sets\":3,\"weight\":100,\"swapTo\":\"bench\",\"note\":\"Add one rep\"}]}",
 					"annotations": []any{},
 				}},
 			}},

@@ -7,6 +7,8 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/aranlucas/set-and-signal/internal/validation"
 )
 
 func cloneFloat(v *float64) *float64 {
@@ -333,7 +335,7 @@ func resolveLogDate(d, tz *string, now time.Time) (string, error) {
 	if d != nil {
 		date = strings.TrimSpace(*d)
 	}
-	if date != "" && !isoDateRe.MatchString(date) {
+	if date != "" && !ValidISODate(date) {
 		return "", errors.New("date must be YYYY-MM-DD")
 	}
 	if tz != nil && strings.TrimSpace(*tz) == "" {
@@ -481,7 +483,7 @@ func workoutForExerciseSets(workouts []MCPWorkout, date, routineID string, id *s
 		return workout, found, nil
 	}
 	normalized := strings.TrimSpace(*id)
-	if normalized == "" || jsSlice(normalized, 40) != normalized {
+	if validation.Validator.Var(normalized, "required,max=40") != nil {
 		return MCPWorkout{}, false, errors.New("workoutId must be a non-empty id up to 40 characters")
 	}
 	for _, workout := range workouts {

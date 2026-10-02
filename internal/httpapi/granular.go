@@ -5,14 +5,11 @@ import (
 	"encoding/json/v2"
 	"maps"
 	"net/http"
-	"regexp"
 	"slices"
 	"time"
 
 	"github.com/aranlucas/set-and-signal/internal/training"
 )
-
-var isoDateRe = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 
 // POST /api/routine — upsert one sanitized routine by id. Cookie or bearer.
 func (s *Server) postRoutine(w http.ResponseWriter, r *http.Request) {

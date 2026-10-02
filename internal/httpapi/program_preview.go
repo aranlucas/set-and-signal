@@ -40,13 +40,12 @@ func prepareTypedProgram(routines []MCPRoutineInput, week MCPWeekSchedule) (type
 	return prepared, err
 }
 
-var programIDRe = regexp.MustCompile(`[^\w-]`)
 var programSlugRe = regexp.MustCompile(`[^a-z0-9]+`)
 
 // Normalization is shared by REST and MCP; field constraints live on the DTOs.
 func normalizeRoutine(input MCPRoutineInput) (MCPRoutine, error) {
 	input.Name = strings.TrimSpace(input.Name)
-	id := programIDRe.ReplaceAllString(inputString(input.ID), "")
+	id := strings.TrimSpace(inputString(input.ID))
 	if input.ID == nil || *input.ID == "" {
 		id = programSlugRe.ReplaceAllString(strings.ToLower(input.Name), "")
 		if id == "" {

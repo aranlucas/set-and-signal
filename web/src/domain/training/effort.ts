@@ -1,7 +1,7 @@
 // Effort as a statistic: one internal scale, both display scales.
 //
 // A set carries either `rir` or `rpe` and is never rewritten — switching the setting changes
-// what new sets ask for, nothing else (see history.js). For a *chart* that is a problem: a
+// what new sets ask for, nothing else (see history.ts). For a *chart* that is a problem: a
 // history that mixes the two (own logs in RIR, an imported file in RPE) would draw two
 // half-empty series. So everything aggregates in RIR and is converted back for display.
 // RIR is the internal unit because it has a real zero — a set taken to failure — where RPE's
@@ -35,7 +35,6 @@ export const toScale = (kind: EffortKind, rir: number | null): number | null =>
 type Profile = {
   workouts?: Workout[];
   effort?: EffortScale | null;
-  showRir?: boolean;
 };
 
 // A set as the effort code reads it — only the optional rating fields matter; cardio

@@ -3,14 +3,7 @@ import type {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
 } from "@simplewebauthn/browser";
-import type {
-  DayPlanEntry,
-  DaySession,
-  IsoDate,
-  PlanBundle,
-  User,
-  Weekday,
-} from "@/shared/lib/types.js";
+import type { PlanBundle, User } from "@/shared/lib/types.js";
 import { ACCENT_NAMES } from "@/shared/lib/accents.js";
 
 const finiteNumber = v.pipe(
@@ -127,7 +120,6 @@ const workoutEntry = v.object({
   sets: v.array(loggedSet),
   topW: v.optional(v.nullable(finiteNumber)),
   target: v.optional(v.nullable(exerciseConfig)),
-  n: v.optional(v.string()),
   muscleSnapshot: v.optional(v.nullable(muscleSnapshot)),
 });
 
@@ -205,10 +197,9 @@ const appState = v.object({
   active: v.nullable(activeWorkout),
   customEx: v.array(customExercise),
   _ts: v.optional(finiteNumber),
-  showRir: v.optional(v.boolean()),
 });
 
-/** A partial state is what older localStorage snapshots and server sync return. */
+/** Local drafts and server sync can contain a partial current state. */
 export const appStatePatch = v.partial(appState);
 
 const userSchema = v.object({
@@ -341,16 +332,10 @@ export const loginOptionsResponse = v.object({
 });
 
 export const planBundle = v.object({
-  opengym_plan: v.union([v.literal(1), v.literal(2)]),
+  opengym_plan: v.literal(2),
   exported: isoDate,
   name: v.string(),
-  week: v.record(
-    v.string(),
-    v.pipe(
-      v.union([id, v.array(daySession)]),
-      v.transform((value) => (typeof value === "string" ? [{ routineId: value }] : value)),
-    ),
-  ),
+  week: v.record(weekday, v.array(daySession)),
   routines: v.array(
     v.object({
       id,
@@ -396,89 +381,10 @@ export function payloadMessage(payload: unknown): string | undefined {
   return result.success ? result.output.error : undefined;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function readStringField(record: Record<string, unknown>, key: string): string | undefined {
-  const value = record[key];
-  return typeof value === "string" && value ? value : undefined;
-}
-
-function toWeekday(key: string): Weekday | null {
-  const day = Number(key);
-  if (day === 0 || day === 1 || day === 2 || day === 3 || day === 4 || day === 5 || day === 6) {
-    return day;
-  }
-  return null;
-}
-
-function normalizeDaySession(value: unknown): DaySession | null {
-  if (!isRecord(value)) return null;
-  const routineId = readStringField(value, "routineId");
-  if (!routineId) return null;
-  const session: DaySession = { routineId };
-  const start = readStringField(value, "start");
-  const label = readStringField(value, "label");
-  if (start) session.start = start;
-  if (label) session.label = label;
-  return session;
-}
-
-function normalizeSessions(value: unknown): DaySession[] | null {
-  if (typeof value === "string" && value) return [{ routineId: value }];
-  if (!Array.isArray(value)) return null;
-  const sessions = value.flatMap((entry) => {
-    if (typeof entry === "string" && entry) return [{ routineId: entry }];
-    const session = normalizeDaySession(entry);
-    return session ? [session] : [];
-  });
-  return sessions;
-}
-
-function normalizeWeekSchedule(week: unknown): Partial<Record<Weekday, DaySession[]>> | undefined {
-  if (!isRecord(week)) return undefined;
-  const out: Partial<Record<Weekday, DaySession[]>> = {};
-  for (const [key, value] of Object.entries(week)) {
-    const day = toWeekday(key);
-    if (day === null) continue;
-    const sessions = normalizeSessions(value);
-    if (sessions?.length) out[day] = sessions;
-  }
-  return out;
-}
-
-function normalizeDayPlanEntry(value: unknown): DayPlanEntry | null {
-  if (value === "rest") return { rest: true };
-  if (typeof value === "string" && value) return { sessions: [{ routineId: value }] };
-  if (!isRecord(value)) return null;
-  if (value.rest) return { rest: true };
-  if (!Array.isArray(value) && Object.keys(value).length === 0) return { sessions: [] };
-  const sessions = normalizeSessions(Object.hasOwn(value, "sessions") ? value.sessions : value);
-  if (!sessions) return null;
-  return { sessions };
-}
-
-function normalizeDayPlan(dayPlan: unknown): Record<IsoDate, DayPlanEntry> | undefined {
-  if (!isRecord(dayPlan)) return undefined;
-  const out: Record<IsoDate, DayPlanEntry> = {};
-  for (const [iso, value] of Object.entries(dayPlan)) {
-    const entry = normalizeDayPlanEntry(value);
-    if (entry) out[iso] = entry;
-  }
-  return out;
-}
-
 export function parseStoredState(raw: string | null): ParsedAppStatePatch | null {
   if (!raw) return null;
   try {
-    const parsed: unknown = JSON.parse(raw);
-    if (!isRecord(parsed)) return null;
-    const week = normalizeWeekSchedule(parsed.week);
-    const dayPlan = normalizeDayPlan(parsed.dayPlan);
-    if (week) parsed.week = week;
-    if (dayPlan) parsed.dayPlan = dayPlan;
-    return parsePayload(appStatePatch, parsed);
+    return parsePayload(appStatePatch, JSON.parse(raw));
   } catch {
     return null;
   }

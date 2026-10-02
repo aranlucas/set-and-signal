@@ -2,7 +2,6 @@ package training
 
 import (
 	"encoding/json/jsontext"
-	"encoding/json/v2"
 	"reflect"
 	"testing"
 
@@ -168,27 +167,18 @@ func TestTypedExerciseSearchUsesCustomCatalogRows(t *testing.T) {
 	}
 }
 
-func TestMigrateLegacyWeekAndDayPlan(t *testing.T) {
-	raw := jsontext.Value(`{"week":{"2":"hip-rehab","4":"hip-rehab"},"dayPlan":{"2026-09-15":"rest","2026-09-16":"fleet-feet-easy"}}`)
-	migrated, err := migrateScheduleFields(raw)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var doc struct {
-		Week    map[string][]MCPDaySession `json:"week"`
-		DayPlan map[string]MCPDayPlan      `json:"dayPlan"`
-	}
-	if err := json.Unmarshal(migrated, &doc); err != nil {
-		t.Fatal(err)
-	}
-	if len(doc.Week["2"]) != 1 || doc.Week["2"][0].RoutineID != "hip-rehab" {
-		t.Fatalf("week migrate = %#v", doc.Week)
-	}
-	if !doc.DayPlan["2026-09-15"].Rest {
-		t.Fatalf("rest migrate = %#v", doc.DayPlan["2026-09-15"])
-	}
-	if len(doc.DayPlan["2026-09-16"].Sessions) != 1 || doc.DayPlan["2026-09-16"].Sessions[0].RoutineID != "fleet-feet-easy" {
-		t.Fatalf("dayPlan migrate = %#v", doc.DayPlan["2026-09-16"])
+func TestTrainingDataRejectsObsoleteScheduleFormats(t *testing.T) {
+	for _, raw := range []string{
+		`{"week":{"2":"hip-rehab"}}`,
+		`{"week":{"2":["hip-rehab"]}}`,
+		`{"dayPlan":{"2026-09-15":"rest"}}`,
+		`{"dayPlan":{"2026-09-15":{}}}`,
+		`{"week":{"1":null}}`,
+		`{"dayPlan":{"2026-09-16":"fleet-feet-easy"}}`,
+	} {
+		if _, err := decodeTrainingData(jsontext.Value(raw)); err == nil {
+			t.Fatalf("accepted obsolete schedule %s", raw)
+		}
 	}
 }
 

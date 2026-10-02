@@ -32,31 +32,6 @@ const (
 	testOrigin = "http://localhost:8080"
 )
 
-func TestDataUploadPreservesUnknownJSONNumbers(t *testing.T) {
-	e := newTestEnv(t)
-	resp, _ := e.do("PUT", "/api/data",
-		`{"state":{"future":{"id":9007199254740993,"decimal":0.1234567890123456789},"active":{"private":true}}}`, "cookie")
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("upload = %d", resp.StatusCode)
-	}
-	raw, err := e.st.ReadState("u1")
-	if err != nil {
-		t.Fatal(err)
-	}
-	var doc map[string]jsontext.Value
-	if err := json.Unmarshal(raw, &doc); err != nil {
-		t.Fatal(err)
-	}
-	if string(doc["future"]) != `{"id":9007199254740993,"decimal":0.1234567890123456789}` {
-		t.Fatalf("unknown numbers changed: %s", doc["future"])
-	}
-	if _, ok := doc["active"]; ok {
-		t.Fatal("device-local workout was uploaded")
-	}
-}
-
-// ---------- harness ----------
-
 type testEnv struct {
 	t      *testing.T
 	url    string
@@ -248,9 +223,6 @@ func TestRouteContract(t *testing.T) {
 				}
 			},
 		},
-		{"data PUT unauthenticated", "PUT", "/api/data", `{"state":{}}`, "", 401, "not signed in", nil},
-		{"data PUT rejects bearer (readSession upstream)", "PUT", "/api/data", `{"state":{"unit":"kg"}}`, "bearer", 401, "not signed in", nil},
-		{"data PUT requires a state object", "PUT", "/api/data", `{}`, "cookie", 400, "state required", nil},
 
 		// granular edits: any credential
 		{"routine unauthenticated", "POST", "/api/routine", `{}`, "", 401, "not signed in", nil},
@@ -279,32 +251,6 @@ func TestRouteContract(t *testing.T) {
 				tc.check(t, resp, body)
 			}
 		})
-	}
-}
-
-// ---------- whole-state PUT ----------
-
-func TestPutDataStripsActiveAndEchoesTs(t *testing.T) {
-	e := newTestEnv(t)
-
-	resp, body := e.do("PUT", "/api/data",
-		`{"state":{"unit":"lb","active":{"ex":[1]},"_ts":1724438400000}}`, "cookie")
-	if resp.StatusCode != 200 || body["ok"] != true || body["ts"] != float64(1724438400000) {
-		t.Fatalf("PUT data = %d %v", resp.StatusCode, body)
-	}
-
-	st := e.getState("cookie")
-	if st["unit"] != "lb" {
-		t.Fatalf("unit not persisted: %v", st)
-	}
-	if _, present := st["active"]; present {
-		t.Fatalf("active key survived: %v", st)
-	}
-
-	// _ts falsy (0 / absent) echoes null, like `body.state._ts || null`.
-	resp, body = e.do("PUT", "/api/data", `{"state":{"_ts":0}}`, "cookie")
-	if resp.StatusCode != 200 || body["ts"] != nil {
-		t.Fatalf("PUT data falsy ts = %d %v", resp.StatusCode, body)
 	}
 }
 
@@ -1113,6 +1059,8 @@ func TestAINextWorkoutWithStub(t *testing.T) {
 			writeReply(w, "I cannot help with that.")
 		case "invalid":
 			writeReply(w, `{"summary":"Invalid plan","entries":[{"id":"squat","sets":99}]}`)
+		case "fenced":
+			writeReply(w, "```json\n{\"summary\":\"Plan\",\"entries\":[]}\n```")
 		case "wrongType":
 			writeReply(w, `{"summary":"Invalid plan","entries":[{"id":"squat","weight":"100"}]}`)
 		case "unknown":
@@ -1128,7 +1076,7 @@ func TestAINextWorkoutWithStub(t *testing.T) {
 					{"id": "plank", "sec": 60},
 				},
 			})
-			content := "Sure!\n```json\n" + string(reply) + "\n```\nGood luck!"
+			content := string(reply)
 			writeReply(w, content)
 		}
 	}))
@@ -1136,7 +1084,7 @@ func TestAINextWorkoutWithStub(t *testing.T) {
 	e.srv.AI = &ai.Client{APIKey: "k", Model: "m", BaseURL: stub.URL, HTTP: stubClient}
 	e.srv.Cfg.OpenRouterModel = "m"
 
-	// Fenced JSON is unwrapped into the validated response DTO.
+	// Structured Outputs decode directly into the validated response DTO.
 	resp, body := e.do("POST", "/api/ai/next-workout", `{"digest":{"recent":["w1"]}}`, "cookie")
 	if resp.StatusCode != 200 {
 		t.Fatalf("next-workout = %d %v", resp.StatusCode, body)
@@ -1185,6 +1133,7 @@ func TestAINextWorkoutWithStub(t *testing.T) {
 	for _, test := range []struct{ mode, message string }{
 		{"invalid", "AI reply failed validation — try again"},
 		{"wrongType", "AI reply was not valid JSON — try again"},
+		{"fenced", "AI reply was not valid JSON — try again"},
 		{"unknown", "AI reply was not valid JSON — try again"},
 		{"empty", "AI reply was empty — try again"},
 	} {

@@ -91,10 +91,7 @@ export function latestProgress(state: Pick<AppState, "workouts">): ProgressInsig
     return {
       exerciseId,
       exerciseName:
-        exerciseMetadata(exerciseId)?.n ||
-        historicalEntry?.muscleSnapshot?.n ||
-        historicalEntry?.n ||
-        exerciseId,
+        exerciseMetadata(exerciseId)?.n || historicalEntry?.muscleSnapshot?.n || exerciseId,
       estimate: latest.y,
       previousEstimate: previous?.y ?? null,
       delta,

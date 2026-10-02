@@ -127,16 +127,21 @@ func TestSVMismatchRejected(t *testing.T) {
 	}
 }
 
-func TestLegacyTwoFieldPayloadIsVersionZero(t *testing.T) {
+func TestUnsupportedSessionPayloadsRejected(t *testing.T) {
 	s := newTestSessions(t)
-	// Pre-versioning cookie: `<uid>:<future-exp>` with no third field.
-	legacy := s.sign(fmt.Sprintf("bob:%d", time.Now().Add(time.Hour).UnixMilli()))
-	if _, ok := s.Read(legacy, func(string) (int, bool) { return 0, false }); !ok {
-		t.Fatal("legacy 2-field cookie with sv-0 user must be accepted")
-	}
-	// Same legacy shape against a bumped (sv>0) account is refused.
-	if _, ok := s.Read(legacy, func(string) (int, bool) { return 5, false }); ok {
-		t.Fatal("legacy cookie must read as version 0 and mismatch sv 5")
+	lookup := func(string) (int, bool) { return 0, false }
+	expiry := time.Now().Add(time.Hour).UnixMilli()
+	for _, payload := range []string{
+		fmt.Sprintf("bob:%d", expiry),
+		"bob:junk:0",
+		"bob:Infinity:0",
+		fmt.Sprintf("bob:%d:0.0", expiry),
+		fmt.Sprintf("bob:%d:-1", expiry),
+		fmt.Sprintf("bob:%d:0:extra", expiry),
+	} {
+		if _, ok := s.Read(s.sign(payload), lookup); ok {
+			t.Fatalf("accepted payload %q", payload)
+		}
 	}
 }
 
@@ -162,12 +167,5 @@ func TestMalformedPayloadsRejected(t *testing.T) {
 		if uid, ok := s.Read(tok, lookup); ok {
 			t.Fatalf("Read(%q) accepted as %q, want rejection", tok, uid)
 		}
-	}
-	// Upstream quirk kept faithfully: a signed payload whose exp field isn't
-	// numeric coerces to NaN, fails `+exp < Date.now()`, and falls through to
-	// the version check — so it verifies for an sv-0 user.
-	quirk := s.sign("a:junk")
-	if uid, ok := s.Read(quirk, lookup); !ok || uid != "a" {
-		t.Fatalf(`Read(%q) = (%q,%v), want ("a",true) per upstream NaN-exp behavior`, quirk, uid, ok)
 	}
 }

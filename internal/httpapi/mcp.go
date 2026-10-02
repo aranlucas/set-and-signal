@@ -80,7 +80,7 @@ func (s *Server) getTodayTool(ctx context.Context, _ *mcp.CallToolRequest, input
 	if input.Iso != nil {
 		iso = *input.Iso
 	}
-	if iso != "" && !isoDateRe.MatchString(iso) {
+	if iso != "" && !training.ValidISODate(iso) {
 		return nil, MCPTodayResult{}, errors.New("date must be YYYY-MM-DD")
 	}
 	if input.Tz != nil && strings.TrimSpace(*input.Tz) == "" {
@@ -162,7 +162,7 @@ func (s *Server) getBodyweightTool(ctx context.Context, _ *mcp.CallToolRequest, 
 	if input.D != nil {
 		filter = *input.D
 	}
-	if filter != "" && !isoDateRe.MatchString(filter) {
+	if filter != "" && !training.ValidISODate(filter) {
 		return nil, MCPBodyweightOutput{}, errors.New("date must be YYYY-MM-DD")
 	}
 	entries := make([]MCPBodyweightEntry, 0, len(view.Bodyweight))
@@ -215,13 +215,13 @@ func (s *Server) getHistoryTool(ctx context.Context, _ *mcp.CallToolRequest, inp
 	query := historyQuery{Limit: limit}
 	if input.Since != nil {
 		query.Since = *input.Since
-		if !isoDateRe.MatchString(query.Since) {
+		if !training.ValidISODate(query.Since) {
 			return nil, MCPHistoryOutput{}, errors.New("since must be YYYY-MM-DD")
 		}
 	}
 	if input.Until != nil {
 		query.Until = *input.Until
-		if !isoDateRe.MatchString(query.Until) {
+		if !training.ValidISODate(query.Until) {
 			return nil, MCPHistoryOutput{}, errors.New("until must be YYYY-MM-DD")
 		}
 	}
@@ -314,7 +314,7 @@ func (s *Server) getMuscleBalanceTool(ctx context.Context, _ *mcp.CallToolReques
 	}
 	if asOf == "" {
 		asOf = todayISOLocal("", time.Now())
-	} else if !isoDateRe.MatchString(asOf) {
+	} else if !training.ValidISODate(asOf) {
 		return nil, MCPMuscleBalance{}, errors.New("asOf must be YYYY-MM-DD")
 	}
 	return nil, MuscleBalance(view, asOf, days), nil
@@ -376,7 +376,7 @@ func (s *Server) getSessionPrescriptionTool(ctx context.Context, _ *mcp.CallTool
 	if input.Iso != nil {
 		iso = *input.Iso
 	}
-	if iso != "" && !isoDateRe.MatchString(iso) {
+	if iso != "" && !training.ValidISODate(iso) {
 		return nil, MCPDayPrescription{}, errors.New("date must be YYYY-MM-DD")
 	}
 	if input.Tz != nil && strings.TrimSpace(*input.Tz) == "" {
@@ -394,7 +394,7 @@ func (s *Server) getSessionPrescriptionTool(ctx context.Context, _ *mcp.CallTool
 
 func (s *Server) addDaySessionTool(ctx context.Context, _ *mcp.CallToolRequest, input MCPAddDaySessionInput) (*mcp.CallToolResult, MCPDaySessionsOutput, error) {
 	iso := strings.TrimSpace(input.Iso)
-	if !isoDateRe.MatchString(iso) {
+	if !training.ValidISODate(iso) {
 		return nil, MCPDaySessionsOutput{}, errors.New("date must be YYYY-MM-DD")
 	}
 	repo := NewTrainingDataRepository(s.ST)
@@ -415,7 +415,7 @@ func (s *Server) addDaySessionTool(ctx context.Context, _ *mcp.CallToolRequest, 
 
 func (s *Server) removeDaySessionTool(ctx context.Context, _ *mcp.CallToolRequest, input MCPRemoveDaySessionInput) (*mcp.CallToolResult, MCPDaySessionsOutput, error) {
 	iso := strings.TrimSpace(input.Iso)
-	if !isoDateRe.MatchString(iso) {
+	if !training.ValidISODate(iso) {
 		return nil, MCPDaySessionsOutput{}, errors.New("date must be YYYY-MM-DD")
 	}
 	repo := NewTrainingDataRepository(s.ST)
@@ -459,7 +459,7 @@ func (s *Server) mcpTrainingDigestFor(uid string, input MCPDateInput) (MCPTraini
 	if input.Iso != nil {
 		iso = *input.Iso
 	}
-	if iso != "" && !isoDateRe.MatchString(iso) {
+	if iso != "" && !training.ValidISODate(iso) {
 		return MCPTrainingDigest{}, errors.New("date must be YYYY-MM-DD")
 	}
 	if input.Tz != nil && strings.TrimSpace(*input.Tz) == "" {
