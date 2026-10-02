@@ -150,7 +150,8 @@ export function useWorkoutSessionActions({
           (item) => item.done,
         ),
       );
-      if (isLastExercise && !unitDone) startRest(appState.restSec);
+      if (isLastExercise && !unitDone)
+        startRest(activeWorkout.sessionPlan?.restSec ?? appState.restSec);
       else if (unitDone) stopRest();
       if (unitDone && isLastUnit) workoutDone = true;
       const loaded =

@@ -45,12 +45,29 @@ func cloneExConfig(cfg MCPExConfig) MCPExConfig {
 func cloneRoutine(routine MCPRoutine) MCPRoutine {
 	out := MCPRoutine{
 		ID: routine.ID, Name: routine.Name, Emoji: routine.Emoji, Prog: cloneString(routine.Prog),
-		Ex: make([]MCPExConfig, len(routine.Ex)),
+		Ex: make([]MCPExConfig, len(routine.Ex)), SessionPlan: cloneSessionPlan(routine.SessionPlan),
 	}
 	for i, cfg := range routine.Ex {
 		out.Ex[i] = cloneExConfig(cfg)
 	}
 	return out
+}
+
+func cloneSessionPlan(plan *MCPSessionPlan) *MCPSessionPlan {
+	if plan == nil {
+		return nil
+	}
+	out := *plan
+	out.Equipment = append([]string{}, plan.Equipment...)
+	out.Rows = make([]MCPSessionPlanRow, len(plan.Rows))
+	for i, row := range plan.Rows {
+		out.Rows[i].Original = cloneExConfig(row.Original)
+		if row.Planned != nil {
+			config := cloneExConfig(*row.Planned)
+			out.Rows[i].Planned = &config
+		}
+	}
+	return &out
 }
 
 func applyProgressionToConfig(cfg MCPExConfig, prescription MCPProgression) MCPExConfig {

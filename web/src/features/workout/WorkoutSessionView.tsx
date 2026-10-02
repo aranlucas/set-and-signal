@@ -29,6 +29,7 @@ import { ExerciseBlock } from "@/features/workout/ExerciseBlock";
 import { useWorkoutSessionActions } from "@/features/workout/useWorkoutSessionActions";
 import { WorkoutSheetHost } from "@/features/workout/WorkoutSheets";
 import type { SetField } from "@/features/workout/workout-set-fields";
+import { SessionPlanSummary } from "@/features/plan/SessionPlanSummary";
 
 function Elapsed({ start }: { start: number }) {
   const { t } = useTranslation();
@@ -525,6 +526,7 @@ export function WorkoutSessionView({
           onDiscard={requestDiscard}
           onFinish={requestFinish}
         />
+        {A.sessionPlan && <SessionPlanSummary plan={A.sessionPlan} unit={appState.unit} />}
         <WorkoutProgressSummary
           activeWorkout={A}
           units={units}

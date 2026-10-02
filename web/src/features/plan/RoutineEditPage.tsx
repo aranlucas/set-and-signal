@@ -41,6 +41,7 @@ import { loadOfRoutine, rankOf } from "@/domain/exercises/muscles";
 import { removeCustomExercise } from "@/features/exercises/custom-delete";
 import { cn } from "@/shared/lib/utils";
 import { routineNameFormSchema } from "@/shared/lib/form-schemas";
+import { SessionPlanSummary } from "./SessionPlanSummary";
 
 type EditSheet =
   | { kind: "glyph"; current: string; onPick: (name: IconName) => void }
@@ -126,6 +127,7 @@ export default function RoutineEdit() {
 
   return (
     <div className="mx-auto w-full max-w-160">
+      {routine.sessionPlan && <SessionPlanSummary plan={routine.sessionPlan} unit={state.unit} />}
       <h1 className="sr-only">{routine.name}</h1>
       <div className="mt-2 mb-4.5 flex items-end justify-between gap-3">
         <Button

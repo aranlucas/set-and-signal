@@ -24,6 +24,7 @@ const indexRoute = createRoute({
 // route definitions so the route graph remains easy to scan.
 const Home = lazyRouteComponent(() => import("@/features/home/HomePage"));
 const Plan = lazyRouteComponent(() => import("@/features/plan/PlanPage"));
+const SessionPlanner = lazyRouteComponent(() => import("@/features/plan/SessionPlannerPage"));
 const RoutineEdit = lazyRouteComponent(() => import("@/features/plan/RoutineEditPage"));
 const Workout = lazyRouteComponent(() => import("@/features/workout/WorkoutPage"));
 const Stats = lazyRouteComponent(() => import("@/features/stats/StatsPage"));
@@ -73,6 +74,11 @@ const routineEditRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/plan/r/$id",
   component: RoutineEdit,
+});
+const sessionPlannerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/plan/session",
+  component: SessionPlanner,
 });
 const workoutRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -183,6 +189,7 @@ const routeTree = rootRoute.addChildren([
     homeMeasuresRoute,
   ]),
   planRoute,
+  sessionPlannerRoute,
   routineEditRoute,
   workoutRoute,
   statsRoute,
