@@ -18,15 +18,23 @@ import (
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
 
-// Store wraps the SQLite handle shared by all typed query files.
+// StateBackend provides the persisted training document operations.
 type StateBackend interface {
 	ReadState(string) (jsontext.Value, error)
 	WriteState(string, jsontext.Value) error
 	MutateState(string, func(jsontext.Value) (jsontext.Value, error)) error
 }
+
+// TrainingBackend also provides the compact projection used by the admin list.
+type TrainingBackend interface {
+	StateBackend
+	Summary(string) (TrainingSummary, error)
+}
+
+// Store wraps the SQLite handle shared by all typed query files.
 type Store struct {
 	DB       *sql.DB
-	Training StateBackend
+	Training TrainingBackend
 }
 
 // Open opens (and migrates) <dataDir>/opengym.db, creating dataDir first.

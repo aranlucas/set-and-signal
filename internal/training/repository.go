@@ -112,8 +112,7 @@ func (r *TrainingDataRepository) PutBodyweight(uid, date string, weight float64)
 			}
 		}
 		if !found {
-			now := time.Now().UnixMilli()
-			data.Bodyweight = append(data.Bodyweight, MCPBodyweightEntry{D: date, W: weight, T: &now})
+			data.Bodyweight = append(data.Bodyweight, MCPBodyweightEntry{D: date, W: weight, T: new(time.Now().UnixMilli())})
 		}
 		slices.SortStableFunc(data.Bodyweight, func(a, b MCPBodyweightEntry) int {
 			return cmp.Compare(a.D, b.D)

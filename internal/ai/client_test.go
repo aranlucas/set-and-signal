@@ -1,7 +1,10 @@
 package ai
 
 import (
+	"context"
+	"encoding/json/jsontext"
 	"encoding/json/v2"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -66,7 +69,7 @@ func TestChatRequestShapeAndReply(t *testing.T) {
 		writeResponseReply(t, w, "hello "+fenceJSON)
 	})
 
-	text, err := c.Chat([]Message{{Role: "user", Content: "hi"}})
+	text, err := c.Chat(t.Context(), []Message{{Role: "user", Content: "hi"}})
 	if err != nil {
 		t.Fatalf("Chat: %v", err)
 	}
@@ -118,7 +121,7 @@ func TestChatProviderErrorPrefersMessage(t *testing.T) {
 		w.WriteHeader(http.StatusPaymentRequired)
 		_, _ = w.Write([]byte(`{"error":{"message":"insufficient credits"}}`))
 	})
-	if _, err := c.Chat(nil); err == nil || err.Error() != "insufficient credits" {
+	if _, err := c.Chat(t.Context(), nil); err == nil || err.Error() != "insufficient credits" {
 		t.Fatalf("err = %v", err)
 	}
 
@@ -127,7 +130,7 @@ func TestChatProviderErrorPrefersMessage(t *testing.T) {
 		w.WriteHeader(http.StatusBadGateway)
 		_, _ = w.Write([]byte(`not json`))
 	})
-	if _, err := c2.Chat(nil); err == nil || err.Error() != "OpenRouter HTTP 502" {
+	if _, err := c2.Chat(t.Context(), nil); err == nil || err.Error() != "OpenRouter HTTP 502" {
 		t.Fatalf("fallback err = %v", err)
 	}
 }
@@ -136,8 +139,19 @@ func TestChatEmptyResponseIsError(t *testing.T) {
 	c := newStubClient(t, func(w http.ResponseWriter, r *http.Request) {
 		writeResponseReply(t, w, "   ")
 	})
-	if _, err := c.Chat(nil); err == nil || err.Error() != "empty response" {
+	if _, err := c.Chat(t.Context(), nil); err == nil || err.Error() != "empty response" {
 		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestChatHonorsCallerCancellation(t *testing.T) {
+	c := newStubClient(t, func(w http.ResponseWriter, _ *http.Request) {
+		writeResponseReply(t, w, "a plan")
+	})
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	if _, err := c.Chat(ctx, []Message{{Role: "user", Content: "hi"}}); !errors.Is(err, context.Canceled) {
+		t.Fatalf("Chat error = %v, want context.Canceled", err)
 	}
 }
 
@@ -147,7 +161,7 @@ func TestChatLiveStructuredOutput(t *testing.T) {
 		t.Skip("OPENROUTER_API_KEY is not set")
 	}
 	c := New(apiKey, "openrouter/free", "https://opengym2.up.railway.app")
-	text, err := c.Chat([]Message{
+	text, err := c.Chat(t.Context(), []Message{
 		{Role: "system", Content: "Suggest conservative strength-training adjustments using the response schema."},
 		{Role: "user", Content: "Routine: squat 3x5 at 100 lb. Recent result: completed every rep."},
 	})
@@ -158,28 +172,33 @@ func TestChatLiveStructuredOutput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse live structured response: %v", err)
 	}
-	if _, ok := obj["summary"].(string); !ok {
-		t.Fatalf("summary = %T", obj["summary"])
+	var reply struct {
+		Summary *string           `json:"summary"`
+		Entries *[]jsontext.Value `json:"entries"`
 	}
-	if _, ok := obj["entries"].([]any); !ok {
-		t.Fatalf("entries = %T", obj["entries"])
+	if err := json.Unmarshal(obj, &reply); err != nil {
+		t.Fatal(err)
 	}
+	if reply.Summary == nil || reply.Entries == nil {
+		t.Fatalf("missing summary or entries: %s", obj)
+	}
+
 }
 
 func TestExtractJSON(t *testing.T) {
 	// Fenced block wins over surrounding prose.
 	obj, err := ExtractJSON("Sure! Here you go:\n```json\n{\"summary\":\"s\",\"entries\":[]}\n```\nhope that helps {not json}")
-	if err != nil || obj["summary"] != "s" {
+	if err != nil || string(obj) != `{"summary":"s","entries":[]}` {
 		t.Fatalf("fenced = %v %v", obj, err)
 	}
 	// Unlabelled fences count too.
 	obj, err = ExtractJSON("```\n{\"a\":true}\n```")
-	if err != nil || obj["a"] != true {
+	if err != nil || string(obj) != `{"a":true}` {
 		t.Fatalf("unlabelled fence = %v %v", obj, err)
 	}
 	// Otherwise the outermost braces.
 	obj, err = ExtractJSON(`prefix {"nested":{"x":1},"tail":2} suffix`)
-	if err != nil || obj["tail"] != float64(2) {
+	if err != nil || string(obj) != `{"nested":{"x":1},"tail":2}` {
 		t.Fatalf("braces = %v %v", obj, err)
 	}
 	// No object at all.

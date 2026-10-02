@@ -40,13 +40,11 @@ func (s *Server) verifyMCPToken(_ context.Context, secret string, _ *http.Reques
 type MCPEmptyInput struct{}
 
 func mcpReadAnnotations() mcp.ToolAnnotations {
-	destructive, openWorld := false, false
-	return mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, DestructiveHint: &destructive, OpenWorldHint: &openWorld}
+	return mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, DestructiveHint: new(false), OpenWorldHint: new(false)}
 }
 
 func mcpWriteAnnotations(destructive, idempotent bool) mcp.ToolAnnotations {
-	openWorld := false
-	return mcp.ToolAnnotations{ReadOnlyHint: false, IdempotentHint: idempotent, DestructiveHint: &destructive, OpenWorldHint: &openWorld}
+	return mcp.ToolAnnotations{ReadOnlyHint: false, IdempotentHint: idempotent, DestructiveHint: new(destructive), OpenWorldHint: new(false)}
 }
 
 func mcpUID(ctx context.Context) string {
@@ -269,7 +267,7 @@ func (s *Server) nextWorkoutSuggestionTool(ctx context.Context, _ *mcp.CallToolR
 	if err != nil {
 		return nil, MCPSuggestionOutput{}, err
 	}
-	suggestion, code, msg := s.nextWorkoutSuggestionMCP(digest)
+	suggestion, code, msg := s.nextWorkoutSuggestionMCP(ctx, digest)
 	if code != 0 {
 		return nil, MCPSuggestionOutput{}, errors.New(msg)
 	}
@@ -494,8 +492,7 @@ func (s *Server) buildMCPServer() *mcp.Server {
 	bwWrite := mcpWriteAnnotations(true, true)
 	workoutWrite := mcpWriteAnnotations(true, true)
 	openWorldRead := mcpReadAnnotations()
-	openWorld := true
-	openWorldRead.OpenWorldHint = &openWorld
+	openWorldRead.OpenWorldHint = new(true)
 	mcp.AddTool(srv, &mcp.Tool{Name: "search_exercises", Description: "Search the exercise catalog and custom exercises by name, muscle, or equipment. Use returned ids in set_program.", Annotations: &read}, s.searchExercisesTool)
 	mcp.AddTool(srv, &mcp.Tool{Name: "get_today", Description: "Resolve today's or a supplied ISO date to ordered sessions (each with its own routine), override, weekday slots, or rest day. Planned weights are filled from history so a logged lift is not prescribed at 0.", Annotations: &read}, s.getTodayTool)
 	mcp.AddTool(srv, &mcp.Tool{Name: "get_training_digest", Description: "Build the compact training-log digest used for coaching. Returns every session for the day with its own exercise list; entries include the next working weight when history exists.", Annotations: &read}, s.getTrainingDigestTool)

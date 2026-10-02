@@ -226,8 +226,8 @@ func (s *Server) isAdmin(u *store.User) bool {
 }
 
 // userPayload is the {id,name,admin} shape every auth success returns.
-func (s *Server) userPayload(u store.User) map[string]any {
-	return map[string]any{"id": u.ID, "name": u.Name, "admin": s.isAdmin(&u)}
+func (s *Server) userPayload(u store.User) userPayload {
+	return userPayload{ID: u.ID, Name: u.Name, Admin: s.isAdmin(&u)}
 }
 
 // ---------- cookies ----------

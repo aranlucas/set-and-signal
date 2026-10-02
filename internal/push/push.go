@@ -5,6 +5,7 @@
 package push
 
 import (
+	"cmp"
 	"context"
 	"encoding/json/jsontext"
 	"encoding/json/v2"
@@ -90,7 +91,7 @@ func New(dataDir string, st *store.Store, subject string) (*Service, error) {
 
 	var keys vapidKeys
 	raw, err := os.ReadFile(file)
-	if err != nil && !os.IsNotExist(err) {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("push: read %s: %w", file, err)
 	}
 	// A corrupt or empty file regenerates rather than failing the server: the
@@ -235,13 +236,13 @@ type reminderState struct {
 		TZ   string `json:"tz"`
 		Time string `json:"time"`
 	} `json:"reminder"`
-	DayPlan  map[string]training.MCPDayPlan `json:"dayPlan"`
+	DayPlan  training.DayPlanMap `json:"dayPlan"`
 	Routines []struct {
 		ID    string `json:"id"`
 		Name  string `json:"name"`
 		Emoji string `json:"emoji"`
 	} `json:"routines"`
-	Week     map[string][]training.MCPDaySession `json:"week"`
+	Week     training.WeekSchedule `json:"week"`
 	Workouts []struct {
 		D         string `json:"d"`
 		RoutineID string `json:"routineId"`
@@ -305,10 +306,10 @@ func decodeReminderState(raw jsontext.Value) (reminderState, error) {
 		return reminderState{}, err
 	}
 	if s.Week == nil {
-		s.Week = map[string][]training.MCPDaySession{}
+		s.Week = training.WeekSchedule{}
 	}
 	if s.DayPlan == nil {
-		s.DayPlan = map[string]training.MCPDayPlan{}
+		s.DayPlan = training.DayPlanMap{}
 	}
 	return s, nil
 }
@@ -358,7 +359,7 @@ func (p *Service) reminderTick(nowFn func(tz string) (date, hhmm string, ok bool
 		if s.Reminder == nil || !s.Reminder.On {
 			continue
 		}
-		date, hhmm, ok := nowFn(orDefault(s.Reminder.TZ, "UTC"))
+		date, hhmm, ok := nowFn(cmp.Or(s.Reminder.TZ, "UTC"))
 		now := nowResult{date: date, hhmm: hhmm, ok: ok}
 		if !ok || s.Reminder.Time != now.hhmm {
 			continue
@@ -373,7 +374,7 @@ func (p *Service) reminderTick(nowFn func(tz string) (date, hhmm string, ok bool
 		title := "Workout planned today"
 		for _, r := range s.Routines {
 			if r.ID == rid {
-				title = orDefault(r.Emoji, "🏋️") + " " + r.Name + " today"
+				title = cmp.Or(r.Emoji, "🏋️") + " " + r.Name + " today"
 				break
 			}
 		}
@@ -383,11 +384,4 @@ func (p *Service) reminderTick(nowFn func(tz string) (date, hhmm string, ok bool
 		}
 		p.SendTo(user.ID, title, "It's on your plan — let's go 💪", "day-reminder")
 	}
-}
-
-func orDefault(s, def string) string {
-	if s == "" {
-		return def
-	}
-	return s
 }

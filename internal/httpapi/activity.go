@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/aranlucas/set-and-signal/internal/presence"
-	"github.com/aranlucas/set-and-signal/internal/sanitize"
 )
 
 // POST /api/activity — live-workout heartbeat (server.js lines 754–769).
@@ -17,32 +16,32 @@ func (s *Server) postActivity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		Active    any `json:"active"`
-		Name      any `json:"name"`
-		ExIdx     any `json:"exIdx"`
-		ExTotal   any `json:"exTotal"`
-		SetsDone  any `json:"setsDone"`
-		SetsTotal any `json:"setsTotal"`
-		StartedAt any `json:"startedAt"`
+		Active    bool   `json:"active"`
+		Name      string `json:"name" validate:"max=60"`
+		ExIdx     int    `json:"exIdx" validate:"gte=0"`
+		ExTotal   int    `json:"exTotal" validate:"gte=0"`
+		SetsDone  int    `json:"setsDone" validate:"gte=0"`
+		SetsTotal int    `json:"setsTotal" validate:"gte=0"`
+		StartedAt int64  `json:"startedAt" validate:"gte=0"`
 	}
-	if !readJSON(w, r, &body) {
+	if !readValidatedJSON(w, r, &body) {
 		return
 	}
-	if jsTruthy(body.Active) {
-		started := plusOrZero(body.StartedAt)
-		if started == 0 { // +body.startedAt || Date.now()
-			started = float64(time.Now().UnixMilli())
+	if body.Active {
+		started := body.StartedAt
+		if started == 0 {
+			started = time.Now().UnixMilli()
 		}
 		s.Presence.Set(u.ID, presence.Info{
-			Name:      jsSlice(sanitize.JSString(body.Name), 60),
-			ExIdx:     int(plusOrZero(body.ExIdx)),
-			ExTotal:   int(plusOrZero(body.ExTotal)),
-			SetsDone:  int(plusOrZero(body.SetsDone)),
-			SetsTotal: int(plusOrZero(body.SetsTotal)),
-			StartedAt: time.UnixMilli(int64(started)),
+			Name:      body.Name,
+			ExIdx:     body.ExIdx,
+			ExTotal:   body.ExTotal,
+			SetsDone:  body.SetsDone,
+			SetsTotal: body.SetsTotal,
+			StartedAt: time.UnixMilli(started),
 		})
 	} else {
 		s.Presence.Delete(u.ID)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+	writeJSON(w, http.StatusOK, okResponse{OK: true})
 }

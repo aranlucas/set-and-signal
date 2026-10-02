@@ -87,17 +87,18 @@ func (s *Server) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := map[string]any{
-		"client_id":                  clientID,
-		"client_id_issued_at":        time.Now().Unix(),
-		"redirect_uris":              meta.RedirectURIs,
-		"grant_types":                grants,
-		"response_types":             []string{"code"},
-		"token_endpoint_auth_method": authMethod,
-		"client_name":                meta.ClientName,
-	}
-	if secret != "" {
-		out["client_secret"] = secret
-	}
-	writeJSON(w, http.StatusCreated, out)
+	writeJSON(w, http.StatusCreated, struct {
+		ClientID                string   `json:"client_id"`
+		ClientIDIssuedAt        int64    `json:"client_id_issued_at"`
+		RedirectURIs            []string `json:"redirect_uris"`
+		GrantTypes              []string `json:"grant_types"`
+		ResponseTypes           []string `json:"response_types"`
+		TokenEndpointAuthMethod string   `json:"token_endpoint_auth_method"`
+		ClientName              string   `json:"client_name"`
+		ClientSecret            string   `json:"client_secret,omitempty"`
+	}{
+		ClientID: clientID, ClientIDIssuedAt: time.Now().Unix(), RedirectURIs: meta.RedirectURIs,
+		GrantTypes: grants, ResponseTypes: []string{"code"}, TokenEndpointAuthMethod: authMethod,
+		ClientName: meta.ClientName, ClientSecret: secret,
+	})
 }

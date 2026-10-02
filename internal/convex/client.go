@@ -31,6 +31,33 @@ type Client struct {
 	http        *http.Client
 }
 
+var _ store.TrainingBackend = (*Client)(nil)
+
+// JSONWebKeySet is the public signing-key document consumed by Convex.
+type JSONWebKeySet struct {
+	Keys []JSONWebKey `json:"keys"`
+}
+
+type JSONWebKey struct {
+	Kty string `json:"kty"`
+	Kid string `json:"kid"`
+	Use string `json:"use"`
+	Alg string `json:"alg"`
+	N   string `json:"n"`
+	E   string `json:"e"`
+}
+
+type tokenClaims struct {
+	jwt.RegisteredClaims
+	Audience string `json:"aud"`
+	Service  bool   `json:"service"`
+}
+
+// Convex's token contract uses a single string audience.
+func (c tokenClaims) GetAudience() (jwt.ClaimStrings, error) {
+	return jwt.ClaimStrings{c.Audience}, nil
+}
+
 func New(url, issuer, dir string) (*Client, error) {
 	path := filepath.Join(dir, "convex-signing.pem")
 	raw, err := os.ReadFile(path)
@@ -56,21 +83,32 @@ func New(url, issuer, dir string) (*Client, error) {
 	}
 	return &Client{URL: strings.TrimRight(url, "/"), Issuer: issuer, key: key, http: &http.Client{Timeout: 15 * time.Second}}, nil
 }
-func (c *Client) JWKS() map[string]any {
-	return map[string]any{"keys": []any{map[string]any{"kty": "RSA", "kid": "set-and-signal", "use": "sig", "alg": "RS256", "n": base64.RawURLEncoding.EncodeToString(c.key.N.Bytes()), "e": "AQAB"}}}
+func (c *Client) JWKS() JSONWebKeySet {
+	return JSONWebKeySet{Keys: []JSONWebKey{{
+		Kty: "RSA", Kid: "set-and-signal", Use: "sig", Alg: "RS256",
+		N: base64.RawURLEncoding.EncodeToString(c.key.N.Bytes()), E: "AQAB",
+	}}}
 }
 func (c *Client) Token(uid string, service bool) (string, error) {
 	now := time.Now()
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{"iss": c.Issuer, "aud": "set-and-signal", "sub": uid, "iat": now.Unix(), "exp": now.Add(2 * time.Minute).Unix(), "service": service})
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, tokenClaims{
+		Issuer: c.Issuer, Audience: "set-and-signal", Subject: uid,
+		IssuedAt: jwt.NewNumericDate(now), ExpiresAt: jwt.NewNumericDate(now.Add(2 * time.Minute)),
+		Service: service,
+	})
 	token.Header["kid"] = "set-and-signal"
 	return token.SignedString(c.key)
 }
-func (c *Client) call(uid, kind, path string, args any, out any) error {
+func (c *Client) call[Args, Result any](uid, kind, path string, args Args, out *Result) error {
 	token, err := c.Token(uid, true)
 	if err != nil {
 		return err
 	}
-	body, err := json.Marshal(map[string]any{"path": path, "args": args, "format": "json"})
+	body, err := json.Marshal(struct {
+		Path   string `json:"path"`
+		Args   Args   `json:"args"`
+		Format string `json:"format"`
+	}{Path: path, Args: args, Format: "json"})
 	if err != nil {
 		return err
 	}
@@ -107,7 +145,7 @@ func (c *Client) call(uid, kind, path string, args any, out any) error {
 }
 func (c *Client) ReadState(uid string) (jsontext.Value, error) {
 	var value any
-	if err := c.call(uid, "query", "training:snapshot", map[string]any{}, &value); err != nil {
+	if err := c.call(uid, "query", "training:snapshot", struct{}{}, &value); err != nil {
 		return nil, err
 	}
 	// Convex serializes integral numbers as 1.0; the typed Go model expects 1.
@@ -115,7 +153,11 @@ func (c *Client) ReadState(uid string) (jsontext.Value, error) {
 }
 func (c *Client) replace(uid string, raw jsontext.Value, expected *int64, onlyMissing bool) (bool, error) {
 	var ok bool
-	err := c.call(uid, "mutation", "training:replace", map[string]any{"state": string(raw), "expected": expected, "onlyIfMissing": onlyMissing}, &ok)
+	err := c.call(uid, "mutation", "training:replace", struct {
+		State         string `json:"state"`
+		Expected      *int64 `json:"expected"`
+		OnlyIfMissing bool   `json:"onlyIfMissing"`
+	}{State: string(raw), Expected: expected, OnlyIfMissing: onlyMissing}, &ok)
 	return ok, err
 }
 func (c *Client) Import(uid string, raw jsontext.Value) error {
@@ -162,7 +204,7 @@ func (c *Client) Summary(uid string) (store.TrainingSummary, error) {
 		LastWorkout jsontext.Value `json:"lastWorkout"`
 		LastSync    jsontext.Value `json:"lastSync"`
 	}
-	err := c.call(uid, "query", "training:summary", map[string]any{}, &value)
+	err := c.call(uid, "query", "training:summary", struct{}{}, &value)
 	return store.TrainingSummary{Workouts: int(value.Workouts), LastWorkout: value.LastWorkout, LastSync: value.LastSync}, err
 }
 

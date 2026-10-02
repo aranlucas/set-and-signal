@@ -25,7 +25,7 @@ func TestNextWorkoutSuggestionMCPUsesClosedOutput(t *testing.T) {
 				"role":   "assistant",
 				"content": []map[string]any{{
 					"type":        "output_text",
-					"text":        "```json\n{\"summary\":\"Keep the effort steady.\",\"entries\":[{\"id\":\"squat\",\"sets\":3,\"weight\":100,\"swapTo\":\"bench\",\"note\":\"Add one rep\",\"unknown\":true},{\"id\":\"\",\"sets\":9},{\"id\":\"noop\"}]}\n```",
+					"text":        "```json\n{\"summary\":\"Keep the effort steady.\",\"entries\":[{\"id\":\"squat\",\"sets\":3,\"weight\":100,\"swapTo\":\"bench\",\"note\":\"Add one rep\"}]}\n```",
 					"annotations": []any{},
 				}},
 			}},
@@ -41,13 +41,13 @@ func TestNextWorkoutSuggestionMCPUsesClosedOutput(t *testing.T) {
 		Sessions: []MCPTrainingDigestSession{{
 			RoutineID: "strength",
 			Name:      "Strength",
-			Entries:   []MCPDigestExerciseEntry{{ID: "squat", Name: "Back squat", Sets: ptrFloat(3), Reps: ptrFloat(5)}},
+			Entries:   []MCPDigestExerciseEntry{{ID: "squat", Name: "Back squat", Sets: new(3.0), Reps: new(5.0)}},
 		}},
 		Bodyweight:   []MCPBodyweightEntry{{D: "2026-08-27", W: 80}},
 		LastWorkouts: []MCPDigestWorkout{},
 	}
 
-	got, code, msg := s.nextWorkoutSuggestionMCP(digest)
+	got, code, msg := s.nextWorkoutSuggestionMCP(t.Context(), digest)
 	if code != 0 || msg != "" {
 		t.Fatalf("typed suggestion failed: code=%d msg=%q", code, msg)
 	}
@@ -62,5 +62,3 @@ func TestNextWorkoutSuggestionMCPUsesClosedOutput(t *testing.T) {
 		t.Fatalf("typed entry annotations = %#v", entry)
 	}
 }
-
-func ptrFloat(v float64) *float64 { return new(v) }

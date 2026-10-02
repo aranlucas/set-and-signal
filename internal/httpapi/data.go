@@ -18,7 +18,9 @@ func (s *Server) getData(w http.ResponseWriter, r *http.Request) {
 		serverError(w)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]jsontext.Value{"state": raw})
+	writeJSON(w, http.StatusOK, struct {
+		State jsontext.Value `json:"state"`
+	}{State: raw})
 }
 
 // PUT /api/data — whole-state write. Deliberately cookie-ONLY (upstream uses
@@ -57,10 +59,13 @@ func (s *Server) putData(w http.ResponseWriter, r *http.Request) {
 		serverError(w)
 		return
 	}
-	var ts any // upstream: body.state._ts || null
+	var ts *float64 // upstream: body.state._ts || null
 	var f float64
 	if json.Unmarshal(body.State["_ts"], &f) == nil && f != 0 {
-		ts = f
+		ts = new(f)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "ts": ts})
+	writeJSON(w, http.StatusOK, struct {
+		OK bool     `json:"ok"`
+		TS *float64 `json:"ts"`
+	}{OK: true, TS: ts})
 }

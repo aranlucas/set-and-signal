@@ -27,7 +27,7 @@ func TestLookupAndNameOf(t *testing.T) {
 	if NameOf("0001", nil) != e.N {
 		t.Fatalf("NameOf catalog")
 	}
-	custom := []any{map[string]any{"id": "cx1", "n": "My Lift"}}
+	custom := []Exercise{{ID: "cx1", N: "My Lift"}}
 	if NameOf("cx1", custom) != "My Lift" {
 		t.Fatal("custom name")
 	}

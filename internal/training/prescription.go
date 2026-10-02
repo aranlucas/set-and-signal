@@ -268,8 +268,7 @@ func sessionPrescription(view TrainingData, iso string) MCPDayPrescription {
 			Exercises:   []MCPExercisePrescription{},
 		}
 		if row.Policy == nil {
-			linear := "linear"
-			row.Policy = &linear
+			row.Policy = new("linear")
 		}
 		row.Exercises = make([]MCPExercisePrescription, 0, len(routine.Ex))
 		for _, cfg := range routine.Ex {
@@ -398,8 +397,7 @@ func logExerciseSets(data *TrainingData, input MCPLogExerciseSetsInput, now time
 		logged = append(logged, loggedSet)
 	}
 	if cfg.Sets == nil {
-		sets := float64(len(logged))
-		cfg.Sets = &sets
+		cfg.Sets = new(float64(len(logged)))
 	}
 	if cfg.Reps == nil && len(logged) > 0 {
 		cfg.Reps = new(input.Sets[0].R)

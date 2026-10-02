@@ -9,8 +9,6 @@ import (
 	"github.com/aranlucas/set-and-signal/internal/exercises"
 )
 
-func floatPtr(value float64) *float64 { return new(value) }
-
 func TestResolveTodayTypedHonorsOverrideAndWeeklyFallback(t *testing.T) {
 	view := TrainingData{
 		Routines: []MCPRoutine{
@@ -40,13 +38,13 @@ func TestTrainingDayReturnsMultipleSessions(t *testing.T) {
 	start := "18:00"
 	view := TrainingData{
 		Routines: []MCPRoutine{
-			{ID: "hip-rehab", Name: "Hip flexor rehab", Ex: []MCPExConfig{{ID: "stretch", Sets: floatPtr(2)}}},
-			{ID: "fleet-feet-easy", Name: "Fleet Feet easy 3mi", Ex: []MCPExConfig{{ID: "run", Sets: floatPtr(1), Min: floatPtr(32)}}},
+			{ID: "hip-rehab", Name: "Hip flexor rehab", Ex: []MCPExConfig{{ID: "stretch", Sets: new(2.0)}}},
+			{ID: "fleet-feet-easy", Name: "Fleet Feet easy 3mi", Ex: []MCPExConfig{{ID: "run", Sets: new(1.0), Min: new(32.0)}}},
 		},
 		Week: map[string][]MCPDaySession{
 			"2": {
 				{RoutineID: "hip-rehab"},
-				{RoutineID: "fleet-feet-easy", Start: &start, Label: stringPtr("6pm")},
+				{RoutineID: "fleet-feet-easy", Start: &start, Label: new("6pm")},
 			},
 			"4": {{RoutineID: "hip-rehab"}},
 		},
@@ -74,8 +72,8 @@ func TestBuildTrainingDigestKeepsSessionBoundaries(t *testing.T) {
 	view := TrainingData{
 		Unit: "lb",
 		Routines: []MCPRoutine{
-			{ID: "hip-rehab", Name: "Hip flexor rehab", Ex: []MCPExConfig{{ID: "stretch", Sets: floatPtr(2)}}},
-			{ID: "fleet-feet-easy", Name: "Fleet Feet easy 3mi", Ex: []MCPExConfig{{ID: "run", Sets: floatPtr(1)}}},
+			{ID: "hip-rehab", Name: "Hip flexor rehab", Ex: []MCPExConfig{{ID: "stretch", Sets: new(2.0)}}},
+			{ID: "fleet-feet-easy", Name: "Fleet Feet easy 3mi", Ex: []MCPExConfig{{ID: "run", Sets: new(1.0)}}},
 		},
 	}
 	got := buildTrainingDigest(view, []MCPDaySession{
@@ -96,28 +94,28 @@ func TestBuildTrainingDigestKeepsSessionBoundaries(t *testing.T) {
 func TestBuildTrainingDigestTypedUsesClosedState(t *testing.T) {
 	view := TrainingData{
 		Unit:       "lb",
-		TargetW:    floatPtr(180),
+		TargetW:    new(180.0),
 		Bodyweight: []MCPBodyweightEntry{{D: "2026-08-20", W: 181}},
 		CustomEx:   []MCPCustomExercise{{ID: "custom-row", N: "Cable Press"}},
 		ExWeights:  map[string]MCPExWeightHint{"custom-row": {W: 75, D: "2026-08-20"}},
 		Routines:   []MCPRoutine{{ID: "push", Name: "Push"}},
 		Workouts: []MCPWorkout{
 			{
-				D: "2026-08-22", Name: "Push", BW: floatPtr(181),
+				D: "2026-08-22", Name: "Push", BW: new(181.0),
 				Entries: []MCPWorkoutEntry{
 					{
-						ID: "custom-row", Target: &MCPExConfig{ID: "custom-row", Sets: floatPtr(3)},
+						ID: "custom-row", Target: &MCPExConfig{ID: "custom-row", Sets: new(3.0)},
 						Sets: []MCPLoggedSet{
-							{Done: true, W: floatPtr(75), R: floatPtr(8)},
-							{Done: false, W: floatPtr(80), R: floatPtr(6)},
-							{Done: true, Sec: floatPtr(30), W: floatPtr(10)},
+							{Done: true, W: new(75.0), R: new(8.0)},
+							{Done: false, W: new(80.0), R: new(6.0)},
+							{Done: true, Sec: new(30.0), W: new(10.0)},
 						},
 					},
 				},
 			},
 		},
 	}
-	config := MCPExConfig{ID: "custom-row", Sets: floatPtr(3), Reps: floatPtr(8), Weight: floatPtr(75)}
+	config := MCPExConfig{ID: "custom-row", Sets: new(3.0), Reps: new(8.0), Weight: new(75.0)}
 	routine := MCPRoutine{ID: "push", Name: "Push", Ex: []MCPExConfig{config}}
 	view.Routines = []MCPRoutine{routine}
 
@@ -145,9 +143,9 @@ func TestBuildHistoryTypedFiltersNewestFirst(t *testing.T) {
 		Unit:     "kg",
 		CustomEx: []MCPCustomExercise{{ID: "custom-row", N: "Cable Press"}},
 		Workouts: []MCPWorkout{
-			{ID: "w1", D: "2026-08-10", Name: "A", Vol: 100, Entries: []MCPWorkoutEntry{{ID: "custom-row", Sets: []MCPLoggedSet{{Done: true, W: floatPtr(60), R: floatPtr(5)}}}}},
-			{ID: "w2", D: "2026-08-20", Name: "B", Vol: 200, PRs: []string{"custom-row"}, Entries: []MCPWorkoutEntry{{ID: "custom-row", Sets: []MCPLoggedSet{{Done: true, W: floatPtr(70), R: floatPtr(5)}}}, {ID: "other", Sets: []MCPLoggedSet{{Done: true, W: floatPtr(20), R: floatPtr(10)}}}}},
-			{ID: "w3", D: "2026-08-25", Name: "C", Vol: 50, Entries: []MCPWorkoutEntry{{ID: "other", Sets: []MCPLoggedSet{{Done: true, W: floatPtr(20), R: floatPtr(20)}}}}},
+			{ID: "w1", D: "2026-08-10", Name: "A", Vol: 100, Entries: []MCPWorkoutEntry{{ID: "custom-row", Sets: []MCPLoggedSet{{Done: true, W: new(60.0), R: new(5.0)}}}}},
+			{ID: "w2", D: "2026-08-20", Name: "B", Vol: 200, PRs: []string{"custom-row"}, Entries: []MCPWorkoutEntry{{ID: "custom-row", Sets: []MCPLoggedSet{{Done: true, W: new(70.0), R: new(5.0)}}}, {ID: "other", Sets: []MCPLoggedSet{{Done: true, W: new(20.0), R: new(10.0)}}}}},
+			{ID: "w3", D: "2026-08-25", Name: "C", Vol: 50, Entries: []MCPWorkoutEntry{{ID: "other", Sets: []MCPLoggedSet{{Done: true, W: new(20.0), R: new(20.0)}}}}},
 		},
 	}
 	got := buildHistory(view, historyQuery{Since: "2026-08-15", Until: "2026-08-25", Limit: 10, ExerciseID: "custom-row"})
@@ -203,7 +201,7 @@ func TestAddAndRemoveDaySessionWithoutWeekReplace(t *testing.T) {
 		},
 		Week: map[string][]MCPDaySession{"2": {{RoutineID: "hip-rehab"}}},
 	}
-	if err := addSessionToDayPlan(&data, "2026-09-15", MCPDaySession{RoutineID: "fleet-feet-easy", Start: stringPtr("18:00")}); err != nil {
+	if err := addSessionToDayPlan(&data, "2026-09-15", MCPDaySession{RoutineID: "fleet-feet-easy", Start: new("18:00")}); err != nil {
 		t.Fatal(err)
 	}
 	if len(data.Week["2"]) != 1 || data.Week["2"][0].RoutineID != "hip-rehab" {

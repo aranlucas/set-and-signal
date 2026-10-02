@@ -2,10 +2,6 @@ package training
 
 import "testing"
 
-func f(v float64) *float64       { return new(v) }
-func b(v bool) *bool             { return new(v) }
-func stringPtr(v string) *string { return new(v) }
-
 func TestEstimate1RMMatchesFrontendFormulasAndCaps(t *testing.T) {
 	cases := []struct {
 		name, formula      string
@@ -34,9 +30,9 @@ func TestEstimate1RMMatchesFrontendFormulasAndCaps(t *testing.T) {
 func TestStrengthProgressSkipsWarmupsAndExplainsMissingEstimate(t *testing.T) {
 	state := TrainingData{Workouts: []MCPWorkout{
 		{D: "2026-08-01", Start: 1, Entries: []MCPWorkoutEntry{{ID: "bench", Sets: []MCPLoggedSet{
-			{W: f(40), R: f(10), Done: true, WU: b(true)}, {W: f(80), R: f(5), Done: true},
+			{W: new(40.0), R: new(10.0), Done: true, WU: new(true)}, {W: new(80.0), R: new(5.0), Done: true},
 		}}}},
-		{D: "2026-08-08", Start: 2, Entries: []MCPWorkoutEntry{{ID: "bench", Sets: []MCPLoggedSet{{W: f(85), R: f(5), Done: true}}}}},
+		{D: "2026-08-08", Start: 2, Entries: []MCPWorkoutEntry{{ID: "bench", Sets: []MCPLoggedSet{{W: new(85.0), R: new(5.0), Done: true}}}}},
 	}}
 	result := StrengthProgress(state, "bench", "epley")
 	trend := result.Trend
@@ -47,7 +43,7 @@ func TestStrengthProgressSkipsWarmupsAndExplainsMissingEstimate(t *testing.T) {
 		t.Fatalf("best = %#v", result.Best)
 	}
 
-	onlyWarmup := TrainingData{Workouts: []MCPWorkout{{Entries: []MCPWorkoutEntry{{ID: "bench", Sets: []MCPLoggedSet{{W: f(40), R: f(10), Done: true, WU: b(true)}}}}}}}
+	onlyWarmup := TrainingData{Workouts: []MCPWorkout{{Entries: []MCPWorkoutEntry{{ID: "bench", Sets: []MCPLoggedSet{{W: new(40.0), R: new(10.0), Done: true, WU: new(true)}}}}}}}
 	missing := StrengthProgress(onlyWarmup, "bench", "epley")
 	if missing.Best != nil || missing.Reason == nil || *missing.Reason != "Only warm-up sets are logged; complete a working set to estimate strength." {
 		t.Fatalf("missing estimate = %#v", missing)
@@ -57,7 +53,7 @@ func TestStrengthProgressSkipsWarmupsAndExplainsMissingEstimate(t *testing.T) {
 func TestMuscleBalanceUsesCatalogAliasesWindowsAndHardSets(t *testing.T) {
 	state := TrainingData{Workouts: []MCPWorkout{
 		{D: "2026-08-02", Entries: []MCPWorkoutEntry{{ID: "0025", Sets: []MCPLoggedSet{
-			{Done: true, RPE: f(9)}, {Done: true, RPE: f(7)},
+			{Done: true, RPE: new(9.0)}, {Done: true, RPE: new(7.0)},
 		}}}},
 		{D: "2026-08-20", Entries: []MCPWorkoutEntry{{ID: "0001", Sets: []MCPLoggedSet{{Done: true}}}}},
 	}}
@@ -80,39 +76,39 @@ func TestMuscleBalanceUsesCatalogAliasesWindowsAndHardSets(t *testing.T) {
 }
 
 func TestNextProgressionPortsLinearAndDoublePolicies(t *testing.T) {
-	state := TrainingData{Unit: "kg", Workouts: []MCPWorkout{{Entries: []MCPWorkoutEntry{{ID: "bench", Target: &MCPExConfig{ID: "bench", Sets: f(3), Reps: f(5)}, Sets: []MCPLoggedSet{
-		{Done: true, W: f(80), R: f(5)}, {Done: true, W: f(80), R: f(5)}, {Done: true, W: f(80), R: f(5)},
+	state := TrainingData{Unit: "kg", Workouts: []MCPWorkout{{Entries: []MCPWorkoutEntry{{ID: "bench", Target: &MCPExConfig{ID: "bench", Sets: new(3.0), Reps: new(5.0)}, Sets: []MCPLoggedSet{
+		{Done: true, W: new(80.0), R: new(5.0)}, {Done: true, W: new(80.0), R: new(5.0)}, {Done: true, W: new(80.0), R: new(5.0)},
 	}}}}}}
-	linear := NextProgression(state, MCPExConfig{ID: "bench", Sets: f(3), Reps: f(5)}, MCPRoutine{})
+	linear := NextProgression(state, MCPExConfig{ID: "bench", Sets: new(3.0), Reps: new(5.0)}, MCPRoutine{})
 	if linear.Kind != "up" || linear.Weight == nil || *linear.Weight != 82.5 || linear.Policy != "linear" {
 		t.Fatalf("linear = %#v", linear)
 	}
-	double := NextProgression(state, MCPExConfig{ID: "bench", Sets: f(3), Reps: f(10), RepsMin: f(8), Prog: stringPtr("double")}, MCPRoutine{})
+	double := NextProgression(state, MCPExConfig{ID: "bench", Sets: new(3.0), Reps: new(10.0), RepsMin: new(8.0), Prog: new("double")}, MCPRoutine{})
 	if double.Kind != "up" || double.Weight == nil || *double.Weight != 82.5 || double.Reps == nil || *double.Reps != 8.0 {
 		t.Fatalf("double = %#v", double)
 	}
 }
 
 func TestNextProgressionDoesNotAdvanceIncompleteWorkingSets(t *testing.T) {
-	state := TrainingData{Unit: "kg", Workouts: []MCPWorkout{{Entries: []MCPWorkoutEntry{{ID: "bench", Target: &MCPExConfig{ID: "bench", Sets: f(3), Reps: f(5)}, Sets: []MCPLoggedSet{
-		{Done: true, W: f(80), R: f(5)}, {Done: true, W: f(80), R: f(5)}, {Done: false, W: f(80), R: f(5)},
+	state := TrainingData{Unit: "kg", Workouts: []MCPWorkout{{Entries: []MCPWorkoutEntry{{ID: "bench", Target: &MCPExConfig{ID: "bench", Sets: new(3.0), Reps: new(5.0)}, Sets: []MCPLoggedSet{
+		{Done: true, W: new(80.0), R: new(5.0)}, {Done: true, W: new(80.0), R: new(5.0)}, {Done: false, W: new(80.0), R: new(5.0)},
 	}}}}}}
-	got := NextProgression(state, MCPExConfig{ID: "bench", Sets: f(3), Reps: f(5)}, MCPRoutine{})
+	got := NextProgression(state, MCPExConfig{ID: "bench", Sets: new(3.0), Reps: new(5.0)}, MCPRoutine{})
 	if got.Kind != "hold" || got.Weight == nil || *got.Weight != 80.0 {
 		t.Fatalf("incomplete session advanced: %#v", got)
 	}
 }
 
 func TestNextProgressionTimeAndCardioModes(t *testing.T) {
-	state := TrainingData{Workouts: []MCPWorkout{{Entries: []MCPWorkoutEntry{{ID: "plank", Target: &MCPExConfig{ID: "plank", Mode: stringPtr("time"), Sets: f(2), Sec: f(30), Prog: stringPtr("time")}, Sets: []MCPLoggedSet{
-		{Done: true, Sec: f(30), W: f(0)}, {Done: true, Sec: f(20), W: f(0)},
+	state := TrainingData{Workouts: []MCPWorkout{{Entries: []MCPWorkoutEntry{{ID: "plank", Target: &MCPExConfig{ID: "plank", Mode: new("time"), Sets: new(2.0), Sec: new(30.0), Prog: new("time")}, Sets: []MCPLoggedSet{
+		{Done: true, Sec: new(30.0), W: new(0.0)}, {Done: true, Sec: new(20.0), W: new(0.0)},
 	}}}}}}
-	got := NextProgression(state, MCPExConfig{ID: "plank", Mode: stringPtr("time"), Sets: f(2), Sec: f(30), Prog: stringPtr("time")}, MCPRoutine{})
+	got := NextProgression(state, MCPExConfig{ID: "plank", Mode: new("time"), Sets: new(2.0), Sec: new(30.0), Prog: new("time")}, MCPRoutine{})
 	if got.Kind != "hold" || got.Sec == nil || *got.Sec != 30.0 || got.Policy != "time" {
 		t.Fatalf("time progression = %#v", got)
 	}
 
-	cardio := NextProgression(state, MCPExConfig{ID: "3220", Prog: stringPtr("linear")}, MCPRoutine{})
+	cardio := NextProgression(state, MCPExConfig{ID: "3220", Prog: new("linear")}, MCPRoutine{})
 	if cardio.Kind != "off" || cardio.Policy != "off" {
 		t.Fatalf("cardio progression should be off: %#v", cardio)
 	}

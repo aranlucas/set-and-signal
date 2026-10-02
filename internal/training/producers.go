@@ -1,6 +1,7 @@
 package training
 
 import (
+	"slices"
 	"strconv"
 	"time"
 
@@ -209,7 +210,7 @@ func buildHistory(view TrainingData, q historyQuery) []MCPHistoryRow {
 
 		row := MCPHistoryRow{ID: workout.ID, D: workout.D, Name: workout.Name, Vol: workout.Vol, Entries: entries}
 		if len(workout.PRs) > 0 {
-			row.PRs = append([]string(nil), workout.PRs...)
+			row.PRs = slices.Clone(workout.PRs)
 		}
 		row.BW = workout.BW
 		out = append(out, row)

@@ -29,7 +29,7 @@ func TestUserSummariesPreserveListSemantics(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	rows, err := st.UserSummaries(context.Background())
+	rows, err := st.UserSummaries(t.Context())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func TestUserSummariesPreserveListSemantics(t *testing.T) {
 	if !rows[1].Disabled {
 		t.Fatal("disabled user disappeared")
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 	if _, err := st.UserSummaries(ctx); err == nil {
 		t.Fatal("ignored request cancellation")
@@ -64,7 +64,7 @@ func TestUserSummariesRejectNonObjectState(t *testing.T) {
 	if err := st.WriteState("u1", jsontext.Value(`[]`)); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := st.UserSummaries(context.Background()); err == nil {
+	if _, err := st.UserSummaries(t.Context()); err == nil {
 		t.Fatal("non-object state accepted")
 	}
 }

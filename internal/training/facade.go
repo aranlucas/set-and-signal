@@ -1,9 +1,8 @@
 package training
 
 import (
-	"time"
-
 	"encoding/json/jsontext"
+	"time"
 
 	"github.com/aranlucas/set-and-signal/internal/exercises"
 )
@@ -37,7 +36,7 @@ func BuildDigest(data TrainingData, sessions []MCPDaySession, today string) MCPT
 }
 
 func BuildHistory(data TrainingData, query HistoryQuery) []MCPHistoryRow {
-	return buildHistory(data, historyQuery(query))
+	return buildHistory(data, query)
 }
 
 func SessionPrescription(data TrainingData, iso string) MCPDayPrescription {
@@ -48,7 +47,7 @@ func NormalizeDaySession(session MCPDaySession) (MCPDaySession, error) {
 	return normalizeDaySession(session)
 }
 
-func CloneWeekSchedule(week map[string][]MCPDaySession) map[string][]MCPDaySession {
+func CloneWeekSchedule(week WeekSchedule) WeekSchedule {
 	return cloneWeekSchedule(week)
 }
 
@@ -79,12 +78,12 @@ func MigrateScheduleFields(raw jsontext.Value) (jsontext.Value, error) {
 }
 
 // DecodeWeekMap coerces a JSON-decoded week value into the typed schedule map.
-func DecodeWeekMap(value any) (map[string][]MCPDaySession, error) {
+func DecodeWeekMap(value jsontext.Value) (WeekSchedule, error) {
 	return decodeWeekMap(value)
 }
 
 // DecodeDayPlanMap coerces a JSON-decoded dayPlan value into typed overrides.
-func DecodeDayPlanMap(value any) (map[string]MCPDayPlan, error) {
+func DecodeDayPlanMap(value jsontext.Value) (DayPlanMap, error) {
 	return decodeDayPlanMap(value)
 }
 

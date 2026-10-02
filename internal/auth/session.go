@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -46,7 +47,7 @@ func NewSessions(dataDir string, days int) (*Sessions, error) {
 		if err := f.Close(); err != nil {
 			return nil, fmt.Errorf("auth: close secret: %w", err)
 		}
-	} else if !os.IsExist(err) {
+	} else if !errors.Is(err, os.ErrExist) {
 		return nil, fmt.Errorf("auth: open secret: %w", err)
 	}
 	raw, err := os.ReadFile(path)

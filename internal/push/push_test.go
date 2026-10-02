@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -66,7 +67,7 @@ func (f *fakePushService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (f *fakePushService) all() []capturedSend {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	return append([]capturedSend(nil), f.sends...)
+	return slices.Clone(f.sends)
 }
 
 func (f *fakePushService) count() int { return len(f.all()) }
