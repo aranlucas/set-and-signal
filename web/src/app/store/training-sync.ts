@@ -167,6 +167,11 @@ export class TrainingSync {
     this.problem = undefined;
     this.publish();
   }
+  private persistQueue(next: Change[][]) {
+    // A failed write must leave the live queue intact for retry or recovery.
+    localStorage.setItem(this.key, JSON.stringify(next));
+    this.queue = next;
+  }
   enqueue(before: Partial<AppState>, after: Partial<AppState>) {
     const changes = changesBetween(before, after).map((change) => ({
       key: change.key,
@@ -174,12 +179,12 @@ export class TrainingSync {
       expected: this.known.get(change.key) ?? null,
     }));
     if (!changes.length) return;
+    // Throw before admitting the edit or advancing its baseline if storage rejects it.
+    this.persistQueue([...this.queue, changes]);
     for (const change of changes) {
       if (change.value === null) this.known.delete(change.key);
       else this.known.set(change.key, change.value);
     }
-    this.queue.push(changes);
-    localStorage.setItem(this.key, JSON.stringify(this.queue));
     this.publish();
     if (this.client && !this.problem) void this.flush().catch(this.failed);
   }
@@ -212,8 +217,8 @@ export class TrainingSync {
       // eslint-disable-next-line no-await-in-loop
       await client.mutation(commit, { changes });
       if (this.closed) return;
-      this.queue.shift();
-      localStorage.setItem(this.key, JSON.stringify(this.queue));
+      // Replaying a committed batch is safe; forgetting an unpersisted acknowledgment is not.
+      this.persistQueue(this.queue.slice(1));
     }
     const value = await client.query(snapshot, {});
     if (!this.closed && !this.queue.length) this.accept(value);
@@ -253,7 +258,7 @@ export class TrainingSync {
     );
     const reviewed = new Map(conflicts.map((conflict) => [conflict.key, conflict]));
     const seen = new Set<string>();
-    this.queue = this.queue
+    const next = this.queue
       .map((batch) =>
         batch.flatMap((change) => {
           const conflict = reviewed.get(change.key);
@@ -265,7 +270,7 @@ export class TrainingSync {
         }),
       )
       .filter((batch) => batch.length);
-    localStorage.setItem(this.key, JSON.stringify(this.queue));
+    this.persistQueue(next);
     this.problem = undefined;
     this.publish();
     try {

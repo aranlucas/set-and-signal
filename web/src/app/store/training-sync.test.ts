@@ -1,6 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { convexTest } from "convex-test";
+import schema from "../../../convex/schema";
+import { api as convexApi } from "../../../convex/_generated/api";
 const fake = vi.hoisted(() => ({
-  mutation: vi.fn<() => Promise<null>>(),
+  mutation:
+    vi.fn<
+      (reference: unknown, args: { changes: ReturnType<typeof changesBetween> }) => Promise<null>
+    >(),
   query: vi.fn<() => Promise<unknown>>(),
   close: vi.fn<() => Promise<null>>(),
 }));
@@ -23,9 +29,13 @@ vi.mock("@/shared/lib/api", () => ({
 }));
 import { TrainingSync, changesBetween } from "./training-sync";
 const saved = new Map<string, string>();
+const modules = import.meta.glob("../../../convex/**/*.ts");
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 beforeEach(() => {
   saved.clear();
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   vi.stubGlobal("localStorage", {
     getItem: (key: string) => saved.get(key) ?? null,
     setItem: (key: string, value: string) => {
@@ -40,6 +50,161 @@ beforeEach(() => {
   fake.close.mockResolvedValue(null);
 });
 describe("durable Convex edits", () => {
+  it.each(["QuotaExceededError", "SecurityError"])(
+    "never uploads an edit rejected by storage with %s",
+    async (name) => {
+      const sync = new TrainingSync("alice", vi.fn<() => void>(), vi.fn<() => void>());
+      const failure = new DOMException("Cannot persist pending edits", name);
+      vi.spyOn(localStorage, "setItem").mockImplementationOnce(() => {
+        throw failure;
+      });
+      expect(() => sync.enqueue({ restSec: 90 }, { restSec: 120 })).toThrow(failure);
+      await sync.start();
+      await sync.flush();
+      expect(fake.mutation).not.toHaveBeenCalled();
+      expect(saved.has("gym_pending_convex:alice")).toBe(false);
+      await sync.close();
+    },
+  );
+  it.each([{ restSec: 120 }, {}])(
+    "keeps the accepted baseline after a rejected update or deletion: %j",
+    async (rejected) => {
+      saved.set("gym_cache:alice", JSON.stringify({ restSec: 90 }));
+      const sync = new TrainingSync("alice", vi.fn<() => void>(), vi.fn<() => void>());
+      vi.spyOn(localStorage, "setItem").mockImplementationOnce(() => {
+        throw new Error("Storage unavailable");
+      });
+      expect(() => sync.enqueue({ restSec: 90 }, rejected)).toThrow("Storage unavailable");
+      sync.enqueue({ restSec: 90 }, { restSec: 150 });
+      await sync.start();
+      expect(fake.mutation).toHaveBeenCalledExactlyOnceWith(expect.anything(), {
+        changes: [{ key: "field/restSec", expected: "90", value: "150" }],
+      });
+      await sync.close();
+    },
+  );
+  it("preserves earlier admitted edits when a later admission fails", async () => {
+    saved.set("gym_cache:alice", JSON.stringify({ restSec: 90 }));
+    const sync = new TrainingSync("alice", vi.fn<() => void>(), vi.fn<() => void>());
+    sync.enqueue({ restSec: 90 }, { restSec: 120 });
+    const pending = saved.get("gym_pending_convex:alice");
+    vi.spyOn(localStorage, "setItem").mockImplementationOnce(() => {
+      throw new Error("Storage unavailable");
+    });
+    expect(() => sync.enqueue({ restSec: 120 }, { restSec: 150 })).toThrow("Storage unavailable");
+    expect(saved.get("gym_pending_convex:alice")).toBe(pending);
+    sync.enqueue({ restSec: 120 }, { restSec: 180 });
+    await sync.start();
+    expect(fake.mutation).toHaveBeenCalledTimes(2);
+    expect(fake.mutation).toHaveBeenNthCalledWith(1, expect.anything(), {
+      changes: [{ key: "field/restSec", expected: "90", value: "120" }],
+    });
+    expect(fake.mutation).toHaveBeenNthCalledWith(2, expect.anything(), {
+      changes: [{ key: "field/restSec", expected: "120", value: "180" }],
+    });
+    await sync.close();
+  });
+  it("retains an acknowledged batch until its removal is durable", async () => {
+    const pending = JSON.stringify([[{ key: "field/unit", expected: '"lb"', value: '"kg"' }]]);
+    saved.set("gym_pending_convex:alice", pending);
+    const status = vi.fn<() => void>();
+    const sync = new TrainingSync("alice", vi.fn<() => void>(), vi.fn<() => void>(), status);
+    vi.spyOn(localStorage, "setItem").mockImplementationOnce(() => {
+      throw new Error("Storage unavailable");
+    });
+    await expect(sync.start()).rejects.toThrow("Storage unavailable");
+    expect(saved.get("gym_pending_convex:alice")).toBe(pending);
+    expect(status).toHaveBeenLastCalledWith({ phase: "error", pending: 1 });
+    await sync.flush();
+    expect(fake.mutation).toHaveBeenCalledTimes(2);
+    expect(fake.mutation).toHaveBeenLastCalledWith(expect.anything(), {
+      changes: [{ key: "field/unit", expected: '"lb"', value: '"kg"' }],
+    });
+    expect(saved.get("gym_pending_convex:alice")).toBe("[]");
+    expect(status).toHaveBeenLastCalledWith({ phase: "saved", pending: 0 });
+    await sync.close();
+  });
+  it("retains edits admitted while a previous batch is in flight", async () => {
+    fake.query.mockResolvedValue({ restSec: 90 });
+    const sync = new TrainingSync("alice", vi.fn<() => void>(), vi.fn<() => void>());
+    await sync.start();
+    let acknowledge = vi.fn<(value: null) => void>();
+    const first = new Promise<null>((resolve) => {
+      acknowledge.mockImplementation(resolve);
+    });
+    fake.mutation.mockReturnValueOnce(first);
+    sync.enqueue({ restSec: 90 }, { restSec: 120 });
+    sync.enqueue({ restSec: 120 }, { restSec: 150 });
+    const pending = saved.get("gym_pending_convex:alice");
+    vi.spyOn(localStorage, "setItem").mockImplementationOnce(() => {
+      throw new Error("Storage unavailable");
+    });
+    const failedFlush = sync.flush();
+    acknowledge(null);
+    await expect(failedFlush).rejects.toThrow("Storage unavailable");
+    expect(saved.get("gym_pending_convex:alice")).toBe(pending);
+    expect(fake.mutation).toHaveBeenCalledTimes(1);
+    await sync.flush();
+    expect(fake.mutation).toHaveBeenCalledTimes(3);
+    expect(fake.mutation).toHaveBeenNthCalledWith(2, expect.anything(), {
+      changes: [{ key: "field/restSec", expected: "90", value: "120" }],
+    });
+    expect(fake.mutation).toHaveBeenNthCalledWith(3, expect.anything(), {
+      changes: [{ key: "field/restSec", expected: "120", value: "150" }],
+    });
+    expect(saved.get("gym_pending_convex:alice")).toBe("[]");
+    await sync.close();
+  });
+  it("replays after an acknowledgment storage failure without duplicate server effects", async () => {
+    const server = convexTest(schema, modules).withIdentity({ subject: "alice", service: true });
+    await server.mutation(convexApi.training.replace, {
+      state: JSON.stringify({ restSec: 90 }),
+      expected: null,
+    });
+    const snapshots: unknown[] = [];
+    fake.query.mockImplementation(() => server.query(convexApi.training.snapshot, {}));
+    fake.mutation.mockImplementation(async (_reference, args) => {
+      await server.mutation(convexApi.training.commit, args);
+      snapshots.push(await server.query(convexApi.training.snapshot, {}));
+      return null;
+    });
+    saved.set("gym_cache:alice", JSON.stringify({ restSec: 90 }));
+    const sync = new TrainingSync("alice", vi.fn<() => void>(), vi.fn<() => void>());
+    sync.enqueue({ restSec: 90 }, { restSec: 120 });
+    sync.enqueue({ restSec: 120 }, { restSec: 150 });
+    vi.spyOn(localStorage, "setItem").mockImplementationOnce(() => {
+      throw new Error("Storage unavailable");
+    });
+    await expect(sync.start()).rejects.toThrow("Storage unavailable");
+    await sync.close();
+
+    const reopened = new TrainingSync("alice", vi.fn<() => void>(), vi.fn<() => void>());
+    await reopened.start();
+    expect(fake.mutation).toHaveBeenCalledTimes(3);
+    expect(snapshots[0]).toMatchObject({ restSec: 120 });
+    expect(snapshots[1]).toEqual(snapshots[0]);
+    expect(snapshots[2]).toMatchObject({ restSec: 150 });
+    expect(saved.get("gym_pending_convex:alice")).toBe("[]");
+    await reopened.close();
+  });
+  it("keeps pending edits scoped to their original account after closing", async () => {
+    const alice = new TrainingSync("alice", vi.fn<() => void>(), vi.fn<() => void>());
+    alice.enqueue({ restSec: 90 }, { restSec: 120 });
+    await alice.close();
+    const bob = new TrainingSync("bob", vi.fn<() => void>(), vi.fn<() => void>());
+    bob.enqueue({ restSec: 90 }, { restSec: 180 });
+    await bob.close();
+    const bobPending = saved.get("gym_pending_convex:bob");
+
+    const reopened = new TrainingSync("alice", vi.fn<() => void>(), vi.fn<() => void>());
+    await reopened.start();
+    expect(fake.mutation).toHaveBeenCalledExactlyOnceWith(expect.anything(), {
+      changes: [{ key: "field/restSec", expected: null, value: "120" }],
+    });
+    expect(saved.get("gym_pending_convex:bob")).toBe(bobPending);
+    expect(saved.get("gym_pending_convex:alice")).toBe("[]");
+    await reopened.close();
+  });
   it("never sends active workouts or client timestamps", () => {
     expect(changesBetween({ _ts: 1, active: null }, { _ts: 2, active: null })).toEqual([]);
   });
@@ -91,6 +256,26 @@ describe("durable Convex edits", () => {
 });
 
 describe("reviewing competing edits", () => {
+  it("keeps the original queue when saving a conflict resolution fails", async () => {
+    const pending = JSON.stringify([[{ key: "field/restSec", expected: "90", value: "120" }]]);
+    saved.set("gym_pending_convex:alice", pending);
+    fake.query.mockResolvedValue({ restSec: 100 });
+    fake.mutation.mockRejectedValue(new Error("CONFLICT"));
+    const sync = new TrainingSync("alice", vi.fn<() => void>(), vi.fn<() => void>());
+    await expect(sync.start()).rejects.toThrow("CONFLICT");
+    const conflicts = await sync.conflicts();
+    const originalSetItem = localStorage.setItem.bind(localStorage);
+    vi.spyOn(localStorage, "setItem").mockImplementation((key, value) => {
+      if (key === "gym_pending_convex:alice") throw new Error("Storage unavailable");
+      originalSetItem(key, value);
+    });
+    await expect(sync.resolve(conflicts, "remote")).rejects.toThrow("Storage unavailable");
+    expect(saved.get("gym_pending_convex:alice")).toBe(pending);
+    expect(await sync.conflicts()).toEqual(conflicts);
+    await expect(sync.flush()).rejects.toThrow("CONFLICT");
+    expect(fake.mutation).toHaveBeenCalledTimes(2);
+    await sync.close();
+  });
   it("keeps unrelated edits when accepting another version", async () => {
     saved.set("gym_cache:alice", JSON.stringify({ unit: "kg", restSec: 90 }));
     saved.set(
