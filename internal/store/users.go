@@ -76,7 +76,7 @@ func (s *Store) Users() ([]User, error) {
 	rows, err := s.DB.Query(
 		`SELECT id, coalesce(name,''), coalesce(created,''), disabled, sv, admin,
 		        coalesce(invited_by,''), coalesce(last_reminder,'')
-		 FROM users ORDER BY created`, // created is empty for legacy imports; ordering then unspecified
+		 FROM users ORDER BY created`,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("store: list users: %w", err)

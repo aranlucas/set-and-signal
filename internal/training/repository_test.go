@@ -192,3 +192,21 @@ func TestTrainingDataRepositoryPutWorkoutUpsertsTypedWorkout(t *testing.T) {
 		t.Fatalf("workouts = %#v", data.Workouts)
 	}
 }
+
+func TestTrainingMutationPreservesCustomExerciseSnapshot(t *testing.T) {
+	st, repo := openTrainingRepositoryTest(t)
+	if err := st.WriteState("u1", jsontext.Value(`{"workouts":[{"id":"w1","d":"2026-09-01","start":1,"end":2,"name":"Custom","entries":[{"id":"deleted","sets":[],"muscleSnapshot":{"n":"Cable Press","bp":"chest","muscleWeights":{"chest":1,"triceps":0.5}}}],"prs":[],"vol":0}]}`)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := repo.PutBodyweight("u1", "2026-09-01", 80); err != nil {
+		t.Fatal(err)
+	}
+	data, err := repo.Load("u1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot := data.Workouts[0].Entries[0].MuscleSnapshot
+	if snapshot == nil || snapshot.N != "Cable Press" || snapshot.BP != "chest" || snapshot.MuscleWeights["triceps"] != 0.5 {
+		t.Fatalf("custom exercise snapshot changed: %#v", snapshot)
+	}
+}

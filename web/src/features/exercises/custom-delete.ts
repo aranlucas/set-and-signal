@@ -15,9 +15,7 @@ function removeCustomExerciseFromState(exercise: CustomEx | SheetEx): void {
     state.workouts.forEach((workout) =>
       workout.entries.forEach((entry) => {
         if (entry.id !== exercise.id) return;
-        // Keep both the old flat name and the canonical weighted snapshot: the former serves
-        // pre-snapshot readers, while the latter keeps recovery maps correct after deletion.
-        entry.n = exercise.n;
+        // Preserve the exercise metadata used by history and recovery maps.
         if (!entry.muscleSnapshot || Object.keys(entry.muscleSnapshot).length === 0)
           entry.muscleSnapshot = exerciseMuscleSnapshot(exercise);
       }),

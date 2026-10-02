@@ -3,13 +3,13 @@ package httpapi
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"net/http"
 	"slices"
 	"strings"
 	"time"
 
-	"github.com/aranlucas/set-and-signal/internal/sanitize"
 	"github.com/aranlucas/set-and-signal/internal/store"
 )
 
@@ -18,68 +18,45 @@ import (
 // credentials.
 
 // adminUserRow is one row of GET /api/admin/users.
-func (s *Server) adminUserRow(summary store.UserSummary) map[string]any {
+func (s *Server) adminUserRow(summary store.UserSummary) adminUserSummary {
 	u := summary.User
-	return map[string]any{
-		"id":          u.ID,
-		"name":        u.Name,
-		"created":     orNull(u.Created),
-		"disabled":    u.Disabled,
-		"admin":       s.isAdmin(&u),
-		"invitedBy":   orNull(u.InvitedBy),
-		"workouts":    summary.Workouts,
-		"lastWorkout": summary.LastWorkout,
-		"lastSync":    summary.LastSync,
-		"hasPush":     summary.HasPush,
-		"live":        s.livePayload(u.ID),
+	return adminUserSummary{
+		ID: u.ID, Name: u.Name, Created: orNull(u.Created), Disabled: u.Disabled,
+		Admin: s.isAdmin(&u), InvitedBy: orNull(u.InvitedBy),
+		Workouts: summary.Workouts, LastWorkout: summary.LastWorkout,
+		LastSync: summary.LastSync, HasPush: summary.HasPush, Live: s.livePayload(u.ID),
 	}
 }
 
 // livePayload renders the caller's presence entry exactly like upstream's
 // livePresence(): the raw heartbeat object with millisecond stamps, or null.
-func (s *Server) livePayload(uid string) any {
+func (s *Server) livePayload(uid string) *liveResponse {
 	p := s.Presence.Live(uid)
 	if p == nil {
 		return nil
 	}
-	return map[string]any{
-		"name":      p.Name,
-		"exIdx":     p.ExIdx,
-		"exTotal":   p.ExTotal,
-		"setsDone":  p.SetsDone,
-		"setsTotal": p.SetsTotal,
-		"startedAt": p.StartedAt.UnixMilli(),
-		"updatedAt": p.UpdatedAt.UnixMilli(),
+	return &liveResponse{
+		Name: p.Name, ExIdx: p.ExIdx, ExTotal: p.ExTotal,
+		SetsDone: p.SetsDone, SetsTotal: p.SetsTotal,
+		StartedAt: p.StartedAt.UnixMilli(), UpdatedAt: p.UpdatedAt.UnixMilli(),
 	}
 }
 
 // orNull ports `x || null` for strings.
-func orNull(s string) any {
+func orNull(s string) *string {
 	if s == "" {
 		return nil
 	}
-	return s
+	return new(s)
 }
 
-// falsyNull ports JS `v || null`: 0 / NaN / undefined become null.
-func falsyNull(v any) any {
-	if f, ok := v.(float64); ok && f != 0 {
-		return f
-	}
-	return nil
-}
-
-// readStateMap loads the user's blob for display; a missing row reads as {}.
-func (s *Server) readStateMap(uid string) (map[string]any, error) {
+// readStateDocument loads the open application document for display.
+func (s *Server) readStateDocument(uid string) (stateDocument, error) {
 	raw, err := s.ST.ReadState(uid)
 	if err != nil {
 		return nil, err
 	}
-	var st map[string]any
-	if err := json.Unmarshal(raw, &st); err != nil {
-		return nil, err
-	}
-	return st, nil
+	return decodeStateDocument(raw)
 }
 
 // GET /api/admin/users — one SQLite snapshot of the compact user summaries.
@@ -93,13 +70,15 @@ func (s *Server) adminUsers(w http.ResponseWriter, r *http.Request) {
 		serverError(w)
 		return
 	}
-	rows := make([]map[string]any, 0, len(users))
+	rows := make([]adminUserSummary, 0, len(users))
 	for _, u := range users {
 		rows = append(rows, s.adminUserRow(u))
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"users": rows, "invite_only": s.Cfg.InviteOnly, "now": time.Now().UnixMilli(),
-	})
+	writeJSON(w, http.StatusOK, struct {
+		Users      []adminUserSummary `json:"users"`
+		InviteOnly bool               `json:"invite_only"`
+		Now        int64              `json:"now"`
+	}{Users: rows, InviteOnly: s.Cfg.InviteOnly, Now: time.Now().UnixMilli()})
 }
 
 // GET /api/admin/user?id=… — drill-down: full workout history + body-weight
@@ -115,14 +94,20 @@ func (s *Server) adminUser(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusNotFound, "no such user")
 		return
 	}
-	st, err := s.readStateMap(u.ID)
+	st, err := s.readStateDocument(u.ID)
 	if err != nil {
 		serverError(w)
 		return
 	}
 
-	unit := st["unit"]
-	if unitStr, ok := unit.(string); !ok || unitStr == "" {
+	var unit string
+	_ = json.Unmarshal(st["unit"], &unit)
+	var lastSync *float64
+	_ = json.Unmarshal(st["_ts"], &lastSync)
+	if lastSync != nil && *lastSync == 0 {
+		lastSync = nil
+	}
+	if unit == "" {
 		unit = "lb"
 	}
 
@@ -132,44 +117,40 @@ func (s *Server) adminUser(w http.ResponseWriter, r *http.Request) {
 		Emoji string `json:"emoji"`
 		Count int    `json:"count"`
 	}
-	rawRoutines, _ := st["routines"].([]any)
-	routines := make([]routineSummary, 0, len(rawRoutines))
-	for _, e := range rawRoutines {
-		m, ok := e.(map[string]any)
-		if !ok {
+	routines := make([]routineSummary, 0)
+	for _, raw := range st.array("routines") {
+		if raw.Kind() != '{' {
 			continue
 		}
-		ex, _ := m["ex"].([]any)
-		routines = append(routines, routineSummary{
-			ID:    sanitize.JSString(m["id"]),
-			Name:  sanitize.JSString(m["name"]),
-			Emoji: sanitize.JSString(m["emoji"]),
-			Count: len(ex),
-		})
+		var routine struct {
+			ID    string           `json:"id"`
+			Name  string           `json:"name"`
+			Emoji string           `json:"emoji"`
+			Ex    []jsontext.Value `json:"ex"`
+		}
+		if json.Unmarshal(raw, &routine) != nil {
+			continue
+		}
+		routines = append(routines, routineSummary{ID: routine.ID, Name: routine.Name, Emoji: routine.Emoji, Count: len(routine.Ex)})
 	}
+	bodyweight := st.array("bodyweight")
+	workouts := st.array("workouts")
+	slices.Reverse(workouts)
 
-	bodyweight, _ := st["bodyweight"].([]any)
-	if bodyweight == nil {
-		bodyweight = []any{}
-	}
-
-	rawWorkouts, _ := st["workouts"].([]any)
-	workouts := make([]any, 0, len(rawWorkouts)) // newest first for display
-	for _, workout := range slices.Backward(rawWorkouts) {
-		workouts = append(workouts, workout)
-	}
-
-	writeJSON(w, http.StatusOK, map[string]any{
-		"user": map[string]any{
-			"id": u.ID, "name": u.Name,
-			"created": orNull(u.Created), "disabled": u.Disabled,
-			"admin": s.isAdmin(u), "invitedBy": orNull(u.InvitedBy),
+	writeJSON(w, http.StatusOK, struct {
+		User       adminUserPayload `json:"user"`
+		Unit       string           `json:"unit"`
+		LastSync   *float64         `json:"lastSync"`
+		Routines   []routineSummary `json:"routines"`
+		Bodyweight []jsontext.Value `json:"bodyweight"`
+		Workouts   []jsontext.Value `json:"workouts"`
+	}{
+		User: adminUserPayload{
+			ID: u.ID, Name: u.Name, Created: orNull(u.Created), Disabled: u.Disabled,
+			Admin: s.isAdmin(u), InvitedBy: orNull(u.InvitedBy),
 		},
-		"unit":       unit,
-		"lastSync":   falsyNull(st["_ts"]),
-		"routines":   routines,
-		"bodyweight": bodyweight,
-		"workouts":   workouts,
+		Unit: unit, LastSync: lastSync, Routines: routines,
+		Bodyweight: bodyweight, Workouts: workouts,
 	})
 }
 
@@ -181,13 +162,13 @@ func (s *Server) adminDisable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		ID       any `json:"id"`
-		Disabled any `json:"disabled"`
+		ID       string `json:"id" validate:"required"`
+		Disabled bool   `json:"disabled"`
 	}
-	if !readJSON(w, r, &body) {
+	if !readValidatedJSON(w, r, &body) {
 		return
 	}
-	u, err := s.ST.UserByID(sanitize.JSString(body.ID)) // upstream finds disabled users too
+	u, err := s.ST.UserByID(body.ID) // upstream finds disabled users too
 	if err != nil || u == nil {
 		writeErr(w, http.StatusNotFound, "no such user")
 		return
@@ -196,7 +177,7 @@ func (s *Server) adminDisable(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusBadRequest, "cannot disable an admin")
 		return
 	}
-	disabled := jsTruthy(body.Disabled) // !!body.disabled
+	disabled := body.Disabled
 	if err := s.ST.SetDisabled(u.ID, disabled); err != nil {
 		serverError(w)
 		return
@@ -204,7 +185,11 @@ func (s *Server) adminDisable(w http.ResponseWriter, r *http.Request) {
 	if disabled {
 		s.Presence.Delete(u.ID)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "id": u.ID, "disabled": disabled})
+	writeJSON(w, http.StatusOK, struct {
+		OK       bool   `json:"ok"`
+		ID       string `json:"id"`
+		Disabled bool   `json:"disabled"`
+	}{OK: true, ID: u.ID, Disabled: disabled})
 }
 
 // GET /api/admin/invites — every invite plus usedBy uid → name resolved for
@@ -219,22 +204,23 @@ func (s *Server) adminInvites(w http.ResponseWriter, r *http.Request) {
 		serverError(w)
 		return
 	}
-	out := make([]map[string]any, 0, len(invites))
+	out := make([]inviteResponse, 0, len(invites))
 	for _, i := range invites {
-		var usedByName any
+		var usedByName *string
 		if i.UsedBy != "" {
 			if u, err := s.ST.UserByID(i.UsedBy); err == nil && u != nil { // upstream finds disabled users too
-				usedByName = u.Name
+				usedByName = new(u.Name)
 			}
 		}
-		out = append(out, map[string]any{
-			"code": i.Code, "note": i.Note,
-			"createdBy": i.CreatedBy, "created": i.Created,
-			"usedBy": i.UsedBy, "usedAt": i.UsedAt, "revoked": i.Revoked,
-			"usedByName": usedByName,
+		out = append(out, inviteResponse{
+			Code: i.Code, Note: i.Note, CreatedBy: i.CreatedBy, Created: i.Created,
+			UsedBy: i.UsedBy, UsedAt: i.UsedAt, Revoked: i.Revoked, UsedByName: usedByName,
 		})
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"invites": out, "invite_only": s.Cfg.InviteOnly})
+	writeJSON(w, http.StatusOK, struct {
+		Invites    []inviteResponse `json:"invites"`
+		InviteOnly bool             `json:"invite_only"`
+	}{Invites: out, InviteOnly: s.Cfg.InviteOnly})
 }
 
 // POST /api/admin/invites/new — mints a 16-hex-char code (64 bits; the app
@@ -247,9 +233,9 @@ func (s *Server) adminNewInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		Note any `json:"note"`
+		Note string `json:"note" validate:"max=60"`
 	}
-	if !readJSON(w, r, &body) {
+	if !readValidatedJSON(w, r, &body) {
 		return
 	}
 	existing, err := s.ST.Invites()
@@ -275,7 +261,7 @@ func (s *Server) adminNewInvite(w http.ResponseWriter, r *http.Request) {
 	}
 	invite := store.Invite{
 		Code:      code,
-		Note:      jsSlice(sanitize.JSString(body.Note), 60),
+		Note:      body.Note,
 		CreatedBy: admin.ID,
 		Created:   time.Now().UTC().Format("2006-01-02T15:04:05.000Z07:00"),
 	}
@@ -283,7 +269,9 @@ func (s *Server) adminNewInvite(w http.ResponseWriter, r *http.Request) {
 		serverError(w)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"invite": invite})
+	writeJSON(w, http.StatusOK, struct {
+		Invite store.Invite `json:"invite"`
+	}{Invite: invite})
 }
 
 // POST /api/admin/invites/revoke — deletes an unused code; used codes stay
@@ -294,12 +282,12 @@ func (s *Server) adminRevokeInvite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		Code any `json:"code"`
+		Code string `json:"code" validate:"required"`
 	}
-	if !readJSON(w, r, &body) {
+	if !readValidatedJSON(w, r, &body) {
 		return
 	}
-	code := strings.ToUpper(sanitize.JSString(body.Code))
+	code := strings.ToUpper(body.Code)
 	invites, err := s.ST.Invites()
 	if err != nil {
 		serverError(w)
@@ -324,5 +312,5 @@ func (s *Server) adminRevokeInvite(w http.ResponseWriter, r *http.Request) {
 		serverError(w)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+	writeJSON(w, http.StatusOK, okResponse{OK: true})
 }

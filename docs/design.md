@@ -77,9 +77,8 @@ not hide the control behind animation.
 ## Compatibility boundary
 
 The public identity is Set & Signal, and the Go module follows the public source
-repository at `github.com/aranlucas/set-and-signal`. The following runtime and
-migration identifiers remain unchanged on purpose: binaries `opengym-api` and
-`opengym-import`; database `opengym.db`; browser key `gym_state_v1`; export key
+repository at `github.com/aranlucas/set-and-signal`. The following runtime
+identifiers remain unchanged on purpose: binary `opengym-api`; database `opengym.db`; browser key `gym_state_v1`; export key
 `opengym_plan`; mobile file `workset-state.json`; native app id
 `ch.duarte-santos.opengym2`; and the OAuth scope `workset`. Do not rename these
 without a compatible data and deployment migration.

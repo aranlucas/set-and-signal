@@ -134,7 +134,7 @@ describe("setLabel", () => {
     expect(setLabel(LIFT, { sec: 90, w: 20 }, { mode: "time" })).toBe("1:30 · 20");
   });
 
-  it("reads a legacy set with no config exactly as before", () => {
+  it("reads an unplanned set without config", () => {
     expect(setLabel(LIFT, { w: 0, r: 0 })).toBe("0×0");
     expect(setLabel(CARDIO, {})).toBe("0 min @ 0 km/h");
   });
@@ -173,48 +173,10 @@ describe("effortOf", () => {
     expect(effortOf({})).toBe("none");
   });
 
-  it("keeps the column for a profile still carrying the old showRir flag", () => {
-    expect(effortOf({ showRir: true })).toBe("rir");
-    // what a stored profile actually looks like once it is overlaid on DEF
-    expect(effortOf({ effort: null, showRir: true })).toBe("rir");
+  it("uses no column until a scale is chosen", () => {
     expect(effortOf({ effort: null })).toBe("none");
-    expect(effortOf({ showRir: false })).toBe("none");
-    // once the new setting is chosen it wins, whatever the old flag said
-    expect(effortOf({ showRir: true, effort: "rpe" })).toBe("rpe");
-    expect(effortOf({ showRir: true, effort: "none" })).toBe("none");
-  });
-
-  // The store cannot be imported here (it reaches for `navigator` at module load), so the
-  // overlay it performs is reproduced literally: stored profile spread over the defaults.
-  // DEF.effort is null precisely so this lands on the showRir fallback rather than on 'none'.
-  const overlay = (stored: { effort?: string | null; showRir?: boolean }) => ({
-    unit: "kg",
-    effort: null,
-    ...stored,
-  });
-
-  it("survives the overlay every load path performs", () => {
-    // upgrading with the column on: local state, a server pull and a restored backup all
-    // arrive as a stored object spread over the defaults, and all must keep the column
-    expect(effortOf(overlay({ showRir: true }))).toBe("rir");
-    expect(effortOf(overlay({ showRir: false }))).toBe("none");
-    // a profile predating the RIR feature entirely
-    expect(effortOf(overlay({}))).toBe("none");
-    // and one written by this version
-    expect(effortOf(overlay({ effort: "rpe" }))).toBe("rpe");
-    // an old backup restored over a profile that had already chosen: the file wins, because
-    // an import replaces state wholesale rather than merging
-    expect(effortOf(overlay({ showRir: true, effort: undefined }))).toBe("rir");
-  });
-
-  it("is not fooled by a junk value", () => {
-    expect(effortOf({ effort: "rpe10" })).toBe("none");
-    expect(effortOf({ effort: "RIR" })).toBe("none");
-    expect(effortOf({ effort: "f" })).toBe("none");
     expect(effortOf(null)).toBe("none");
     expect(effortOf()).toBe("none");
-    // a junk value with the old flag still set falls back rather than showing nothing
-    expect(effortOf({ effort: "nope", showRir: true })).toBe("rir");
   });
 });
 

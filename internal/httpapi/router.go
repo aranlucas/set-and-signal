@@ -58,7 +58,6 @@ func Router(s *Server) http.Handler {
 	r.Post("/api/logout/all", s.logoutAll)
 
 	r.Get("/api/data", s.getData)
-	r.Put("/api/data", s.putData)
 
 	r.Post("/api/routine", s.postRoutine)
 	r.Post("/api/routines", s.postRoutines)
@@ -110,7 +109,7 @@ func Router(s *Server) http.Handler {
 type callerKey struct{}
 
 // caller is the resolved request identity. viaCookie distinguishes cookie
-// sessions from OAuth bearer tokens: whole-state PUT, /api/me, logout/all and
+// sessions from OAuth bearer tokens: /api/me, logout/all and
 // the admin surface stay cookie-only.
 type caller struct {
 	user      *store.User
@@ -226,8 +225,8 @@ func (s *Server) isAdmin(u *store.User) bool {
 }
 
 // userPayload is the {id,name,admin} shape every auth success returns.
-func (s *Server) userPayload(u store.User) map[string]any {
-	return map[string]any{"id": u.ID, "name": u.Name, "admin": s.isAdmin(&u)}
+func (s *Server) userPayload(u store.User) userPayload {
+	return userPayload{ID: u.ID, Name: u.Name, Admin: s.isAdmin(&u)}
 }
 
 // ---------- cookies ----------

@@ -1,10 +1,32 @@
 package training
 
 import (
+	"encoding/json/v2"
 	"reflect"
 	"strings"
 	"testing"
 )
+
+func TestOptionalLoggedSetScalarsPreserveZeroValues(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		set  MCPLoggedSet
+		want string
+	}{
+		{"omitted", MCPLoggedSet{}, `{"done":false}`},
+		{"explicit", MCPLoggedSet{W: new(0.0), RIR: new(0.0), WU: new(false)}, `{"done":false,"w":0,"rir":0,"wu":false}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			raw, err := json.Marshal(tc.set)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(raw) != tc.want {
+				t.Fatalf("logged set JSON = %s, want %s", raw, tc.want)
+			}
+		})
+	}
+}
 
 // MCP DTOs are deliberately closed graphs.  A map[string]any hidden inside a
 // nested output is just as harmful as one on the top-level tool result, so

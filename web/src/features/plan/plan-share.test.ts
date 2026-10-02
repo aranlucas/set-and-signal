@@ -26,17 +26,20 @@ describe("multi-session plan sharing", () => {
     expect(sessions[1].routineId).not.toBe("run");
   });
 
-  it("still imports legacy version-one schedules", () => {
-    const parsed = parsePlan(
-      JSON.stringify({
-        opengym_plan: 1,
-        exported: "2026-09-15",
-        name: "Legacy",
-        routines: [],
-        customEx: [],
-        week: { 2: "a" },
-      }),
-    );
-    expect(parsed.week).toEqual({ 2: [{ routineId: "a" }] });
+  it.each([
+    { opengym_plan: 1, week: { 2: [{ routineId: "a" }] } },
+    { opengym_plan: 2, week: { 2: "a" } },
+  ])("rejects obsolete plan formats: %j", (fields) => {
+    expect(() =>
+      parsePlan(
+        JSON.stringify({
+          ...fields,
+          exported: "2026-09-15",
+          name: "Plan",
+          routines: [],
+          customEx: [],
+        }),
+      ),
+    ).toThrow(/Set & Signal plan file/u);
   });
 });

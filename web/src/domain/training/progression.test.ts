@@ -620,7 +620,7 @@ describe("sessionsFor", () => {
     expect(sessionsFor(state, LIFT).map((s) => s.d)).toEqual(["2026-01-01"]);
   });
 
-  it("reads a legacy entry that has no target without crashing", () => {
+  it("reads a imported entry that has no target without crashing", () => {
     const state = {
       unit: "kg" as const,
       workouts: [
@@ -634,11 +634,10 @@ describe("sessionsFor", () => {
   });
 });
 
-// Workouts only began storing their prescription in v1.2.2. Everything logged before that is
-// targetless, and reading it as "missed" would tell every long-standing user to deload on
-// their first session after updating — which is exactly what the demo history did.
+// CSV imports contain performed sets without prescribed targets.
+
 describe("history logged before targets were recorded", () => {
-  const legacy = (rows: number[][]) => ({
+  const importedHistory = (rows: number[][]) => ({
     unit: "kg" as const,
     workouts: rows.map((row, i) => ({
       d: "2026-03-" + String(i + 1).padStart(2, "0"),
@@ -659,24 +658,27 @@ describe("history logged before targets were recorded", () => {
   };
 
   it("judges a targetless session against the current plan instead of calling it a miss", () => {
-    const p = nextPrescription(legacy([[60, 5, 5, 5]]), cfg);
+    const p = nextPrescription(importedHistory([[60, 5, 5, 5]]), cfg);
     expect(p.kind).toBe("up");
     expect(p.weight).toBe(62.5);
   });
 
   it("does not manufacture a stall out of a long clean history", () => {
-    const p = nextPrescription(legacy(Array.from({ length: 11 }, () => [60, 5, 5, 5])), cfg);
+    const p = nextPrescription(
+      importedHistory(Array.from({ length: 11 }, () => [60, 5, 5, 5])),
+      cfg,
+    );
     expect(p.kind).toBe("up");
   });
 
   it("still spots a genuine miss in old data", () => {
-    expect(nextPrescription(legacy([[60, 5, 5, 2]]), cfg).kind).toBe("hold");
+    expect(nextPrescription(importedHistory([[60, 5, 5, 2]]), cfg).kind).toBe("hold");
   });
 
   it("matches the weight hint the app showed before this engine existed", () => {
     // Old rule: every set at or above the plan's reps, with a real weight → suggest a step up.
-    expect(nextPrescription(legacy([[60, 5, 6, 5]]), cfg).weight).toBe(62.5);
-    expect(nextPrescription(legacy([[60, 5, 4, 5]]), cfg).kind).toBe("hold");
+    expect(nextPrescription(importedHistory([[60, 5, 6, 5]]), cfg).weight).toBe(62.5);
+    expect(nextPrescription(importedHistory([[60, 5, 4, 5]]), cfg).kind).toBe("hold");
   });
 });
 

@@ -27,7 +27,7 @@ read/write MCP surface protected by the same account boundary as the web app.
 
 Requires Go 1.27+, Node.js 24+, pnpm 12+, PostgreSQL-compatible Convex
 deployment, and an OAuth or passkey configuration. The API refuses to start
-without `CONVEX_URL`; the full training setup and migration rules are in
+without `CONVEX_URL`; the full training setup and storage rules are in
 [docs/convex.md](docs/convex.md).
 
 ```bash
@@ -96,17 +96,17 @@ people need are:
 ## Further documentation
 
 - [Architecture](docs/architecture.md) — dependency direction and build layout.
-- [Convex setup and migration](docs/convex.md) — hosted training ownership,
-  offline queues, keys, and rollback precautions.
-- [Data model](docs/data-model.md) — storage ownership and compatibility notes.
+- [Convex setup and storage](docs/convex.md) — hosted training ownership,
+  offline queues, keys, and current format requirements.
+- [Data model](docs/data-model.md) — storage ownership and current contracts.
 - [Product](docs/product.md) and [design](docs/design.md) — user flows and UI
   constraints.
 - [Railway deployment](.railway/README.md) — infrastructure configuration.
 
 ## Status and privacy
 
-The repository is an active, self-hosted application with a production-shaped
-Convex migration path. Training records are account-scoped, but a deployment's
+The repository is an active, self-hosted application with hosted
+Convex training storage. Training records are account-scoped, but a deployment's
 operator controls the API, Convex project, and persistent volume. Review
 `SECURITY.md` and configure access controls before exposing an instance to
 other users.

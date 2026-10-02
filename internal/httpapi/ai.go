@@ -2,12 +2,13 @@ package httpapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"net/http"
 
 	"github.com/aranlucas/set-and-signal/internal/ai"
-	"github.com/aranlucas/set-and-signal/internal/sanitize"
+	"github.com/aranlucas/set-and-signal/internal/validation"
 )
 
 // AI workout planning (server.js lines 664–705). GET status is public;
@@ -54,7 +55,7 @@ func (s *Server) postAINextWorkout(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &body) {
 		return
 	}
-	parsed, code, errMsg := s.nextWorkoutSuggestion(body.Digest)
+	parsed, code, errMsg := s.nextWorkoutSuggestion(r.Context(), body.Digest)
 	if code != 0 {
 		writeErr(w, code, errMsg)
 		return
@@ -63,27 +64,23 @@ func (s *Server) postAINextWorkout(w http.ResponseWriter, r *http.Request) {
 }
 
 // nextWorkoutSuggestion is the pipeline shared by the HTTP route and the MCP
-// tool: digest size cap → provider chat → JSON extraction → paranoid
-// cleaning. A zero code means success and parsed holds
+// tool: digest size cap → provider chat → JSON extraction → validation. A zero code means success and parsed holds
 // {summary, entries}; otherwise code/msg carry the HTTP-mapped failure so
 // both surfaces answer identically.
-func (s *Server) nextWorkoutSuggestion(digest jsontext.Value) (MCPSuggestionOutput, int, string) {
-	return s.nextWorkoutSuggestionJSON(compactDigestJSON(digest))
+func (s *Server) nextWorkoutSuggestion(ctx context.Context, digest jsontext.Value) (MCPSuggestionOutput, int, string) {
+	return s.nextWorkoutSuggestionJSON(ctx, compactDigestJSON(digest))
 }
 
 // nextWorkoutSuggestionMCP is the typed MCP entry point. The MCP handler
 // passes the closed MCPTrainingDigest graph directly, and receives the
 // closed MCPSuggestionOutput graph directly; no generic output decoder or
 // JSON round-trip sits between the AI response and the MCP contract.
-func (s *Server) nextWorkoutSuggestionMCP(digest MCPTrainingDigest) (MCPSuggestionOutput, int, string) {
-	return s.nextWorkoutSuggestionJSON(marshalTrainingDigest(digest))
+func (s *Server) nextWorkoutSuggestionMCP(ctx context.Context, digest MCPTrainingDigest) (MCPSuggestionOutput, int, string) {
+	return s.nextWorkoutSuggestionJSON(ctx, marshalTrainingDigest(digest))
 }
 
-// nextWorkoutSuggestionJSON contains the provider and sanitization pipeline.
-// The provider's response is necessarily decoded through the existing AI
-// extractor, but the result exposed to MCP is built field-by-field from the
-// allow-listed sanitize.Suggestion values.
-func (s *Server) nextWorkoutSuggestionJSON(raw []byte) (MCPSuggestionOutput, int, string) {
+// nextWorkoutSuggestionJSON decodes and validates the provider response into the shared DTO.
+func (s *Server) nextWorkoutSuggestionJSON(ctx context.Context, raw []byte) (MCPSuggestionOutput, int, string) {
 	const unavailable = "AI planning is not configured on this instance (set OPENROUTER_API_KEY)"
 	if !s.aiEnabled() {
 		return MCPSuggestionOutput{}, http.StatusServiceUnavailable, unavailable
@@ -95,7 +92,7 @@ func (s *Server) nextWorkoutSuggestionJSON(raw []byte) (MCPSuggestionOutput, int
 		return MCPSuggestionOutput{}, http.StatusRequestEntityTooLarge, "digest too large"
 	}
 
-	text, err := s.AI.Chat([]ai.Message{
+	text, err := s.AI.Chat(ctx, []ai.Message{
 		{Role: "system", Content: systemPrompt},
 		{Role: "user", Content: "Training log digest (JSON):\n" + string(raw)},
 	})
@@ -103,47 +100,28 @@ func (s *Server) nextWorkoutSuggestionJSON(raw []byte) (MCPSuggestionOutput, int
 		return MCPSuggestionOutput{}, http.StatusBadGateway, "AI provider error: " + err.Error()
 	}
 
-	obj, err := ai.ExtractJSON(text)
-	if err != nil {
+	var plan MCPSuggestionOutput
+	if err := json.Unmarshal([]byte(text), &plan, json.RejectUnknownMembers(true)); err != nil {
 		return MCPSuggestionOutput{}, http.StatusBadGateway, "AI reply was not valid JSON — try again"
 	}
-	entries := make([]MCPSuggestionEntry, 0, 30)
-	if list, ok := obj["entries"].([]any); ok {
-		for _, e := range list {
-			cleaned := sanitize.CleanSuggestion(e)
-			if cleaned == nil {
-				continue
-			}
-			entries = append(entries, mcpSuggestionEntry(cleaned))
-			if len(entries) == 30 {
-				break
+	if err := validation.Validator.Struct(plan); err != nil {
+		return MCPSuggestionOutput{}, http.StatusBadGateway, "AI reply failed validation — try again"
+	}
+	if plan.Summary == "" && len(plan.Entries) == 0 {
+		return MCPSuggestionOutput{}, http.StatusBadGateway, "AI reply was empty — try again"
+	}
+	if plan.Entries == nil {
+		plan.Entries = []MCPSuggestionEntry{}
+	}
+	for i := range plan.Entries {
+		entry := &plan.Entries[i]
+		for _, field := range []**float64{&entry.Sets, &entry.Reps, &entry.Weight, &entry.Sec, &entry.Min, &entry.Speed} {
+			if *field != nil {
+				*field = new(roundHundredths(**field))
 			}
 		}
 	}
-	if !hasSummary(obj["summary"]) && len(entries) == 0 { // upstream throws 'empty'
-		return MCPSuggestionOutput{}, http.StatusBadGateway, "AI reply was not valid JSON — try again"
-	}
-
-	return MCPSuggestionOutput{
-		Summary: jsSlice(sanitize.JSString(obj["summary"]), 800), // String(obj.summary || '').slice(0, 800)
-		Entries: entries,
-	}, 0, ""
-}
-
-// hasSummary ports `!obj.summary`: only JS-falsy summaries count as missing.
-func hasSummary(v any) bool {
-	switch t := v.(type) {
-	case nil:
-		return false
-	case bool:
-		return t
-	case float64:
-		return t != 0
-	case string:
-		return t != ""
-	default:
-		return true
-	}
+	return plan, 0, ""
 }
 
 // marshalTrainingDigest is JSON.stringify for the typed MCP digest. JSON v2
@@ -169,19 +147,4 @@ func compactDigestJSON(digest jsontext.Value) []byte {
 		return nil
 	}
 	return compact
-}
-
-// mcpSuggestionEntry renders only fields that survived cleanSuggestion into
-// the closed MCP DTO. Empty swap/note values remain omitted from JSON.
-func mcpSuggestionEntry(sg *sanitize.Suggestion) MCPSuggestionEntry {
-	entry := MCPSuggestionEntry{ID: sg.ID, Sets: sg.Sets, Reps: sg.Reps, Weight: sg.Weight, Sec: sg.Sec, Min: sg.Min, Speed: sg.Speed}
-	if sg.SwapTo != "" {
-		value := sg.SwapTo
-		entry.SwapTo = &value
-	}
-	if sg.Note != "" {
-		value := sg.Note
-		entry.Note = &value
-	}
-	return entry
 }

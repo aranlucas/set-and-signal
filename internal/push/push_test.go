@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -66,7 +67,7 @@ func (f *fakePushService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (f *fakePushService) all() []capturedSend {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	return append([]capturedSend(nil), f.sends...)
+	return slices.Clone(f.sends)
 }
 
 func (f *fakePushService) count() int { return len(f.all()) }
@@ -215,10 +216,10 @@ func reminderStateDoc(hhmm string) map[string]any {
 	return map[string]any{
 		"reminder": map[string]any{"on": true, "tz": "UTC", "time": hhmm},
 		"routines": []map[string]any{
-			{"id": "push", "name": "Push Day", "emoji": "💪"},
-			{"id": "legs", "name": "Leg Day", "emoji": "🦵"},
+			{"id": "push", "name": "Push Day", "emoji": "arm"},
+			{"id": "legs", "name": "Leg Day", "emoji": "legs"},
 		},
-		"week": map[string]string{"1": "push", "2": "legs", "3": "push", "4": "legs", "5": "push"},
+		"week": training.WeekSchedule{"1": {{RoutineID: "push"}}, "2": {{RoutineID: "legs"}}, "3": {{RoutineID: "push"}}, "4": {{RoutineID: "legs"}}, "5": {{RoutineID: "push"}}},
 	}
 }
 
@@ -423,10 +424,10 @@ func TestReminderLoopFiresOncePerDayWithInjectedNow(t *testing.T) {
 
 		sends := h.fake.all()
 		first, last := sends[0], sends[len(sends)-1]
-		if first.Payload.Title != "💪 Push Day today" || first.Payload.Body != "It's on your plan — let's go 💪" {
+		if first.Payload.Title != "Push Day today" || first.Payload.Body != "It's on your plan — let's go 💪" {
 			t.Fatalf("unexpected first reminder payload: %+v", first.Payload)
 		}
-		if last.Payload.Title != "🦵 Leg Day today" || last.Payload.Body != "It's on your plan — let's go 💪" {
+		if last.Payload.Title != "Leg Day today" || last.Payload.Body != "It's on your plan — let's go 💪" {
 			t.Fatalf("unexpected second reminder payload: %+v", last.Payload)
 		}
 
@@ -486,7 +487,7 @@ func TestReminderLoopSkipsWhenNothingPlanned(t *testing.T) {
 			name: "dayPlan rest override",
 			state: func() map[string]any {
 				d := reminderStateDoc("07:30")
-				d["dayPlan"] = map[string]any{"2026-08-24": "rest"}
+				d["dayPlan"] = training.DayPlanMap{"2026-08-24": {Rest: true}}
 				return d
 			}(),
 			date: "2026-08-24", hhmm: "07:30", ok: true, subbed: true,
@@ -495,7 +496,7 @@ func TestReminderLoopSkipsWhenNothingPlanned(t *testing.T) {
 			name: "week slot empty",
 			state: func() map[string]any {
 				d := reminderStateDoc("07:30")
-				d["week"] = map[string]string{}
+				d["week"] = training.WeekSchedule{}
 				return d
 			}(),
 			date: "2026-08-26", hhmm: "07:30", ok: true, subbed: true,
@@ -595,7 +596,6 @@ func TestReminderKeepsRemainingSessionsAndHonorsEmptyOverride(t *testing.T) {
 		{"second routine remains", nil, []map[string]any{{"d": "2026-08-24", "routineId": "push"}}, "legs"},
 		{"all complete", nil, []map[string]any{{"d": "2026-08-24", "routineId": "push"}, {"d": "2026-08-24", "routineId": "legs"}}, ""},
 		{"empty override", map[string]any{"sessions": []any{}}, nil, ""},
-		{"legacy empty object", map[string]any{}, nil, ""},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			doc := reminderStateDoc("07:30")

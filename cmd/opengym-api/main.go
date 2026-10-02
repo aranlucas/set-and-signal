@@ -112,21 +112,6 @@ func wire(cfg config.Config) (*app, error) {
 		if err != nil {
 			return nil, err
 		}
-		users, err := st.Users()
-		if err != nil {
-			return nil, err
-		}
-		for _, u := range users {
-			raw, err := st.ReadState(u.ID)
-			if err != nil {
-				return nil, err
-			}
-			if string(raw) != "null" {
-				if err := convexClient.Import(u.ID, raw); err != nil {
-					return nil, fmt.Errorf("migrate training: %w", err)
-				}
-			}
-		}
 		st.Training = convexClient
 	}
 	sess, err := auth.NewSessions(cfg.DataDir, cfg.SessionDays)

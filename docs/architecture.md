@@ -11,7 +11,7 @@ home.
 .
 ├── cmd/
 │   ├── opengym-api/       # production server entry point
-│   └── opengym-import/    # one-shot legacy data importer
+│   └── opengym-convex-key/ # signing-key initialization
 ├── internal/
 │   ├── httpapi/           # HTTP routes, auth guards, static SPA and MCP transport
 │   ├── training/          # training model, repository, analytics and prescriptions

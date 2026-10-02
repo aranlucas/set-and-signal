@@ -20,7 +20,7 @@ export function effectiveSessions(appState: ScheduleState, iso: IsoDate): DaySes
     if (override.rest) return [];
     const sessions = validSessions(appState, override.sessions);
     if (sessions.length || !override.sessions?.length) return sessions;
-    // Preserve legacy fallback when all override routines have been deleted.
+    // Use the weekly schedule when all override routines have been deleted.
   }
   const weekday = weekdayOf(new Date(`${iso}T12:00:00`));
   return weekSessions(appState, weekday);

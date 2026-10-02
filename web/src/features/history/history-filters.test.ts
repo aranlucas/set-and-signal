@@ -57,7 +57,7 @@ describe("filterHistoryWorkouts", () => {
         name: "Upper strength",
         routineId: "routine-b",
         note: "Felt crisp",
-        entries: [{ id: "bench", n: "Bench press", sets: [] }],
+        entries: [{ id: "bench", muscleSnapshot: { n: "Bench press" }, sets: [] }],
       }),
       workout({ id: "other", name: "Leg day", routineId: "routine-a" }),
     ];

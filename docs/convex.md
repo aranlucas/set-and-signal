@@ -19,8 +19,9 @@ existing typed mutation callbacks use a bounded compare-and-swap retry against
 the profile revision. Only a server-signed service identity can replace a
 snapshot. Browser identities cannot call that operation or select another user.
 
-The old `/api/data` read remains for integrations/export compatibility. Hosted
-whole-profile PUT returns 410; browsers use Convex mutations instead.
+The authenticated `/api/data` read returns a snapshot for integrations and
+exports. Browsers write through Convex mutations; there is no whole-profile
+HTTP upload endpoint.
 
 ## Offline behavior and recovery
 
@@ -73,26 +74,28 @@ configuration. Start Go with `CONVEX_URL` set to the matching cloud URL and
 `PUBLIC_URL` matching `AUTH_ISSUER`. The browser learns the URL from its
 authenticated `/api/convex/token` response; it needs no deployment secret.
 
-## Migration and rollback
+## Current formats and storage
 
-On startup with Convex configured, Go imports each existing SQLite profile
-only if that owner has no Convex profile. It does not overwrite existing Convex
-data. Imports stop rather than silently round JSON numbers that cannot survive the
-JavaScript number boundary. The original snapshot remains available for repair.
-Subsequent training reads and writes go to Convex; SQLite snapshots are
-retained unchanged as pre-migration backups. Accounts and credentials stay in
-SQLite. Back up SQLite and the API key files before a production cutover.
+The API reads and writes training records in the configured Convex deployment.
+Startup does not import SQLite training snapshots. Accounts and credentials
+remain in SQLite; its schema migrations still create and maintain those tables.
+The one-shot Node JSON importer has been removed.
 
-Do not roll back by simply pointing a live app at the old snapshots: they do
-not contain edits made after migration. Export current Convex profiles through
-the authenticated read API first, then validate and restore them to the old
-version if a rollback is needed. The production cutover backup is
-`/data/pre-convex-20260907.db` on the Railway volume.
+Weekly schedules contain ordered arrays of session objects. Calendar overrides
+contain either `{ "rest": true }` or an explicit `sessions` array, including an
+empty array to clear a day. Plan files use `opengym_plan: 2`. Older string-based
+schedules, version-one plans, and pre-versioned browser user keys are not
+converted. Session cookies must include the current session version; older
+cookies require signing in again.
+
+This code change does not delete stored profiles or backup files. Export current
+Convex profiles through the authenticated read API before changing storage
+backends. Existing SQLite snapshots do not receive edits made in Convex.
 
 ## Verification
 
 Web tests exercise real Convex functions with `convex-test`: owner isolation,
-service/browser separation, CAS conflicts, retry idempotency, migration guards,
+service/browser separation, CAS conflicts, retry idempotency,
 and record ordering. Go tests verify token claims and CAS retries. The opt-in
 `TestLiveDevelopment` uses synthetic users against a configured development
 deployment; it never reads real profiles.

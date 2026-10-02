@@ -10,7 +10,7 @@ import (
 func aptFullBody() MCPRoutine {
 	prog := "linear"
 	ex := func(id string) MCPExConfig {
-		return MCPExConfig{ID: id, Sets: f(3), Reps: f(8), Weight: f(0)}
+		return MCPExConfig{ID: id, Sets: new(3.0), Reps: new(8.0), Weight: new(0.0)}
 	}
 	return MCPRoutine{
 		ID: "apt-full-body", Name: "Apartment Full Body", Emoji: "dumbbell", Prog: &prog,
@@ -33,10 +33,10 @@ func aptView(workouts ...MCPWorkout) TrainingData {
 func gobletEntry(weight float64, reps ...float64) MCPWorkoutEntry {
 	sets := make([]MCPLoggedSet, 0, len(reps))
 	for _, r := range reps {
-		sets = append(sets, MCPLoggedSet{Done: true, W: f(weight), R: f(r)})
+		sets = append(sets, MCPLoggedSet{Done: true, W: new(float64(weight)), R: new(float64(r))})
 	}
 	return MCPWorkoutEntry{
-		ID: "1760", Target: &MCPExConfig{ID: "1760", Sets: f(3), Reps: f(8), Weight: f(weight)}, Sets: sets,
+		ID: "1760", Target: &MCPExConfig{ID: "1760", Sets: new(3.0), Reps: new(8.0), Weight: new(float64(weight))}, Sets: sets,
 	}
 }
 
@@ -70,7 +70,7 @@ func TestLinearTwoMissesDeload(t *testing.T) {
 func TestWarmupsAreIgnoredForProgression(t *testing.T) {
 	wu := true
 	entry := gobletEntry(155, 8, 8, 8)
-	entry.Sets = append([]MCPLoggedSet{{Done: true, W: f(95), R: f(8), WU: &wu}}, entry.Sets...)
+	entry.Sets = append([]MCPLoggedSet{{Done: true, W: new(95.0), R: new(8.0), WU: &wu}}, entry.Sets...)
 	view := aptView(MCPWorkout{D: "2026-08-24", Entries: []MCPWorkoutEntry{entry}})
 	got := NextProgression(view, aptFullBody().Ex[0], aptFullBody())
 	if got.Kind != "up" || got.Weight == nil || *got.Weight != 160 {
@@ -80,7 +80,7 @@ func TestWarmupsAreIgnoredForProgression(t *testing.T) {
 
 func TestZeroLoggedSetsFallBackToTargetWeight(t *testing.T) {
 	entry := gobletEntry(0, 8, 8, 8)
-	entry.Target = &MCPExConfig{ID: "1760", Sets: f(3), Reps: f(8), Weight: f(155)}
+	entry.Target = &MCPExConfig{ID: "1760", Sets: new(3.0), Reps: new(8.0), Weight: new(155.0)}
 	view := aptView(MCPWorkout{D: "2026-08-24", Entries: []MCPWorkoutEntry{entry}})
 	got := NextProgression(view, aptFullBody().Ex[0], aptFullBody())
 	if got.Kind != "up" || got.Weight == nil || *got.Weight != 160 {
@@ -110,7 +110,7 @@ func TestPersistRoutineWorkingWeightsDoesNotWipeProgram(t *testing.T) {
 	data := aptView()
 	original := cloneRoutine(data.Routines[0])
 	workout := MCPWorkout{
-		D: "2026-08-24", RoutineID: stringPtr("apt-full-body"),
+		D: "2026-08-24", RoutineID: new("apt-full-body"),
 		Entries: []MCPWorkoutEntry{gobletEntry(155, 8, 8, 8)},
 	}
 	data.Workouts = append(data.Workouts, workout)
@@ -162,8 +162,8 @@ func TestSessionPrescriptionReportsLastAndNext(t *testing.T) {
 func TestLogExerciseSetsWritesNextWeight(t *testing.T) {
 	data := aptView()
 	workout, next, err := logExerciseSets(&data, MCPLogExerciseSetsInput{
-		ExerciseID: "1760", D: stringPtr("2026-08-24"), RoutineID: stringPtr("apt-full-body"),
-		Sets: []MCPLogExerciseSet{{W: f(155), R: 8}, {W: f(155), R: 8}, {W: f(155), R: 8}},
+		ExerciseID: "1760", D: new("2026-08-24"), RoutineID: new("apt-full-body"),
+		Sets: []MCPLogExerciseSet{{W: new(155.0), R: 8}, {W: new(155.0), R: 8}, {W: new(155.0), R: 8}},
 	}, time.Date(2026, 8, 24, 18, 0, 0, 0, time.UTC))
 	if err != nil {
 		t.Fatal(err)
@@ -185,8 +185,8 @@ func TestLogExerciseSetsWritesNextWeight(t *testing.T) {
 func TestLogExerciseSetsRequiresWeightOnLoadedLifts(t *testing.T) {
 	data := aptView()
 	_, _, err := logExerciseSets(&data, MCPLogExerciseSetsInput{
-		ExerciseID: "1760", D: stringPtr("2026-08-24"),
-		Sets: []MCPLogExerciseSet{{W: f(0), R: 8}, {W: f(0), R: 8}, {W: f(0), R: 8}},
+		ExerciseID: "1760", D: new("2026-08-24"),
+		Sets: []MCPLogExerciseSet{{W: new(0.0), R: 8}, {W: new(0.0), R: 8}, {W: new(0.0), R: 8}},
 	}, time.Now())
 	if err == nil {
 		t.Fatal("expected weight required error")
@@ -228,7 +228,7 @@ func TestPutWorkoutPersistsNextWorkingWeight(t *testing.T) {
 	}
 	workout := MCPWorkout{
 		ID: "w1", D: "2026-08-24", Name: "Apartment Full Body",
-		RoutineID: stringPtr("apt-full-body"),
+		RoutineID: new("apt-full-body"),
 		Entries:   []MCPWorkoutEntry{gobletEntry(155, 8, 8, 8)},
 		PRs:       []string{},
 	}
@@ -251,12 +251,12 @@ func TestLogExerciseSetsSeparatesRepeatedRoutineSessions(t *testing.T) {
 	data := aptView()
 	data.Workouts = nil
 	now := time.Date(2026, 8, 24, 18, 0, 0, 0, time.UTC)
-	input := MCPLogExerciseSetsInput{ExerciseID: "1760", D: stringPtr("2026-08-24"), RoutineID: stringPtr("apt-full-body"), WorkoutID: stringPtr("morning"), Sets: []MCPLogExerciseSet{{W: f(155), R: 8}}}
+	input := MCPLogExerciseSetsInput{ExerciseID: "1760", D: new("2026-08-24"), RoutineID: new("apt-full-body"), WorkoutID: new("morning"), Sets: []MCPLogExerciseSet{{W: new(155.0), R: 8}}}
 	if _, _, err := logExerciseSets(&data, input, now); err != nil {
 		t.Fatal(err)
 	}
-	input.WorkoutID = stringPtr("evening")
-	input.Sets = []MCPLogExerciseSet{{W: f(150), R: 6}}
+	input.WorkoutID = new("evening")
+	input.Sets = []MCPLogExerciseSet{{W: new(150.0), R: 6}}
 	if _, _, err := logExerciseSets(&data, input, now); err != nil {
 		t.Fatal(err)
 	}
@@ -270,14 +270,14 @@ func TestLogExerciseSetsSeparatesRepeatedRoutineSessions(t *testing.T) {
 	if *data.Workouts[0].Entries[0].Sets[0].W != 155 || *data.Workouts[1].Entries[0].Sets[0].W != 150 {
 		t.Fatal("session results were merged")
 	}
-	input.D = stringPtr("2026-08-25")
+	input.D = new("2026-08-25")
 	if _, _, err := logExerciseSets(&data, input, now); err == nil {
 		t.Fatal("accepted a workout id from another day")
 	}
 }
 
 func TestWorkoutSelectionDoesNotMergeUnassignedLogsIntoRoutine(t *testing.T) {
-	workouts := []MCPWorkout{{ID: "existing", D: "2026-08-24", RoutineID: stringPtr("a")}}
+	workouts := []MCPWorkout{{ID: "existing", D: "2026-08-24", RoutineID: new("a")}}
 	if _, found := findSameDayWorkout(workouts, "2026-08-24", ""); found {
 		t.Fatal("unassigned exercise selected unrelated routine")
 	}
@@ -286,7 +286,7 @@ func TestWorkoutSelectionDoesNotMergeUnassignedLogsIntoRoutine(t *testing.T) {
 			t.Fatalf("accepted id %q", id)
 		}
 	}
-	if _, _, err := workoutForExerciseSets(workouts, "2026-08-24", "b", stringPtr("existing")); err == nil {
+	if _, _, err := workoutForExerciseSets(workouts, "2026-08-24", "b", new("existing")); err == nil {
 		t.Fatal("accepted id from another routine")
 	}
 }

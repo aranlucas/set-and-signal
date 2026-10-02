@@ -1,11 +1,4 @@
-// Routine glyphs.
-//
-// Routines used to store a literal emoji in `r.emoji` ('💪', '🦵', …). The
-// redesign stores an icon key instead, but the field keeps its name so existing
-// synced state stays readable by both builds — no migration, no lost routines.
-//
-// glyphOf() accepts either form: a known icon key passes through, a legacy emoji
-// is mapped, and anything unrecognised falls back to the default.
+// Routine icon keys and picker groups.
 import { ICON_NAMES } from "@/shared/components/icon-names";
 import type { IconName } from "@/shared/components/Icon";
 
@@ -35,63 +28,9 @@ export const GLYPH_GROUPS = [
     items: ["stretch", "moon", "heart", "flame", "bolt"],
   },
 ] satisfies { id: GlyphGroupId; items: IconName[] }[];
-// Legacy emoji → icon key, so routines created before the redesign keep a
-// sensible glyph instead of all collapsing onto the default.
-const LEGACY: Record<string, IconName> = {
-  "💪": "arm",
-  "🦾": "arm",
-  "🫸": "figureStrength",
-  "🫷": "pullup",
-  "🏋️": "dumbbell",
-  "🏋": "dumbbell",
-  "🏋️‍♀️": "dumbbell",
-  "🦵": "legs",
-  "🍑": "legs",
-  "🔥": "flame",
-  "⚡": "bolt",
-  "💥": "bolt",
-  "🧨": "bolt",
-  "😤": "flame",
-  "🏃": "figureRun",
-  "🏃‍♀️": "figureRun",
-  "🚴": "bike",
-  "🏊": "swim",
-  "🤸": "stretch",
-  "🧘": "stretch",
-  "🧘‍♀️": "stretch",
-  "🥊": "boxing",
-  "🧗": "pullup",
-  "⛰️": "figureRun",
-  "🏔️": "figureRun",
-  "🚀": "bolt",
-  "🎯": "target",
-  "🏆": "trophy",
-  "🥇": "medal",
-  "⭐": "star",
-  "🌟": "star",
-  "👑": "crown",
-  "🛡️": "shield",
-  "⚔️": "shield",
-  "❤️‍🔥": "heart",
-  "🦍": "kettlebell",
-  "🐂": "barbell",
-  "🐻": "kettlebell",
-  "🦁": "boxing",
-  "🐺": "figureRun",
-  "🦈": "swim",
-  "🤖": "machine",
-};
-
 const isIconName = (value: string): value is IconName =>
   ICON_NAMES.some((iconName) => iconName === value);
 
-export function glyphOf(v: string | null | undefined): IconName {
-  if (!v) return DEFAULT_GLYPH;
-  if (isIconName(v)) return v;
-  if (LEGACY[v]) return LEGACY[v];
-  // strip variation selectors / ZWJ sequences and retry the base emoji
-  // Emoji need code-point iteration here to strip variation selectors safely.
-  // oxlint-disable-next-line typescript/no-misused-spread
-  const base = [...v].find((c) => c !== "️" && c !== "‍");
-  return (base && LEGACY[base]) || DEFAULT_GLYPH;
+export function glyphOf(value: string | null | undefined): IconName {
+  return value && isIconName(value) ? value : DEFAULT_GLYPH;
 }

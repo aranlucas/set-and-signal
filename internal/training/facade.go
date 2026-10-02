@@ -1,9 +1,9 @@
 package training
 
 import (
-	"time"
-
 	"encoding/json/jsontext"
+	"github.com/aranlucas/set-and-signal/internal/validation"
+	"time"
 
 	"github.com/aranlucas/set-and-signal/internal/exercises"
 )
@@ -21,7 +21,7 @@ func TodayISO(timezone string, now time.Time) string {
 }
 
 func ValidISODate(value string) bool {
-	return isoDateRe.MatchString(value)
+	return validation.Validator.Var(value, "datetime=2006-01-02") == nil
 }
 
 func Day(data TrainingData, iso string) MCPTodayResult {
@@ -37,7 +37,7 @@ func BuildDigest(data TrainingData, sessions []MCPDaySession, today string) MCPT
 }
 
 func BuildHistory(data TrainingData, query HistoryQuery) []MCPHistoryRow {
-	return buildHistory(data, historyQuery(query))
+	return buildHistory(data, query)
 }
 
 func SessionPrescription(data TrainingData, iso string) MCPDayPrescription {
@@ -48,7 +48,7 @@ func NormalizeDaySession(session MCPDaySession) (MCPDaySession, error) {
 	return normalizeDaySession(session)
 }
 
-func CloneWeekSchedule(week map[string][]MCPDaySession) map[string][]MCPDaySession {
+func CloneWeekSchedule(week WeekSchedule) WeekSchedule {
 	return cloneWeekSchedule(week)
 }
 
@@ -72,19 +72,13 @@ func ResolveDaySessions(data TrainingData, iso string) (sessions []MCPDaySession
 	return resolveDaySessions(data, iso)
 }
 
-// MigrateScheduleFields rewrites legacy single-id week/dayPlan JSON into the
-// sessions-array shape without changing other document fields.
-func MigrateScheduleFields(raw jsontext.Value) (jsontext.Value, error) {
-	return migrateScheduleFields(raw)
-}
-
-// DecodeWeekMap coerces a JSON-decoded week value into the typed schedule map.
-func DecodeWeekMap(value any) (map[string][]MCPDaySession, error) {
+// DecodeWeekMap decodes the current typed schedule map.
+func DecodeWeekMap(value jsontext.Value) (WeekSchedule, error) {
 	return decodeWeekMap(value)
 }
 
-// DecodeDayPlanMap coerces a JSON-decoded dayPlan value into typed overrides.
-func DecodeDayPlanMap(value any) (map[string]MCPDayPlan, error) {
+// DecodeDayPlanMap decodes current typed day overrides.
+func DecodeDayPlanMap(value jsontext.Value) (DayPlanMap, error) {
 	return decodeDayPlanMap(value)
 }
 

@@ -117,11 +117,9 @@ function deloadTo(currentWeight: number, step: number): number {
 /**
  * Reduce one finished workout entry to what a policy needs to judge it.
  *
- * Workouts only started recording their prescription in v1.2.2, so most existing history has
- * no `target` at all. Judging those against nothing would score every past session as a miss
- * — and then greet a long-standing user with "missed reps 11 sessions running, deload". So an
- * entry without its own target is judged against `fallback`, the exercise's current plan,
- * which is exactly what the app's old weight hint compared against.
+ * Planned sessions capture their prescription in `target`. Imported CSV history
+ * records performed sets without a prescribed target, so it is judged against
+ * `fallback`, the exercise's current plan.
  */
 export function readSession(
   entry?: { id?: Id; target?: AnyConfig | null; sets?: SetFields[]; topW?: number | null } | null,

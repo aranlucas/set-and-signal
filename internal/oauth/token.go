@@ -142,12 +142,15 @@ func (s *Server) writeTokenResponse(w http.ResponseWriter, userID, clientID, sco
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]any{
-		"access_token":  access,
-		"token_type":    "Bearer",
-		"expires_in":    int(time.Until(exp).Seconds()),
-		"refresh_token": refresh,
-		"scope":         scope,
+	writeJSON(w, http.StatusOK, struct {
+		AccessToken  string `json:"access_token"`
+		TokenType    string `json:"token_type"`
+		ExpiresIn    int    `json:"expires_in"`
+		RefreshToken string `json:"refresh_token"`
+		Scope        string `json:"scope"`
+	}{
+		AccessToken: access, TokenType: "Bearer", ExpiresIn: int(time.Until(exp).Seconds()),
+		RefreshToken: refresh, Scope: scope,
 	})
 }
 

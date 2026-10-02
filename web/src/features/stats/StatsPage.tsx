@@ -70,7 +70,7 @@ export default function Stats() {
   const historicalNames = new Map<string, string>();
   appState.workouts.forEach((workout) =>
     workout.entries.forEach((entry) => {
-      const name = entry.muscleSnapshot?.n || entry.n;
+      const name = entry.muscleSnapshot?.n;
       if (name && !historicalNames.has(entry.id)) historicalNames.set(entry.id, name);
     }),
   );
