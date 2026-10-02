@@ -7,7 +7,7 @@ import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useDateLabels } from "@/shared/hooks/use-date-labels";
 import { useStore } from "@/app/store/useStore";
 import { EXIDX } from "@/domain/exercises/exercises";
-import { fmtDate, fmtDur, fmtVol, durPart, todayISO } from "@/shared/lib/format";
+import { fmtDate, fmtDur, fmtVol, durPart, todayISO, formatDate } from "@/shared/lib/format";
 import { setLabel, setsDone } from "@/domain/training/history";
 import { toast } from "@/shared/lib/toast";
 import { Button } from "@/shared/ui/button";
@@ -26,6 +26,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/shared/ui/alert-dialog";
 import { noteFormSchema } from "@/shared/lib/form-schemas";
 
@@ -77,7 +78,17 @@ export function WorkoutDetail({
   const prSet = new Set(workout.prs);
   return (
     <>
-      <h3>{workout.name}</h3>
+      <div className="flex items-center justify-between gap-3">
+        <h3>{workout.name}</h3>
+        <Button
+          variant="plain"
+          className="min-h-11 min-w-11"
+          onClick={() => void close()}
+          aria-label={t("common.close", "Close")}
+        >
+          <Icon name="xmark" />
+        </Button>
+      </div>
       <div className="mb-3 text-sm leading-snug text-foreground/60">
         {[
           fmtDate(t, workout.d, true),
@@ -168,10 +179,17 @@ export function WorkoutDetail({
           </div>
         );
       })}
-      <Button className="w-full" variant="destructive" onClick={() => setConfirmOpen(true)}>
-        {t("workout.completion.deleteWorkoutLabel", "Delete workout")}
-      </Button>
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+          <AlertDialogTrigger
+            render={<Button size="sm" className="min-h-11" variant="destructive" />}
+          >
+            {t("workout.completion.deleteWorkoutLabel", "Delete workout")}
+          </AlertDialogTrigger>
+          <Button size="sm" className="min-h-11" onClick={() => void close()}>
+            {t("common.done", "Done")}
+          </Button>
+        </div>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -342,9 +360,11 @@ export function Calendar({
 export function WorkoutRow({
   workout,
   onClick,
+  ledger = false,
 }: {
   workout: Workout;
   onClick?: () => void;
+  ledger?: boolean;
 }): ReactElement {
   const { t } = useTranslation();
   const appState = useStore((state) => state.appState);
@@ -353,9 +373,16 @@ export function WorkoutRow({
   );
   const content = (
     <>
-      <span className="flex size-8.5 shrink-0 items-center justify-center rounded-lg bg-primary text-xl text-white">
-        <Icon name={glyph} />
-      </span>
+      {ledger ? (
+        <span className="history-date" aria-hidden="true">
+          <strong>{formatDate(t, new Date(`${workout.d}T12:00:00`), { day: "2-digit" })}</strong>
+          <span>{formatDate(t, new Date(`${workout.d}T12:00:00`), { weekday: "short" })}</span>
+        </span>
+      ) : (
+        <span className="flex size-8.5 shrink-0 items-center justify-center rounded-lg bg-primary text-xl text-white">
+          <Icon name={glyph} />
+        </span>
+      )}
       <span className="min-w-0 grow">
         <span className="block text-base leading-tight tracking-tight">{workout.name}</span>
         <span className="mt-0.5 block text-sm text-foreground/60">
@@ -381,7 +408,7 @@ export function WorkoutRow({
   );
   return onClick ? (
     <Button
-      variant="row"
+      variant={ledger ? "ledger" : "row"}
       type="button"
       className="flex min-h-15 w-full items-center text-left"
       onClick={onClick}

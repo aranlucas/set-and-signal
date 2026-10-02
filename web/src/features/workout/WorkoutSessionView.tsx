@@ -73,38 +73,35 @@ function WorkoutSessionHeader({
   const { t } = useTranslation();
   const hosted = useStore((state) => !!state.user);
   return (
-    <div className="mt-2 mb-4.5 flex items-end justify-between gap-3">
-      <Button
-        variant="circle"
-        className="flex size-11 flex-none items-center justify-center active:scale-95 sm:size-9"
-        aria-label={t("common.discard", "Discard")}
-        onClick={onDiscard}
-      >
-        <Icon name="xmark" />
-      </Button>
-      <div className="min-w-0 text-center">
-        <h1 className="text-2xl font-semibold wrap-anywhere">{name}</h1>
+    <header className="session-header">
+      <div className="min-w-0">
+        <h1 className="session-title font-semibold wrap-anywhere">{name}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          <Elapsed start={start} /> ·{" "}
+          {t("workout.completion.setProgress", "{{progress}} sets", {
+            progress: done + "/" + total,
+          })}
+        </p>
         <p className="mt-1 text-xs text-muted-foreground">
           {hosted
             ? t("sync.workoutDevice", "Saved here · syncs when you finish")
             : t("sync.deviceOnly", "Saved on this device")}
         </p>
-        <div className="mt-1 text-base tracking-tight text-foreground/60">
-          <Elapsed start={start} /> ·{" "}
-          {t("workout.completion.setProgress", "{{progress}} sets", {
-            progress: done + "/" + total,
-          })}
-        </div>
       </div>
-      <Button
-        variant="circle"
-        className="flex size-11 flex-none items-center justify-center active:scale-95 sm:size-9"
-        aria-label={t("common.finish", "Finish")}
-        onClick={onFinish}
-      >
-        <Icon name="check" className="text-primary" />
-      </Button>
-    </div>
+      <div className="session-header-actions">
+        <Button variant="secondary" size="sm" className="min-h-11" onClick={onFinish}>
+          <Icon name="check" /> {t("common.finish", "Finish")}
+        </Button>
+        <Button
+          variant="plain"
+          className="min-h-11 min-w-11"
+          aria-label={t("common.discard", "Discard")}
+          onClick={onDiscard}
+        >
+          <Icon name="xmark" />
+        </Button>
+      </div>
+    </header>
   );
 }
 
@@ -142,55 +139,45 @@ function WorkoutProgressSummary({
   const setProgressLabel = t("workout.sessionSummary.setProgress", "Set progress");
 
   return (
-    <section
-      aria-label={progressLabel}
-      className="mb-4 rounded-xl border border-primary/15 bg-card p-4 shadow-sm"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-primary uppercase">
-            <Icon name="target" className="text-base" />
-            {progressLabel}
-          </div>
-          <div className="mt-1.5 flex items-baseline gap-2">
-            <span className="text-3xl leading-none font-semibold tracking-tight tabular-nums">
-              {percentage}%
-            </span>
-            <span className="text-sm text-muted-foreground">{completeLabel}</span>
-          </div>
+    <section aria-label={progressLabel} className="session-progress">
+      <div className="session-score">
+        <div>
+          <h2 className="text-sm font-semibold">{progressLabel}</h2>
+          <p className="text-sm text-muted-foreground">
+            {percentage}% {completeLabel}
+          </p>
         </div>
-        <div className="rounded-lg bg-primary/10 px-3 py-2 text-right">
-          <div className="text-lg leading-none font-semibold tracking-tight text-primary tabular-nums">
-            {done}/{total}
-          </div>
-          <div className="mt-1 text-xs font-medium tracking-wide text-primary/70 uppercase">
-            {setsLabel}
-          </div>
-        </div>
+        <p className="tabular-nums">
+          <strong>{done}</strong>
+          <span>
+            {" "}
+            / {total} {setsLabel}
+          </span>
+        </p>
       </div>
-      <Progress className="mt-4 block w-full" value={percentage} aria-label={setProgressLabel} />
-      <div className="mt-4 grid grid-cols-3 divide-x divide-border/70">
-        <div className="pr-3">
-          <div className="text-base font-semibold tracking-tight tabular-nums">
+      <div className="session-set-tally" aria-hidden="true">
+        {Array.from({ length: total }, (_, index) => (
+          <span key={index} data-done={index < done} />
+        ))}
+      </div>
+      <Progress className="sr-only" value={percentage} aria-label={setProgressLabel} />
+      <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+        <div className="flex gap-2">
+          <dt className="text-muted-foreground">{exercisesLabel}</dt>
+          <dd className="font-semibold tabular-nums">
             {completedExercises}/{activeWorkout.entries.length}
-          </div>
-          <div className="mt-0.5 text-xs text-muted-foreground">{exercisesLabel}</div>
+          </dd>
         </div>
-        <div className="px-3">
-          <div className="text-base font-semibold tracking-tight tabular-nums">
-            {fmtNum(volume)}
-          </div>
-          <div className="mt-0.5 text-xs text-muted-foreground">
-            {volumeLabel} · {appState.unit}
-          </div>
+        <div className="flex gap-2">
+          <dt className="text-muted-foreground">{volumeLabel}</dt>
+          <dd className="font-semibold tabular-nums">
+            {fmtNum(volume)} {appState.unit}
+          </dd>
         </div>
-        <div className="min-w-0 pl-3">
-          <div className="line-clamp-2 text-sm font-semibold tracking-tight capitalize">
-            {currentLabel}
-          </div>
-          <div className="mt-0.5 text-xs text-muted-foreground">{currentBlockLabel}</div>
-        </div>
-      </div>
+      </dl>
+      <p className="sr-only">
+        {currentBlockLabel}: {currentLabel}
+      </p>
     </section>
   );
 }
@@ -210,7 +197,7 @@ function WorkoutExerciseNavigator({
   if (units.length < 2) return null;
   return (
     <section
-      className="mb-4"
+      className="session-exercise-flow mb-4"
       aria-label={t("workout.sessionSummary.exerciseNavigation", "Exercise navigation")}
     >
       <div className="mb-2 flex items-center justify-between px-1">
@@ -233,7 +220,7 @@ function WorkoutExerciseNavigator({
           return (
             <Button
               key={unit[0]}
-              variant="row"
+              variant="flow"
               type="button"
               aria-current={index === currentUnit ? "step" : undefined}
               aria-label={`${t("workout.sessionSummary.exerciseLabel", "Exercise")} ${index + 1}: ${label}`}
@@ -517,7 +504,7 @@ export function WorkoutSessionView({
 
   return (
     <>
-      <div className="mx-auto max-w-140">
+      <div className="workout-session mx-auto max-w-260">
         <WorkoutSessionHeader
           name={A.name}
           start={A.start}
@@ -527,127 +514,137 @@ export function WorkoutSessionView({
           onFinish={requestFinish}
         />
         {A.sessionPlan && <SessionPlanSummary plan={A.sessionPlan} unit={appState.unit} />}
-        <WorkoutProgressSummary
-          activeWorkout={A}
-          units={units}
-          currentUnit={unitIdx}
-          done={done}
-          total={total}
-        />
-        <WorkoutExerciseNavigator
-          activeWorkout={A}
-          units={units}
-          currentUnit={unitIdx}
-          onSelect={(entryIndex) =>
-            update((state) => {
-              if (state.active) state.active.cur = entryIndex;
-            })
-          }
-        />
-
-        <WorkoutExerciseList
-          activeWorkout={A}
-          currentEntry={cur}
-          unit={unit}
-          unitIndex={unitIdx}
-          unitCount={units.length}
-          isSuperset={isSuperset}
-          setField={setField}
-          addSet={addSet}
-          removeSet={removeSet}
-          toggleWarmup={toggleWarmup}
-          startTimed={startTimed}
-          toggle={toggle}
-          setWorkoutSheet={setWorkoutSheet}
-        />
-
-        <SpaceBetween size="s" className="pt-3 pb-10">
-          <SpaceBetween direction="horizontal" size="s" alignItems="center" className="flex-nowrap">
-            <Button
-              className="w-0 flex-1 shrink"
-              disabled={unitIdx <= 0}
-              onClick={() =>
-                update((s) => {
-                  if (s.active) s.active.cur = units[unitIdx - 1][0];
+        <div className="session-layout">
+          <aside className="session-overview">
+            <WorkoutProgressSummary
+              activeWorkout={A}
+              units={units}
+              currentUnit={unitIdx}
+              done={done}
+              total={total}
+            />
+            <WorkoutExerciseNavigator
+              activeWorkout={A}
+              units={units}
+              currentUnit={unitIdx}
+              onSelect={(entryIndex) =>
+                update((state) => {
+                  if (state.active) state.active.cur = entryIndex;
                 })
               }
-            >
-              <Icon name="chevronLeft" />
-              {t("common.previous", "Prev")}
-            </Button>
-            <Button
-              className="w-0 flex-1 shrink"
-              disabled={unitIdx < 0 || unitIdx >= units.length - 1}
-              onClick={() =>
-                update((s) => {
-                  if (s.active) s.active.cur = units[unitIdx + 1][0];
-                })
-              }
-            >
-              {t("common.next", "Next")}
-              <Icon name="chevronRight" />
-            </Button>
-          </SpaceBetween>
-          <Button
-            className="w-full"
-            onClick={() =>
-              setWorkoutSheet({
-                type: "picker",
-                onPick: (exercise) =>
-                  setWorkoutSheet({
-                    type: "config",
-                    exercise,
-                    existing: null,
-                    onSave: (config) =>
-                      update((s) => {
-                        const act = s.active;
-                        if (!act) return;
-                        const full = { ...config, id: exercise.id };
-                        const plan = nextPrescription(
-                          s,
-                          full,
-                          s.routines.find((r) => r.id === act.routineId) ?? null,
-                        );
-                        act.entries.push({
-                          id: exercise.id,
-                          target: { ...config },
-                          plan,
-                          sets: applyPrescription(buildSets(s, full), plan),
-                        });
-                        act.cur = act.entries.length - 1;
-                      }),
-                    onDelete: null,
-                    routine:
-                      appState.routines.find((routine) => routine.id === A.routineId) ?? null,
-                  }),
-              })
-            }
-          >
-            <Icon name="plus" />
-            {t("exercise.addExercise", "Add exercise")}
-          </Button>
-          {(() => {
-            const exDone = A.entries.filter(
-              (e) => e.sets.length && e.sets.every((s) => s.done),
-            ).length;
-            const allDone = A.entries.length > 0 && exDone === A.entries.length;
-            return (
-              <Button
-                variant={allDone ? "default" : "quiet"}
-                className="w-full"
-                onClick={requestFinish}
+            />
+          </aside>
+          <div className="session-working-block">
+            <WorkoutExerciseList
+              activeWorkout={A}
+              currentEntry={cur}
+              unit={unit}
+              unitIndex={unitIdx}
+              unitCount={units.length}
+              isSuperset={isSuperset}
+              setField={setField}
+              addSet={addSet}
+              removeSet={removeSet}
+              toggleWarmup={toggleWarmup}
+              startTimed={startTimed}
+              toggle={toggle}
+              setWorkoutSheet={setWorkoutSheet}
+            />
+
+            <SpaceBetween size="s" className="pt-3 pb-10">
+              <SpaceBetween
+                direction="horizontal"
+                size="s"
+                alignItems="center"
+                className="flex-nowrap"
               >
-                {allDone
-                  ? t("workout.completion.finishWorkout", "Finish workout")
-                  : t(
-                      "workout.finishWorkoutEarlyProgress",
-                      "Finish workout early · {{progress}} exercises",
-                      { progress: exDone + "/" + A.entries.length },
-                    )}
+                <Button
+                  className="w-0 flex-1 shrink"
+                  disabled={unitIdx <= 0}
+                  onClick={() =>
+                    update((s) => {
+                      if (s.active) s.active.cur = units[unitIdx - 1][0];
+                    })
+                  }
+                >
+                  <Icon name="chevronLeft" />
+                  {t("common.previous", "Prev")}
+                </Button>
+                <Button
+                  className="w-0 flex-1 shrink"
+                  disabled={unitIdx < 0 || unitIdx >= units.length - 1}
+                  onClick={() =>
+                    update((s) => {
+                      if (s.active) s.active.cur = units[unitIdx + 1][0];
+                    })
+                  }
+                >
+                  {t("common.next", "Next")}
+                  <Icon name="chevronRight" />
+                </Button>
+              </SpaceBetween>
+              <Button
+                className="w-full"
+                onClick={() =>
+                  setWorkoutSheet({
+                    type: "picker",
+                    onPick: (exercise) =>
+                      setWorkoutSheet({
+                        type: "config",
+                        exercise,
+                        existing: null,
+                        onSave: (config) =>
+                          update((s) => {
+                            const act = s.active;
+                            if (!act) return;
+                            const full = { ...config, id: exercise.id };
+                            const plan = nextPrescription(
+                              s,
+                              full,
+                              s.routines.find((r) => r.id === act.routineId) ?? null,
+                            );
+                            act.entries.push({
+                              id: exercise.id,
+                              target: { ...config },
+                              plan,
+                              sets: applyPrescription(buildSets(s, full), plan),
+                            });
+                            act.cur = act.entries.length - 1;
+                          }),
+                        onDelete: null,
+                        routine:
+                          appState.routines.find((routine) => routine.id === A.routineId) ?? null,
+                      }),
+                  })
+                }
+              >
+                <Icon name="plus" />
+                {t("exercise.addExercise", "Add exercise")}
               </Button>
-            );
-          })()}
-        </SpaceBetween>
+              {(() => {
+                const exDone = A.entries.filter(
+                  (e) => e.sets.length && e.sets.every((s) => s.done),
+                ).length;
+                const allDone = A.entries.length > 0 && exDone === A.entries.length;
+                return (
+                  <Button
+                    variant={allDone ? "default" : "quiet"}
+                    className="w-full"
+                    onClick={requestFinish}
+                  >
+                    {allDone
+                      ? t("workout.completion.finishWorkout", "Finish workout")
+                      : t(
+                          "workout.finishWorkoutEarlyProgress",
+                          "Finish workout early · {{progress}} exercises",
+                          { progress: exDone + "/" + A.entries.length },
+                        )}
+                  </Button>
+                );
+              })()}
+            </SpaceBetween>
+          </div>
+        </div>
       </div>
       <WorkoutSheetHost
         workoutSheet={workoutSheet}

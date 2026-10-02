@@ -56,10 +56,10 @@ export default function History() {
   };
 
   return (
-    <>
+    <div className="history-log mx-auto max-w-260">
       <div className="mt-2 mb-5 flex items-end justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h1 className="text-4xl leading-none font-bold tracking-tight">
+          <h1 className="history-title leading-none font-bold tracking-tight">
             {t("navigation.history", "History")}
           </h1>
           <p className="mt-1 text-base tracking-tight text-foreground/60">
@@ -70,17 +70,17 @@ export default function History() {
         </div>
         <Button
           variant="circle"
-          className="flex size-9 flex-none items-center justify-center active:scale-95"
+          className="flex size-11 flex-none items-center justify-center active:scale-95"
           onClick={() => void nav({ to: "/stats" })}
           aria-label={t("navigation.stats", "Stats")}
         >
-          <Icon name="chevronLeft" />
+          <Icon name="chart" />
         </Button>
       </div>
 
       {state.workouts.length > 0 && (
         <>
-          <section className="mb-3 rounded-xl bg-card p-3 shadow-sm">
+          <section className="history-filters mb-4">
             <div className="relative">
               <Icon
                 name="search"
@@ -160,7 +160,7 @@ export default function History() {
 
           <section
             aria-label={t("history.summary", "History summary")}
-            className="mb-5 grid grid-cols-3 gap-2"
+            className="history-totals mb-6 grid grid-cols-3"
           >
             <SummaryMetric
               icon="dumbbell"
@@ -185,7 +185,7 @@ export default function History() {
         <div className="flex flex-col gap-5">
           {monthGroups.map((group) => (
             <section key={group.month} aria-labelledby={`history-${group.month}`}>
-              <div className="mb-2 flex items-center justify-between gap-3 px-1">
+              <div className="mb-2 flex items-center justify-between gap-3 border-b border-border pb-3">
                 <h2
                   id={`history-${group.month}`}
                   className="text-sm font-semibold tracking-wide text-foreground/60 uppercase"
@@ -201,11 +201,12 @@ export default function History() {
                   })}
                 </span>
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="history-ledger flex flex-col">
                 {group.workouts.map((workoutRecord) => (
                   <WorkoutRow
                     key={workoutRecord.id}
                     workout={workoutRecord}
+                    ledger
                     onClick={() => setWorkout(workoutRecord)}
                   />
                 ))}
@@ -233,7 +234,7 @@ export default function History() {
           {workout && <WorkoutDetail workoutId={workout.id} close={closeSheet} />}
         </SheetContent>
       </Sheet>
-    </>
+    </div>
   );
 }
 
@@ -247,10 +248,12 @@ function SummaryMetric({
   value: string;
 }) {
   return (
-    <div className="min-w-0 rounded-xl bg-card p-3 shadow-sm">
-      <Icon name={icon} className="mb-2 size-4 text-primary" />
-      <div className="truncate text-base font-semibold tracking-tight">{value}</div>
-      <div className="mt-0.5 truncate text-xs text-foreground/60">{label}</div>
+    <div className="history-metric min-w-0">
+      <Icon name={icon} className="mb-2 size-4 text-muted-foreground" />
+      <div className="history-metric-value font-semibold tracking-tight wrap-anywhere tabular-nums">
+        {value}
+      </div>
+      <div className="mt-1 text-sm text-muted-foreground">{label}</div>
     </div>
   );
 }

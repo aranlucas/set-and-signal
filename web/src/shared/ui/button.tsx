@@ -17,6 +17,21 @@ const buttonVariants = cva(
           plain,
           "gap-3 rounded-lg bg-card px-3 py-2.5 transition-colors duration-140 active:bg-muted aria-[current=step]:bg-primary aria-[current=step]:text-primary-foreground",
         ),
+        // Ordered training log, separated by rules instead of cards.
+        ledger: cn(
+          plain,
+          "gap-4 rounded-none border-b border-border bg-transparent px-0 py-4 text-left transition-colors hover:bg-muted active:bg-muted",
+        ),
+        // Exercise flow: current step uses the same selection vocabulary as list rows.
+        flow: cn(
+          plain,
+          "gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-left transition-colors hover:bg-muted active:bg-muted aria-[current=step]:bg-primary aria-[current=step]:text-primary-foreground",
+        ),
+        // Equipment selection: readable labels and a full touch target.
+        equipment: cn(
+          plain,
+          "min-h-11 max-w-full justify-start gap-1.5 rounded-lg border border-border bg-card px-2.5 py-2 text-start text-sm leading-snug capitalize transition-colors hover:border-muted-foreground aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:font-medium aria-pressed:text-primary-foreground",
+        ),
         // Round icon button in page headers and toolbars.
         circle: cn(
           plain,

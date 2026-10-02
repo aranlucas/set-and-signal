@@ -5,6 +5,13 @@ source routine, the available equipment, a time budget and rest between sets.
 The planner takes a snapshot of the source when selected; subsequent edits to
 the source do not silently replace the draft.
 
+The planner presents constraints beside an ordered review sheet on wide screens.
+Equipment is grouped into weights/supports, machines/cables, and cardio; each
+disclosure shows its selected count. A duration comparison appears before the
+review, with a compact live estimate beside the budget on narrow screens.
+Each row identifies the source target and whether the copy keeps, replaces, or
+omits it. Estimation assumptions remain available in **How time is estimated**.
+
 The reviewed alternative list groups general movement patterns and names every
 required machine, bench, rack or anchor. Available originals take priority.
 Unknown exercises and exhausted alternatives are shown as omissions. Suggestions
@@ -28,6 +35,10 @@ editing remains available; later edits can change the duration.
 The accepted original/alternative snapshot is retained in the saved routine,
 unfinished session and completed history, including through backup and typed Go
 state mutations. Plan-share files continue to contain only the resulting program.
+The snapshot labels source targets and accepted-copy targets separately. Active
+sessions show a tally of completed working sets and keep exercise navigation
+beside the working block on wide screens. History uses dated ledger rows; its
+filters and totals still describe only the matching sessions.
 **Undo save** removes only an unchanged, unused and unscheduled copy. Planning
 drafts resume in account-scoped device storage; they are not uploaded or synced.
 Storage failure is shown and cannot publish a rejected copy.
