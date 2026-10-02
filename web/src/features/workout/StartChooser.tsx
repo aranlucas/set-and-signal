@@ -95,6 +95,15 @@ export function StartChooser() {
         </>
       )}
       <SpaceBetween size="xs" className="pt-4">
+        {appState.routines.length > 0 && (
+          <Button
+            variant="secondary"
+            className="w-full"
+            onClick={() => void nav({ to: "/plan/session" })}
+          >
+            {t("sessionPlan.open", "Plan for equipment & time")}
+          </Button>
+        )}
         <Button className="w-full" onClick={() => openStart(null)}>
           <Icon name="shuffle" />
           {t("workout.freestyleWorkoutPickGo", "Freestyle workout (pick as you go)")}

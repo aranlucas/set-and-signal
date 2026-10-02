@@ -106,6 +106,17 @@ export interface Routine {
   emoji: string; // icon glyph name, not a unicode emoji
   prog?: PolicyId; // routine-wide progression default
   ex: ExConfig[];
+  sessionPlan?: SessionPlan;
+}
+
+/** An accepted adaptation snapshot; later routine edits never rewrite its source. */
+export interface SessionPlan {
+  sourceId: Id;
+  sourceName: string;
+  equipment: string[];
+  budgetMin: number;
+  restSec: number;
+  rows: { original: ExConfig; planned: ExConfig | null }[];
 }
 
 // One planned exercise. Fields beyond id/sets depend on mode; absent fields are absent.
@@ -194,6 +205,7 @@ export interface Workout {
   prs: Id[]; // exercise ids with a new top weight this session ([] allowed)
   vol: number; // sum w*r over done sets, computed after construction
   note?: string; // free-text session notes, written from the finish summary
+  sessionPlan?: SessionPlan;
 }
 
 /* ============================ active workout ============================ */
@@ -217,6 +229,7 @@ export interface ActiveWorkout {
   bw: number | null;
   cur: number; // index into entries currently on screen
   entries: ActiveEntry[];
+  sessionPlan?: SessionPlan;
 }
 
 /* ============================ progression ============================ */

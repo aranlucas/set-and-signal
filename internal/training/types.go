@@ -41,11 +41,27 @@ type MCPExConfig struct {
 type MCPExConfigInput = MCPExConfig
 
 type MCPRoutine struct {
-	ID    string        `json:"id"`
-	Name  string        `json:"name"`
-	Emoji string        `json:"emoji"`
-	Prog  *string       `json:"prog,omitempty"`
-	Ex    []MCPExConfig `json:"ex"`
+	ID          string          `json:"id"`
+	Name        string          `json:"name"`
+	Emoji       string          `json:"emoji"`
+	Prog        *string         `json:"prog,omitempty"`
+	Ex          []MCPExConfig   `json:"ex"`
+	SessionPlan *MCPSessionPlan `json:"sessionPlan,omitempty"`
+}
+
+// MCPSessionPlan retains the accepted adaptation and its original template.
+type MCPSessionPlan struct {
+	SourceID   string              `json:"sourceId"`
+	SourceName string              `json:"sourceName"`
+	Equipment  []string            `json:"equipment"`
+	BudgetMin  float64             `json:"budgetMin"`
+	RestSec    float64             `json:"restSec"`
+	Rows       []MCPSessionPlanRow `json:"rows"`
+}
+
+type MCPSessionPlanRow struct {
+	Original MCPExConfig  `json:"original"`
+	Planned  *MCPExConfig `json:"planned"`
 }
 
 // MCPRoutineInput keeps fields minted by the server optional at input time.
@@ -88,17 +104,18 @@ type MCPWorkoutEntry struct {
 }
 
 type MCPWorkout struct {
-	ID        string            `json:"id" jsonschema:"stable workout id; an existing id is replaced" validate:"required,max=40"`
-	D         string            `json:"d" jsonschema:"workout date in YYYY-MM-DD" validate:"required,datetime=2006-01-02"`
-	Start     int64             `json:"start" jsonschema:"start time as unix milliseconds"`
-	End       int64             `json:"end" jsonschema:"end time as unix milliseconds"`
-	RoutineID *string           `json:"routineId,omitempty" jsonschema:"source routine id"`
-	Name      string            `json:"name" jsonschema:"workout name" validate:"max=80"`
-	BW        *float64          `json:"bw,omitzero" jsonschema:"bodyweight at workout time"`
-	Entries   []MCPWorkoutEntry `json:"entries" jsonschema:"exercise results"`
-	PRs       []string          `json:"prs" jsonschema:"exercise ids with personal records"`
-	Vol       float64           `json:"vol" jsonschema:"total workout volume"`
-	Note      *string           `json:"note,omitempty" jsonschema:"optional workout note"`
+	ID          string            `json:"id" jsonschema:"stable workout id; an existing id is replaced" validate:"required,max=40"`
+	D           string            `json:"d" jsonschema:"workout date in YYYY-MM-DD" validate:"required,datetime=2006-01-02"`
+	Start       int64             `json:"start" jsonschema:"start time as unix milliseconds"`
+	End         int64             `json:"end" jsonschema:"end time as unix milliseconds"`
+	RoutineID   *string           `json:"routineId,omitempty" jsonschema:"source routine id"`
+	Name        string            `json:"name" jsonschema:"workout name" validate:"max=80"`
+	BW          *float64          `json:"bw,omitzero" jsonschema:"bodyweight at workout time"`
+	Entries     []MCPWorkoutEntry `json:"entries" jsonschema:"exercise results"`
+	PRs         []string          `json:"prs" jsonschema:"exercise ids with personal records"`
+	Vol         float64           `json:"vol" jsonschema:"total workout volume"`
+	Note        *string           `json:"note,omitempty" jsonschema:"optional workout note"`
+	SessionPlan *MCPSessionPlan   `json:"sessionPlan,omitempty"`
 }
 
 type MCPBodyweightEntry struct {

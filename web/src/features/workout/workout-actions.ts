@@ -24,15 +24,23 @@ export function beginWorkout(
   freestyleName: string,
 ): void {
   const state = getAppState();
+  if (state.active) return;
   const routine = routineId ? state.routines.find((candidate) => candidate.id === routineId) : null;
   const entries: ActiveEntry[] = (routine ? routine.ex : []).map((config) => {
-    const prescription = nextPrescription(state, config, routine);
+    const fixedTargets = !!routine?.sessionPlan && (config.prog ?? routine.prog ?? "off") === "off";
+    const prescription = fixedTargets ? null : nextPrescription(state, config, routine);
     return {
       id: config.id,
       sg: config.sg,
       target: { ...config },
       plan: prescription,
-      sets: applyPrescription(buildSets(state, config), prescription),
+      sets: applyPrescription(
+        buildSets(
+          fixedTargets ? { workouts: [], unit: state.unit, plates: state.plates } : state,
+          config,
+        ),
+        prescription,
+      ),
     };
   });
   updateAppState((draft) => {
@@ -45,6 +53,7 @@ export function beginWorkout(
       bw: bodyweight || null,
       cur: 0,
       entries,
+      ...(routine?.sessionPlan ? { sessionPlan: structuredClone(routine.sessionPlan) } : {}),
     };
   });
   useWorkoutTimer.getState().stopRest();
@@ -122,6 +131,9 @@ export function completeWorkout(): FinishSummaryPayload | null {
     ),
     prs: personalRecords,
     vol: 0,
+    ...(activeWorkout.sessionPlan
+      ? { sessionPlan: structuredClone(activeWorkout.sessionPlan) }
+      : {}),
   };
   workout.vol = workoutVolume(workout);
   updateAppState((draft) => {
@@ -138,7 +150,7 @@ export function completeWorkout(): FinishSummaryPayload | null {
       }
     });
     draft.workouts.push(workout);
-    if (workout.routineId) {
+    if (workout.routineId && !workout.sessionPlan) {
       const routineIndex = draft.routines.findIndex(
         (candidate) => candidate.id === workout.routineId,
       );

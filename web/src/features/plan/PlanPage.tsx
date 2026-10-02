@@ -66,6 +66,13 @@ export default function Plan() {
       >
         {t("navigation.plan", "Plan")}
       </Header>
+      <Button
+        className="mb-4 w-full"
+        variant="secondary"
+        onClick={() => void nav({ to: "/plan/session" })}
+      >
+        {t("sessionPlan.open", "Plan for equipment & time")}
+      </Button>
       <Grid columns={{ default: 1, lg: 2 }} gap="s" alignItems="start">
         <div>
           <Header className="mb-2 px-1">{t("plan.weekSchedule", "Week schedule")}</Header>

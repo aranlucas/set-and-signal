@@ -43,12 +43,22 @@ export const exerciseConfig = v.object({
   sg: v.optional(id),
 });
 
-const routine = v.object({
+export const sessionPlan = v.object({
+  sourceId: id,
+  sourceName: v.string(),
+  equipment: v.array(v.string()),
+  budgetMin: v.pipe(finiteNumber, v.minValue(5), v.maxValue(180)),
+  restSec: v.pipe(finiteNumber, v.minValue(0), v.maxValue(600)),
+  rows: v.array(v.object({ original: exerciseConfig, planned: v.nullable(exerciseConfig) })),
+});
+
+export const routine = v.object({
   id,
   name: v.string(),
-  emoji: v.optional(v.string()),
+  emoji: v.optional(v.string(), ""),
   prog: v.optional(policy),
   ex: v.array(exerciseConfig),
+  sessionPlan: v.optional(sessionPlan),
 });
 
 const repsSet = v.object({
@@ -107,6 +117,7 @@ const activeWorkout = v.object({
   bw: v.nullable(finiteNumber),
   cur: nonNegativeNumber,
   entries: v.array(activeEntry),
+  sessionPlan: v.optional(sessionPlan),
 });
 
 const muscleSnapshot = v.object({
@@ -135,6 +146,7 @@ const workout = v.object({
   prs: v.optional(v.array(id)),
   vol: finiteNumber,
   note: v.optional(v.string()),
+  sessionPlan: v.optional(sessionPlan),
 });
 const bodyweightEntry = v.object({
   d: isoDate,

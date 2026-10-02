@@ -1,6 +1,7 @@
 import { sessionProgress } from "@/domain/training/schedule";
 import { useState, type ReactElement } from "react";
 import { useTranslation } from "react-i18next";
+import { SessionPlanSummary } from "@/features/plan/SessionPlanSummary";
 import { useForm } from "react-hook-form";
 import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useDateLabels } from "@/shared/hooks/use-date-labels";
@@ -139,6 +140,7 @@ export function WorkoutDetail({
           </Button>
         )}
       </div>
+      {workout.sessionPlan && <SessionPlanSummary plan={workout.sessionPlan} unit={unit} />}
       {workout.entries.map((entry) => {
         const exercise = EXIDX[entry.id];
         return (
