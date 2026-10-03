@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 
 export function useDateLabels() {
   const { t } = useTranslation();
+
   return {
     weekdays: [
       t("date.weekday.sunday", "Sunday"),

@@ -8,9 +8,11 @@ const routeApi = getRouteApi("/home/workout/$workoutId");
 export default function HomeWorkoutDetailSheet() {
   const { workoutId } = routeApi.useParams();
   const navigate = useNavigate();
+
   const workoutName = useStore(
     (state) => state.appState.workouts.find((workout) => workout.id === workoutId)?.name,
   );
+
   const close = () => navigate({ to: "/home", replace: true, resetScroll: false });
 
   return (

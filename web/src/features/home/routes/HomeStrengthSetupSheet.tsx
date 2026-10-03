@@ -74,6 +74,7 @@ export default function HomeStrengthSetupSheet() {
   const savedUnit = useStore((state) => state.appState.unit);
   const hasRoutines = useStore((state) => state.appState.routines.length > 0);
   const [step, setStep] = useState<SetupStep>(0);
+
   const { control, handleSubmit, setValue, trigger } = useForm<StartingStrengthFormValues>({
     defaultValues: {
       experience: "new",
@@ -82,11 +83,13 @@ export default function HomeStrengthSetupSheet() {
     },
     resolver: valibotResolver(createStartingStrengthFormSchema(t)),
   });
+
   const experience = useWatch({ control, name: "experience" });
   const unit = useWatch({ control, name: "unit" });
 
   const close = () => navigate({ to: "/home", replace: true, resetScroll: false });
   const stepLabel = t("startingSetup.step", "Step {{current}} of 3", { current: step + 1 });
+
   const experienceOptions = [
     {
       ...EXPERIENCE_OPTIONS[0],
@@ -113,6 +116,7 @@ export default function HomeStrengthSetupSheet() {
       ),
     },
   ];
+
   const liftRows = [
     {
       ...STARTING_STRENGTH_LIFTS[0],
@@ -135,6 +139,7 @@ export default function HomeStrengthSetupSheet() {
       label: t("startingSetup.lift.deadlift", "Deadlift"),
     },
   ];
+
   const firstWeek = [
     {
       day: t("startingSetup.day.monday", "Monday"),
@@ -178,6 +183,7 @@ export default function HomeStrengthSetupSheet() {
       appState.unit = selectedUnit;
       appState.routines.push(...plan.routines);
       appState.week = { ...appState.week, ...plan.week };
+
       for (const [exerciseId, weight] of Object.entries(weights)) {
         appState.exWeights[exerciseId] = { w: weight, d: todayISO() };
       }
@@ -246,6 +252,7 @@ export default function HomeStrengthSetupSheet() {
                 <div className="grid gap-2">
                   {experienceOptions.map((option) => {
                     const selected = experience === option.value;
+
                     return (
                       <Button
                         variant="tile"

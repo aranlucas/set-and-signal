@@ -18,12 +18,15 @@ const EFFORT_ROWS = [
   ["3", "7"],
   ["4+", "≤6"],
 ] as const;
+
 // RIR 2 / RPE 8: the row a working set usually lands on — the anchor the others are read
 // against. Not where the stepper starts; + walks up from the bottom of the scale.
 const EFFORT_TYPICAL = 2;
+
 function EffortHelpContent() {
   const { t } = useTranslation();
   const effortLabels = useEffortLabels();
+
   return (
     <>
       <div className="my-3 mb-3 overflow-hidden rounded-xl bg-card">
@@ -88,6 +91,7 @@ export function EffortHelpDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { t } = useTranslation();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full max-w-xs">

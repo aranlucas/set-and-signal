@@ -7,15 +7,19 @@ import { adaptSession, createSessionRoutine } from "@/domain/training/session-pl
 import { parseStoredState } from "@/shared/lib/schemas";
 
 const modules = import.meta.glob("../../../convex/**/*.ts");
+
 it("round-trips separate copies and logged snapshots through local Convex while retaining source history", async () => {
   const backend = convexTest(schema, modules).withIdentity({ subject: "synthetic", service: true });
+
   const source = {
     id: "original",
     name: "Template",
     emoji: "barbell",
     ex: [{ id: "0025", sets: 3, reps: 8, weight: 40 }],
   };
+
   const constraints = { equipment: [], budgetMin: 20, restSec: 60 };
+
   const copy = createSessionRoutine(
     source,
     constraints,
@@ -23,6 +27,7 @@ it("round-trips separate copies and logged snapshots through local Convex while 
     "copy",
     "Travel copy",
   );
+
   const history = {
     id: "past",
     d: "2026-01-01",
@@ -34,6 +39,7 @@ it("round-trips separate copies and logged snapshots through local Convex while 
     prs: [],
     vol: 320,
   };
+
   await backend.mutation(api.training.replace, {
     state: JSON.stringify({ routines: [source], workouts: [history] }),
     expected: null,
@@ -48,6 +54,7 @@ it("round-trips separate copies and logged snapshots through local Convex while 
       },
     ],
   });
+
   const completed = {
     ...history,
     id: "adapted",
@@ -55,6 +62,7 @@ it("round-trips separate copies and logged snapshots through local Convex while 
     name: copy.name,
     sessionPlan: copy.sessionPlan,
   };
+
   await backend.mutation(api.training.commit, {
     changes: [
       { key: "workouts/adapted", expected: null, value: canonical(completed) },

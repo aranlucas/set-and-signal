@@ -28,6 +28,7 @@ export const GLYPH_GROUPS = [
     items: ["stretch", "moon", "heart", "flame", "bolt"],
   },
 ] satisfies { id: GlyphGroupId; items: IconName[] }[];
+
 const isIconName = (value: string): value is IconName =>
   ICON_NAMES.some((iconName) => iconName === value);
 

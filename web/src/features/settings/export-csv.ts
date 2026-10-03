@@ -9,6 +9,7 @@ type CsvCell = string | number | null | undefined;
 
 const cell = (value: CsvCell): string => {
   const text = value == null ? "" : String(value);
+
   // Quote anything a spreadsheet could misread; double up embedded quotes.
   return /[",\n\r]/.test(text) ? '"' + text.replaceAll('"', '""') + '"' : text;
 };
@@ -18,6 +19,7 @@ const hms = (ms: number): string => {
   const h = Math.floor(totalSeconds / 3600);
   const m = Math.floor((totalSeconds % 3600) / 60);
   const s = totalSeconds % 60;
+
   return h + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
 };
 
@@ -40,6 +42,7 @@ export function workoutsToCsv(
     "rpe",
     "rir",
   ];
+
   const lines = [header.join(",")];
   state.workouts.forEach((workout: Workout) => {
     const workoutNotes = workout.note || "";
@@ -50,6 +53,7 @@ export function workoutsToCsv(
         if (!set.done) return;
         order++;
         const isWarmup = "wu" in set && set.wu;
+
         if ("min" in set) {
           // Cardio has no measured distance in this app; duration goes in seconds and
           // speed rides along in notes rather than being invented into the wrong column.
@@ -72,8 +76,10 @@ export function workoutsToCsv(
               .map(cell)
               .join(","),
           );
+
           return;
         }
+
         const seconds = "sec" in set ? set.sec : "";
         const weight = "w" in set ? set.w : "";
         const reps = "r" in set ? set.r : "";
@@ -100,6 +106,7 @@ export function workoutsToCsv(
       });
     });
   });
+
   return lines.join("\n") + "\n";
 }
 

@@ -18,7 +18,9 @@ export function UserRows({
   const signOut = useStore((state) => state.signOut);
   const syncStatus = useStore((state) => state.syncStatus);
   const pending = syncStatus.pending > 0 || syncStatus.phase === "conflict";
+
   if (!user) return null;
+
   return (
     <>
       <Row

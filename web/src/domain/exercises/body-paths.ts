@@ -17,10 +17,12 @@ export interface BodyPartPaths {
   vb: string;
   p: Record<string, string[]>;
 }
+
 export interface BodyView {
   front: BodyPartPaths;
   back: BodyPartPaths;
 }
+
 export interface BodyPaths {
   male: BodyView;
   female: BodyView;

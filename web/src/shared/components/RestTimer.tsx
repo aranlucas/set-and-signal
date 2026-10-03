@@ -18,6 +18,7 @@ export default function RestTimer() {
   const finishWorkEarly = useWorkoutTimer((state) => state.finishWorkEarly);
   const stopWork = useWorkoutTimer((state) => state.stopWork);
   const on = work || timer;
+
   if (!on) return null;
   const pct = (on.left / on.total) * 100;
 
@@ -52,11 +53,13 @@ export default function RestTimer() {
         </Button>
       </div>
     );
+
   // Three controls plus the clock don't fit one line on a phone — at 360px the bar is left
   // with about 30px and stops saying anything. So the rest variant stacks: clock and bar
   // read at a glance, controls get their own row. −15 and +15 sit together in number-line
   // order; Skip is pushed to the far edge, away from the button you tap to buy more time.
   if (!timer) return null;
+
   return (
     <div
       id="timer"

@@ -1,3 +1,4 @@
+import * as validation from "valibot";
 // Import a training history exported from another app.
 //
 // Every one of these apps exports the same thing in a different dialect: one row per
@@ -87,14 +88,17 @@ export type ParseResult = WorkoutsImport | WeightsImport;
  * and CRLF. Splitting on commas breaks on the first exercise named "Bench Press, Close
  * Grip" — and a whole history would import shifted by one column without ever erroring.
  */
+// eslint-disable-next-line anti-slop/no-unknown-parameters -- CSV import preserves its public arbitrary-input contract, normalizes through String, then parses quotes/escapes into string cells.
 export function parseCSV(text: unknown): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = "";
   let quoted = false;
   const s = String(text).replace(/^\uFEFF/, "");
+
   for (let i = 0; i < s.length; i++) {
     const c = s[i];
+
     if (quoted) {
       if (c === '"') {
         if (s[i + 1] === '"') {
@@ -110,12 +114,16 @@ export function parseCSV(text: unknown): string[][] {
       if (c === "\r" && s[i + 1] === "\n") i++;
       row.push(field);
       field = "";
+
       if (row.some((x) => x !== "")) rows.push(row);
       row = [];
     } else field += c;
   }
+
   row.push(field);
+
   if (row.some((x) => x !== "")) rows.push(row);
+
   return rows;
 }
 
@@ -151,28 +159,37 @@ const COLUMNS: ReadonlyArray<readonly [string, string[]]> = [
   ["note", ["comment", "comments", "notes", "note"]],
 ];
 
-function mapHeader(header: string[]): Record<string, number | undefined> {
+function mapHeader(header: string[]) {
   const map: Record<string, number | undefined> = {};
   header.forEach((h, i) => {
     const n = norm(h);
+
     for (const [field, names] of COLUMNS) {
       if (map[field] === undefined && names.includes(n)) {
         map[field] = i;
+
         return;
       }
     }
   });
+
   return map;
 }
 
 /** Name of the app a header looks like — shown back to the user so they can sanity-check. */
 export function detectSource(header: string[]): string | null {
   const h = new Set(header.map(norm));
+
   if (h.has("exercise title") && h.has("set index")) return "Hevy";
+
   if (h.has("exercise name") && h.has("set order")) return "Strong";
+
   if (h.has("exercise") && h.has("kind")) return "FitNotes (iOS)";
+
   if (h.has("exercise") && h.has("weight unit")) return "FitNotes";
+
   if (h.has("exercise") && h.has("category")) return "FitNotes";
+
   return null;
 }
 
@@ -205,6 +222,7 @@ const SYN: ReadonlyArray<readonly [RegExp, string]> = [
   [/\bseated\b/g, "seated"],
   [/\bassisted\b/g, "assisted"],
 ];
+
 // Words that say nothing about which exercise this is, so they shouldn't stop a match.
 const FILLER = new Set([
   "the",
@@ -226,11 +244,14 @@ function wordsOf(name: string | null | undefined): string[] {
     .replaceAll(/[()[\]]/g, " ")
     .replaceAll(/[^a-z0-9]+/g, " ")
     .trim();
+
   SYN.forEach(([re, to]) => {
     k = k.replace(re, to);
   });
+
   return k.split(" ").filter((w) => w && !FILLER.has(w));
 }
+
 const keyOf = (name: string | null | undefined) => wordsOf(name).sort().join(" ");
 
 interface IndexEntry {
@@ -238,17 +259,22 @@ interface IndexEntry {
   set: Set<string>;
   n: number;
 }
+
 let INDEX: { exact: Map<string, Id>; all: IndexEntry[] } | null = null;
+
 function buildIndex() {
   if (INDEX) return INDEX;
-  const index = { exact: new Map<string, Id>(), all: [] as IndexEntry[] };
+  const all: IndexEntry[] = [];
+  const index = { exact: new Map<string, Id>(), all };
   EXDB.forEach((e) => {
     const w = wordsOf(e.n);
     const k = w.slice().sort().join(" ");
+
     if (!index.exact.has(k)) index.exact.set(k, e.id);
     index.all.push({ id: e.id, set: new Set(w), n: w.length });
   });
   INDEX = index;
+
   return index;
 }
 
@@ -261,71 +287,76 @@ function buildIndex() {
 // common vocabulary is spelled out. The convention is that an unqualified name means the
 // canonical barbell version, which is what these apps assume when they show it to you.
 // Extending this table is the intended way to improve import accuracy.
-const ALIAS_EX: Record<string, Id> = {
-  "bench press": "0025",
-  "barbell bench press": "0025",
-  "flat bench press": "0025",
-  "incline bench press": "0047",
-  "decline bench press": "0033",
-  "close grip bench press": "0030",
-  "close-grip bench press": "0030",
-  squat: "0043",
-  "back squat": "0043",
-  "barbell squat": "0043",
-  "front squat": "0042",
-  deadlift: "0032",
-  "romanian deadlift": "0085",
-  rdl: "0085",
-  "sumo deadlift": "0117",
-  "lat pulldown": "2330",
-  "lat pull down": "2330",
-  pulldown: "2330",
-  shrug: "0095",
-  shrugs: "0095",
-  "overhead press": "0091",
-  "military press": "0091",
-  "shoulder press": "0091",
-  ohp: "0091",
-  "barbell row": "0027",
-  "bent over row": "0027",
-  "bent-over row": "0027",
-  "dumbbell row": "0292",
-  "one arm dumbbell row": "0292",
-  "leg curl": "0586",
-  "lying leg curl": "0586",
-  "seated leg curl": "0586",
-  "leg press": "0739",
-  "leg extension": "0585",
-  "calf raise": "1372",
-  "standing calf raise": "1372",
-  "seated calf raise": "0088",
-  "lateral raise": "0334",
-  "side raise": "0334",
-  "reverse fly": "0348",
-  "rear delt fly": "0348",
-  "bicep curl": "0294",
-  "biceps curl": "0294",
-  "dumbbell curl": "0294",
-  "preacher curl": "0070",
-  "barbell curl": "0031",
-  "tricep pushdown": "0241",
-  "triceps pushdown": "0241",
-  pushdown: "0241",
-  skullcrusher: "0060",
-  "skull crusher": "0060",
-  "lying triceps extension": "0061",
-  lunge: "0054",
-  lunges: "0054",
-  "cable crossover": "1269",
-  "cable cross over": "1269",
-};
+const ALIAS_EX = new Map<string, Id>(
+  Object.entries({
+    "bench press": "0025",
+    "barbell bench press": "0025",
+    "flat bench press": "0025",
+    "incline bench press": "0047",
+    "decline bench press": "0033",
+    "close grip bench press": "0030",
+    "close-grip bench press": "0030",
+    squat: "0043",
+    "back squat": "0043",
+    "barbell squat": "0043",
+    "front squat": "0042",
+    deadlift: "0032",
+    "romanian deadlift": "0085",
+    rdl: "0085",
+    "sumo deadlift": "0117",
+    "lat pulldown": "2330",
+    "lat pull down": "2330",
+    pulldown: "2330",
+    shrug: "0095",
+    shrugs: "0095",
+    "overhead press": "0091",
+    "military press": "0091",
+    "shoulder press": "0091",
+    ohp: "0091",
+    "barbell row": "0027",
+    "bent over row": "0027",
+    "bent-over row": "0027",
+    "dumbbell row": "0292",
+    "one arm dumbbell row": "0292",
+    "leg curl": "0586",
+    "lying leg curl": "0586",
+    "seated leg curl": "0586",
+    "leg press": "0739",
+    "leg extension": "0585",
+    "calf raise": "1372",
+    "standing calf raise": "1372",
+    "seated calf raise": "0088",
+    "lateral raise": "0334",
+    "side raise": "0334",
+    "reverse fly": "0348",
+    "rear delt fly": "0348",
+    "bicep curl": "0294",
+    "biceps curl": "0294",
+    "dumbbell curl": "0294",
+    "preacher curl": "0070",
+    "barbell curl": "0031",
+    "tricep pushdown": "0241",
+    "triceps pushdown": "0241",
+    pushdown: "0241",
+    skullcrusher: "0060",
+    "skull crusher": "0060",
+    "lying triceps extension": "0061",
+    lunge: "0054",
+    lunges: "0054",
+    "cable crossover": "1269",
+    "cable cross over": "1269",
+  } satisfies Record<string, Id>),
+);
 
 let ALIAS_IDX: Map<string, Id> | null = null;
+
 const aliasIndex = () => {
   if (!ALIAS_IDX) {
     ALIAS_IDX = new Map();
-    for (const k in ALIAS_EX) ALIAS_IDX.set(wordsOf(k).sort().join(" "), ALIAS_EX[k]);
+
+    for (const [key, id] of ALIAS_EX) ALIAS_IDX.set(wordsOf(key).sort().join(" "), id);
   }
+
   return ALIAS_IDX;
 };
 
@@ -341,158 +372,209 @@ const aliasIndex = () => {
 export function matchExercise(name: string | null | undefined): Id | null {
   const idx = buildIndex();
   const w = wordsOf(name);
+
   if (w.length === 0) return null;
   // Compared as a sorted bag of words, so "Squat (Barbell)" finds the 'barbell squat'
   // alias — the exporters disagree about whether the equipment leads or trails.
   const sorted = w.slice().sort().join(" ");
   const aliased = aliasIndex().get(sorted);
+
   if (aliased && EXIDX[aliased]) return aliased;
   const exact = idx.exact.get(sorted);
+
   if (exact) return exact;
   const q = new Set(w);
   let best: Id | null = null;
   let bestExtra = Infinity;
   let ties = 0;
+
   for (const c of idx.all) {
     let ok = true;
+
     for (const word of q)
       if (!c.set.has(word)) {
         ok = false;
         break;
       }
+
     if (!ok) continue;
     const extra = c.n - q.size;
+
     if (extra > 2) continue;
+
     if (extra < bestExtra) {
       best = c.id;
       bestExtra = extra;
       ties = 1;
     } else if (extra === bestExtra) ties++;
   }
+
   return ties === 1 ? best : null;
 }
 
 // Categories the exporters use -> the dataset's body parts, for exercises we invent.
-const CATEGORY_BP: Record<string, string> = {
-  chest: "chest",
-  back: "back",
-  lats: "back",
-  shoulders: "shoulders",
-  delts: "shoulders",
-  legs: "upper legs",
-  quads: "upper legs",
-  hamstrings: "upper legs",
-  glutes: "upper legs",
-  calves: "lower legs",
-  abs: "waist",
-  core: "waist",
-  obliques: "waist",
-  arms: "upper arms",
-  biceps: "upper arms",
-  triceps: "upper arms",
-  forearms: "lower arms",
-  cardio: "cardio",
-  "full body": "upper legs",
-  olympic: "upper legs",
-  neck: "neck",
-};
+const CATEGORY_BP = new Map<string, string>(
+  Object.entries({
+    chest: "chest",
+    back: "back",
+    lats: "back",
+    shoulders: "shoulders",
+    delts: "shoulders",
+    legs: "upper legs",
+    quads: "upper legs",
+    hamstrings: "upper legs",
+    glutes: "upper legs",
+    calves: "lower legs",
+    abs: "waist",
+    core: "waist",
+    obliques: "waist",
+    arms: "upper arms",
+    biceps: "upper arms",
+    triceps: "upper arms",
+    forearms: "lower arms",
+    cardio: "cardio",
+    "full body": "upper legs",
+    olympic: "upper legs",
+    neck: "neck",
+  } satisfies Record<string, string>),
+);
 
 /* ----------------------------------------------------------- conversion --- */
 
-const textValue = (value: unknown): string =>
-  typeof value === "string" ? value : typeof value === "number" ? String(value) : "";
+const textValue = validation.parser(
+  validation.fallback(
+    validation.union([
+      validation.string(),
+      validation.pipe(validation.number(), validation.transform(String)),
+    ]),
+    "",
+  ),
+);
 
-const num = (v: unknown) => {
+const num = (v: string | undefined) => {
   const n = parseFloat(textValue(v).replace(",", "."));
+
   return isFinite(n) ? n : 0;
 };
+
 // An effort rating out of someone else's export. A blank cell means "not rated" and has to
 // stay absent rather than becoming 0 — and 0 itself means opposite things on the two scales:
 // RIR 0 is a set taken to failure and worth keeping, while RPE has no 0 (the scale is 1–10),
 // so an app writing 0 for "nothing here" must not be read as an effort. Ratings above the
 // scale are capped rather than dropped — the set was still rated, just written oddly.
-const effortNum = (raw: unknown, zeroMeansRated: boolean): number | null => {
+const effortNum = (raw: string | undefined, zeroMeansRated: boolean): number | null => {
   const s = textValue(raw).trim();
+
   if (!s) return null;
   const n = parseFloat(s.replace(",", "."));
+
   if (!isFinite(n) || n < 0 || (n === 0 && !zeroMeansRated)) return null;
+
   return Math.min(10, Math.round(n * 100) / 100);
 };
+
 const LB_TO_KG = 0.45359237;
+
 const p2 = (n: string | number) => String(n).padStart(2, "0");
-const MON: Record<string, number> = {
-  jan: 1,
-  feb: 2,
-  mar: 3,
-  apr: 4,
-  may: 5,
-  jun: 6,
-  jul: 7,
-  aug: 8,
-  sep: 9,
-  oct: 10,
-  nov: 11,
-  dec: 12,
-};
+
+const MON = new Map<string, number>(
+  Object.entries({
+    jan: 1,
+    feb: 2,
+    mar: 3,
+    apr: 4,
+    may: 5,
+    jun: 6,
+    jul: 7,
+    aug: 8,
+    sep: 9,
+    oct: 10,
+    nov: 11,
+    dec: 12,
+  } satisfies Record<string, number>),
+);
 
 /** "2020-12-30 18:51:52" · "2024-03-07" · "22 Dec 2025, 08:00" · "07/03/2024" -> { d, t } */
+// eslint-disable-next-line anti-slop/no-unknown-parameters -- Import timestamps are untrusted; textValue validates scalar representation before date-pattern parsing returns a typed date or null.
 export function parseWhen(s: unknown): When | null {
   const v = textValue(s).trim();
   let m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ](\d{1,2}):(\d{2}))?/);
+
   if (m) return { d: `${m[1]}-${p2(m[2])}-${p2(m[3])}`, t: hm(m[4], m[5]) };
   m = v.match(/^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?\s+(\d{4})(?:,?\s+(\d{1,2}):(\d{2}))?/);
-  if (m && MON[m[2].toLowerCase()])
+
+  const dayFirstMonth = m ? MON.get(m[2].toLowerCase()) : undefined;
+
+  if (m && dayFirstMonth)
     return {
-      d: `${m[3]}-${p2(MON[m[2].toLowerCase()])}-${p2(m[1])}`,
+      d: `${m[3]}-${p2(dayFirstMonth)}-${p2(m[1])}`,
       t: hm(m[4], m[5]),
     };
   m = v.match(/^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})(?:,?\s+(\d{1,2}):(\d{2}))?/);
-  if (m && MON[m[1].toLowerCase()])
+
+  const monthFirstMonth = m ? MON.get(m[1].toLowerCase()) : undefined;
+
+  if (m && monthFirstMonth)
     return {
-      d: `${m[3]}-${p2(MON[m[1].toLowerCase()])}-${p2(m[2])}`,
+      d: `${m[3]}-${p2(monthFirstMonth)}-${p2(m[2])}`,
       t: hm(m[4], m[5]),
     };
   // Day-first when ambiguous: FitNotes/Strong/Hevy all write unambiguous dates, so a
   // bare numeric one came through a spreadsheet, and those are usually European.
   m = v.match(/^(\d{1,2})[/.](\d{1,2})[/.](\d{4})(?:[, ]+(\d{1,2}):(\d{2}))?/);
+
   if (m) {
     const [, a, b, y] = m;
+
     if (!a || !b || !y) return null;
     const day = +a > 12 ? a : +b > 12 ? b : a;
     const mon = day === a ? b : a;
+
     return { d: `${y}-${p2(mon)}-${p2(day)}`, t: hm(m[4], m[5]) };
   }
+
   return null;
 }
+
 const hm = (h?: string, mi?: string) =>
   h === undefined ? null : (parseInt(h, 10) || 0) * 3600000 + (parseInt(mi || "", 10) || 0) * 60000;
 
 /** "HH:MM:SS" · "MM:SS" · "90" -> minutes */
-function toMinutes(v: unknown): number {
+function toMinutes(v: string | undefined): number {
   const s = textValue(v).trim();
+
   if (!s) return 0;
+
   if (s.includes(":")) {
     const p = s.split(":").map((x) => parseInt(x, 10) || 0);
     const [first = 0, second = 0, third = 0] = p;
     const sec = p.length === 3 ? first * 3600 + second * 60 + third : first * 60 + second;
+
     return Math.round((sec / 60) * 10) / 10;
   }
+
   const m = s.match(/(\d+)\s*h/i);
   const mm = s.match(/(\d+)\s*m/i); // Strong's "2h 38m"
+
   if (m || mm) return (m ? Number(m[1] || 0) * 60 : 0) + (mm ? Number(mm[1] || 0) : 0);
+
   return Math.round(num(s) * 10) / 10;
 }
-const KM: Record<string, number> = {
-  m: 0.001,
-  km: 1,
-  cm: 0.00001,
-  in: 0.0000254,
-  ft: 0.0003048,
-  yd: 0.0009144,
-  mi: 1.609344,
-};
-const toKm = (v: unknown, unit: unknown) =>
-  num(v) * (KM[textValue(unit).toLowerCase().trim()] ?? 1);
+
+const KM = new Map<string, number>(
+  Object.entries({
+    m: 0.001,
+    km: 1,
+    cm: 0.00001,
+    in: 0.0000254,
+    ft: 0.0003048,
+    yd: 0.0009144,
+    mi: 1.609344,
+  } satisfies Record<string, number>),
+);
+
+const toKm = (v: string | undefined, unit: string | undefined) =>
+  num(v) * (KM.get(textValue(unit).toLowerCase().trim()) ?? 1);
 
 /* --------------------------------------------------------------- parse ---- */
 
@@ -510,24 +592,30 @@ const fields = (s: LoggedSet): SetFields => s;
  * helps nobody. Bad rows are counted and reported instead.
  */
 export function parseWorkoutCSV(
+  // eslint-disable-next-line anti-slop/no-unknown-parameters -- File-import boundary retains arbitrary input, then normalizes and validates CSV/XML grammar and numeric fields before producing domain entries.
   text: unknown,
   { unit = "lb" }: { unit?: Unit } = {},
 ): WorkoutsImport {
   const rows = parseCSV(text);
+
   if (rows.length < 2) return { error: "empty" };
   const [headerRow, ...dataRows] = rows;
+
   if (!headerRow) return { error: "empty" };
   const map = mapHeader(headerRow);
   const source = detectSource(headerRow);
+
   const dateCol =
     map.date === undefined
       ? map.startTime !== undefined
         ? ("startTime" as const)
         : null
       : ("date" as const);
+
   if (!dateCol || map.exercise === undefined) return { error: "unrecognised" };
 
   const resolved = new Map<string, Id | null>(); // exercise name -> dataset id | null, resolved once
+
   const byDate = new Map<
     IsoDate,
     {
@@ -537,6 +625,7 @@ export function parseWorkoutCSV(
       end: number | null;
     }
   >();
+
   const created = new Map<string, CustomEx>();
   const unmatched = new Set<string>();
   let sets = 0;
@@ -553,6 +642,7 @@ export function parseWorkoutCSV(
   for (const r of dataRows) {
     const name = cell(r, "exercise");
     const when = parseWhen(cell(r, dateCol));
+
     if (!name || !when) {
       skipped++;
       continue;
@@ -561,6 +651,7 @@ export function parseWorkoutCSV(
     // explicit kg/lb columns beat a generic column plus a unit column
     let w = 0;
     let rowUnit: "" | Unit = "";
+
     if (map.weightKg !== undefined && cell(r, "weightKg")) {
       w = num(cell(r, "weightKg"));
       rowUnit = "kg";
@@ -572,31 +663,39 @@ export function parseWorkoutCSV(
       const u = cell(r, "weightUnit").toLowerCase();
       rowUnit = u.startsWith("lb") ? "lb" : u.startsWith("kg") ? "kg" : "";
     }
+
     if (rowUnit === "lb") sawLb = true;
+
     if (rowUnit === "kg") sawKg = true;
 
     const reps = Math.round(num(cell(r, "reps")));
     const secs = num(cell(r, "seconds"));
     const mins = secs > 0 ? Math.round((secs / 60) * 10) / 10 : toMinutes(cell(r, "time"));
+
     const km =
       map.distanceKm !== undefined && cell(r, "distanceKm")
         ? num(cell(r, "distanceKm"))
         : toKm(cell(r, "distance"), cell(r, "distanceUnit"));
+
     if (!w && !reps && !mins && !km) {
       skipped++;
       continue;
     }
+
     if (/warm/i.test(cell(r, "setType"))) warmups++;
 
     const key = keyOf(name);
     let id = resolved.get(key);
+
     if (id === undefined) {
       id = matchExercise(name);
       resolved.set(key, id);
     }
+
     if (id) matched++;
     else {
       let c = created.get(key);
+
       if (!c) {
         c = {
           id: "im" + uid(),
@@ -606,16 +705,18 @@ export function parseWorkoutCSV(
           tg: "",
           desc: "",
           bp:
-            CATEGORY_BP[cell(r, "category").toLowerCase()] ||
+            CATEGORY_BP.get(cell(r, "category").toLowerCase()) ||
             (km || (mins > 0 && !reps) ? "cardio" : "upper legs"),
         };
         created.set(key, c);
         unmatched.add(name);
       }
+
       id = c.id;
     }
 
     const isCardioRow = (km > 0 || mins > 0) && !reps;
+
     const set: RowSet = isCardioRow
       ? {
           min: mins || 0,
@@ -623,12 +724,14 @@ export function parseWorkoutCSV(
           done: true,
         }
       : { w, r: reps || 0, done: true, u: rowUnit };
+
     // Effort rides along only where the app can show it again: a weighted rep set. A treadmill
     // row with an RPE would have nowhere to put it. A set is kept on one scale, so a file
     // carrying both columns is read as RIR — the same precedence setLabel reads them back with.
     if (!isCardioRow) {
       const rir = effortNum(cell(r, "rir"), true);
       const rpe = rir == null ? effortNum(cell(r, "rpe"), false) : null;
+
       if (rir != null) {
         set.rir = rir;
         rirSets++;
@@ -639,6 +742,7 @@ export function parseWorkoutCSV(
     }
 
     let day = byDate.get(when.d);
+
     if (!day) {
       day = {
         ex: new Map(),
@@ -648,14 +752,19 @@ export function parseWorkoutCSV(
       };
       byDate.set(when.d, day);
     }
+
     if (!day.name) day.name = cell(r, "workoutName") || "";
+
     if (map.endTime !== undefined) {
       const e = parseWhen(cell(r, "endTime"));
+
       if (e && e.t != null) day.end = e.t;
     } else if (map.time !== undefined && !map.seconds && reps) {
       /* FitNotes' Time is per-set */
     }
+
     const exerciseSets = day.ex.get(id);
+
     if (exerciseSets) exerciseSets.push(set);
     else day.ex.set(id, [set]);
     sets++;
@@ -670,46 +779,62 @@ export function parseWorkoutCSV(
   const mixedUnits = sawLb && sawKg;
   const toKg = (x: number) => Math.round(x * LB_TO_KG * 10) / 10;
   const toLb = (x: number) => Math.round((x / LB_TO_KG) * 10) / 10;
+
   // A row without its own unit follows the file's, and a file that says nothing is taken
   // to already be in the profile's unit.
   const convRow = (s: RowSet): number => {
     const u = s.u || fileUnit;
+
     if (!u || u === unit) return s.w || 0;
+
     return u === "lb" ? toKg(s.w || 0) : toLb(s.w || 0);
   };
+
   const converted = (!!fileUnit && fileUnit !== unit) || mixedUnits;
 
   const dates = [...byDate.keys()].sort();
+
   const workouts: Workout[] = dates.flatMap((d) => {
     const day = byDate.get(d);
+
     if (!day) return [];
+
     // rows carry either the cardio pair (min/speed) or w/r (+optional effort) by
     // construction, so the widened arrays are runtime-guaranteed to hold LoggedSets
     const entries = [...day.ex.entries()].map(([id, ss]): WorkoutEntry => {
       // the transient unit marker is stripped here, before anything is stored
       const mx = Math.max(0, ...ss.map((s) => s.w || 0));
+
       const convertedSets = ss.map(({ u, ...set }): LoggedSet => {
         if (set.min !== undefined || set.speed !== undefined) {
           return { done: set.done, min: set.min || 0, speed: set.speed || 0 };
         }
+
         const repsSet: RepsSet = {
           done: set.done,
           w: set.w === undefined ? 0 : convRow({ ...set, u }),
           r: set.r || 0,
         };
+
         if (set.rir != null) repsSet.rir = set.rir;
+
         if (set.rpe != null) repsSet.rpe = set.rpe;
+
         return repsSet;
       });
+
       return { id, sets: convertedSets, topW: mx || null };
     });
+
     const base = new Date(d + "T00:00:00").getTime();
     const start = base + (day.start ?? 18 * 3600000);
     const end = day.end == null ? start : base + day.end;
+
     const vol = entries.reduce(
       (a, e) => a + e.sets.reduce((b, s) => b + (fields(s).w || 0) * (fields(s).r || 0), 0),
       0,
     );
+
     return [
       {
         id: "iw" + uid(),
@@ -758,6 +883,7 @@ export function parseWorkoutCSV(
  * phone is set to and labels each record, so the unit is read per record.
  */
 export function parseBodyweight(
+  // eslint-disable-next-line anti-slop/no-unknown-parameters -- File-import boundary retains arbitrary input, then normalizes and validates CSV/XML grammar and numeric fields before producing domain entries.
   text: unknown,
   { unit = "lb" }: { unit?: Unit } = {},
 ): WeightsImport {
@@ -768,14 +894,18 @@ export function parseBodyweight(
   if (s.includes("HKQuantityTypeIdentifierBodyMass")) {
     const re = /<Record[^>]*type="HKQuantityTypeIdentifierBodyMass"[^>]*>/g;
     let m: RegExpExecArray | null;
+
     while ((m = re.exec(s))) {
       const tag = m[0];
       const val = /value="([\d.]+)"/.exec(tag);
       const dt = /startDate="([^"]+)"/.exec(tag) || /creationDate="([^"]+)"/.exec(tag);
       const u = /unit="([^"]+)"/.exec(tag);
+
       if (!val || !dt) continue;
       const when = parseWhen(dt[1]);
+
       if (!when) continue;
+
       if (u) fileUnit = /lb/i.test(u[1]) ? "lb" : "kg";
       out.set(when.d, {
         w: parseFloat(val[1]),
@@ -784,19 +914,25 @@ export function parseBodyweight(
     }
   } else {
     const rows = parseCSV(s);
+
     if (rows.length < 2) return { error: "empty" };
     const headerRow = rows[0];
+
     if (!headerRow) return { error: "empty" };
     const map = mapHeader(headerRow);
     // a weight-only CSV: whichever weight column it has
     const wCol = map.weightKg ?? map.weightLb ?? map.weight;
     const dCol = map.date ?? map.startTime;
+
     if (wCol === undefined || dCol === undefined) return { error: "unrecognised" };
+
     if (map.weightKg !== undefined) fileUnit = "kg";
     else if (map.weightLb !== undefined) fileUnit = "lb";
+
     for (let i = 1; i < rows.length; i++) {
       const when = parseWhen(rows[i]?.[dCol] ?? "");
       const w = num(rows[i]?.[wCol]);
+
       if (!when || !w) continue;
       out.set(when.d, { w, t: new Date(when.d).getTime() + (when.t ?? 0) });
     }
@@ -804,20 +940,25 @@ export function parseBodyweight(
 
   if (out.size === 0) return { error: "unrecognised" };
   const converted = !!fileUnit && fileUnit !== unit;
+
   const conv = converted
     ? fileUnit === "lb"
       ? (x: number) => Math.round(x * LB_TO_KG * 10) / 10
       : (x: number) => Math.round((x / LB_TO_KG) * 10) / 10
     : (x: number) => Math.round(x * 10) / 10;
+
   const dates = [...out.keys()].sort();
   const firstDate = dates[0];
   const lastDate = dates.at(-1);
+
   if (!firstDate || !lastDate) return { error: "unrecognised" };
+
   return {
     kind: "bodyweight",
     source: "Apple Health",
     bodyweight: dates.flatMap((d) => {
       const entry = out.get(d);
+
       return entry ? [{ d, w: conv(entry.w), t: entry.t || new Date(d).getTime() }] : [];
     }),
     fileUnit,
@@ -828,12 +969,16 @@ export function parseBodyweight(
 }
 
 /** Sniff the file and parse it as whatever it is. */
+// eslint-disable-next-line anti-slop/no-unknown-parameters -- Import dispatcher normalizes untrusted input and immediately delegates to the CSV/XML domain parsers.
 export function parseImport(text: unknown, opts?: { unit?: Unit }): ParseResult {
   const s = String(text);
+
   if (s.includes("HKQuantityTypeIdentifier") || /^\s*</.test(s)) return parseBodyweight(s, opts);
   const asWorkouts = parseWorkoutCSV(s, opts);
+
   if (!("error" in asWorkouts)) return asWorkouts;
   const asWeights = parseBodyweight(s, opts);
+
   return "error" in asWeights ? asWorkouts : asWeights;
 }
 
@@ -846,17 +991,19 @@ export function mergeImport(
     "bodyweight" | "customEx" | "exWeights" | "workouts"
   >,
   parsed: ParseResult,
-): { added: number; skipped: number } {
+) {
   // callers pass a confirmed parse; an error result simply merges nothing
   if ("kind" in parsed && parsed.kind === "bodyweight") {
     const have = new Set(state.bodyweight.map((b) => b.d));
     const fresh = parsed.bodyweight.filter((b) => !have.has(b.d));
     state.bodyweight = [...state.bodyweight, ...fresh].sort((a, b) => (a.d < b.d ? -1 : 1));
+
     return {
       added: fresh.length,
       skipped: parsed.bodyweight.length - fresh.length,
     };
   }
+
   if ("kind" in parsed && parsed.kind === "workouts") {
     const have = new Set(state.workouts.map((w) => w.d));
     const fresh = parsed.workouts.filter((w) => !have.has(w.d));
@@ -868,16 +1015,20 @@ export function mergeImport(
     fresh.forEach((w) =>
       w.entries.forEach((e) => {
         const mx = Math.max(0, ...e.sets.map((s) => fields(s).w || 0), e.topW || 0);
+
         if (mx > 0) {
           const cur = state.exWeights[e.id];
+
           if (!cur || w.d >= cur.d) state.exWeights[e.id] = { w: mx, d: w.d };
         }
       }),
     );
+
     return {
       added: fresh.length,
       skipped: parsed.workouts.length - fresh.length,
     };
   }
+
   return { added: 0, skipped: 0 };
 }

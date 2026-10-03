@@ -46,21 +46,28 @@ export function platesFor(
 ): PlateBreakdown | null {
   if (!setup || !setup.on) return null;
   const perSideTarget = (weight - setup.bar) / 2;
+
   if (!(perSideTarget > 0)) return null;
   const sorted = [...new Set(setup.avail)].filter((w) => w > 0).sort((a, b) => b - a);
+
   if (sorted.length === 0) return null;
 
   let remaining = perSideTarget;
   const perSide: Array<{ w: number; count: number }> = [];
+
   for (const plate of sorted) {
     const count = Math.floor(remaining / plate + 1e-9);
+
     if (count > 0) {
       perSide.push({ w: plate, count });
       remaining -= count * plate;
     }
+
     if (remaining <= 1e-9) break;
   }
+
   const used = perSide.reduce((sum, p) => sum + p.w * p.count, 0);
   const achieved = Math.round((setup.bar + used * 2) * 100) / 100;
+
   return { perSide, achieved, exact: Math.abs(achieved - weight) < 0.01 };
 }

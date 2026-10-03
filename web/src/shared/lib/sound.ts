@@ -1,5 +1,6 @@
 // WebAudio beeps + haptics. `enabled` gates sound.
 let audioCtx: AudioContext | null = null;
+
 export function beep(
   enabled: boolean,
   frequency?: number,
@@ -7,6 +8,7 @@ export function beep(
   delaySeconds?: number,
 ) {
   if (!enabled) return;
+
   try {
     audioCtx ??= new AudioContext();
     const oscillator = audioCtx.createOscillator();
@@ -26,6 +28,7 @@ export function beep(
     /* */
   }
 }
+
 export function vibrate(pattern: VibratePattern) {
   try {
     navigator.vibrate && navigator.vibrate(pattern);

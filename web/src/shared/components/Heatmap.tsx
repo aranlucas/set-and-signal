@@ -46,12 +46,14 @@ export default function Heatmap({
 
   const activityByDate: Record<string, { workoutCount: number; volume: number; minutes: number }> =
     {};
+
   appState.workouts.forEach((workout) => {
     const activity = (activityByDate[workout.d] = activityByDate[workout.d] || {
       workoutCount: 0,
       volume: 0,
       minutes: 0,
     });
+
     activity.workoutCount++;
     activity.volume += workout.vol || 0;
     activity.minutes += Math.max(
@@ -60,25 +62,35 @@ export default function Heatmap({
     );
   });
   const minutes: number[] = [];
+
   for (const activity of Object.values(activityByDate)) {
     if (activity.minutes > 0) minutes.push(activity.minutes);
   }
+
   const sortedMinutes = minutes.toSorted((a, b) => a - b);
+
   const percentile = (position: number) =>
     sortedMinutes.length > 0
       ? sortedMinutes[
           Math.min(sortedMinutes.length - 1, Math.floor(position * sortedMinutes.length))
         ]
       : 0;
+
   const lowThreshold = percentile(0.25);
   const mediumThreshold = percentile(0.5);
   const highThreshold = percentile(0.75);
+
   const levelForActivity = (activity?: { minutes: number }) => {
     if (activity === undefined) return 0;
+
     if (activity.minutes === 0) return 1;
+
     if (activity.minutes >= highThreshold) return 4;
+
     if (activity.minutes >= mediumThreshold) return 3;
+
     if (activity.minutes >= lowThreshold) return 2;
+
     return 1;
   };
 
@@ -91,6 +103,7 @@ export default function Heatmap({
   const monthLabels: { key: string; label: string }[] = [];
   const weekColumns = [];
   let lastMonth = -1;
+
   for (let wk = 0; wk <= 52; wk++) {
     const columnStart = new Date(start);
     columnStart.setDate(start.getDate() + wk * 7);
@@ -100,18 +113,22 @@ export default function Heatmap({
       key: isoOf(columnStart),
       label: shouldShowMonth ? monthsShort[monthIndex] : "",
     });
+
     if (columnStart.getDate() <= 7) lastMonth = monthIndex;
     const dayCells = [];
+
     for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
       const date = new Date(columnStart);
       date.setDate(columnStart.getDate() + dayIndex);
       const dateKey = isoOf(date);
       const activity = activityByDate[dateKey];
+
       const cellClassName = activityCellClass(
         levelForActivity(activity),
         dateKey === todayKey,
         date > today,
       );
+
       const cellTitle =
         dateKey +
         (activity
@@ -119,6 +136,7 @@ export default function Heatmap({
               count: activity.workoutCount,
             })} · ${activity.minutes} min · ${fmtVol(activity.volume, appState.unit)}`
           : "");
+
       dayCells.push(
         activity ? (
           <Button
@@ -137,6 +155,7 @@ export default function Heatmap({
         ),
       );
     }
+
     weekColumns.push(
       <div key={isoOf(columnStart)} className="flex flex-col gap-1">
         {dayCells}

@@ -22,6 +22,7 @@ export function MuscleBalance({ appState }: { appState: AppState }) {
   const [hard, setHard] = useState(false);
   const [sel, setSel] = useState<MuscleSlug | null>(null);
   const [now] = useState(() => Date.now());
+
   const inWin = appState.workouts.filter((w) =>
     windowDayCount === 0
       ? true
@@ -29,6 +30,7 @@ export function MuscleBalance({ appState }: { appState: AppState }) {
         ? weekKey(w.d) === weekKey(todayISO())
         : (w.start || new Date(w.d).getTime()) > now - windowDayCount * 86400000,
   );
+
   // Counting only the sets taken near failure turns the map from "where did the volume go"
   // into "where did the stimulus go" — a muscle can lead on sets and still never be trained
   // hard. Offered only when the window holds ratings at all, since with none the hard map
@@ -36,12 +38,14 @@ export function MuscleBalance({ appState }: { appState: AppState }) {
   const rated = inWin.some((w) =>
     w.entries.some((e) => e.sets.some((s) => s.done && isHardSet(ratingOf(s)))),
   );
+
   const on = hard && rated;
   const load = loadOfWorkouts(inWin, on ? (s: LoggedSet) => isHardSet(ratingOf(s)) : undefined);
   const { worked, missed } = rankOf(load);
   const top = worked.slice(0, 4);
   const max = (worked.length > 0 ? load[worked[0]] : 0) ?? 0;
   const sets = (m: MuscleSlug) => Math.round((load[m] || 0) * 10) / 10;
+
   return (
     <div className="mb-3 rounded-lg bg-card p-4">
       <div className="mb-2 flex items-center justify-between gap-3">

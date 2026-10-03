@@ -26,16 +26,20 @@ export function EffortCard({ appState }: { appState: AppState }) {
   const windowDayCount = Number(windowDays);
   const kind = displayScale(appState);
   const hd = scaleName(kind);
+
   // Every rir this card hands toScale is already known-rated, so the null arm of
   // toScale never fires; collapse it once here instead of at each call site.
   const scaled = (rir: number) => {
     const v = toScale(kind, rir);
+
     return v == null ? 0 : v;
   };
+
   const weeks = effortWeeks(appState, windowDayCount);
   const hist = effortHistogram(appState, windowDayCount);
   const sum = effortSummary(appState, windowDayCount);
   const maxBin = Math.max(1, ...hist.map((b) => b.n));
+
   // The week's set count rides along in the tooltip, because the pair is the reading:
   // volume up with effort up is fatigue piling up, volume up with effort flat is adaptation.
   const pts = weeks.map((w) => ({
@@ -43,6 +47,7 @@ export function EffortCard({ appState }: { appState: AppState }) {
     y: scaled(w.rir),
     note: t("workout.completion.sets", "{{count}} sets", { count: w.sets }),
   }));
+
   // Bins run hardest-first in both scales: RIR 0 and RPE 10 are the same set.
   const binLabel = (b: (typeof hist)[number]) =>
     kind === "rpe" ? (b.tail ? "≤ 6" : String(10 - b.rir)) : b.tail ? b.rir + "+" : String(b.rir);

@@ -34,13 +34,16 @@ function RegistrationDialogContent({ open, onOpenChange }: RegistrationDialogPro
   const setUser = useStore((state) => state.setUser);
   const transferGuest = useStore((state) => state.transferGuest);
   const pullState = useStore((state) => state.pullState);
+
   const configQuery = useQuery({
     queryKey: ["config"],
     queryFn: getConfig,
     select: (config) => config.invite_only,
     enabled: open,
   });
+
   const inviteOnly = configQuery.data ?? false;
+
   const {
     handleSubmit,
     register,
@@ -62,6 +65,7 @@ function RegistrationDialogContent({ open, onOpenChange }: RegistrationDialogPro
       setUser(user);
       onOpenChange(false);
       reset();
+
       if (hasData(guestState)) {
         await transferGuest(guestState);
         toast(

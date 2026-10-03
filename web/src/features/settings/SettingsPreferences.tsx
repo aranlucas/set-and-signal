@@ -30,6 +30,7 @@ export function SettingsPreferences({ onEffortHelp }: { onEffortHelp: () => void
   const update = useStore((state) => state.update);
   const user = useStore((state) => state.user);
   const wakeOK = wakeLockSupported();
+
   return (
     <>
       <Section
@@ -72,6 +73,7 @@ export function SettingsPreferences({ onEffortHelp }: { onEffortHelp: () => void
             onChange={(value) =>
               update((state) => {
                 state.unit = value;
+
                 // A kg inventory means nothing once the profile reads lb: re-seed the
                 // plate calculator with the new unit's defaults.
                 if (state.plates) state.plates = defaultPlateSetup(value);
@@ -211,6 +213,7 @@ export function SettingsPreferences({ onEffortHelp }: { onEffortHelp: () => void
                 {COMMON_PLATES[appState.unit].map((plate) => {
                   const setup = effectivePlateSetup(appState.unit, appState.plates);
                   const active = setup.avail.includes(plate);
+
                   return (
                     <Button
                       variant="toggle"

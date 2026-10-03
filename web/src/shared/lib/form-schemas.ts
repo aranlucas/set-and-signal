@@ -26,11 +26,13 @@ export const createRegistrationFormSchema = (t: Translate, inviteOnly: boolean) 
 
 export const createWeightFormSchema = (t: Translate) => {
   const message = t("weight.enterValidWeight", "Enter a valid weight");
+
   return v.object({ weight: positiveNumber(message) });
 };
 
 export const createTopWeightFormSchema = (t: Translate) => {
   const message = t("weight.enterValidWeight", "Enter a valid weight");
+
   return v.object({ weight: nonNegativeNumber(message) });
 };
 
@@ -45,6 +47,7 @@ const optionalMeasurement = (message: string) => v.optional(positiveNumber(messa
 
 export const createMeasurementsFormSchema = (t: Translate) => {
   const message = t("measurements.enterAtLeastOne", "Enter at least one measurement");
+
   return v.pipe(
     v.object({
       chest: optionalMeasurement(message),
@@ -59,6 +62,7 @@ export const createMeasurementsFormSchema = (t: Translate) => {
 
 export const createStartingStrengthFormSchema = (t: Translate) => {
   const message = t("startingSetup.validWeights", "Enter a starting weight for every lift");
+
   return v.object({
     experience: v.picklist(["new", "some", "confident"]),
     unit: v.picklist(["lb", "kg"]),
@@ -74,6 +78,7 @@ export const createStartingStrengthFormSchema = (t: Translate) => {
 
 export const createExerciseConfigFormSchema = (t: Translate) => {
   const message = t("weight.enterValidWeight", "Enter a valid weight");
+
   return v.object({
     id: nonEmptyString(message),
     sets: nonNegativeNumber(message),
@@ -94,5 +99,7 @@ export const createExerciseConfigFormSchema = (t: Translate) => {
 };
 
 export const planImportFormSchema = v.object({ schedule: v.boolean() });
+
 export const noteFormSchema = v.object({ note: v.string() });
+
 export const routineNameFormSchema = v.object({ name: v.string() });

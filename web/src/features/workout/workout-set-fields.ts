@@ -27,24 +27,30 @@ export const setFieldValue = (set: LoggedSet, field: SetField, value: number | n
   switch (field) {
     case "w":
       if ("w" in set) set.w = value ?? 0;
+
       return;
     case "r":
       if ("r" in set) set.r = value ?? 0;
+
       return;
     case "sec":
       if ("sec" in set) set.sec = value ?? 0;
+
       return;
     case "min":
       if ("min" in set) set.min = value ?? 0;
+
       return;
     case "speed":
       if ("speed" in set) set.speed = value ?? 0;
+
       return;
     case "rir":
       if ("r" in set || "sec" in set) {
         if (value == null) delete set.rir;
         else set.rir = value;
       }
+
       return;
     case "rpe":
       if ("r" in set || "sec" in set) {
@@ -55,8 +61,11 @@ export const setFieldValue = (set: LoggedSet, field: SetField, value: number | n
 };
 
 export const weightOf = (set?: LoggedSet) => (set && "w" in set ? set.w : undefined);
+
 export const repsOf = (set: LoggedSet) => ("r" in set ? set.r : undefined);
+
 export const hasWeight = (set: LoggedSet) => {
   const weight = weightOf(set);
+
   return weight !== undefined && weight > 0;
 };

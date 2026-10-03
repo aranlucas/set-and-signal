@@ -1,6 +1,7 @@
 import type { IsoDate, Workout } from "@/shared/lib/types";
 
 export type HistoryRange = "30" | "90" | "all";
+
 export type HistoryRoutineFilter = string;
 
 export interface HistoryFilters {
@@ -21,7 +22,9 @@ export interface HistoryMonthGroup {
 }
 
 const DAY_MS = 86_400_000;
+
 const MARKS_RE = /\p{Mark}+/gu;
+
 const SEPARATORS_RE = /[^\p{Letter}\p{Number}]+/gu;
 
 function normalizeHistorySearchText(value: string): string {
@@ -47,6 +50,7 @@ export function historyRangeStart(today: IsoDate, range: HistoryRange): IsoDate 
   if (range === "all") return null;
   const start = dateAtNoon(today);
   start.setTime(start.getTime() - (Number(range) - 1) * DAY_MS);
+
   return isoAtLocalDate(start);
 }
 
@@ -78,13 +82,16 @@ export function filterHistoryWorkouts(
   return workouts
     .filter((workout) => {
       if (rangeStart !== null && (workout.d < rangeStart || workout.d > today)) return false;
+
       if (filters.routineId === "freestyle" && workout.routineId !== null) return false;
+
       if (
         filters.routineId !== "all" &&
         filters.routineId !== "freestyle" &&
         workout.routineId !== filters.routineId
       )
         return false;
+
       return !query || workoutSearchText(workout, exerciseName).includes(query);
     })
     .toSorted((left, right) => right.d.localeCompare(left.d) || right.start - left.start);
@@ -103,12 +110,15 @@ export function summarizeHistoryWorkouts(workouts: readonly Workout[]): HistoryS
 
 export function groupHistoryWorkoutsByMonth(workouts: readonly Workout[]): HistoryMonthGroup[] {
   const groups = new Map<string, Workout[]>();
+
   for (const workout of workouts) {
     const month = workout.d.slice(0, 7);
     const current = groups.get(month);
+
     if (current) current.push(workout);
     else groups.set(month, [workout]);
   }
+
   return [...groups.entries()].map(([month, groupedWorkouts]) => ({
     month,
     workouts: groupedWorkouts,

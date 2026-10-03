@@ -20,6 +20,7 @@ const REQUIRED_BACKUP_KEYS = [
 
 export function parseBackup(json: string): AppState {
   let parsed: unknown;
+
   try {
     parsed = JSON.parse(json);
   } catch {
@@ -27,6 +28,7 @@ export function parseBackup(json: string): AppState {
   }
 
   const restoredPatch = parsePayload(appStatePatch, parsed);
+
   for (const key of REQUIRED_BACKUP_KEYS) {
     if (!(key in restoredPatch)) throw new Error(`backup.${key} is required`);
   }

@@ -33,11 +33,15 @@ function SettingsContent() {
   const [effortHelpOpen, setEffortHelpOpen] = useState(false);
   const [confirmation, setConfirmation] = useState<ConfirmDialogOptions | null>(null);
   const [activeSheet, setActiveSheet] = useState<SettingsSheet | null>(null);
+
   const closeSheet: SheetClose = () => {
     setActiveSheet(null);
+
     return Promise.resolve();
   };
+
   const requestConfirmation = (options: ConfirmDialogOptions) => setConfirmation(options);
+
   const signInHere = async () => {
     try {
       const u = await passkeyLogin();
@@ -50,6 +54,7 @@ function SettingsContent() {
       else if (!(e instanceof Error)) toast(t("account.signFailed", "Sign-in failed"));
     }
   };
+
   return (
     <div className="mx-auto w-full max-w-160">
       <PageHeader>

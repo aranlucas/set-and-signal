@@ -22,6 +22,7 @@ describe("dashboard training summaries", () => {
       session("2026-01-02", 300),
       session("2026-01-03", 500),
     ];
+
     expect(weeklySummary(workouts, "2026-01-02")).toEqual({
       sessions: 2,
       volume: 500,

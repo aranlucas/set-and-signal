@@ -18,6 +18,18 @@
     "src/generated/**",
     "node_modules/**",
     "src/generated/exercises-data.ts",
-    "convex/_generated/**"
+    "convex/_generated/**",
+    ".agent/**",
+    ".agents/**",
+    ".claude/**",
+    ".codex/**",
+    ".continue/**",
+    ".cursor/**",
+    ".gemini/**",
+    ".opencode/**",
+    ".pi/**",
+    ".roo/**",
+    ".windsurf/**",
+    "tools/oxlint/anti-slop/**"
   ]
 }

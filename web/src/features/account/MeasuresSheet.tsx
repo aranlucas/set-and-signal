@@ -23,6 +23,7 @@ export function MeasuresSheet({ close }: { close: SheetClose }) {
   const todayEntry = (measures || []).find((entry) => entry.d === todayISO());
   const latest = (measures || []).at(-1) ?? null;
   const atLeastOneMessage = t("measurements.enterAtLeastOne", "Enter at least one measurement");
+
   const { control, handleSubmit } = useForm<Partial<Record<MeasurementKey, number>>>({
     defaultValues: Object.fromEntries(
       fields.map((field) => [field.key, todayEntry?.[field.key] ?? latest?.[field.key]]),
@@ -34,11 +35,18 @@ export function MeasuresSheet({ close }: { close: SheetClose }) {
     const filled = fields.filter((field) => values[field.key] != null);
     updateAppState((draft) => {
       draft.measures = draft.measures || [];
-      const rounded = Object.fromEntries(
-        filled.map((field) => [field.key, Math.round(values[field.key]! * 10) / 10]),
-      ) as Omit<MeasuresEntry, "d">;
+
+      const rounded: Omit<MeasuresEntry, "d"> = {};
+
+      for (const field of filled) {
+        const value = values[field.key];
+
+        if (value != null) rounded[field.key] = Math.round(value * 10) / 10;
+      }
+
       const date = todayISO();
       const at = draft.measures.findIndex((entry) => entry.d === date);
+
       if (at >= 0) draft.measures[at] = { d: date, ...rounded };
       else draft.measures.push({ d: date, ...rounded });
       draft.measures.sort((left, right) => (left.d < right.d ? -1 : 1));
@@ -51,6 +59,7 @@ export function MeasuresSheet({ close }: { close: SheetClose }) {
     updateAppState((draft) => {
       draft.measures = (draft.measures || []).filter((entry) => entry.d !== date);
     });
+
   const recent = [...(measures || [])].reverse().slice(0, 3);
 
   return (

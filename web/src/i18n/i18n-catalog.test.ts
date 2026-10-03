@@ -16,20 +16,26 @@ const catalogs = { en, de, es, fr, hi, it, ko, pl, pt, ru, tr, zh } satisfies Re
   string,
   Readonly<Record<string, string>>
 >;
+
 const pluralSuffix = /_(zero|one|two|few|many|other)$/u;
+
 const variables = (value: string): string[] =>
   [...value.matchAll(/\{\{\s*([A-Za-z][A-Za-z0-9]*)\s*(?:,[^}]*)?\}\}/gu)]
     .map((match) => match[1])
     .sort();
+
 const canonicalKey = (key: string): string => key.replace(pluralSuffix, "");
+
 const canonicalKeys = (catalog: Readonly<Record<string, string>>): string[] =>
   [...new Set(Object.keys(catalog).map(canonicalKey))].sort();
 
 describe("translation catalogs", () => {
   test("keeps every supported locale in exact semantic-key parity with English", () => {
     const expected = canonicalKeys(en);
+
     for (const catalog of Object.values(catalogs)) {
       expect(canonicalKeys(catalog)).toEqual(expected);
+
       for (const key of Object.keys(catalog)) {
         expect(key).toMatch(
           /^[a-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+(?:_(?:zero|one|two|few|many|other))?$/u,
@@ -42,6 +48,7 @@ describe("translation catalogs", () => {
 
   test("matches named interpolation variables in every locale", () => {
     const englishByCanonical = new Map<string, string[]>();
+
     for (const [key, value] of Object.entries(en)) {
       const base = canonicalKey(key);
       englishByCanonical.set(
@@ -49,6 +56,7 @@ describe("translation catalogs", () => {
         [...new Set([...(englishByCanonical.get(base) ?? []), ...variables(value)])].sort(),
       );
     }
+
     for (const catalog of Object.values(catalogs)) {
       for (const [key, value] of Object.entries(catalog)) {
         // Empty entries are explicit untranslated placeholders. i18next is configured with
@@ -65,24 +73,30 @@ describe("translation catalogs", () => {
         .filter((key) => pluralSuffix.test(key))
         .map(canonicalKey),
     );
+
     expect(pluralBases.size).toBeGreaterThan(0);
 
     for (const [language, catalog] of Object.entries(catalogs)) {
-      const catalogRecord = catalog as Readonly<Record<string, string>>;
+      const catalogRecord = new Map(Object.entries(catalog));
+
       const expectedCategories = new Set([
         "zero",
         ...new Intl.PluralRules(language).resolvedOptions().pluralCategories,
       ]);
+
       for (const base of pluralBases) {
-        expect(catalogRecord[base]).toBeUndefined();
+        expect(catalogRecord.get(base)).toBeUndefined();
+
         const actualCategories = new Set(
           Object.keys(catalog)
             .filter((key) => canonicalKey(key) === base)
             .map((key) => key.match(pluralSuffix)?.[1]),
         );
+
         expect(actualCategories).toEqual(expectedCategories);
+
         for (const category of actualCategories) {
-          expect(catalogRecord[`${base}_${category}`]).toContain("{{count}}");
+          expect(catalogRecord.get(`${base}_${category}`)).toContain("{{count}}");
         }
       }
     }

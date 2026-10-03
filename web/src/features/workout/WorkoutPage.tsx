@@ -9,10 +9,13 @@ import { FinishSummarySheet } from "@/features/workout/WorkoutSheets";
 export default function Workout() {
   const active = useStore((state) => state.appState.active);
   const [finishSummary, setFinishSummary] = useState<FinishSummaryPayload | null>(null);
+
   const closeSummary: SheetClose = () => {
     setFinishSummary(null);
+
     return Promise.resolve();
   };
+
   return (
     <>
       {active ? (

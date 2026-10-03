@@ -19,10 +19,13 @@ export function ImportSummary({ parsed, close }: { parsed: ParsedOk; close: Shee
   const st = useStore((store) => store.appState);
   const isBW = parsed.kind === "bodyweight";
   const mixedUnits = parsed.kind === "workouts" && parsed.mixedUnits;
+
   const have = isBW
     ? parsed.bodyweight.filter((b) => st.bodyweight.some((x) => x.d === b.d)).length
     : parsed.workouts.filter((w) => st.workouts.some((x) => x.d === w.d)).length;
+
   const fresh = (isBW ? parsed.bodyweight.length : parsed.workouts.length) - have;
+
   const doImport = () => {
     let added = 0;
     updateAppState((appState) => {
@@ -35,6 +38,7 @@ export function ImportSummary({ parsed, close }: { parsed: ParsedOk; close: Shee
         : t("import.workoutsImported", "{{count}} workouts imported", { count: added }),
     );
   };
+
   return (
     <>
       <h3>

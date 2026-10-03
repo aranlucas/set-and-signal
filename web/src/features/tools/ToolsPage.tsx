@@ -73,6 +73,7 @@ function ToolNumberField({
         const raw = event.currentTarget.value;
         setDraft(raw);
         const parsed = Number(raw.replace(",", "."));
+
         if (!Number.isFinite(parsed)) return;
         const bounded = clampToolNumber(parsed, min, max);
         onChange(integer ? Math.round(bounded) : bounded);
@@ -145,8 +146,10 @@ export default function ToolsPage() {
   const stopRest = useWorkoutTimer((state) => state.stopRest);
   const addRest = useWorkoutTimer((state) => state.addRest);
   const unit = appState.unit;
+
   const setup = useMemo(() => {
     const saved = effectivePlateSetup(unit, appState.plates);
+
     return {
       ...saved,
       on: saved.on === true,
@@ -276,6 +279,7 @@ export default function ToolsPage() {
             <div className="flex flex-wrap gap-2">
               {COMMON_PLATES[unit].map((plate) => {
                 const active = setup.avail.includes(plate);
+
                 return (
                   <Button
                     key={plate}

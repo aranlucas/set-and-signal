@@ -5,6 +5,7 @@ export type MeasurementKey = keyof Omit<MeasuresEntry, "d">;
 
 export function useMeasurementFields(): ReadonlyArray<{ key: MeasurementKey; label: string }> {
   const { t } = useTranslation();
+
   return [
     { key: "chest", label: t("measurements.chest", "Chest") },
     { key: "waist", label: t("measurements.waist", "Waist") },

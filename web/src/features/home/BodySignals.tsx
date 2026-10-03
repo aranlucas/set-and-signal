@@ -22,14 +22,17 @@ export default function BodySignals() {
   const cutoff = new Date(today + "T12:00:00");
   cutoff.setDate(cutoff.getDate() - 5);
   const cutoffIso = isoOf(cutoff);
+
   const hasRecentTraining = state.workouts.some(
     (workout) => workout.d >= cutoffIso && workout.d <= today,
   );
+
   const recovery = recoveryForRoutine(
     state.workouts,
     nextPlannedRoutine(state, todayISO()),
     todayISO(),
   );
+
   return (
     <div className="body-signals">
       <section className="dashboard-panel">

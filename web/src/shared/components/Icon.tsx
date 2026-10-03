@@ -12,6 +12,7 @@
 import type { CSSProperties, ReactElement, SVGProps } from "react";
 import type { IconName } from "@/shared/components/icon-names";
 import { cn } from "@/shared/lib/utils";
+
 export type { IconName } from "@/shared/components/icon-names";
 
 const BASE = {
@@ -395,7 +396,9 @@ export default function Icon({
   style?: CSSProperties;
 } & SVGProps<SVGSVGElement>) {
   const iconContent = P[name];
+
   if (!iconContent) return null;
+
   return (
     <svg
       data-icon

@@ -9,6 +9,7 @@ import {
 import { cn } from "@/shared/lib/utils";
 
 export type SpaceBetweenSize = LayoutSpacingSize;
+
 export type SpaceBetweenBreakpoint = LayoutBreakpoint;
 
 export interface SpaceBetweenProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {

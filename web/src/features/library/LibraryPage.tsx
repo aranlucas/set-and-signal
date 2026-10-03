@@ -55,6 +55,7 @@ type LibrarySheet =
 type Confirmation = { title: string; message: string; onConfirm: () => void };
 
 const isCustomExercise = (exercise: SheetEx): exercise is CustomEx => exercise.custom === true;
+
 export default function Library() {
   const { t, i18n } = useTranslation();
   const metadata = useExerciseMetadataLabels();
@@ -66,13 +67,17 @@ export default function Library() {
   const [visibleCount, setVisibleCount] = useState(40);
   const [sheet, setSheet] = useState<LibrarySheet | null>(null);
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
+
   const closeSheet: SheetClose = () => {
     setSheet(null);
+
     return Promise.resolve();
   };
+
   const filteredExercises: SheetEx[] = allExercises(state)
     .flatMap((exercise) => {
       if (bodyPart && exercise.bp !== bodyPart) return [];
+
       const score = exerciseSearchScore(
         {
           ...exercise,
@@ -80,13 +85,16 @@ export default function Library() {
         },
         searchQuery,
       );
+
       return score === null ? [] : [{ exercise, score }];
     })
     .sort((a, b) => a.score - b.score)
     .map(({ exercise }) => exercise);
+
   const equipmentOptions = equipmentOf(filteredExercises);
   // Drop the equipment filter if the search narrowed it away, so you never hit a dead end.
   const selectedEquipment = equipmentOptions.includes(equipment) ? equipment : "";
+
   const visibleExercises = selectedEquipment
     ? filteredExercises.filter((exercise) => exercise.eq === selectedEquipment)
     : filteredExercises;
@@ -222,6 +230,7 @@ export default function Library() {
         </Button>
         {visibleExercises.slice(0, visibleCount).map((exercise) => {
           const bestWeight = bestWeights.get(exercise.id) ?? 0;
+
           return (
             <div
               key={exercise.id}
@@ -325,6 +334,7 @@ function LibrarySheetOverlay({
   setConfirmation,
 }: LibrarySheetOverlayProps) {
   const { t } = useTranslation();
+
   return (
     <>
       <Sheet open={sheet !== null} onOpenChange={(open) => !open && setSheet(null)}>
@@ -386,6 +396,7 @@ function LibrarySheetOverlay({
                 sheet.existingExercise
                   ? () => {
                       const customExercise = sheet.existingExercise;
+
                       if (!customExercise) return;
                       setConfirmation({
                         title: t("customExercise.delete", "Delete “{{name}}”?", {

@@ -30,7 +30,9 @@ const legendCellClass = (level: number) =>
 // renders nothing but keeps its height, so nothing below it jumps on arrival.
 
 let cachedBodyPaths: BodyPaths | null = null; // shared across every mounted map
+
 let bodyPathsPromise: Promise<BodyPaths> | null = null;
+
 const EMPTY_LOAD: Record<string, number> = {};
 
 function useBodyPaths(): BodyPaths | null {
@@ -46,10 +48,12 @@ function useBodyPaths(): BodyPaths | null {
         if (isMounted) setBodyPaths(loadedPaths);
       })
       .catch(() => {});
+
     return () => {
       isMounted = false;
     };
   }, []);
+
   return bodyPaths;
 }
 
@@ -69,6 +73,7 @@ function MuscleMapView({
   const { t } = useTranslation();
   const muscleLabels = useMuscleLabels();
   const activateMuscle = (slug: MuscleSlug) => onMuscle?.(slug);
+
   const handleMuscleKeyDown = (event: KeyboardEvent<SVGPathElement>, slug: MuscleSlug) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
@@ -134,6 +139,7 @@ export default function BodyMap({
   const paths = useBodyPaths();
   const muscleLevels = levelsOf(load);
   const bodyPaths = paths && (paths[body] || paths.male);
+
   return (
     <div className={`flex items-start justify-center gap-1.5 ${className}`}>
       {bodyPaths ? (
@@ -160,6 +166,7 @@ export default function BodyMap({
 
 export function BodyMapLegend() {
   const { t } = useTranslation();
+
   return (
     <div className="mt-2.5 flex items-center justify-end gap-1 text-xs text-muted-foreground">
       {t("muscleMap.less", "Less")}{" "}

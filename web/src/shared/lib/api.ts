@@ -1,3 +1,4 @@
+import * as validation from "valibot";
 // Backend + WebAuthn helpers.
 //
 // The backend speaks the WebAuthn JSON format. SimpleWebAuthn owns the
@@ -5,6 +6,7 @@
 // this boundary stays small and follows the maintained library contract.
 import {
   authResponse,
+  jsonValue,
   configResponse,
   loginOptionsResponse,
   parsePayload,
@@ -13,19 +15,22 @@ import {
   registrationOptionsResponse,
   sessionResponse,
 } from "@/shared/lib/schemas.js";
-import type { PayloadSchema } from "@/shared/lib/schemas.js";
+import type { JsonValue, PayloadSchema } from "@/shared/lib/schemas.js";
 import type { User } from "@/shared/lib/types.js";
 
 export const IS_APPLE = /iPhone|iPad|iPod|Macintosh/u.test(navigator.userAgent);
+
 export const IS_ANDROID = /Android/u.test(navigator.userAgent);
+
 export const BIO = IS_APPLE
   ? "Face ID / Touch ID"
   : IS_ANDROID
     ? "fingerprint or face unlock"
     : "your fingerprint, face or PIN";
+
 export const webauthnOK = () =>
   globalThis.PublicKeyCredential !== undefined &&
-  typeof globalThis.PublicKeyCredential === "function";
+  validation.is(validation.function(), globalThis.PublicKeyCredential);
 
 export class ApiError extends Error {
   status: number;
@@ -36,17 +41,19 @@ export class ApiError extends Error {
   }
 }
 
-export async function api(path: string, opts?: RequestInit): Promise<unknown> {
+export async function api(path: string, opts?: RequestInit): Promise<JsonValue> {
   const response = await fetch(
     path,
     Object.assign({ headers: { "Content-Type": "application/json" } }, opts),
   );
+
   if (!response.ok) {
     const errorPayload: unknown = await response.json().catch(() => ({}));
     const message = payloadMessage(errorPayload) ?? `HTTP ${response.status}`;
     throw new ApiError(message, response.status);
   }
-  return response.json().catch(() => ({}));
+
+  return validation.parse(jsonValue, await response.json().catch(() => ({})));
 }
 
 export async function apiParsed<T>(
@@ -62,14 +69,18 @@ export async function passkeyRegister(name: string, code: string): Promise<User>
     method: "POST",
     body: JSON.stringify({ name, code: code || "" }),
   });
+
   const { startRegistration } = await import("@simplewebauthn/browser");
+
   const credential = await startRegistration({
     optionsJSON: options.publicKey,
   });
+
   const res = await apiParsed("/api/register/verify", authResponse, {
     method: "POST",
     body: JSON.stringify({ cid, credential }),
   });
+
   return res.user;
 }
 
@@ -78,17 +89,23 @@ export async function passkeyLogin(): Promise<User> {
     method: "POST",
     body: "{}",
   });
+
   const { startAuthentication } = await import("@simplewebauthn/browser");
+
   const credential = await startAuthentication({
     optionsJSON: options.publicKey,
   });
+
   const res = await apiParsed("/api/login/verify", authResponse, {
     method: "POST",
     body: JSON.stringify({ cid, credential }),
   });
+
   return res.user;
 }
 
 export const getConfig = () => apiParsed("/api/config", configResponse);
+
 export const getSession = () => apiParsed("/api/me", sessionResponse);
+
 export const getPushKey = () => apiParsed("/api/push/public-key", pushKeyResponse);

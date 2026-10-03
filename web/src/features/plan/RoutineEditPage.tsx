@@ -72,43 +72,55 @@ export default function RoutineEdit() {
   const { id } = useParams({ from: "/plan/r/$id" });
   const state = useStore((store) => store.appState);
   const update = useStore((store) => store.update);
+
   const closeSheet: SheetClose = () => {
     setSheet(null);
+
     return Promise.resolve();
   };
+
   const routine = state.routines.find((candidate) => candidate.id === id);
+
   const { handleSubmit, register, reset } = useForm<{ name: string }>({
     defaultValues: { name: routine?.name ?? "" },
     values: { name: routine?.name ?? "" },
     resolver: valibotResolver(routineNameFormSchema),
   });
+
   if (!routine) return <Navigate to="/plan" replace />;
 
   const updateRoutine = (recipe: (currentRoutine: Routine) => void) =>
     update((nextState) => {
       const currentRoutine = nextState.routines.find((candidate) => candidate.id === id);
+
       if (currentRoutine) recipe(currentRoutine);
     });
+
   const edit = (fn: (ex: ExConfig[]) => void) =>
     updateRoutine((currentRoutine) => fn(currentRoutine.ex));
+
   const move = (i: number, dir: number) =>
     edit((ex) => {
       const j = i + dir;
+
       if (j < 0 || j >= ex.length) return;
       [ex[i], ex[j]] = [ex[j], ex[i]];
       cleanupSg(ex);
     });
+
   const toggleLink = (i: number) =>
     edit((ex) => {
       if (i < 1) return;
       const cur = ex[i];
       const prev = ex[i - 1];
+
       if (cur.sg && prev.sg && cur.sg === prev.sg) delete cur.sg;
       else {
         const gid = prev.sg || "sg" + uid();
         prev.sg = gid;
         cur.sg = gid;
       }
+
       cleanupSg(ex);
     });
 
@@ -116,9 +128,11 @@ export default function RoutineEdit() {
   const multiUnits = units.filter((u) => u.length > 1);
   const unitFirst = new Set(multiUnits.map((u) => u[0]));
   const inSS = new Set(multiUnits.flat());
+
   const saveName = ({ name: draftName }: { name: string }) => {
     const name = draftName.trim() || t("workout.type.routine", "Routine");
     reset({ name });
+
     if (name === routine.name) return;
     updateRoutine((currentRoutine) => {
       currentRoutine.name = name;
@@ -263,19 +277,25 @@ export default function RoutineEdit() {
                   s.routines = s.routines.filter((x) => x.id !== id);
                   Object.keys(s.week).forEach((weekdayKey) => {
                     const weekday = weekdayFromNumber(Number(weekdayKey));
+
                     if (weekday == null) return;
                     const sessions = s.week[weekday];
+
                     if (!sessions?.length) return;
                     const next = sessions.filter((session) => session.routineId !== id);
+
                     if (next.length) s.week[weekday] = next;
                     else delete s.week[weekday];
                   });
                   Object.keys(s.dayPlan).forEach((k) => {
                     const entry = s.dayPlan[k];
+
                     if (!entry || entry.rest || !entry.sessions?.length) return;
+
                     const next = (entry.sessions ?? []).filter(
                       (session) => session.routineId !== id,
                     );
+
                     if (!next.length) delete s.dayPlan[k];
                     else s.dayPlan[k] = { sessions: next };
                   });
@@ -364,8 +384,10 @@ function RoutineExerciseList({
         // An unresolvable id is shown rather than skipped — hiding it left an entry you
         // could neither see nor delete, but that still turned up in the workout.
         const exercise = exOr(exerciseConfig.id);
+
         const linkedPrevious =
           index > 0 && exerciseConfig.sg && routine.ex[index - 1].sg === exerciseConfig.sg;
+
         const openExerciseEditor = () =>
           setSheet({
             kind: "config",
@@ -382,6 +404,7 @@ function RoutineExerciseList({
               }),
             routine,
           });
+
         return (
           <div key={exerciseConfig.id}>
             {unitFirst.has(index) && (
@@ -466,9 +489,11 @@ function RoutineExerciseList({
 function RoutineCoverage({ routine, body }: { routine: Routine; body: AppState["body"] }) {
   const { t } = useTranslation();
   const muscleLabels = useMuscleLabels();
+
   if (routine.ex.length === 0) return null;
   const load = loadOfRoutine(routine);
   const { worked } = rankOf(load);
+
   return (
     <div className="my-3 rounded-lg bg-card p-4">
       <h2 className="mb-3 text-sm font-normal tracking-tight text-foreground/60">
@@ -498,6 +523,7 @@ type RoutineSheetProps = {
 
 function RoutineSheet({ sheet, setSheet, closeSheet, setConfirmation }: RoutineSheetProps) {
   const { t } = useTranslation();
+
   return (
     <Sheet open={sheet !== null} onOpenChange={(open) => !open && setSheet(null)}>
       <SheetContent side="bottom" variant="panel" showCloseButton={false}>
@@ -539,6 +565,7 @@ function RoutineSheet({ sheet, setSheet, closeSheet, setConfirmation }: RoutineS
               sheet.existingExercise
                 ? () => {
                     const customExercise = sheet.existingExercise;
+
                     if (!customExercise) return;
                     setConfirmation({
                       title: t("customExercise.delete", "Delete “{{name}}”?", {

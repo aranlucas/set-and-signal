@@ -49,6 +49,7 @@ interface Col {
   opt?: boolean; // an unlogged effort is not 0 — clearing drops the key instead
   min?: number;
 }
+
 /* ---------- one exercise block (reps: weight×reps · time: a held duration · cardio: duration+speed) ---------- */
 export function ExerciseBlock({
   entryIdx,
@@ -77,27 +78,34 @@ export function ExerciseBlock({
   const appState = useStore((state) => state.appState);
   const working = useWorkoutTimer((state) => state.work);
   const [setKeys] = useState(() => new Map<string, string>());
+
   if (!appState.active) return null;
   const A: ActiveWorkout = appState.active;
   const entry = A.entries[entryIdx];
+
   const setKeyFor = (position: number) => {
     const mapKey = `${entry.id}:${position}`;
     const existing = setKeys.get(mapKey);
+
     if (existing) return existing;
     const key = `${entry.id}-set-${setKeys.size}`;
     setKeys.set(mapKey, key);
+
     return key;
   };
+
   const ex = exOr(entry.id);
   const mode = modeOf({ ...entry.target, id: entry.id });
   const cardio = mode === "cardio";
   const timed = mode === "time";
   const last = lastEntryFor(appState, entry.id);
+
   // The same number the "confirm your working weight" sheet calls your best, so the two
   // never disagree inside one session: heaviest logged set, or the working weight you kept.
   const best = cardio
     ? 0
     : Math.max(bestWeightFor(appState, entry.id), (appState.exWeights[entry.id] || {}).w || 0);
+
   // What the progression policy decided for this session, and why (issue #17). Computed when
   // the session was built so the reason matches the numbers already in the rows.
   const plan = entry.plan;
@@ -110,12 +118,14 @@ export function ExerciseBlock({
   const emptyBar = barbell ? barWeightFor(appState.unit, appState.plates) : 0;
   const added = bw && entry.sets.some((set) => (weightOf(set) ?? 0) > 0);
   const hasWarmup = entry.sets.some(isWarmup);
+
   // The load the plate breakdown is drawn for: the set you're working on, else the last
   // one. Only loaded rep work has plates to put on a bar.
   const plateWeight =
     mode === "reps" && barbell
       ? (weightOf(entry.sets.find((set) => !set.done && !isWarmup(set)) ?? entry.sets.at(-1)) ?? 0)
       : 0;
+
   const loadCol: Col = {
     f: "w",
     step: barbell && appState.unit === "lb" ? 5 : 2.5,
@@ -127,9 +137,11 @@ export function ExerciseBlock({
         ? t("exercise.totalWeight", "Total weight ({{unit}})", { unit: appState.unit })
         : t("exercise.weight", "Weight ({{unit}})", { unit: appState.unit }),
   };
+
   // The reps column is the total in every mode, unilateral included — the stepper walks in
   // twos there so the number you land on is one you can actually split evenly.
   const repCol: Col = { f: "r", step: repStep(cfg), dec: false, hd: t("exercise.reps", "Reps") };
+
   const col1: Col = cardio
     ? { f: "min", step: 1, dec: false, hd: t("workout.durationMin", "Duration (min)") }
     : timed
@@ -137,6 +149,7 @@ export function ExerciseBlock({
       : bw && !added
         ? repCol
         : loadCol;
+
   const col2: Col | null = cardio
     ? { f: "speed", step: 0.5, dec: true, hd: t("exercise.speedKmH", "Speed (km/h)") }
     : timed
@@ -146,10 +159,12 @@ export function ExerciseBlock({
       : bw && !added
         ? null
         : repCol;
+
   // Effort (RIR or RPE, whichever the profile logs) only makes sense for weighted rep sets,
   // not cardio/timed holds, and is opt-in since it adds a third stepper to every row. `opt`
   // because an unlogged effort is not the same as 0 — RIR 0 says the set went to failure.
   const kind = effortOf(appState);
+
   const col3: Col | null =
     mode !== "reps" || kind === "none"
       ? null
@@ -160,10 +175,12 @@ export function ExerciseBlock({
           opt: true,
           hd: kind === "rir" ? effortLabels.rir : effortLabels.rpe,
         };
+
   // The effort column walks its own scale — see stepEffort. Weight and reps step up from 0
   // with no ceiling, as they always did.
   const bump = (s: LoggedSet, i: number, col: Col, dir: number) => {
     const cur = fieldOf(s, col.f);
+
     if (col.eff) return onField(i, col.f, stepEffort(col.eff, cur ?? null, dir));
     onField(
       i,
@@ -171,6 +188,7 @@ export function ExerciseBlock({
       Math.max(col.min ?? 0, Math.round(((cur || 0) + dir * col.step) * 100) / 100),
     );
   };
+
   // Uses the shared stepper markup so a set row picks up the same control styling
   // as every other +/- field in the app.
   const cell = (s: LoggedSet, i: number, col: Col, cls: string) => (
@@ -220,6 +238,7 @@ export function ExerciseBlock({
       </div>
     </div>
   );
+
   return (
     <>
       <Media exercise={ex} key={entry.id} compact={compact} minimizable />

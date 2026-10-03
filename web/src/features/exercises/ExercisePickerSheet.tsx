@@ -73,13 +73,17 @@ export function AddToRoutine({
                 ex: [],
               }
             : state.routines.find((candidate) => candidate.id === routineId);
+
           if (!routine) return;
+
           if (createNewRoutine) state.routines.push(routine);
           routine.ex.push(exerciseConfig);
         });
+
         const selectedRoutine = createNewRoutine
           ? getAppState().routines.at(-1)
           : appState.routines.find((candidate) => candidate.id === routineId);
+
         toast(
           t("exercise.addedTo", "“{{exercise}}” added to {{routine}}", {
             exercise: exercise.n,
@@ -88,6 +92,7 @@ export function AddToRoutine({
               : t("workout.type.routineLowercase", "routine"),
           }),
         );
+
         if (createNewRoutine && selectedRoutine)
           void nav({ to: "/plan/r/$id", params: { id: selectedRoutine.id } });
       },
@@ -175,14 +180,17 @@ export function ExercisePicker({
   const [visibleCount, setVisibleCount] = useState(50);
   const deferredQuery = useDeferredValue(query);
   const allCatalogExercises: SheetEx[] = allExercises(appState);
+
   let matchingExercises = searchExercises(allCatalogExercises, deferredQuery, {
     bodyPart: bodyPart === "★" ? undefined : bodyPart,
   });
+
   if (bodyPart === "★") {
     matchingExercises = matchingExercises.filter((exercise) =>
       Boolean(usageByExercise[exercise.id]),
     );
   }
+
   if (bodyPart === "★")
     matchingExercises = matchingExercises.toSorted(
       (leftExercise, rightExercise) =>
@@ -191,11 +199,14 @@ export function ExercisePicker({
     );
   const equipmentOptions = equipmentOf(matchingExercises);
   const activeEquipment = equipmentOptions.includes(equipment) ? equipment : "";
+
   const filteredExercises = activeEquipment
     ? matchingExercises.filter((exercise) => exercise.eq === activeEquipment)
     : matchingExercises;
+
   const chosenExerciseCount = Object.keys(usageByExercise).length;
   const resetVisibleCount = () => setVisibleCount(50);
+
   const pickExercise = async (exercise: SheetEx) => {
     await close();
     onPick(exercise);

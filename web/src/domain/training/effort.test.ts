@@ -1,3 +1,4 @@
+import * as validation from "valibot";
 import { describe, it, expect } from "vitest";
 import {
   rirOf,
@@ -18,8 +19,10 @@ import type { RepsSet, Workout } from "@/shared/lib/types";
 const daysAgo = (n: number) => {
   const d = new Date();
   d.setDate(d.getDate() - n);
+
   return d;
 };
+
 // One workout on a day, with the sets given. Everything here is a finished set unless a set
 // says otherwise, because that is what the stats read.
 const W = (
@@ -27,6 +30,7 @@ const W = (
   sets: Array<{ rir?: number | null; rpe?: number | null; done?: boolean }>,
 ): Workout => {
   const d = daysAgo(n);
+
   return {
     id: "w" + n,
     d: isoOf(d),
@@ -44,14 +48,18 @@ const W = (
         topW: null,
         sets: sets.map<RepsSet>((set) => {
           const repsSet: RepsSet = { w: 60, r: 8, done: set.done ?? true };
-          if (typeof set.rir === "number") repsSet.rir = set.rir;
-          if (typeof set.rpe === "number") repsSet.rpe = set.rpe;
+
+          if (validation.is(validation.number(), set.rir)) repsSet.rir = set.rir;
+
+          if (validation.is(validation.number(), set.rpe)) repsSet.rpe = set.rpe;
+
           return repsSet;
         }),
       },
     ],
   };
 };
+
 const profileWithWorkouts = (...workouts: Workout[]) => ({ workouts });
 
 describe("rirOf", () => {
@@ -151,13 +159,16 @@ describe("effortSummary", () => {
         Array.from({ length: MIN_RATED - 1 }, () => ({ rir: 2 })),
       ),
     );
+
     expect(effortSummary(few, 0).avg).toBe(null);
+
     const enough = profileWithWorkouts(
       W(
         2,
         Array.from({ length: MIN_RATED }, () => ({ rir: 2 })),
       ),
     );
+
     expect(effortSummary(enough, 0).avg).toBe(2);
   });
 
@@ -215,6 +226,7 @@ describe("effortWeeks", () => {
       profileWithWorkouts(W(2, [{ rir: 1 }, { rir: 1 }]), W(30, [{ rir: 3 }, { rir: 3 }])),
       0,
     );
+
     expect(pts.map((p) => p.rir)).toEqual([3, 1]);
     expect(pts[0].t).toBeLessThan(pts[1].t);
   });
@@ -226,6 +238,7 @@ describe("effortHistogram", () => {
       profileWithWorkouts(W(2, [{ rir: 0 }, { rir: 1.5 }, { rir: 4 }, { rir: 7 }])),
       0,
     );
+
     expect(h.map((b) => b.n)).toEqual([1, 1, 0, 0, 2]);
     expect(h[4].tail).toBe(true);
     expect(h[0].pct).toBe(0.25);

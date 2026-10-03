@@ -13,10 +13,12 @@ export default function HomeCalendarDaySheet() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const allWorkouts = useStore((state) => state.appState.workouts);
+
   const workouts = useMemo(
     () => allWorkouts.filter((workout) => workout.d === date),
     [allWorkouts, date],
   );
+
   const close = () => navigate({ to: "/home", replace: true, resetScroll: false });
 
   return (

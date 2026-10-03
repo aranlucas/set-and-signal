@@ -1,3 +1,4 @@
+import type { TOptions } from "i18next";
 // Set & Signal domain contracts for persisted state and runtime data.
 import type { TranslationKey } from "@/i18n/i18n-types.js";
 import type { Accent } from "@/shared/lib/accents.js";
@@ -7,17 +8,27 @@ export type { Accent } from "@/shared/lib/accents.js";
 /* ============================ primitives ============================ */
 
 export type Unit = "kg" | "lb";
+
 export type Theme = "dark" | "light";
+
 export type Body = "male" | "female";
+
 export type GifSize = "full" | "mini";
+
 export type EffortScale = "none" | "rir" | "rpe";
+
 export type EffortKind = "rir" | "rpe";
+
 export type Mode = "reps" | "time" | "cardio";
+
 export type PolicyId = "off" | "linear" | "greyskull" | "double" | "time";
+
 export type FormulaId = "epley" | "brzycki" | "lombardi";
 
 export type IsoDate = string; // 'YYYY-MM-DD'
+
 export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6; // JS getDay(); JSON round-trips keys to strings
+
 export type Id = string; // uid(): Date.now().toString(36)+rand
 
 /** One planned workout on a weekday slot or calendar override. */
@@ -44,6 +55,7 @@ export interface ExWeightHint {
   w: number;
   d: IsoDate;
 }
+
 export interface BodyweightEntry {
   d: IsoDate;
   w: number;
@@ -159,16 +171,19 @@ export interface RepsSet extends SetBase {
   rpe?: number;
   wu?: boolean; // warm-up set: excluded from volume, set counts, PRs and progression reads
 }
+
 export interface TimeSet extends SetBase {
   sec: number;
   w: number;
   rir?: number;
   rpe?: number;
 }
+
 export interface CardioSet extends SetBase {
   min: number;
   speed: number;
 }
+
 export type LoggedSet = RepsSet | TimeSet | CardioSet;
 
 // A set carries either rir or rpe, never both, never null (cleared = key dropped).
@@ -239,7 +254,7 @@ export type PrescriptionKind = "first" | "up" | "hold" | "deload" | "off";
 export interface TranslationMessage {
   key: TranslationKey;
   defaultValue: string;
-  values?: Record<string, unknown>;
+  values?: TOptions;
 }
 
 export interface Prescription {
@@ -302,6 +317,7 @@ export interface PlanBundleRoutine {
   prog?: PolicyId;
   ex: ExConfig[];
 }
+
 export interface PlanBundleCustom {
   id: Id;
   n: string;
@@ -343,6 +359,7 @@ export interface Timer {
   total: number;
   endsAt: number;
 }
+
 export interface WorkTimer extends Timer {
   label: string;
 }

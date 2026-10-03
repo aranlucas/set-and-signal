@@ -28,15 +28,19 @@ export default function Media({
   const [playing, setPlaying] = useState(true);
   const gifSize = useStore((state) => state.appState.gifSize);
   const update = useStore((state) => state.update);
+
   if (!exercise.gif) return null;
   const isMinimized = minimizable && gifSize === "mini";
+
   const toggleSize = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     update((state) => {
       state.gifSize = isMinimized ? "full" : "mini";
     });
   };
+
   const togglePlayback = () => setPlaying((currentlyPlaying) => !currentlyPlaying);
+
   return (
     <div className="relative mb-3 shrink-0 overflow-hidden rounded-xl bg-white" id={id}>
       <Button
@@ -96,6 +100,7 @@ export function Thumb({ exercise }: { exercise: CatalogExercise }) {
         <Icon name="dumbbell" />
       </div>
     );
+
   return (
     <img
       className="size-12.5 shrink-0 rounded-md bg-white object-cover"

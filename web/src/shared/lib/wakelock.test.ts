@@ -7,6 +7,7 @@ interface FakeSentinel {
   addEventListener(type: string, fn: () => void): void;
   release(): Promise<void>;
 }
+
 interface FakeDoc {
   visibilityState: "visible" | "hidden";
   addEventListener(type: string, fn: () => void): void;
@@ -14,22 +15,21 @@ interface FakeDoc {
 }
 
 let requests: number;
+
 let released: number;
+
 let live: FakeSentinel | null;
+
 let listeners: Set<() => void>;
+
 let reject: boolean;
+
 let doc: FakeDoc;
 
 // Node 21+ defines globalThis.navigator itself, as a getter with no setter — a plain
 // assignment throws under ESM's strict mode. defineProperty works on both that and the older
 // runtimes where the global simply doesn't exist. Production images are node:22-alpine, so
 // the tests have to run there too.
-const setNavigator = (value: unknown) =>
-  Object.defineProperty(globalThis, "navigator", {
-    value,
-    configurable: true,
-    writable: true,
-  });
 
 function fakeBrowser() {
   requests = 0;
@@ -46,40 +46,50 @@ function fakeBrowser() {
       if (type === "visibilitychange") listeners.delete(fn);
     },
   };
-  (globalThis as { document?: unknown }).document = doc;
-  setNavigator({
+  vi.stubGlobal("document", doc);
+  vi.stubGlobal("navigator", {
     wakeLock: {
       request: async (): Promise<FakeSentinel> => {
         await Promise.resolve();
         requests++;
+
         if (reject) throw new Error("NotAllowedError"); // iOS Low Power Mode
         const subs = new Set<() => void>();
+
         const s: FakeSentinel = {
           addEventListener: (_, fn) => subs.add(fn),
           release: async () => {
             await Promise.resolve();
+
             if (live === s) live = null;
             released++;
             subs.forEach((fn) => fn());
           },
         };
+
         live = s;
+
         return s;
       },
     },
   });
 }
+
 const fire = () => listeners.forEach((fn) => fn());
+
 const settle = () =>
   new Promise<void>((resolve) => {
     setTimeout(resolve, 0);
   });
+
 const background = async () => {
   doc.visibilityState = "hidden";
+
   if (live) await live.release();
   fire();
   await settle();
 };
+
 const foreground = async () => {
   doc.visibilityState = "visible";
   fire();
@@ -87,7 +97,9 @@ const foreground = async () => {
 };
 
 let requestWakeLock: () => void;
+
 let releaseWakeLock: () => void;
+
 let wakeLockSupported: () => boolean;
 
 beforeEach(async () => {
@@ -98,13 +110,12 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  delete (globalThis as { document?: unknown }).document;
-  delete (globalThis as { navigator?: unknown }).navigator;
+  vi.unstubAllGlobals();
 });
 
 describe("wakeLockSupported", () => {
   it("is false when the browser has no wakeLock at all", () => {
-    setNavigator({});
+    vi.stubGlobal("navigator", {});
     expect(wakeLockSupported()).toBe(false);
   });
   it("is true when it does", () => {

@@ -9,6 +9,7 @@ export function SessionPlanSummary({ plan, unit }: { plan: SessionPlan; unit: Un
   const { t } = useTranslation();
   const labels = useSessionPlannerLabels();
   const occurrences = new Map<string, number>();
+
   return (
     <details className="session-snapshot my-3">
       <summary className="min-h-11 cursor-pointer py-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-ring">
@@ -43,6 +44,7 @@ export function SessionPlanSummary({ plan, unit }: { plan: SessionPlan; unit: Un
         {plan.rows.map((row) => {
           const occurrence = (occurrences.get(row.original.id) ?? 0) + 1;
           occurrences.set(row.original.id, occurrence);
+
           return (
             <li key={`${row.original.id}:${occurrence}`} className="border-t border-border pt-3">
               <div className="text-muted-foreground">

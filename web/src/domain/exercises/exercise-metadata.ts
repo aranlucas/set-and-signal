@@ -1,3 +1,4 @@
+import * as validation from "valibot";
 // Generated compact projection of exercises-data.ts for name and muscle lookups.
 // Keep this file mechanical: it intentionally excludes instructions and media paths.
 import type { CustomEx } from "@/shared/lib/types.js";
@@ -6556,18 +6557,19 @@ export function exerciseMetadata(id: string): ExerciseMetadata | CustomEx | unde
 }
 
 export const isCardio = (idOrExercise: string | { bp?: string } | null | undefined) =>
-  (typeof idOrExercise === "string" ? exerciseMetadata(idOrExercise) : idOrExercise)?.bp ===
-  "cardio";
+  (validation.is(validation.string(), idOrExercise) ? exerciseMetadata(idOrExercise) : idOrExercise)
+    ?.bp === "cardio";
 
 export const isBodyweightEq = (idOrExercise: string | { eq?: string } | null | undefined) =>
-  (typeof idOrExercise === "string" ? exerciseMetadata(idOrExercise) : idOrExercise)?.eq ===
-  "body weight";
+  (validation.is(validation.string(), idOrExercise) ? exerciseMetadata(idOrExercise) : idOrExercise)
+    ?.eq === "body weight";
 
 const BARBELL_EQUIPMENT = new Set(["barbell", "olympic barbell", "ez barbell", "trap bar"]);
 
 export const isBarbellEq = (idOrExercise: string | { eq?: string } | null | undefined) => {
   const equipment = (
-    typeof idOrExercise === "string" ? exerciseMetadata(idOrExercise) : idOrExercise
+    validation.is(validation.string(), idOrExercise) ? exerciseMetadata(idOrExercise) : idOrExercise
   )?.eq;
+
   return !!equipment && BARBELL_EQUIPMENT.has(equipment);
 };

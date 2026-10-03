@@ -40,9 +40,11 @@ export default function ConfirmDialog({
   const [error, setError] = useState("");
   const resolvedConfirmLabel = confirmLabel ?? t("common.confirm", "Confirm");
   const resolvedCancelLabel = cancelLabel ?? t("common.cancel", "Cancel");
+
   const confirm = async () => {
     setBusy(true);
     setError("");
+
     try {
       await onConfirm();
       onOpenChange(false);

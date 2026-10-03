@@ -21,12 +21,15 @@ const FILE = "workset-state.json";
 export async function nativeLoad(): Promise<ParsedAppStatePatch | null> {
   try {
     const { Filesystem, Directory, Encoding } = await import("@capacitor/filesystem");
+
     const file = await Filesystem.readFile({
       path: FILE,
       directory: Directory.Data,
       encoding: Encoding.UTF8,
     });
-    const raw = typeof file.data === "string" ? file.data : await file.data.text();
+
+    const raw = file.data instanceof Blob ? await file.data.text() : file.data;
+
     return parseStoredState(raw);
   } catch {
     return null;
@@ -60,18 +63,25 @@ export async function syncReminder(appState: AppState, interactive = false): Pro
       })),
     }).catch(() => {});
     const reminder = appState.reminder;
+
     if (!reminder?.on) return true;
     let permission = await LocalNotifications.checkPermissions();
+
     if (permission.display !== "granted" && interactive)
       permission = await LocalNotifications.requestPermissions();
+
     if (permission.display !== "granted") return false;
     const [hour, minute] = (reminder.time || "08:00").split(":").map(Number);
+
     const notifications = Object.entries(appState.week).flatMap(([day, sessions]) => {
       const names = (sessions ?? []).flatMap((session) => {
         const routine = appState.routines.find((candidate) => candidate.id === session.routineId);
+
         return routine ? [routine.name] : [];
       });
+
       if (!names.length) return [];
+
       return [
         {
           id: 100 + Number(day),
@@ -91,7 +101,9 @@ export async function syncReminder(appState: AppState, interactive = false): Pro
         },
       ];
     });
+
     if (notifications.length > 0) await LocalNotifications.schedule({ notifications });
+
     return true;
   } catch {
     return false;
@@ -105,11 +117,13 @@ export async function shareExport(json: string, filename: string): Promise<void>
     import("@capacitor/filesystem"),
     import("@capacitor/share"),
   ]);
+
   const file = await Filesystem.writeFile({
     path: filename,
     directory: Directory.Cache,
     data: json,
     encoding: Encoding.UTF8,
   });
+
   await Share.share({ title: filename, url: file.uri });
 }

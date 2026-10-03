@@ -31,9 +31,11 @@ export function SettingsData({
   const replaceState = useStore((state) => state.replaceState);
   const fileRef = useRef<HTMLInputElement>(null);
   const importRef = useRef<HTMLInputElement>(null);
+
   const doExport = async () => {
     const json = JSON.stringify(appState, null, 2);
     const name = "set-and-signal-backup-" + todayISO() + ".json";
+
     if (MOBILE) {
       try {
         await shareExport(json, name);
@@ -41,8 +43,10 @@ export function SettingsData({
       } catch {
         /* share sheet dismissed */
       }
+
       return;
     }
+
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
@@ -52,8 +56,10 @@ export function SettingsData({
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast(t("settings.backupExported", "Backup exported"));
   };
+
   const doExportCsv = async () => {
     const { csv, filename } = buildExport(appState, (id) => EXIDX[id]?.n || id);
+
     if (MOBILE) {
       try {
         await shareExport(csv, filename);
@@ -61,8 +67,10 @@ export function SettingsData({
       } catch {
         /* share sheet dismissed */
       }
+
       return;
     }
+
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
@@ -72,8 +80,10 @@ export function SettingsData({
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     toast(t("settings.workoutsExported", "Workouts exported"));
   };
+
   const doImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+
     if (!file) return;
     void file
       .text()
@@ -93,23 +103,24 @@ export function SettingsData({
               toast(t("settings.backupImported", "Backup imported"));
             },
           });
-        } catch (error) {
+        } catch (cause) {
           toast(
             t("settings.importFailed", "Import failed: {{error}}", {
-              error: error instanceof Error ? error.message : String(error),
+              error: cause instanceof Error ? cause.message : String(cause),
             }),
           );
         }
       })
-      .catch((error: unknown) =>
+      .catch((cause: unknown) =>
         toast(
           t("settings.importFailed", "Import failed: {{error}}", {
-            error: error instanceof Error ? error.message : String(error),
+            error: cause instanceof Error ? cause.message : String(cause),
           }),
         ),
       );
     event.target.value = "";
   };
+
   return (
     <>
       <Section title={t("settings.data", "Data")}>
@@ -193,6 +204,7 @@ export function SettingsData({
         className="hidden"
         onChange={(event) => {
           const file = event.target.files?.[0];
+
           if (file) importFromApp(file, (parsed) => onOpenSheet({ kind: "import", parsed }));
           event.target.value = "";
         }}

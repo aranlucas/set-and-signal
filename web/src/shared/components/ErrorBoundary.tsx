@@ -61,8 +61,8 @@ function Fallback() {
   );
 }
 
-function logError(error: unknown) {
-  console.error("Set & Signal render error:", error);
+function logError(cause: unknown) {
+  console.error("Set & Signal render error:", cause);
 }
 
 export default function ErrorBoundary({ children }: ErrorBoundaryProps) {

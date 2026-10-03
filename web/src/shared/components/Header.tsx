@@ -3,6 +3,7 @@ import { type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { cn } from "@/shared/lib/utils";
 
 export type HeaderVariant = "h1" | "h2" | "h3";
+
 export type HeaderHeadingTag = "h1" | "h2" | "h3" | "h4" | "h5";
 
 export interface HeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {

@@ -14,6 +14,7 @@ import type { EffortKind, EffortScale, LoggedSet, Workout } from "@/shared/lib/t
 // 3 rather than 2: the line is a convention, and drawn one rep too generously it still
 // separates working sets from the ones left in the warm-up range.
 export const HARD_RIR = 3;
+
 // Below this many rated sets an average is noise. Showing "RIR 1.0" off a single set reads
 // like a finding when it is one tap, so the callers show a dash instead.
 export const MIN_RATED = 5;
@@ -43,6 +44,7 @@ type RatedSet = LoggedSet & { rir?: number | null; rpe?: number | null };
 
 export function displayScale(profile: Profile): EffortKind {
   const configuredScale = effortOf(profile);
+
   if (configuredScale === "rir" || configuredScale === "rpe") return configuredScale;
   let rirCount = 0;
   let rpeCount = 0;
@@ -50,8 +52,10 @@ export function displayScale(profile: Profile): EffortKind {
     if (set.rir != null) rirCount++;
     else if (set.rpe != null) rpeCount++;
   });
+
   return rpeCount > rirCount ? "rpe" : "rir";
 }
+
 export const scaleName = (kind: EffortKind): string => EFFORT[kind].hd;
 
 // Every finished set in the profile, oldest first. `fn` gets the set plus the workout it
@@ -75,6 +79,7 @@ export const avgRir = (
   sets: ReadonlyArray<{ rir?: number | null; rpe?: number | null }> | null,
 ): number | null => {
   const ratings = (sets || []).map(rirOf).filter((rating) => rating != null);
+
   return ratings.length > 0
     ? ratings.reduce((total, rating) => total + rating, 0) / ratings.length
     : null;
@@ -103,11 +108,14 @@ export function effortSummary(profile: Profile, days: number): EffortSummary {
     if (!inWindow(workout, days)) return;
     done++;
     const rating = rirOf(set);
+
     if (rating == null) return;
     rated++;
     sum += rating;
+
     if (rating <= HARD_RIR) hard++;
   });
+
   return {
     done,
     rated,
@@ -123,6 +131,7 @@ export function hasEffort(profile: Profile): boolean {
   eachDoneSet(profile, (set) => {
     if (!found && rirOf(set) != null) found = true;
   });
+
   return found;
 }
 
@@ -145,6 +154,7 @@ export function effortWeeks(profile: Profile, days: number): EffortWeekPoint[] {
     if (!inWindow(workout, days)) return;
     const weekKeyValue = weekKey(workout.d);
     let week = weeks.get(weekKeyValue);
+
     if (!week)
       weeks.set(
         weekKeyValue,
@@ -158,11 +168,13 @@ export function effortWeeks(profile: Profile, days: number): EffortWeekPoint[] {
       );
     week.sets++;
     const rating = rirOf(set);
+
     if (rating != null) {
       week.sum += rating;
       week.n++;
     }
   });
+
   return [...weeks.values()]
     .filter((week) => week.n >= 2)
     .sort((left, right) => left.t - right.t)
@@ -173,11 +185,13 @@ export function effortWeeks(profile: Profile, days: number): EffortWeekPoint[] {
       sets: week.sets,
     }));
 }
+
 // The Monday of an ISO date, as ms — the x position a week's point sits at.
 function mondayOf(iso: string): number {
   const d = new Date(iso + "T12:00:00");
   d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
   d.setHours(12, 0, 0, 0);
+
   return +d;
 }
 
@@ -188,6 +202,7 @@ function mondayOf(iso: string): number {
  * half the sets at 0 and half at 4 average to a healthy-looking 2.
  */
 export const BUCKETS = 4; // 0,1,2,3 and a "4+" tail
+
 export interface EffortBin {
   rir: number;
   tail: boolean;
@@ -201,10 +216,12 @@ export function effortHistogram(profile: Profile, days: number): EffortBin[] {
   eachDoneSet(profile, (set, workout) => {
     if (!inWindow(workout, days)) return;
     const rating = rirOf(set);
+
     if (rating == null) return;
     rated++;
     bins[Math.min(BUCKETS, Math.max(0, Math.floor(rating)))]++;
   });
+
   return bins.map((count, bucket) => ({
     rir: bucket,
     tail: bucket === BUCKETS,
@@ -218,5 +235,6 @@ export const isHardSet = (
   s: { rir?: number | null; rpe?: number | null } | null | undefined,
 ): boolean => {
   const rating = rirOf(s);
+
   return rating != null && rating <= HARD_RIR;
 };

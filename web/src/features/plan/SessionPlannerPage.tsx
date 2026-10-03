@@ -30,6 +30,7 @@ import { SessionPlanSummary } from "./SessionPlanSummary";
 
 export default function SessionPlannerPage() {
   const account = useStore((store) => store.user?.id ?? null);
+
   return <SessionPlanner key={account ?? "guest"} account={account} />;
 }
 
@@ -40,6 +41,7 @@ function SessionPlanner({ account }: { account: string | null }) {
   const state = useStore((store) => store.appState);
   const update = useStore((store) => store.update);
   const reviewRef = useRef<HTMLHeadingElement>(null);
+
   const [draft, setDraft] = useState<SessionDraft | null>(
     () =>
       loadSessionDraft(account) ??
@@ -60,8 +62,10 @@ function SessionPlanner({ account }: { account: string | null }) {
           }
         : null),
   );
+
   const [message, setMessage] = useState("");
   const [draftError, setDraftError] = useState(false);
+
   const changeDraft = (next: SessionDraft) => {
     try {
       saveSessionDraft(account, next);
@@ -69,11 +73,13 @@ function SessionPlanner({ account }: { account: string | null }) {
     } catch {
       setDraftError(true);
     }
+
     setDraft(next);
   };
 
   const selectSource = (id: string) => {
     const source = state.routines.find((routine) => routine.id === id);
+
     if (!source) return;
     changeDraft({
       source: structuredClone(source),
@@ -84,24 +90,31 @@ function SessionPlanner({ account }: { account: string | null }) {
     });
     setMessage("");
   };
+
   const rows = draft ? adaptSession(draft.source, draft.constraints, draft.choices) : [];
   const configs = rows.flatMap(({ planned }) => (planned ? [planned] : []));
   const estimate = estimateSessionMinutes(configs, draft?.constraints.restSec ?? 0);
   const duplicate = new Set(configs.map((config) => config.id)).size !== configs.length;
+
   const valid =
     !!draft && validSessionConstraints(draft.constraints) && configs.every(validSessionConfig);
+
   const saved = draft ? state.routines.find((routine) => routine.id === draft.copyId) : undefined;
   const undoable = draft?.savedCopy && canUndoSessionCopy(state, draft.savedCopy);
+
   const changeChoice = (index: number, change: Partial<SessionChoice>) => {
     if (!draft) return;
     const choices = [...draft.choices];
+
     // Fill missing positions: sparse arrays serialize to null and cannot resume.
     while (choices.length <= index) choices.push({});
     choices[index] = { ...choices[index], ...change };
     changeDraft({ ...draft, choices });
   };
+
   const save = () => {
     if (!draft || saved) return;
+
     try {
       const copy = createSessionRoutine(
         draft.source,
@@ -110,6 +123,7 @@ function SessionPlanner({ account }: { account: string | null }) {
         draft.copyId,
         draft.name.trim(),
       );
+
       update((next) => {
         if (next.routines.some((routine) => routine.id === copy.id))
           throw new Error("Copy already saved");
@@ -131,8 +145,10 @@ function SessionPlanner({ account }: { account: string | null }) {
       );
     }
   };
+
   const undo = () => {
     if (!draft?.savedCopy) return;
+
     try {
       update((next) => {
         if (!draft.savedCopy || !canUndoSessionCopy(next, draft.savedCopy))
@@ -150,6 +166,7 @@ function SessionPlanner({ account }: { account: string | null }) {
       );
     }
   };
+
   return (
     <div className="session-planner mx-auto w-full max-w-260">
       <Button
@@ -582,6 +599,7 @@ function SessionPlannerRow({
   const { t } = useTranslation();
   const labels = useSessionPlannerLabels();
   const mode = modeOf(row.original);
+
   const amount = row.planned
     ? mode === "cardio"
       ? (row.planned.min ?? 20)
@@ -589,6 +607,7 @@ function SessionPlannerRow({
         ? (row.planned.sec ?? 45)
         : (row.planned.reps ?? 10)
     : 0;
+
   const reason =
     row.reason === "unknown"
       ? t(
@@ -624,7 +643,7 @@ function SessionPlannerRow({
                     "sessionPlan.reason.swap",
                     "Same general pattern: {{movement}}. Uses {{equipment}}. Original load and speed are not transferred.",
                     {
-                      movement: labels.movements[row.options[0]?.movement ?? ""],
+                      movement: labels.movements.get(row.options[0]?.movement ?? ""),
                       equipment:
                         row.options
                           .find((option) => option.id === row.planned?.id)
@@ -632,6 +651,7 @@ function SessionPlannerRow({
                           .join(", ") || t("sessionPlan.floor", "no equipment"),
                     },
                   );
+
   return (
     <article
       className="planner-row space-y-3"

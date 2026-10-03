@@ -1,25 +1,36 @@
-import { renderToStaticMarkup } from "react-dom/server";
-import { expect, it, vi } from "vitest";
+import { renderWithTranslations as renderToStaticMarkup } from "@/test/render-with-i18n";
+import { afterEach, expect, it, vi } from "vitest";
+
+vi.hoisted(() => {
+  const values = new Map<string, string>();
+  vi.stubGlobal("localStorage", {
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      values.set(key, value);
+    },
+    removeItem: (key: string) => {
+      values.delete(key);
+    },
+  });
+});
+
 import { DEFAULT_APP_STATE } from "@/domain/training/default-state";
 import { todayISO } from "@/shared/lib/format";
 import type { AppState } from "@/shared/lib/types";
-import { StartChooser } from "./StartChooser";
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterContextProvider,
+} from "@tanstack/react-router";
+
+import { StartChooserView } from "./StartChooser";
 
 let appState: AppState;
-vi.mock("@/app/store/useStore", () => ({
-  useStore: (select: (state: { appState: AppState }) => unknown) => select({ appState }),
-}));
-vi.mock("@tanstack/react-router", () => ({ useNavigate: () => vi.fn<() => Promise<void>>() }));
-vi.mock("@/shared/components/RouteBottomSheet", () => ({ RouteBottomSheet: () => null }));
-vi.mock("react-i18next", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("react-i18next")>()),
-  useTranslation: () => ({
-    t: (_key: string, fallback: string, values?: Record<string, string | number>) =>
-      fallback.replaceAll(/\{\{(\w+)\}\}/gu, (_match, key: string) => String(values?.[key] ?? "")),
-  }),
-}));
 
-it("preserves all planned sessions and completion state after extracting the start chooser", () => {
+afterEach(() => vi.restoreAllMocks());
+
+it("preserves all planned sessions and completion state after extracting the start chooser", async () => {
   appState = structuredClone(DEFAULT_APP_STATE);
   appState.routines = [
     { id: "rehab", name: "Rehab", emoji: "", ex: [] },
@@ -41,7 +52,20 @@ it("preserves all planned sessions and completion state after extracting the sta
       vol: 0,
     },
   ];
-  const markup = renderToStaticMarkup(<StartChooser />);
+
+  const router = createRouter({
+    routeTree: createRootRoute(),
+    history: createMemoryHistory({ initialEntries: ["/"] }),
+  });
+
+  await router.load();
+
+  const markup = renderToStaticMarkup(
+    <RouterContextProvider router={router}>
+      <StartChooserView appState={appState} />
+    </RouterContextProvider>,
+  );
+
   expect(markup).toContain("today is Rehab, Easy run");
   expect(markup).toContain("Done");
   expect(markup).toContain("18:00");

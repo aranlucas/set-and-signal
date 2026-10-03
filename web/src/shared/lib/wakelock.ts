@@ -10,19 +10,26 @@ import { useEffect } from "react";
 export const wakeLockSupported = () => "wakeLock" in navigator;
 
 let sentinel: WakeLockSentinel | null = null; // the live WakeLockSentinel, null when we hold nothing
+
 let isRequested = false; // do we currently want the screen to stay on?
+
 let isAcquiring = false; // a request() is in flight — don't stack a second one
 
 async function acquireWakeLock() {
   if (!isRequested || sentinel || isAcquiring || !wakeLockSupported()) return;
+
   if (document.visibilityState !== "visible") return; // request() rejects on a hidden document
   isAcquiring = true;
+
   try {
     const requestedSentinel = await navigator.wakeLock.request("screen");
+
     if (!isRequested) {
       requestedSentinel.release().catch(() => {});
+
       return;
     } // released while we were awaiting
+
     sentinel = requestedSentinel;
     requestedSentinel.addEventListener("release", () => {
       if (sentinel === requestedSentinel) sentinel = null;
@@ -53,6 +60,7 @@ export function releaseWakeLock() {
   document.removeEventListener("visibilitychange", handleVisibilityChange);
   const releasedSentinel = sentinel;
   sentinel = null;
+
   if (releasedSentinel) releasedSentinel.release().catch(() => {});
 }
 
@@ -61,6 +69,7 @@ export function useWakeLock(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
     requestWakeLock();
+
     return releaseWakeLock;
   }, [enabled]);
 }

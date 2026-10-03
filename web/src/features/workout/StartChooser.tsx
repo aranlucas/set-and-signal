@@ -15,25 +15,34 @@ import { glyphOf } from "@/domain/exercises/glyphs";
 import { PreWorkoutBodyweightSheet } from "@/features/account/AccountSheet";
 import { beginWorkout } from "@/features/workout/workout-actions";
 import { RouteBottomSheet } from "@/shared/components/RouteBottomSheet";
-import type { Id } from "@/shared/lib/types";
+import type { AppState, Id } from "@/shared/lib/types";
 
 export function StartChooser() {
+  const appState = useStore((state) => state.appState);
+
+  return <StartChooserView appState={appState} />;
+}
+
+export function StartChooserView({ appState }: { appState: AppState }) {
   const { t } = useTranslation();
   const { weekdays } = useDateLabels();
   const nav = useNavigate();
-  const appState = useStore((state) => state.appState);
   const today = useToday();
   const sessions = sessionProgress(appState, today);
   const routineIdRef = useRef<Id | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+
   const openStart = (nextRoutineId: Id | null) => {
     routineIdRef.current = nextRoutineId;
     setSheetOpen(true);
   };
+
   const todayOvr = appState.dayPlan[today] !== undefined;
+
   const others = appState.routines.filter(
     (r) => !sessions.some((session) => session.routineId === r.id),
   );
+
   return (
     <div className="mx-auto max-w-140">
       <Header

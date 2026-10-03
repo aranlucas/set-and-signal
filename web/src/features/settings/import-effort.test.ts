@@ -4,7 +4,9 @@ import { setLabel, effortOf, type SetFields } from "@/domain/training/history.js
 
 // Headers as the real exports write them, trimmed to the columns that matter here.
 const HEVY = "title,start_time,end_time,exercise_title,set_index,set_type,weight_kg,reps,rpe";
+
 const STRONG = "Date,Workout Name,Exercise Name,Set Order,Weight,Reps,Seconds,RPE";
+
 const FITNOTES = "Date,Exercise,Category,Weight,Reps,Distance,Distance Unit,Time";
 
 type WorkoutsOk = Extract<WorkoutsImport, { kind: "workouts" }>;
@@ -12,11 +14,13 @@ type WorkoutsOk = Extract<WorkoutsImport, { kind: "workouts" }>;
 const requireWorkouts = (parsedImport: WorkoutsImport): WorkoutsOk => {
   if (!("kind" in parsedImport) || parsedImport.kind !== "workouts")
     throw new Error("Expected a workouts import");
+
   return parsedImport;
 };
 
 const rows = (head: string, ...lines: string[]): WorkoutsOk =>
   requireWorkouts(parseWorkoutCSV([head, ...lines].join("\n"), { unit: "kg" }));
+
 // every set of the first workout, in file order
 const setsOf = (p: WorkoutsOk): SetFields[] =>
   p.workouts.flatMap((w) => w.entries.flatMap((e) => e.sets));
@@ -28,6 +32,7 @@ describe("importing effort from another app", () => {
       'Push,"12 Jan 2026, 18:00","12 Jan 2026, 19:00",Bench Press (Barbell),0,normal,60,10,8',
       'Push,"12 Jan 2026, 18:00","12 Jan 2026, 19:00",Bench Press (Barbell),1,normal,60,8,9.5',
     );
+
     expect(p.kind).toBe("workouts");
     expect(setsOf(p).map((s) => s.rpe)).toEqual([8, 9.5]);
     expect(p.rpeSets).toBe(2);
@@ -46,6 +51,7 @@ describe("importing effort from another app", () => {
       "2026-01-12,Bench Press,60,10,2",
       "2026-01-12,Bench Press,60,6,0",
     ); // 0 RIR is a real rating: taken to failure
+
     expect(setsOf(p).map((s) => s.rir)).toEqual([2, 0]);
     expect(p.rirSets).toBe(2);
     expect(setsOf(p).every((s) => s.rpe === undefined)).toBe(true);
@@ -57,6 +63,7 @@ describe("importing effort from another app", () => {
       'Push,"12 Jan 2026, 18:00",,Bench Press (Barbell),0,normal,60,10,',
       'Push,"12 Jan 2026, 18:00",,Bench Press (Barbell),1,normal,60,10,8',
     );
+
     const s = setsOf(p);
     expect("rpe" in s[0]).toBe(false); // the key is absent, so the set reads as unrated
     expect(s[1].rpe).toBe(8);
@@ -82,6 +89,7 @@ describe("importing effort from another app", () => {
       "2026-01-12 18:00:00,Push,Bench Press (Barbell),1,60,10,0,hard",
       "2026-01-12 18:00:00,Push,Bench Press (Barbell),2,60,10,0,-3",
     );
+
     expect(setsOf(p).every((s) => !("rpe" in s))).toBe(true);
     expect(p.rpeSets).toBe(0);
     expect(p.sets).toBe(2); // the sets still import, just unrated
@@ -102,6 +110,7 @@ describe("importing effort from another app", () => {
       "Date,Exercise,Distance,Distance Unit,Time,RPE",
       "2026-01-12,Running,5,km,00:30:00,7",
     );
+
     const s = setsOf(p)[0];
     expect(s.min).toBe(30);
     expect("rpe" in s).toBe(false);
@@ -125,6 +134,7 @@ describe("importing effort from another app", () => {
         { unit: "kg" },
       ),
     );
+
     const s = setsOf(p)[0];
     expect(s.w).toBe(61.2);
     expect(s.rpe).toBe(8);
@@ -159,6 +169,7 @@ describe("effort in a backup", () => {
         },
       ],
     };
+
     const back = roundTrip(appState);
     expect(effortOf(back)).toBe("rpe");
     const [a, b, c] = back.workouts[0].entries[0].sets;

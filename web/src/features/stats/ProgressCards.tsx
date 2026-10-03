@@ -10,8 +10,11 @@ import type { AppState, EffortKind, ExConfig, LoggedSet } from "@/shared/lib/typ
 import type { StatsSheet } from "@/features/stats/stats-types";
 
 export type StatsRange = "30" | "90" | "365" | "0";
+
 export type StatsMetric = "top" | "e1rm" | "effort";
+
 export type ProgressPoint = { t: number; y: number; d: string };
+
 export type ExercisePoint = ProgressPoint & { sets: LoggedSet[]; target: ExConfig | null };
 
 type ProgressCardsProps = {
@@ -70,6 +73,7 @@ export function ProgressCards({
   onSheet,
 }: ProgressCardsProps) {
   const { t } = useTranslation();
+
   return (
     <div className="block lg:grid lg:grid-cols-2 lg:items-start lg:gap-3.5 [&>*]:min-w-0">
       <div className="mb-3 rounded-lg bg-card p-4">

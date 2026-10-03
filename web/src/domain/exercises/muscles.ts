@@ -1,3 +1,4 @@
+import * as validation from "valibot";
 // Which muscles an exercise trains, and how hard — the data behind every muscle map.
 //
 // The exercise dataset names muscles in free text and is not consistent about it:
@@ -39,75 +40,79 @@ export type MuscleSlug = (typeof MUSCLES)[number];
 export const INERT = ["head", "hair", "neck", "hands", "feet", "knees", "ankles"];
 
 // Every spelling that occurs in the dataset's `tg` and `sm` fields. null = not drawable.
-const ALIAS: Record<string, MuscleSlug | null> = {
-  // primaries
-  abs: "abs",
-  pectorals: "chest",
-  biceps: "biceps",
-  glutes: "gluteal",
-  delts: "deltoids",
-  triceps: "triceps",
-  "upper back": "upper-back",
-  lats: "upper-back",
-  calves: "calves",
-  quads: "quadriceps",
-  forearms: "forearm",
-  hamstrings: "hamstring",
-  spine: "lower-back",
-  traps: "trapezius",
-  adductors: "adductors",
-  "serratus anterior": "serratus",
-  abductors: "gluteal",
-  "levator scapulae": "trapezius",
-  "cardiovascular system": null,
-  // secondaries
-  shoulders: "deltoids",
-  deltoids: "deltoids",
-  "rear deltoids": "deltoids",
-  "rotator cuff": "deltoids",
-  quadriceps: "quadriceps",
-  core: "abs",
-  abdominals: "abs",
-  "lower abs": "abs",
-  chest: "chest",
-  "upper chest": "chest",
-  "hip flexors": "hip-flexors",
-  obliques: "obliques",
-  "lower back": "lower-back",
-  rhomboids: "upper-back",
-  trapezius: "trapezius",
-  back: "upper-back",
-  "latissimus dorsi": "upper-back",
-  brachialis: "biceps",
-  soleus: "calves",
-  shins: "tibialis",
-  wrists: "forearm",
-  "wrist flexors": "forearm",
-  "wrist extensors": "forearm",
-  "grip muscles": "forearm",
-  groin: "adductors",
-  "inner thighs": "adductors",
-  ankles: null,
-  feet: null,
-  hands: null,
-  "ankle stabilizers": null,
-  sternocleidomastoid: null,
-};
+const ALIAS = new Map<string, MuscleSlug | null>(
+  Object.entries({
+    // primaries
+    abs: "abs",
+    pectorals: "chest",
+    biceps: "biceps",
+    glutes: "gluteal",
+    delts: "deltoids",
+    triceps: "triceps",
+    "upper back": "upper-back",
+    lats: "upper-back",
+    calves: "calves",
+    quads: "quadriceps",
+    forearms: "forearm",
+    hamstrings: "hamstring",
+    spine: "lower-back",
+    traps: "trapezius",
+    adductors: "adductors",
+    "serratus anterior": "serratus",
+    abductors: "gluteal",
+    "levator scapulae": "trapezius",
+    "cardiovascular system": null,
+    // secondaries
+    shoulders: "deltoids",
+    deltoids: "deltoids",
+    "rear deltoids": "deltoids",
+    "rotator cuff": "deltoids",
+    quadriceps: "quadriceps",
+    core: "abs",
+    abdominals: "abs",
+    "lower abs": "abs",
+    chest: "chest",
+    "upper chest": "chest",
+    "hip flexors": "hip-flexors",
+    obliques: "obliques",
+    "lower back": "lower-back",
+    rhomboids: "upper-back",
+    trapezius: "trapezius",
+    back: "upper-back",
+    "latissimus dorsi": "upper-back",
+    brachialis: "biceps",
+    soleus: "calves",
+    shins: "tibialis",
+    wrists: "forearm",
+    "wrist flexors": "forearm",
+    "wrist extensors": "forearm",
+    "grip muscles": "forearm",
+    groin: "adductors",
+    "inner thighs": "adductors",
+    ankles: null,
+    feet: null,
+    hands: null,
+    "ankle stabilizers": null,
+    sternocleidomastoid: null,
+  } satisfies Record<string, MuscleSlug | null>),
+);
 
 // Custom exercises carry only a body part, so they fall back to it. Weights inside a
 // group sum to 1 — "upper legs" spreads over three muscles rather than counting triple.
-const BY_BODYPART: Record<string, Partial<Record<MuscleSlug, number>>> = {
-  chest: { chest: 1 },
-  back: { "upper-back": 0.75, "lower-back": 0.25 },
-  shoulders: { deltoids: 1 },
-  "upper arms": { biceps: 0.5, triceps: 0.5 },
-  "lower arms": { forearm: 1 },
-  waist: { abs: 0.7, obliques: 0.3 },
-  "upper legs": { quadriceps: 0.4, hamstring: 0.35, gluteal: 0.25 },
-  "lower legs": { calves: 0.8, tibialis: 0.2 },
-  neck: { trapezius: 1 },
-  cardio: {},
-};
+const BY_BODYPART = new Map<string, Partial<Record<MuscleSlug, number>>>(
+  Object.entries({
+    chest: { chest: 1 },
+    back: { "upper-back": 0.75, "lower-back": 0.25 },
+    shoulders: { deltoids: 1 },
+    "upper arms": { biceps: 0.5, triceps: 0.5 },
+    "lower arms": { forearm: 1 },
+    waist: { abs: 0.7, obliques: 0.3 },
+    "upper legs": { quadriceps: 0.4, hamstring: 0.35, gluteal: 0.25 },
+    "lower legs": { calves: 0.8, tibialis: 0.2 },
+    neck: { trapezius: 1 },
+    cardio: {},
+  } satisfies Record<string, Partial<Record<MuscleSlug, number>>>),
+);
 
 const SECONDARY = 0.4; // a supporting muscle counts this much against a primary
 
@@ -124,25 +129,37 @@ export function musclesOf(
     | undefined,
 ): Partial<Record<MuscleSlug, number>> {
   if (!ex) return {};
-  if (ex.muscleWeights && typeof ex.muscleWeights === "object") {
+
+  if (ex.muscleWeights) {
     const snapshotLoad: Partial<Record<MuscleSlug, number>> = {};
+
     for (const slug of MUSCLES) {
       const weight = ex.muscleWeights[slug];
-      if (typeof weight === "number" && Number.isFinite(weight) && weight > 0)
+
+      if (weight !== undefined && Number.isFinite(weight) && weight > 0)
         snapshotLoad[slug] = weight;
     }
+
     if (Object.keys(snapshotLoad).length > 0) return snapshotLoad;
   }
+
   const muscleLoad: Partial<Record<MuscleSlug, number>> = {};
-  const addMuscle = (name: unknown, weight: number): void => {
-    const slug = ALIAS[(typeof name === "string" ? name : "").toLowerCase().trim()];
+
+  const addMuscle = (name: string | undefined, weight: number): void => {
+    const slug = ALIAS.get(
+      (validation.is(validation.string(), name) ? name : "").toLowerCase().trim(),
+    );
+
     if (slug) muscleLoad[slug] = Math.max(muscleLoad[slug] || 0, weight);
   };
+
   addMuscle(ex.tg, 1);
   (ex.sm || []).forEach((muscle) => addMuscle(muscle, SECONDARY));
+
   // Nothing recognised (custom exercises, or a target we don't draw) — use the body part.
   if (Object.keys(muscleLoad).length === 0)
-    Object.assign(muscleLoad, BY_BODYPART[ex.bp || ""] || {});
+    Object.assign(muscleLoad, BY_BODYPART.get(ex.bp || "") || {});
+
   return muscleLoad;
 }
 
@@ -152,10 +169,14 @@ export function exerciseMuscleSnapshot(
 ): MuscleSnapshot {
   if (!ex) return {};
   const snapshot: MuscleSnapshot = {};
+
   if (ex.n) snapshot.n = ex.n;
+
   if (ex.bp) snapshot.bp = ex.bp;
   const weights = musclesOf(ex);
+
   if (Object.keys(weights).length > 0) snapshot.muscleWeights = { ...weights };
+
   return snapshot;
 }
 
@@ -176,19 +197,26 @@ export function loadOf(
   const load: Partial<Record<MuscleSlug, number>> = {};
   items.forEach((item) => {
     const { id, sets } = item;
+
     if (!sets) return;
     const snapshot = item.muscleSnapshot;
+
     const snapshotHasWeights =
       !!snapshot?.muscleWeights && Object.keys(snapshot.muscleWeights).length > 0;
+
     const source = snapshotHasWeights
       ? snapshot
       : item.exercise || exerciseMetadata(id) || snapshot;
+
     const exerciseLoad = musclesOf(source);
+
     for (const slug of MUSCLES) {
       const contribution = exerciseLoad[slug] || 0;
+
       if (contribution > 0) load[slug] = (load[slug] || 0) + contribution * sets;
     }
   });
+
   return load;
 }
 
@@ -230,6 +258,7 @@ export const loadOfRoutine = (
  */
 export function levelsOf(load: Partial<Record<MuscleSlug, number>>): Record<MuscleSlug, number> {
   const max = Math.max(0, ...MUSCLES.map((m) => load[m] || 0));
+
   const lv: Record<MuscleSlug, number> = {
     abs: 0,
     adductors: 0,
@@ -250,21 +279,22 @@ export function levelsOf(load: Partial<Record<MuscleSlug, number>>): Record<Musc
     triceps: 0,
     "upper-back": 0,
   };
+
   MUSCLES.forEach((m) => {
     const v = load[m] || 0;
     lv[m] = v ? (max <= 0 ? 0 : Math.max(1, Math.min(4, Math.ceil((v / max) * 4)))) : 0;
   });
+
   return lv;
 }
 
 /** Muscles sorted hardest-worked first; untrained ones last, in body order. */
-export function rankOf(load: Partial<Record<MuscleSlug, number>>): {
-  worked: MuscleSlug[];
-  missed: MuscleSlug[];
-} {
+export function rankOf(load: Partial<Record<MuscleSlug, number>>) {
   const worked = MUSCLES.filter((muscle) => (load[muscle] || 0) > 0).toSorted(
     (left, right) => (load[right] || 0) - (load[left] || 0),
   );
+
   const missed = MUSCLES.filter((muscle) => (load[muscle] || 0) <= 0);
+
   return { worked, missed };
 }

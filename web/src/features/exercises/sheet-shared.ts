@@ -2,12 +2,14 @@ import { useStore } from "@/app/store/useStore";
 import type { AppState, CatalogExercise, CustomEx, Exercise, LoggedSet } from "@/shared/lib/types";
 
 export const getAppState = () => useStore.getState().appState;
+
 export const updateAppState = (mutate: (appState: AppState) => void) =>
   useStore.getState().update(mutate);
+
 export const getSoundSettings = () => getAppState().sound;
 
-export const getErrorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+export const getErrorMessage = (cause: unknown): string =>
+  cause instanceof Error ? cause.message : String(cause);
 
 export type SheetEx = (Exercise | CustomEx) & {
   custom?: boolean;
@@ -16,6 +18,7 @@ export type SheetEx = (Exercise | CustomEx) & {
 
 export const toCatalogExercise = (exercise: SheetEx): CatalogExercise => {
   if ("img" in exercise) return exercise;
+
   return {
     ...exercise,
     tg: exercise.tg || "",

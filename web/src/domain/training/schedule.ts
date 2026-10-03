@@ -6,6 +6,7 @@ type ScheduleState = Pick<AppState, "dayPlan" | "routines" | "week">;
 function validSessions(appState: ScheduleState, sessions: DaySession[] | undefined): DaySession[] {
   if (!sessions?.length) return [];
   const validIds = new Set(appState.routines.map((routine) => routine.id));
+
   return sessions.filter((session) => validIds.has(session.routineId));
 }
 
@@ -16,13 +17,17 @@ function weekSessions(appState: ScheduleState, weekday: Weekday): DaySession[] {
 /** Ordered planned sessions for `iso` (empty when rest). */
 export function effectiveSessions(appState: ScheduleState, iso: IsoDate): DaySession[] {
   const override = appState.dayPlan[iso];
+
   if (override !== undefined) {
     if (override.rest) return [];
     const sessions = validSessions(appState, override.sessions);
+
     if (sessions.length || !override.sessions?.length) return sessions;
     // Use the weekly schedule when all override routines have been deleted.
   }
+
   const weekday = weekdayOf(new Date(`${iso}T12:00:00`));
+
   return weekSessions(appState, weekday);
 }
 
@@ -38,6 +43,7 @@ export function effectiveRoutineId(appState: ScheduleState, iso: IsoDate): Id | 
 /** First planned routine object for `iso` (convenience for single-CTA flows). */
 export function effectiveRoutine(appState: ScheduleState, iso: IsoDate): Routine | null {
   const id = effectiveRoutineId(appState, iso);
+
   return id ? (appState.routines.find((routine) => routine.id === id) ?? null) : null;
 }
 
@@ -53,20 +59,26 @@ export function sessionProgress(
   iso: IsoDate,
 ): PlannedSession[] {
   const remaining = new Map<Id, number>();
+
   for (const workout of appState.workouts) {
     if (workout.d === iso && workout.routineId) {
       remaining.set(workout.routineId, (remaining.get(workout.routineId) ?? 0) + 1);
     }
   }
+
   const occurrences = new Map<Id, number>();
   const routines = new Map(appState.routines.map((routine) => [routine.id, routine]));
+
   return effectiveSessions(appState, iso).flatMap((session) => {
     const routine = routines.get(session.routineId);
+
     if (!routine) return [];
     const occurrence = (occurrences.get(session.routineId) ?? 0) + 1;
     occurrences.set(session.routineId, occurrence);
     const count = remaining.get(session.routineId) ?? 0;
+
     if (count > 0) remaining.set(session.routineId, count - 1);
+
     return [
       Object.assign({}, session, {
         routine,
@@ -82,5 +94,6 @@ export function nextPlannedRoutine(
   iso: IsoDate,
 ): Routine | null {
   const next = sessionProgress(appState, iso).find((session) => !session.completed);
+
   return next?.routine ?? null;
 }

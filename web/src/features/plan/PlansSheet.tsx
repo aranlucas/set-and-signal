@@ -39,28 +39,35 @@ export function PlanTools({
   const printRef = useRef<HTMLDivElement | null>(null);
   const hasRoutines = (st.routines || []).some((r) => r.ex && r.ex.length);
   const uname = user?.name || "";
+
   const printPlan = useReactToPrint({
     contentRef: printRef,
     documentTitle: () => `set-and-signal-plan-${todayISO()}`,
     onAfterPrint: () => void close(),
     onPrintError: () => toast(t("sharing.printDialogError", "Could not open the print dialog")),
   });
+
   const exportFile = async () => {
     const bundle = buildPlanBundle(
       st,
       uname ? t("sharing.sPlan", "{{name}}’s plan", { name: uname }) : "",
     );
+
     const json = JSON.stringify(bundle, null, 2);
     const name = "set-and-signal-plan-" + todayISO() + ".json";
+
     if (MOBILE) {
       try {
         await shareExport(json, name);
       } catch {
         /* dismissed */
       }
+
       void close();
+
       return;
     }
+
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -71,9 +78,11 @@ export function PlanTools({
     void close();
     toast(t("sharing.planFileSavedSendFriend", "Plan file saved — send it to a friend"));
   };
+
   const pickFile = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
+
     if (!file) return;
     void file.text().then(async (contents) => {
       try {
@@ -87,6 +96,7 @@ export function PlanTools({
       }
     });
   };
+
   return (
     <>
       <h3>{t("sharing.sharePlan", "Share your plan")}</h3>
@@ -162,10 +172,12 @@ export function PlanTools({
 export function PlanImport({ bundle, close }: { bundle: ParsedBundle; close: SheetClose }) {
   const { t } = useTranslation();
   const nav = useNavigate();
+
   const { control, handleSubmit } = useForm<{ schedule: boolean }>({
     defaultValues: { schedule: false },
     resolver: valibotResolver(planImportFormSchema),
   });
+
   const apply = async ({ schedule }: { schedule: boolean }) => {
     updateAppState((state) => mergePlan(state, bundle, { schedule }));
     await close();
@@ -176,6 +188,7 @@ export function PlanImport({ bundle, close }: { bundle: ParsedBundle; close: She
     );
     void nav({ to: "/plan" });
   };
+
   return (
     <form onSubmit={(event) => void handleSubmit(apply)(event)}>
       <h3>
@@ -257,18 +270,23 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
   const { t } = useTranslation();
   const st = useStore((store) => store.appState);
   const wd = weekdayOf(new Date(iso + "T12:00:00"));
+
   const weeklyNames = (st.week[wd] ?? [])
     .map((session) => st.routines.find((routine) => routine.id === session.routineId)?.name)
     .filter(Boolean);
+
   const hasOvr = st.dayPlan[iso] !== undefined;
   const effIds = new Set(effectiveRoutineIds(st, iso));
   const isRest = hasOvr && st.dayPlan[iso].rest === true;
+
   const toggleRoutine = (routineId: Id) => {
     updateAppState((appState) => {
       const sessions = effectiveSessions(appState, iso).map((session) =>
         Object.assign({}, session),
       );
+
       const index = sessions.findIndex((session) => session.routineId === routineId);
+
       if (index >= 0) sessions.splice(index, 1);
       else sessions.push({ routineId });
       appState.dayPlan[iso] = { sessions };
@@ -281,6 +299,7 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
       }),
     );
   };
+
   const setRest = () => {
     updateAppState((appState) => {
       appState.dayPlan[iso] = { rest: true };
@@ -288,6 +307,7 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
     void close();
     toast(t("calendar.setRest", "{{date}} set to rest", { date: fmtDate(t, iso) }));
   };
+
   const clearOverride = () => {
     updateAppState((appState) => {
       delete appState.dayPlan[iso];
@@ -295,6 +315,7 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
     void close();
     toast(t("calendar.backWeeklyPlan", "Back to weekly plan"));
   };
+
   return (
     <>
       <h3>{fmtDate(t, iso, true)}</h3>
@@ -368,24 +389,29 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
     </>
   );
 }
+
 export function DayAssign({ day, close }: { day: Weekday; close: SheetClose }) {
   const { t } = useTranslation();
   const { weekdays } = useDateLabels();
   const appState = useStore((state) => state.appState);
   const selected = appState.week[day] ?? [];
   const selectedIds = new Set(selected.map((session) => session.routineId));
+
   const clearDay = () => {
     updateAppState((state) => {
       delete state.week[day];
     });
     void close();
   };
+
   const toggleRoutine = (routineId: Id) => {
     updateAppState((state) => {
       const current = state.week[day] ?? [];
       const index = current.findIndex((session) => session.routineId === routineId);
+
       if (index >= 0) {
         const next = current.filter((session) => session.routineId !== routineId);
+
         if (next.length) state.week[day] = next;
         else delete state.week[day];
       } else {
@@ -394,6 +420,7 @@ export function DayAssign({ day, close }: { day: Weekday; close: SheetClose }) {
     });
     void close();
   };
+
   return (
     <>
       <h3>{weekdays[day]}</h3>

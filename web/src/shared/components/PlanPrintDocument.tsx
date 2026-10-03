@@ -12,8 +12,11 @@ import styles from "@/shared/components/PlanPrintDocument.module.css";
 const WEEK_ORDER: Weekday[] = [1, 2, 3, 4, 5, 6, 0];
 
 type PrintableState = Pick<AppState, "customEx" | "routines" | "unit" | "week">;
+
 type ExerciseDetails = Exercise | CustomEx;
+
 type KeyedExercise = { config: ExConfig; key: string };
+
 type ExerciseGroup = { exercises: KeyedExercise[]; key: string };
 
 export interface PlanPrintDocumentProps {
@@ -26,17 +29,23 @@ export interface PlanPrintDocumentProps {
 function scheme(t: TFunction, config: ExConfig, unit: string): string {
   const sets = config.sets || 1;
   const mode = modeOf(config);
+
   if (mode === "cardio") {
     const body = `${config.min || 20} min @ ${fmtNum(config.speed || 8)} km/h`;
+
     return sets > 1 ? `${sets} × ${body}` : body;
   }
+
   let summary =
     mode === "time" ? `${sets} × ${fmtSec(config.sec || 45)}` : `${sets} × ${config.reps ?? 10}`;
+
   if (config.weight) summary += ` · ${isBw(config) ? "+" : ""}${fmtNum(config.weight)} ${unit}`;
+
   if (mode !== "time" && isPerSide(config))
     summary += ` · ${t("exercise.measurement.side", "{{reps}}/side", {
       reps: fmtNum(sideReps(config.reps ?? 10)),
     })}`;
+
   return summary;
 }
 
@@ -49,6 +58,7 @@ function groupedExercises(exercises: ExConfig[]): ExerciseGroup[] {
     occurrences.set(exercise.id, occurrence);
     const keyedExercise = { config: exercise, key: `${exercise.id}-${occurrence}` };
     const previousExercise = exercises[index - 1];
+
     if (index > 0 && exercise.sg && previousExercise?.sg === exercise.sg)
       groups.at(-1)?.exercises.push(keyedExercise);
     else
@@ -57,6 +67,7 @@ function groupedExercises(exercises: ExConfig[]): ExerciseGroup[] {
         key: exercise.sg ? `${exercise.sg}-${keyedExercise.key}` : keyedExercise.key,
       });
   });
+
   return groups;
 }
 
@@ -71,6 +82,7 @@ function ExerciseRow({
 }) {
   const { t } = useTranslation();
   const metadata = useExerciseMetadataLabels();
+
   return (
     <div className={styles.exercise}>
       <div className={styles.exerciseName}>
@@ -94,6 +106,7 @@ function RoutineSection({
   unit: string;
 }) {
   const { t } = useTranslation();
+
   return (
     <section className={styles.routine}>
       <div className={styles.routineHeader}>
@@ -110,6 +123,7 @@ function RoutineSection({
               unit={unit}
             />
           ));
+
           return group.exercises.length > 1 ? (
             <div className={styles.superset} key={group.key}>
               <div className={styles.supersetLabel}>{t("workout.type.superset", "Superset")}</div>
@@ -149,6 +163,7 @@ export function PlanPrintDocument({ appState, contentRef, owner }: PlanPrintDocu
                 appState.routines.find((candidate) => candidate.id === session.routineId)?.name,
             )
             .filter(Boolean);
+
           return (
             <div className={styles.weekRow} key={weekday}>
               <div className={styles.weekday}>{weekdays[weekday]}</div>

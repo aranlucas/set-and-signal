@@ -26,11 +26,15 @@ export function warmupSets(topWeight: number, unit: Unit): RepsSet[] {
   const step = warmupRound(unit);
   const floor = Math.min(step * 2, topWeight);
   const sets: RepsSet[] = [];
+
   for (const { pct, reps } of WARMUP_RAMP) {
     const w = Math.round((topWeight * pct) / step) * step;
+
     if (w < floor || w >= topWeight) continue;
+
     if (sets.length > 0 && sets.at(-1)!.w === w) continue; // ramp plateaued at this weight
     sets.push({ w, r: reps, done: false, wu: true });
   }
+
   return sets;
 }
