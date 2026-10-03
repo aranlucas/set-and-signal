@@ -1,3 +1,4 @@
+import * as validation from "valibot";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Controller, useForm } from "react-hook-form";
@@ -15,16 +16,22 @@ import { useStore } from "@/app/store/useStore";
 import { createWeightFormSchema } from "@/shared/lib/form-schemas";
 
 const W_LO = 1;
+
 const wHi = (unit: Unit) => (unit === "lb" ? 660 : 300);
+
 const defaultBodyweight = (unit: Unit) => (unit === "lb" ? 155 : 70);
+
 const weightStep = (unit: Unit) => (unit === "lb" ? 0.2 : 0.1);
+
 const weightRange = (unit: Unit) => (unit === "lb" ? 50 : 20);
+
 const weightJumps = (unit: Unit) => (unit === "lb" ? [-5, -1, 1, 5] : [-1, -0.5, 0.5, 1]);
 
 function sliderBounds(value: number, unit: Unit) {
   const radius = weightRange(unit) / 2;
   const min = Math.max(W_LO, Math.round((value - radius) * 10) / 10);
   const max = Math.min(wHi(unit), Math.round((value + radius) * 10) / 10);
+
   return { min, max };
 }
 
@@ -41,14 +48,18 @@ export function WeightInput({
   const step = weightStep(unit);
   const clamp = (x: number) => Math.max(W_LO, Math.min(W_HI, Math.round((x || 0) * 10) / 10));
   const [bounds, setBounds] = useState(() => sliderBounds(value, unit));
+
   const onSlide = (x: number) => {
     const nextValue = clamp(x);
     setValue(nextValue);
+
     if (nextValue <= bounds.min || nextValue >= bounds.max) {
       setBounds(sliderBounds(nextValue, unit));
     }
   };
+
   const sliderValue = Math.max(bounds.min, Math.min(bounds.max, value));
+
   return (
     <>
       <div className="my-3.5 mb-1.5 flex items-center justify-center gap-4.5">
@@ -95,9 +106,17 @@ export function WeightInput({
         max={bounds.max}
         step={step}
         aria-label={`Weight in ${unit}`}
+        // eslint-disable-next-line anti-slop/no-unknown-parameters -- The Slider library callback is untyped; validate its scalar/array boundary before applying a weight.
         onValueChange={(values: unknown) => {
-          const firstValue: unknown = Array.isArray(values) ? values[0] : values;
-          if (typeof firstValue === "number") onSlide(firstValue);
+          const array = validation.safeParse(validation.array(validation.unknown()), values);
+          const first = array.success ? array.output[0] : values;
+
+          const number = validation.safeParse(
+            validation.union([validation.number(), validation.nan()]),
+            first,
+          );
+
+          if (number.success) onSlide(number.output);
         }}
       />
     </>
@@ -113,6 +132,7 @@ const saveBodyweight = (weight: number) =>
   updateAppState((state) => {
     const date = todayISO();
     const existingEntry = state.bodyweight.find((entry) => entry.d === date);
+
     if (existingEntry) {
       existingEntry.w = weight;
       existingEntry.t = Date.now();
@@ -133,10 +153,12 @@ function BodyweightEntryForm({
 }) {
   const { t } = useTranslation();
   const invalidWeightMessage = t("weight.enterValidWeight", "Enter a valid weight");
+
   const { control, handleSubmit } = useForm<{ weight: number }>({
     defaultValues: { weight: defaultValue },
     resolver: valibotResolver(createWeightFormSchema(t)),
   });
+
   const submit = async ({ weight: rawWeight }: { weight: number }) => {
     const weight = Math.round((rawWeight || 0) * 10) / 10;
     await onSubmit(weight);
@@ -171,6 +193,7 @@ export function PreWorkoutBodyweightSheet({
   const state = useStore((store) => store.appState);
   const previousBodyweight = lastBW(state);
   const defaultValue = previousBodyweight?.w ?? state.targetW ?? defaultBodyweight(state.unit);
+
   return (
     <>
       <h3>{t("weight.quickCheck", "Quick check-in")}</h3>
@@ -212,6 +235,7 @@ export function BodyweightLogSheet({ close }: { close: SheetClose }) {
   const previousBodyweight = lastBW(state);
   const defaultValue = previousBodyweight?.w ?? state.targetW ?? defaultBodyweight(state.unit);
   const recent = [...state.bodyweight].reverse().slice(0, 3);
+
   return (
     <>
       <h3>{t("weight.logBodyWeight", "Log body weight")}</h3>
@@ -263,15 +287,18 @@ export function BodyweightLogSheet({ close }: { close: SheetClose }) {
     </>
   );
 }
+
 export function GoalSheet({ close }: { close: SheetClose }) {
   const { t } = useTranslation();
   const st = getAppState();
   const bw = lastBW(st);
   const invalidWeightMessage = t("weight.enterValidWeight", "Enter a valid weight");
+
   const { control, handleSubmit } = useForm<{ weight: number }>({
     defaultValues: { weight: st.targetW ?? bw?.w ?? defaultBodyweight(st.unit) },
     resolver: valibotResolver(createWeightFormSchema(t)),
   });
+
   const save = ({ weight: rawWeight }: { weight: number }) => {
     const weight = Math.round((rawWeight || 0) * 10) / 10;
     updateAppState((appState) => {
@@ -292,6 +319,7 @@ export function GoalSheet({ close }: { close: SheetClose }) {
           : ""),
     );
   };
+
   return (
     <>
       <h3>{t("weight.targetWeight", "Target weight")}</h3>

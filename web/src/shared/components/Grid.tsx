@@ -1,3 +1,4 @@
+import * as validation from "valibot";
 import { forwardRef, type ComponentPropsWithoutRef } from "react";
 
 import {
@@ -10,6 +11,7 @@ import {
 import { cn } from "@/shared/lib/utils";
 
 export type GridColumnCount = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+
 export type ResponsiveGridColumns = { default: GridColumnCount } & Partial<
   Record<LayoutBreakpoint, GridColumnCount>
 >;
@@ -123,8 +125,8 @@ export const Grid = forwardRef<HTMLDivElement, GridProps>(function Grid(
   { columns, gap = "s", responsiveGap, alignItems, className, children, ...props },
   ref,
 ) {
-  const responsiveColumns = typeof columns === "number" ? undefined : columns;
-  const defaultColumns = typeof columns === "number" ? columns : columns.default;
+  const responsiveColumns = validation.is(validation.number(), columns) ? undefined : columns;
+  const defaultColumns = validation.is(validation.number(), columns) ? columns : columns.default;
 
   return (
     <div
@@ -137,6 +139,7 @@ export const Grid = forwardRef<HTMLDivElement, GridProps>(function Grid(
         responsiveColumns &&
           layoutBreakpoints.map((breakpoint) => {
             const breakpointColumns = responsiveColumns[breakpoint];
+
             return breakpointColumns && responsiveColumnClasses[breakpoint][breakpointColumns];
           }),
         layoutGapClasses(gap, responsiveGap),

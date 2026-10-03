@@ -29,18 +29,22 @@ export default function SyncStatus() {
       setOnline(true);
       void pull().catch(() => {});
     };
+
     const disconnected = () => setOnline(false);
     window.addEventListener("online", connected);
     window.addEventListener("offline", disconnected);
+
     return () => {
       window.removeEventListener("online", connected);
       window.removeEventListener("offline", disconnected);
     };
   }, [pull]);
   const phase = online ? status.phase : "offline";
+
   const retry = async () => {
     setBusy(true);
     setError("");
+
     try {
       await pull();
     } catch {
@@ -51,11 +55,13 @@ export default function SyncStatus() {
       setBusy(false);
     }
   };
+
   const review = async () => {
     setOpen(true);
     setBusy(true);
     setError("");
     setConflicts([]);
+
     try {
       setConflicts(await useStore.getState().reviewChanges());
     } catch {
@@ -66,9 +72,11 @@ export default function SyncStatus() {
       setBusy(false);
     }
   };
+
   const resolve = async (choice: "local" | "remote") => {
     setBusy(true);
     setError("");
+
     try {
       await useStore.getState().resolveChanges(conflicts, choice);
       setOpen(false);
@@ -83,6 +91,7 @@ export default function SyncStatus() {
       setBusy(false);
     }
   };
+
   const label = !user
     ? t("sync.deviceOnly", "Saved on this device")
     : phase === "offline"
@@ -96,6 +105,7 @@ export default function SyncStatus() {
             : phase === "saving"
               ? t("sync.saving", "Saving…")
               : t("sync.saved", "Saved");
+
   return (
     <>
       <div className="record-status">

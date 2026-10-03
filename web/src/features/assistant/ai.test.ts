@@ -41,10 +41,12 @@ const state = {
 };
 
 beforeEach(() => vi.stubEnv("TZ", "America/Los_Angeles"));
+
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllEnvs();
 });
+
 describe("buildDigest", () => {
   it("uses the local calendar day rather than UTC for today", () => {
     const now = new Date("2026-08-24T06:30:00Z"); // 23:30 on August 23 in Los Angeles

@@ -68,6 +68,7 @@ describe("form schemas", () => {
 
   it("requires positive weights for every starting-strength lift", () => {
     const schema = createStartingStrengthFormSchema(t);
+
     const values = {
       experience: "some" as const,
       unit: "kg" as const,

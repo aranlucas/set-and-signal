@@ -20,7 +20,7 @@ describe("parseBackup", () => {
   });
 
   it("rejects malformed nested workout data", () => {
-    const exportedState: Record<string, unknown> = {
+    const exportedState = {
       ...structuredClone(DEFAULT_APP_STATE),
       workouts: [
         {

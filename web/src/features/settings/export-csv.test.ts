@@ -27,6 +27,7 @@ describe("workoutsToCsv", () => {
       prs: [],
       vol: 1000,
     };
+
     const csv = workoutsToCsv(state([workout]), nameOf);
     const rows = csv.trimEnd().split("\n");
     expect(rows[0]).toBe(
@@ -62,10 +63,12 @@ describe("workoutsToCsv", () => {
       prs: [],
       vol: 400,
     };
+
     const rows = workoutsToCsv(state([workout]), nameOf)
       .trimEnd()
       .split("\n")
       .slice(1);
+
     // Warm-up row keeps its order position but is marked in notes
     expect(rows[0]).toContain("2026-08-21,Push,0:30:00,Squat,1,40,8,,,");
     expect(rows[0]).toContain("warm-up");
@@ -85,9 +88,11 @@ describe("workoutsToCsv", () => {
       prs: [],
       vol: 0,
     };
+
     const row = workoutsToCsv(state([workout]), nameOf)
       .trimEnd()
       .split("\n")[1];
+
     const cells = row.split(",");
     expect(cells[4 + 4]).toBe("1200"); // seconds column
     expect(row).toContain("11.5 km/h");
@@ -105,6 +110,7 @@ describe("workoutsToCsv", () => {
       prs: [],
       vol: 0,
     };
+
     const csv = workoutsToCsv(state([workout]), nameOf);
     expect(csv.trimEnd().split("\n")).toHaveLength(1);
   });

@@ -22,6 +22,7 @@ export function Stepper({
 }) {
   const set = (v: number | null) => onChange(Math.max(0, Math.round((v || 0) * 100) / 100));
   const cur = value || 0;
+
   const inner = (
     <div className={cn("flex min-w-0 items-center overflow-hidden rounded-md bg-muted", className)}>
       <Button
@@ -48,7 +49,9 @@ export function Stepper({
       </Button>
     </div>
   );
+
   if (!label) return inner;
+
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       <span className="text-center text-sm text-foreground/60">{label}</span>

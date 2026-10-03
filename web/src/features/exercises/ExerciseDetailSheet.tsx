@@ -26,9 +26,11 @@ function OneRepMax({ exercise }: { exercise: SheetEx }) {
   const { t } = useTranslation();
   const appState = useAppState();
   const bestResult = best1RM(appState, exercise.id);
+
   const [weight, setWeight] = useState(
     bestResult ? bestResult.w : appState.exWeights[exercise.id]?.w || 20,
   );
+
   const [reps, setReps] = useState(bestResult ? bestResult.r : 5);
   const estimate = estimate1RM(weight, reps);
 
@@ -102,6 +104,7 @@ function OneRepMax({ exercise }: { exercise: SheetEx }) {
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((repCount) => {
               const share = 100 / (1 + repCount / 30);
               const repMax = Math.round((estimate / (1 + repCount / 30)) * 10) / 10;
+
               return (
                 <div
                   key={repCount}
@@ -145,11 +148,13 @@ export function ExerciseDetail({
   const bestWeight = bestWeightFor(appState, exercise.id);
   const instructionLanguage = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
   const hasCatalogInstructions = "img" in exercise && !catalogExercise.missing;
+
   const loadedInstructions = useExerciseInstructions(
     instructionLanguage,
     catalogExercise.id,
     hasCatalogInstructions,
   );
+
   const instructions = loadedInstructions?.steps || [];
 
   return (

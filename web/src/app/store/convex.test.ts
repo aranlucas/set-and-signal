@@ -5,8 +5,10 @@ import { api } from "../../../convex/_generated/api";
 import { splitState, joinState } from "../../../convex/model";
 
 const modules = import.meta.glob("../../../convex/**/*.ts");
+
 function setup() {
   const t = convexTest(schema, modules);
+
   return {
     t,
     alice: t.withIdentity({ subject: "alice", service: true }),
@@ -14,6 +16,7 @@ function setup() {
     browser: t.withIdentity({ subject: "alice" }),
   };
 }
+
 describe("Convex training authority", () => {
   it("isolates users and rejects anonymous and browser snapshot replacements", async () => {
     const { t, alice, bob, browser } = setup();
@@ -65,6 +68,7 @@ describe("Convex training authority", () => {
       ],
       unit: "lb",
     };
+
     expect(joinState(splitState(state), 42)).toEqual({ ...state, _ts: 42 });
     expect(() => splitState({ workouts: [{ id: "a" }, { id: "a" }] })).toThrow("duplicate");
   });

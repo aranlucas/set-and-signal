@@ -130,14 +130,19 @@ export const CURATED: CuratedPlan[] = [
 
 // Fresh routine objects (new ids) built from a curated template.
 export const curatedRoutines = (p: CuratedPlan): Routine[] =>
-  p.routines.map(([name, emoji, list]) => ({
-    id: uid(),
-    name,
-    emoji,
-    ...(p.prog ? { prog: p.prog } : {}),
-    ex: list.map((e: CuratedItem): ExConfig =>
-      Array.isArray(e)
-        ? { id: e[0], sets: e[1], reps: e[2], weight: 0 }
-        : { id: e.id, sets: e.sets, min: e.min, speed: e.speed },
-    ),
-  }));
+  p.routines.map(([name, emoji, list]) => {
+    const routine: Routine = {
+      id: uid(),
+      name,
+      emoji,
+      ex: list.map((e: CuratedItem): ExConfig =>
+        Array.isArray(e)
+          ? { id: e[0], sets: e[1], reps: e[2], weight: 0 }
+          : { id: e.id, sets: e.sets, min: e.min, speed: e.speed },
+      ),
+    };
+
+    if (p.prog) routine.prog = p.prog;
+
+    return routine;
+  });

@@ -11,9 +11,11 @@ export default function HomePreWorkoutBodyweightSheet() {
   const { routineId } = routeApi.useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+
   const routineExists = useStore((state) =>
     state.appState.routines.some((routine) => routine.id === routineId),
   );
+
   const close = () => navigate({ to: "/home", replace: true, resetScroll: false });
 
   if (!routineExists) return <Navigate to="/home" replace />;

@@ -19,6 +19,7 @@ interface CardProps {
 
 export function NotificationsCard({ appState, update, notify }: CardProps) {
   if (MOBILE) return <MobileReminderCard appState={appState} update={update} notify={notify} />;
+
   return <PushCard appState={appState} update={update} notify={notify} />;
 }
 
@@ -27,6 +28,7 @@ export function NotificationsCard({ appState, update, notify }: CardProps) {
 // this card only owns the OS permission prompt when the switch turns on.
 function MobileReminderCard({ appState, update, notify }: CardProps) {
   const { t } = useTranslation();
+
   const setReminder = (patch: Partial<AppState["reminder"]>) =>
     update((state) => {
       state.reminder = {
@@ -35,8 +37,10 @@ function MobileReminderCard({ appState, update, notify }: CardProps) {
         tz: localTZ(),
       };
     });
+
   const toggle = async () => {
     const on = !appState.reminder?.on;
+
     if (on) {
       const ok = await syncReminder(
         {
@@ -45,6 +49,7 @@ function MobileReminderCard({ appState, update, notify }: CardProps) {
         },
         true,
       );
+
       if (!ok) {
         notify(
           t(
@@ -52,11 +57,14 @@ function MobileReminderCard({ appState, update, notify }: CardProps) {
             "Could not change notification settings",
           ),
         );
+
         return;
       }
     }
+
     setReminder({ on });
   };
+
   return (
     <Section
       title={t("settings.notifications", "Notifications")}
@@ -102,12 +110,14 @@ function PushCard({ appState, update, notify }: CardProps) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const supported = pushSupported();
+
   // The subscription lives in the service worker's pushManager; react-query owns the read.
   const sub = useQuery({
     queryKey: ["push", "subscription"],
     queryFn: () => navigator.serviceWorker.ready.then((reg) => reg.pushManager.getSubscription()),
     enabled: supported,
   });
+
   const on = !!sub.data;
 
   const toggle = useMutation({
@@ -129,6 +139,7 @@ function PushCard({ appState, update, notify }: CardProps) {
           ),
       ),
   });
+
   const test = useMutation({
     mutationFn: () => sendTestPush(),
     onSuccess: () =>

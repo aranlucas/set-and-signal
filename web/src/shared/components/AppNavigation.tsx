@@ -40,6 +40,7 @@ export default function AppNavigation({ onStart }: { onStart: () => void }) {
     const media = window.matchMedia("(max-width: 1023px)");
     const change = () => setMobile(media.matches);
     media.addEventListener("change", change);
+
     return () => media.removeEventListener("change", change);
   }, []);
   useEffect(() => {
@@ -49,18 +50,25 @@ export default function AppNavigation({ onStart }: { onStart: () => void }) {
     const opener = menuButton.current;
     const panel = sidebar.current;
     panel?.querySelector<HTMLButtonElement>(".nav-close")?.focus();
+
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setOpen(false);
+
         return;
       }
+
       if (event.key !== "Tab") return;
+
       const elements = Array.from(
         panel?.querySelectorAll<HTMLElement>("a[href], button:not([disabled])") ?? [],
       );
+
       const first = elements.at(0);
       const last = elements.at(-1);
+
       if (!first || !last) return;
+
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();
@@ -69,13 +77,16 @@ export default function AppNavigation({ onStart }: { onStart: () => void }) {
         first.focus();
       }
     };
+
     document.addEventListener("keydown", handleKey);
+
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", handleKey);
       opener?.focus();
     };
   }, [open, mobile]);
+
   const links = [
     { to: "/home", label: t("dashboard.overview", "Overview"), icon: LayoutDashboard },
     { to: "/plan", label: t("dashboard.myProgram", "My program"), icon: CalendarDays },
@@ -84,11 +95,13 @@ export default function AppNavigation({ onStart }: { onStart: () => void }) {
     { to: "/library", label: t("dashboard.exerciseLibrary", "Exercise library"), icon: Dumbbell },
     { to: "/tools", label: t("dashboard.trainingTools", "Training tools"), icon: Wrench },
   ] as const;
+
   const current =
     links.find((link) => pathname.startsWith(link.to))?.label ??
     (pathname.startsWith("/workout")
       ? t("workout.title", "Workout")
       : t("navigation.settings", "Settings"));
+
   return (
     <>
       <a

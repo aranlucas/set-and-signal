@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 
 export function useEffortLabels() {
   const { t } = useTranslation();
+
   return {
     rir: t("effort.rir", "RIR"),
     rpe: t("effort.rpe", "RPE"),

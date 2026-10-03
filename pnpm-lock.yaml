@@ -244,6 +244,9 @@ importers:
         specifier: ^5.0.15
         version: 5.0.15(@types/react@19.3.0)(react@19.3.0)(use-sync-external-store@1.7.0(react@19.3.0))
     devDependencies:
+      '@oxlint/plugins':
+        specifier: 1.86.0
+        version: 1.86.0
       '@shadcn/lint':
         specifier: ^0.2.0
         version: 0.2.0
@@ -272,7 +275,7 @@ importers:
         specifier: ^0.65.0
         version: 0.65.0
       oxlint:
-        specifier: ^1.80.0
+        specifier: 1.86.0
         version: 1.86.0(oxlint-tsgolint@7.0.2003)
       oxlint-tailwindcss:
         specifier: ^1.10.1
@@ -1324,6 +1327,10 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [win32]
+
+  '@oxlint/plugins@1.86.0':
+    resolution: {integrity: sha512-JeAiaaRMyUiUEQHQ7zBsJn1aEdbLyt1HJsOs4XKIIlATNxcvWRrRxneZA+RF4G03cQobq3IhTqSfyLhOFv03qA==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
   '@rolldown/binding-android-arm-eabi@1.2.12':
     resolution: {integrity: sha512-dB/a1214qKfHMXCpgqR4OZT+jS4kTyEXbQGJPqzobt5EwH5rX080pxE37alt3RzvR1bf1Yz/yGqRfrYAxuPw0A==}
@@ -4318,6 +4325,8 @@ snapshots:
 
   '@oxlint/binding-win32-x64-msvc@1.86.0':
     optional: true
+
+  '@oxlint/plugins@1.86.0': {}
 
   '@rolldown/binding-android-arm-eabi@1.2.12':
     optional: true

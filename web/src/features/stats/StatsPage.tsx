@@ -37,15 +37,19 @@ export default function Stats() {
   const nav = useNavigate();
   const appState = useStore((state) => state.appState);
   const [activeSheet, setActiveSheet] = useState<StatsSheet | null>(null);
+
   const closeSheet = () => {
     setActiveSheet(null);
+
     return Promise.resolve();
   };
+
   const historySheetActions: HistorySheetActions = {
     onDayOverride: (iso) => setActiveSheet({ kind: "day-override", iso }),
     onWorkoutDetail: (workout) => setActiveSheet({ kind: "workout", workout }),
     onCalendarDay: (iso, workouts) => setActiveSheet({ kind: "calendar-day", iso, workouts }),
   };
+
   const [rangeDays, setRangeDays] = useState<StatsRange>("90");
   const rangeDayCount = Number(rangeDays);
   const [exId, setExId] = useState<string | null>(null);
@@ -54,31 +58,40 @@ export default function Stats() {
   const anyEffort = hasEffort(appState);
   const kind = displayScale(appState);
   const hd = scaleName(kind);
+
   // Same collapse as EffortCard: every rir reaching toScale here is known-rated.
   const scaled = (rir: number) => {
     const v = toScale(kind, rir);
+
     return v == null ? 0 : v;
   };
+
   const bwPts = appState.bodyweight.flatMap((bodyweight) => {
     const timestamp = bodyweight.t || new Date(bodyweight.d).getTime();
+
     return rangeDayCount === 0 || timestamp > now - rangeDayCount * 86400000
       ? [{ t: timestamp, y: bodyweight.w, d: bodyweight.d }]
       : [];
   });
+
   // Deleted custom exercises still have a useful history name in their snapshot. Keep them in
   // the picker instead of reducing a real progression curve to an opaque id after deletion.
   const historicalNames = new Map<string, string>();
   appState.workouts.forEach((workout) =>
     workout.entries.forEach((entry) => {
       const name = entry.muscleSnapshot?.n;
+
       if (name && !historicalNames.has(entry.id)) historicalNames.set(entry.id, name);
     }),
   );
   const exerciseName = (id: string) => EXIDX[id]?.n || historicalNames.get(id) || id;
+
   const exHist = [...new Set(appState.workouts.flatMap((w) => w.entries.map((e) => e.id)))]
     .filter((id) => EXIDX[id] || historicalNames.has(id))
     .sort((a, b) => exerciseName(a).localeCompare(exerciseName(b)) || a.localeCompare(b));
+
   const curEx = exId && exHist.includes(exId) ? exId : exHist[0] || null;
+
   // How this exercise was logged most recently decides what the curve means: top weight,
   // longest hold or top speed. Sets logged in another mode lack the field and score 0, so a
   // switched exercise drops its old points instead of mixing seconds into a weight chart.
@@ -86,27 +99,34 @@ export default function Stats() {
     ? (() => {
         for (let i = appState.workouts.length - 1; i >= 0; i--) {
           const en = appState.workouts[i].entries.find((e) => e.id === curEx);
+
           if (en) return modeOf({ ...en.target, id: curEx });
         }
+
         return modeOf({ id: curEx });
       })()
     : "reps";
+
   const curCardio = curMode === "cardio";
   const curTimed = curMode === "time";
   const exUnit = curCardio ? "km/h" : curTimed ? "s" : appState.unit;
   const exPts: ExercisePoint[] = [];
   let exList = exPts;
   let exBest = 0;
+
   if (curEx) {
     appState.workouts.forEach((w) => {
       const en = w.entries.find((e) => e.id === curEx);
+
       if (en) {
         const doneSets = en.sets.filter((s) => s.done && !isWarmup(s));
+
         const mx = Math.max(
           0,
           ...doneSets.map(loggedMetric),
           curCardio || curTimed ? 0 : en.topW || 0,
         );
+
         if (mx > 0) {
           exPts.push({
             t: w.start,
@@ -115,12 +135,14 @@ export default function Stats() {
             sets: doneSets,
             target: en.target ?? null,
           });
+
           if (mx > exBest) exBest = mx;
         }
       }
     });
     exList = exPts.slice(-5).reverse();
   }
+
   // Estimated 1RM (issue #18) — only reps-mode training produces one, so cardio and timed
   // work simply have no points and the toggle stays hidden.
   const e1Pts = curEx ? e1rmSeries(appState, curEx) : [];
@@ -131,16 +153,19 @@ export default function Stats() {
   // with more left in the tank is progress a weight-only chart draws as a flat line.
   const exRir = exPts.map((p) => avgRir(p.sets.map(ratingOf)));
   const showEff = exRir.filter((v) => v != null).length >= 3;
-  const effPts = exPts
-    .map((p, i) => {
-      const r = exRir[i];
-      return r == null ? null : { t: p.t, y: scaled(r), d: p.d };
-    })
-    .filter((p): p is NonNullable<typeof p> => p != null);
+
+  const effPts = exPts.flatMap((p, i) => {
+    const r = exRir[i];
+
+    return r == null ? [] : [{ t: p.t, y: scaled(r), d: p.d }];
+  });
+
   const onE1 = showE1 && exMetric === "e1rm";
   const onEff = showEff && exMetric === "effort";
+
   const topPts = exPts.map((p, i) => {
     const r = exRir[i];
+
     return {
       t: p.t,
       y: p.y,
@@ -150,10 +175,13 @@ export default function Stats() {
       note: r == null ? undefined : hd + " " + fmtNum(scaled(r)),
     };
   });
+
   const exOpts: { value: StatsMetric; label: string }[] = [
     { value: "top", label: t("progression.topSet", "Top set") },
   ];
+
   if (showE1) exOpts.push({ value: "e1rm", label: t("progression.est1rm", "Est. 1RM") });
+
   if (showEff) exOpts.push({ value: "effort", label: t("stats.effort.effort", "Effort") });
 
   return (

@@ -44,6 +44,7 @@ type Movement =
   | "core"
   | "legRaise"
   | "cardio";
+
 export interface SessionMovement {
   id: string;
   movement: Movement;
@@ -106,7 +107,9 @@ export const SESSION_MOVEMENTS: readonly SessionMovement[] = [
 
 export function availableAlternatives(config: ExConfig, equipment: readonly string[]) {
   const source = SESSION_MOVEMENTS.find((candidate) => candidate.id === config.id);
+
   if (!source) return [];
+
   return SESSION_MOVEMENTS.filter(
     (candidate) =>
       candidate.movement === source.movement &&
@@ -125,11 +128,13 @@ export interface SessionChoice {
   sets?: number;
   amount?: number; // reps, seconds or minutes, depending on the original mode
 }
+
 export interface SessionConstraints {
   equipment: string[];
   budgetMin: number;
   restSec: number;
 }
+
 export interface SessionRow {
   key: string;
   original: ExConfig;
@@ -157,6 +162,7 @@ export function adaptSession(
 ) {
   const occurrences = new Map<string, number>();
   const used = new Set<string>();
+
   return routine.ex.map((original, index): SessionRow => {
     const occurrence = (occurrences.get(original.id) ?? 0) + 1;
     occurrences.set(original.id, occurrence);
@@ -164,11 +170,14 @@ export function adaptSession(
     const options = availableAlternatives(original, constraints.equipment);
     const known = SESSION_MOVEMENTS.some((candidate) => candidate.id === original.id);
     const choice = choices[index];
+
     const selected =
       choice?.id ??
       options.find((candidate) => candidate.id === original.id && !used.has(candidate.id))?.id ??
       options.find((candidate) => !used.has(candidate.id))?.id;
+
     const candidate = options.find((option) => option.id === selected);
+
     const reason = !known
       ? "unknown"
       : !options.length
@@ -182,10 +191,12 @@ export function adaptSession(
           : candidate.id === original.id
             ? "kept"
             : "swap";
+
     if (!candidate) return { key, original, planned: null, options, reason };
     used.add(candidate.id);
     const mode = modeOf(original);
     const changed = candidate.id !== original.id;
+
     // Never transfer a load/speed or per-side convention across different exercises.
     const planned: ExConfig = changed
       ? {
@@ -199,29 +210,36 @@ export function adaptSession(
           weight: 0,
         }
       : { ...original };
+
     // Fixed session targets: no supersets or automatic progression can silently
     // add work/rest that the approximate budget did not account for.
     delete planned.sg;
     planned.prog = "off";
+
     if (choice?.sets !== undefined) planned.sets = choice.sets;
+
     if (choice?.amount !== undefined) {
       if (mode === "time") planned.sec = choice.amount;
       else if (mode === "cardio") planned.min = choice.amount;
       else planned.reps = choice.amount;
     }
+
     return { key, original: { ...original }, planned, options, reason };
   });
 }
 
 export function validSessionConfig(config: ExConfig) {
   const mode = modeOf(config);
+
   const amount =
     mode === "cardio"
       ? (config.min ?? 20)
       : mode === "time"
         ? (config.sec ?? 45)
         : (config.reps ?? 10);
+
   const limit = mode === "cardio" ? 180 : mode === "time" ? 600 : 100;
+
   return (
     Number.isInteger(config.sets) &&
     config.sets >= 1 &&
@@ -237,16 +255,20 @@ export function validSessionConfig(config: ExConfig) {
 export function estimateSessionMinutes(configs: readonly ExConfig[], restSec: number) {
   if (!configs.length) return 0;
   let seconds = 300;
+
   for (const config of configs) {
     const mode = modeOf(config);
+
     const work =
       mode === "cardio"
         ? (config.min ?? 20) * 60
         : mode === "time"
           ? (config.sec ?? 45)
           : (config.reps ?? 10) * 3;
+
     seconds += 60 + config.sets * work + Math.max(0, config.sets - 1) * restSec;
   }
+
   return Math.ceil(seconds / 60);
 }
 
@@ -267,37 +289,46 @@ export function fitSession(rows: SessionRow[], constraints: SessionConstraints):
         }
       : { id: "" },
   );
+
   const configs = rows.map(({ planned }) => (planned ? { ...planned } : null));
+
   const estimate = () =>
     estimateSessionMinutes(
       configs.flatMap((config) => (config ? [config] : [])),
       constraints.restSec,
     );
+
   // Bound iterations even for malformed imported templates.
   for (let step = 0; step < 500 && estimate() > constraints.budgetMin; step++) {
     const reducible = configs
-      .map((config, index) => ({ config, index }))
-      .filter((row) => row.config && row.config.sets > 1)
+      .flatMap((config, index) => (config && config.sets > 1 ? [{ config, index }] : []))
       .sort((a, b) => (b.config?.sets ?? 0) - (a.config?.sets ?? 0))[0];
+
     if (reducible?.config) {
       reducible.config.sets--;
       choices[reducible.index].sets = reducible.config.sets;
       continue;
     }
+
     const cardioIndex = configs.findIndex(
       (config) => config && modeOf(config) === "cardio" && (config.min ?? 20) > 1,
     );
+
     const cardio = configs[cardioIndex];
+
     if (cardio) {
       cardio.min = (cardio.min ?? 20) - 1;
       choices[cardioIndex].amount = cardio.min;
       continue;
     }
+
     const lastIndex = configs.findLastIndex((config) => config !== null);
+
     if (lastIndex < 0) break;
     configs[lastIndex] = null;
     choices[lastIndex] = { id: "" };
   }
+
   return choices;
 }
 
@@ -309,6 +340,7 @@ export function createSessionRoutine(
   name: string,
 ): Routine {
   const ex = rows.flatMap(({ planned }) => (planned ? [{ ...planned }] : []));
+
   if (
     !name.trim() ||
     name.length > 60 ||
@@ -328,12 +360,14 @@ export function createSessionRoutine(
   ) {
     throw new Error("Review equipment, targets and time before saving.");
   }
+
   const sessionPlan: SessionPlan = {
     sourceId: source.id,
     sourceName: source.name,
     ...structuredClone(constraints),
     rows: rows.map(({ original, planned }) => structuredClone({ original, planned })),
   };
+
   return { id, name, emoji: source.emoji, prog: "off", ex, sessionPlan };
 }
 

@@ -28,8 +28,10 @@ export default function Plan() {
   const state = useStore((store) => store.appState);
   const update = useStore((store) => store.update);
   const [sheet, setSheet] = useState<PlanSheet | null>(null);
+
   const closeSheet: SheetClose = () => {
     setSheet(null);
+
     return Promise.resolve();
   };
 
@@ -40,6 +42,7 @@ export default function Plan() {
       emoji: DEFAULT_GLYPH,
       ex: [],
     };
+
     update((s) => {
       s.routines.push(newRoutine);
     });
@@ -77,17 +80,21 @@ export default function Plan() {
         <div>
           <Header className="mb-2 px-1">{t("plan.weekSchedule", "Week schedule")}</Header>
           <SpaceBetween size="xs">
-            {([1, 2, 3, 4, 5, 6, 0] as Weekday[]).map((d) => {
+            {([1, 2, 3, 4, 5, 6, 0] satisfies Weekday[]).map((d) => {
               const occurrences = new Map<string, number>();
+
               const routines = (state.week[d] ?? []).flatMap((session) => {
                 const routine = state.routines.find(
                   (candidate) => candidate.id === session.routineId,
                 );
+
                 if (!routine) return [];
                 const occurrence = (occurrences.get(routine.id) ?? 0) + 1;
                 occurrences.set(routine.id, occurrence);
+
                 return [{ routine, key: `${routine.id}:${occurrence}` }];
               });
+
               return (
                 <Button
                   variant="row"

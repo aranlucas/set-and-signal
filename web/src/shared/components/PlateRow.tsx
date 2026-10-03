@@ -9,6 +9,7 @@ import Icon from "@/shared/components/Icon";
 // inline style is the honest tool here.
 function PlateGroup({ w, count, max }: { w: number; count: number; max: number }) {
   const height = 12 + Math.round((w / max) * 12);
+
   return (
     <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-1">
       <span className="flex items-end gap-0.5">
@@ -35,9 +36,11 @@ export function PlateRow({ weight }: { weight: number }) {
   const unit = useStore((state) => state.appState.unit);
   const savedSetup = useStore((state) => state.appState.plates);
   const setup = effectivePlateSetup(unit, savedSetup);
+
   if (!setup.on || weight < setup.bar) return null;
   const result = platesFor(weight, setup);
   const max = result ? Math.max(...result.perSide.map((plate) => plate.w)) : 0;
+
   return (
     <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-md bg-muted px-2.5 py-2">
       <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">

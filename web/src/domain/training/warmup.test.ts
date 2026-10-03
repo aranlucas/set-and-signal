@@ -30,6 +30,7 @@ describe("warmupSets", () => {
   it("collapses plateaued steps instead of repeating one weight", () => {
     // 6.25 kg at 2.5 rounding: 2.5 is under the floor and 80% rounds onto 5 again
     expect(warmupSets(6.25, "kg").map((s) => s.w)).toEqual([5]);
+
     // Every surviving set of any ramp is distinct
     for (const top of [12.5, 47.5, 100]) {
       const sets = warmupSets(top, "kg");

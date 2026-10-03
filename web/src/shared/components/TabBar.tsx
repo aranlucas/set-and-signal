@@ -9,18 +9,22 @@ import { cn } from "@/shared/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 
 type TabValue = "home" | "plan" | "workout" | "stats" | "library";
+
 type NavigationTabValue = Exclude<TabValue, "workout">;
+
 type TabDestination = `/${NavigationTabValue}`;
 
-const SECTION_TABS: Readonly<Record<string, TabValue>> = {
-  home: "home",
-  settings: "home",
-  plan: "plan",
-  workout: "workout",
-  stats: "stats",
-  history: "stats",
-  library: "library",
-};
+const SECTION_TABS = new Map<string, TabValue>(
+  Object.entries({
+    home: "home",
+    settings: "home",
+    plan: "plan",
+    workout: "workout",
+    stats: "stats",
+    history: "stats",
+    library: "library",
+  } satisfies Record<string, TabValue>),
+);
 
 function NavigationTab({
   value,
@@ -59,20 +63,25 @@ export default function TabBar({
   const appState = useStore((state) => state.appState);
   const user = useStore((state) => state.user);
   const isGuest = useStore((state) => state.isGuest);
+
   if (!user && !isGuest) return null;
   const currentSection = loc.pathname.split("/")[1] || "home";
-  const activeTab = SECTION_TABS[currentSection] ?? null;
+  const activeTab = SECTION_TABS.get(currentSection) ?? null;
 
   const startWorkout = () => {
     if (!appState.active) {
       const routine = nextPlannedRoutine(appState, todayISO());
+
       if (routine && routine.ex.length > 0) {
         onStart(routine.id);
+
         return;
       }
     }
+
     void navigate({ to: "/workout" });
   };
+
   return (
     <nav
       id="tabbar"

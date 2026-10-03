@@ -8,7 +8,7 @@
     "build": "pnpm typecheck && vite build",
     "preview": "vite preview",
     "lint": "pnpm lint:strict",
-    "lint:strict": "oxlint src --type-aware --type-check --deny-warnings --report-unused-disable-directives-severity error",
+    "lint:strict": "oxlint src --type-aware --type-check --deny-warnings --report-unused-disable-directives-severity error && pnpm lint:anti-slop",
     "format": "oxfmt --check .",
     "format:write": "oxfmt --write .",
     "catalog:validate": "pnpm instructions:generate && node --experimental-strip-types scripts/validate-exercise-catalog.mjs",
@@ -21,7 +21,8 @@
     "convex:dev": "convex dev",
     "convex:deploy": "convex deploy",
     "convex:check": "tsc --noEmit -p convex/tsconfig.json",
-    "typecheck": "pnpm instructions:generate && tsc -b && pnpm convex:check"
+    "typecheck": "pnpm instructions:generate && tsc -b && pnpm convex:check",
+    "lint:anti-slop": "oxlint --config .oxlintrc.anti-slop.json ."
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
@@ -51,6 +52,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@oxlint/plugins": "1.86.0",
     "@shadcn/lint": "^0.2.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.4.0",
@@ -60,7 +62,7 @@
     "convex-test": "^0.0.56",
     "i18next-cli": "^1.71.3",
     "oxfmt": "^0.65.0",
-    "oxlint": "^1.80.0",
+    "oxlint": "1.86.0",
     "oxlint-tailwindcss": "^1.10.1",
     "oxlint-tsgolint": "^7.0.2001",
     "tailwindcss": "^4.3.3",

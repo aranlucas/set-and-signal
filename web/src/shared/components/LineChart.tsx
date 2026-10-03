@@ -44,6 +44,7 @@ export default function LineChart({
   const wrapRef = useRef<HTMLDivElement>(null);
   const tipRef = useRef<HTMLDivElement>(null);
   const gradientId = `line-chart-gradient-${useId()}`;
+
   const [hover, setHover] = useState<{
     x: number;
     y: number;
@@ -61,6 +62,7 @@ export default function LineChart({
   useLayoutEffect(() => {
     const tip = tipRef.current;
     const wrap = wrapRef.current;
+
     if (!hover || !tip || !wrap) return;
     const cw = wrap.clientWidth;
     const ch = wrap.clientHeight;
@@ -87,6 +89,7 @@ export default function LineChart({
   const plottedPoints = single ? [points[0], points[0]] : points;
   const firstPoint = plottedPoints.at(0);
   const finalPoint = plottedPoints.at(-1);
+
   if (!firstPoint || !finalPoint)
     return (
       <div className="px-5 py-11 text-center text-sm leading-snug text-foreground/60">
@@ -96,27 +99,33 @@ export default function LineChart({
   const yValues = plottedPoints.map((point) => point.y);
   let minY = Math.min(...yValues);
   let maxY = Math.max(...yValues);
+
   if (goal !== null && isFinite(goal)) {
     minY = Math.min(minY, goal);
     maxY = Math.max(maxY, goal);
   }
+
   if (minY === maxY) {
     minY -= 1;
     maxY += 1;
   }
+
   const yPadding = (maxY - minY) * 0.12;
   minY -= yPadding;
   maxY += yPadding;
   const firstTimestamp = firstPoint.t;
   const lastTimestamp = finalPoint.t || firstTimestamp + 1;
+
   const xPosition = (timestamp: number) =>
     lastTimestamp === firstTimestamp
       ? (chartPadding.l + VIEWBOX_WIDTH - chartPadding.r) / 2
       : chartPadding.l +
         ((timestamp - firstTimestamp) / (lastTimestamp - firstTimestamp)) *
           (VIEWBOX_WIDTH - chartPadding.l - chartPadding.r);
+
   const yPosition = (value: number) => {
     const fraction = (value - minY) / (maxY - minY);
+
     return (
       chartPadding.t +
       (invert ? fraction : 1 - fraction) * (chartHeight - chartPadding.t - chartPadding.b)
@@ -124,16 +133,19 @@ export default function LineChart({
   };
 
   const gridlines = [];
+
   if (axes) {
     const range = maxY - minY;
     const raw = range / 3;
     const pow = Math.pow(10, Math.floor(Math.log10(raw)));
     let step = 10 * pow;
+
     for (const m of [1, 2, 2.5, 5, 10])
       if (raw <= m * pow) {
         step = m * pow;
         break;
       }
+
     for (let value = Math.ceil(minY / step) * step; value <= maxY + 1e-9; value += step) {
       const y = yPosition(value);
       gridlines.push(
@@ -159,14 +171,18 @@ export default function LineChart({
         </g>,
       );
     }
+
     const firstDate = new Date(firstTimestamp);
     const lastDate = new Date(lastTimestamp);
+
     const ticks: {
       t: number;
       txt: string;
       anchor?: "start" | "middle" | "end";
     }[] = [];
+
     let monthStart = new Date(firstDate.getFullYear(), firstDate.getMonth() + 1, 1);
+
     while (monthStart <= lastDate) {
       ticks.push({
         t: +monthStart,
@@ -174,6 +190,7 @@ export default function LineChart({
       });
       monthStart = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1);
     }
+
     if (ticks.length === 0 && !single) {
       for (let i = 0; i <= 2; i++) {
         const timestamp = firstTimestamp + ((lastTimestamp - firstTimestamp) * i) / 2;
@@ -185,6 +202,7 @@ export default function LineChart({
         });
       }
     }
+
     const every = Math.max(1, Math.ceil(ticks.length / 7));
     ticks.forEach((tk, i) => {
       if (i % every) return;
@@ -217,6 +235,7 @@ export default function LineChart({
   const polylinePoints = plottedPoints
     .map((point) => xPosition(point.t).toFixed(1) + "," + yPosition(point.y).toFixed(1))
     .join(" ");
+
   const hoverPoints = (single ? [points[0]] : points).map((point) => ({
     x: xPosition(point.t),
     y: yPosition(point.y),
@@ -224,17 +243,21 @@ export default function LineChart({
     v: point.y,
     note: point.note,
   }));
+
   const marked = points.some((point) => point.m !== null && point.m !== undefined);
 
   const onMove = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     const c = "touches" in e ? e.touches[0] : e;
+
     if (!c || !("clientX" in c)) return; // runtime guard kept from JS: synthetic events can lack clientX
     const svg = svgRef.current;
+
     if (!svg) return;
     const r = svg.getBoundingClientRect();
     const w = r.width || VIEWBOX_WIDTH;
     const vx = ((c.clientX - r.left) / w) * VIEWBOX_WIDTH;
     const firstHoverPoint = hoverPoints.at(0);
+
     if (!firstHoverPoint) return;
     let closestPoint = firstHoverPoint;
     hoverPoints.forEach((point) => {

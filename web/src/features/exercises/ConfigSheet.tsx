@@ -62,9 +62,11 @@ function ProgressionFields({
   const { t } = useTranslation();
   const progressionLabels = useProgressionLabels();
   const policyOptions: PolicyId[] = POLICIES_FOR[mode] || ["off"];
+
   if (policyOptions.length < 2) return null;
   const inheritedPolicy = progressionPolicyFor({ id: exercise.id }, routine, mode);
   const activePolicy = progressionPolicyFor({ ...config, id: exercise.id }, routine, mode);
+
   const increment =
     config.inc && config.inc > 0
       ? config.inc
@@ -148,6 +150,7 @@ function ConfigExerciseIntro({ exercise, cardio }: { exercise: SheetEx; cardio: 
   const { t } = useTranslation();
   const metadata = useExerciseMetadataLabels();
   const catalogExercise = toCatalogExercise(exercise);
+
   return (
     <>
       <h3 className="capitalize">{catalogExercise.n}</h3>
@@ -193,10 +196,13 @@ function ConfigModeFields({
   unit: Unit;
 }) {
   const { t } = useTranslation();
+
   const weightLabel = barbell
     ? t("exercise.totalWeight", "Total weight ({{unit}})", { unit })
     : t("exercise.weight", "Weight ({{unit}})", { unit });
+
   const weightStep = barbell && unit === "lb" ? 5 : 2.5;
+
   return (
     <div
       className={
@@ -313,6 +319,7 @@ function ConfigOptions({
   unit: Unit;
 }) {
   const { t } = useTranslation();
+
   return (
     <>
       {mode === "time" && !bodyweight && (
@@ -417,7 +424,9 @@ function ConfigOptions({
 
 function ConfigRangeHelp({ config }: { config: ExConfig }) {
   const { t } = useTranslation();
+
   if (!(config.repsMax && config.repsMax > 0)) return null;
+
   return (
     <div className="-mt-2.5 mb-4.5 text-sm leading-snug text-muted-foreground">
       {t(
@@ -451,6 +460,7 @@ export function ExConfigSheet({
   const cardio = isCardio(exercise.id);
   const barbell = isBarbellEq(exercise);
   const barWeight = barWeightFor(appState.unit, appState.plates);
+
   const initialConfig = existing
     ? {
         ...existing,
@@ -462,6 +472,7 @@ export function ExConfigSheet({
             : existing.weight,
       }
     : defaultConfig(exercise.id, undefined, barWeight);
+
   const { control, getValues, handleSubmit, reset } = useForm<ExConfig>({
     defaultValues: {
       ...initialConfig,
@@ -469,10 +480,13 @@ export function ExConfigSheet({
     },
     resolver: valibotResolver(createExerciseConfigFormSchema(t)),
   });
+
   useWatch({ control });
   const config = getValues();
+
   const setConfig = (updateConfig: (previous: ExConfig) => ExConfig) =>
     reset(updateConfig(getValues()));
+
   const mode: Mode = cardio ? "cardio" : modeOf({ ...config, id: exercise.id });
   const bodyweight = !cardio && isBw({ ...config, id: exercise.id });
   const perSide = isPerSide(config);
@@ -480,6 +494,7 @@ export function ExConfigSheet({
   const setMode = (nextMode: "reps" | "time") =>
     setConfig((previous) => {
       const nextDefaults = defaultConfig(exercise.id, nextMode, barWeight);
+
       return {
         ...nextDefaults,
         ...previous,
@@ -495,9 +510,12 @@ export function ExConfigSheet({
     await close();
     const sets = Math.max(1, Math.round(submittedConfig.sets) || (cardio ? 1 : 3));
     const progression: Partial<ExConfig> = {};
+
     if (submittedConfig.prog) progression.prog = submittedConfig.prog;
+
     if (submittedConfig.inc && submittedConfig.inc > 0) progression.inc = submittedConfig.inc;
     const flags: Partial<ExConfig> = {};
+
     if (bodyweight !== isBodyweightEq(exercise.id)) flags.bodyweight = bodyweight;
 
     if (cardio) {
@@ -520,6 +538,7 @@ export function ExConfigSheet({
     } else {
       const typedReps = Math.max(1, Math.round(submittedConfig.reps ?? 0) || 10);
       const reps = perSide ? Math.ceil(typedReps / 2) * 2 : typedReps;
+
       const savedConfig: ExConfig = {
         id: exercise.id,
         sets,
@@ -527,9 +546,11 @@ export function ExConfigSheet({
         reps,
         weight: Math.max(0, submittedConfig.weight || 0),
         ...flags,
-        ...(perSide ? { side: true } : {}),
         ...progression,
       };
+
+      if (perSide) savedConfig.side = true;
+
       if (
         progressionPolicyFor({ ...submittedConfig, id: exercise.id }, routine, "reps") === "double"
       )
@@ -537,6 +558,7 @@ export function ExConfigSheet({
           reps,
           Math.max(1, Math.round(submittedConfig.repsMin ?? 0) || Math.max(1, reps - 2)),
         );
+
       if (
         bodyweight &&
         !(savedConfig.weight && savedConfig.weight > 0) &&
@@ -549,6 +571,7 @@ export function ExConfigSheet({
   };
 
   const customExercise = isCustomExercise(exercise) ? exercise : null;
+
   return (
     <form onSubmit={(event) => void handleSubmit(saveConfig)(event)}>
       <ConfigExerciseIntro exercise={exercise} cardio={cardio} />

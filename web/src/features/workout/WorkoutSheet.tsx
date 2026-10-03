@@ -44,6 +44,7 @@ export function TopWeight({
   const A = st.active;
   const entry = A ? A.entries[entryIdx] || null : null;
   const ex = entry ? EXIDX[entry.id] : undefined;
+
   // Warm-up ramp sets never define your working weight.
   const maxSet = entry
     ? entry.sets.reduce(
@@ -51,16 +52,20 @@ export function TopWeight({
         0,
       )
     : 0;
+
   const prevBest = entry
     ? Math.max(st.exWeights[entry.id]?.w || 0, bestWeightFor(st, entry.id))
     : 0;
+
   const invalidWeightMessage = t("weight.enterValidWeight", "Enter a valid weight");
+
   const { control, handleSubmit } = useForm<{ weight: number }>({
     defaultValues: {
       weight: entry ? Math.max(maxSet, prevBest) || entry.target.weight || 0 : 0,
     },
     resolver: valibotResolver(createTopWeightFormSchema(t)),
   });
+
   const weightValue = useWatch({ control, name: "weight" });
   useEffect(() => {
     if (!entry) void close();
@@ -70,11 +75,14 @@ export function TopWeight({
   const unitDone = !!entry && unit.every((i) => A?.entries[i]?.sets.every((s) => s.done) ?? false);
   const unitIdx = units.findIndex((u) => u === unit);
   const isLastUnit = unitIdx === units.length - 1;
+
   if (!entry || !ex) return null;
+
   const commit = async ({ weight: rawWeight }: { weight: number }, advance: boolean) => {
     const weight = Math.round((rawWeight || 0) * 10) / 10;
     updateAppState((state) => {
       const activeWorkout = state.active;
+
       if (!activeWorkout) return;
       activeWorkout.entries[entryIdx].topW = weight;
       const currentWeight = state.exWeights[entry.id];
@@ -84,11 +92,13 @@ export function TopWeight({
       };
     });
     await close();
+
     if (advance && unitDone) {
       if (isLastUnit) setWorkoutSheet({ type: "workout-complete" });
       else
         updateAppState((state) => {
           const activeWorkout = state.active;
+
           if (activeWorkout) activeWorkout.cur = units[unitIdx + 1][0];
         });
     } else
@@ -98,6 +108,7 @@ export function TopWeight({
         }),
       );
   };
+
   return (
     <>
       <h3 className="flex items-center gap-2 capitalize">
@@ -176,8 +187,10 @@ export function TopWeight({
     </>
   );
 }
+
 export function WorkoutComplete({ close, onFinish }: { close: SheetClose; onFinish: () => void }) {
   const { t } = useTranslation();
+
   return (
     <div className="py-2 text-center">
       <div className="flex justify-center text-5xl text-primary">
@@ -222,14 +235,18 @@ export function WorkoutComplete({ close, onFinish }: { close: SheetClose; onFini
     </div>
   );
 }
+
 interface E1PrRec {
   est: number;
   w: number;
   r: number;
   prev?: number;
 }
+
 type E1Pr = E1PrRec & { id: Id };
+
 const EMPTY_E1PRS: E1Pr[] = [];
+
 export function FinishSummary({
   workout,
   prs,
@@ -247,15 +264,19 @@ export function FinishSummary({
   // Session notes (Hevy-style): how the session felt, aches, cues worth remembering.
   // Saved straight into the finished workout on every keystroke — persistence debounces.
   const [note, setNote] = useState(workout.note ?? "");
+
   const saveNote = (text: string) => {
     setNote(text);
     updateAppState((draft) => {
       const saved = draft.workouts.find((candidate) => candidate.id === workout.id);
+
       if (!saved) return;
+
       if (text.trim()) saved.note = text;
       else delete saved.note;
     });
   };
+
   return (
     <div className="py-2 text-center">
       <div className="flex justify-center text-5xl text-primary">

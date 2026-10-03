@@ -24,16 +24,20 @@ function loadState(): AppState {
   try {
     const rawUser = localStorage.getItem(USER_STORAGE_KEY);
     const user = rawUser ? parseUser(JSON.parse(rawUser)) : null;
+
     const storedState = parseStoredState(
       localStorage.getItem(user ? `gym_cache:${user.id}` : STATE_STORAGE_KEY),
     );
+
     const draft = user
       ? parseStoredState(`{"active":${localStorage.getItem(`gym_active:${user.id}`) ?? "null"}}`)
       : null;
+
     if (storedState || draft) return Object.assign(cloneValue(DEFAULT_STATE), storedState, draft);
   } catch {
     /* ignore */
   }
+
   return cloneValue(DEFAULT_STATE);
 }
 
@@ -84,6 +88,7 @@ export const useStore = create<Store>()((set, get) => {
   const persist = (nextState: AppState, push = true) => {
     const previous = get().appState;
     registerCustom(nextState.customEx);
+
     if (MOBILE || DEMO || !get().user) {
       nextState._ts = Date.now();
       localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(nextState));
@@ -93,9 +98,12 @@ export const useStore = create<Store>()((set, get) => {
           throw new Error("Training connection is not ready. Your existing draft is preserved.");
         trainingSync.enqueue(previous, nextState);
       }
+
       localStorage.setItem(`gym_active:${get().user?.id}`, JSON.stringify(nextState.active));
     }
+
     set({ appState: nextState });
+
     if (MOBILE) nativePersist();
   };
 
@@ -106,6 +114,7 @@ export const useStore = create<Store>()((set, get) => {
   if (typeof document !== "undefined") {
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState !== "hidden") return;
+
       if (MOBILE && saveTimerId) {
         clearTimeout(saveTimerId);
         saveTimerId = undefined;
@@ -117,11 +126,13 @@ export const useStore = create<Store>()((set, get) => {
   // Everything a sign-out leaves behind on this device, whichever way it was triggered.
   const clearLocalSession = () => {
     const uid = get().user?.id;
+
     if (uid) {
       localStorage.removeItem(`gym_cache:${uid}`);
       // Keep the unfinished workout for this account on this device.
       localStorage.removeItem(`gym_pending_convex:${uid}`);
     }
+
     get().setUser(null);
     get().setGuest(false);
     localStorage.removeItem(STATE_STORAGE_KEY);
@@ -132,11 +143,13 @@ export const useStore = create<Store>()((set, get) => {
     appState: (() => {
       const savedState = loadState();
       registerCustom(savedState.customEx);
+
       return savedState;
     })(),
     user: (() => {
       try {
         const rawUser = localStorage.getItem(USER_STORAGE_KEY);
+
         return rawUser ? parseUser(JSON.parse(rawUser)) : null;
       } catch {
         return null;
@@ -148,6 +161,7 @@ export const useStore = create<Store>()((set, get) => {
       try {
         const raw = localStorage.getItem(USER_STORAGE_KEY);
         const user = raw ? parseUser(JSON.parse(raw)) : null;
+
         return !!user && !!parseStoredState(localStorage.getItem(`gym_cache:${user.id}`));
       } catch {
         return false;
@@ -186,30 +200,37 @@ export const useStore = create<Store>()((set, get) => {
         localStorage.removeItem("gym_guest");
       } else localStorage.removeItem(USER_STORAGE_KEY);
       const previousUser = get().user?.id;
+
       if (previousUser && !user) {
         localStorage.removeItem(STATE_STORAGE_KEY);
         set({ appState: cloneValue(DEFAULT_STATE) });
       }
+
       if (previousUser !== user?.id && user) {
         const saved = parseStoredState(
           `{"active":${localStorage.getItem(`gym_active:${user.id}`) ?? "null"}}`,
         );
+
         const next = Object.assign(cloneValue(DEFAULT_STATE), saved ?? { active: null });
         set({ appState: next });
       }
+
       if (syncUser !== user?.id) {
         void trainingSync?.close();
         trainingSync = undefined;
         syncUser = undefined;
         syncStart = undefined;
       }
-      set({ user, ...(user ? { isGuest: false } : {}) });
+
+      set(user ? { user, isGuest: false } : { user });
+
       if (previousUser !== user?.id)
         set({ profileLoaded: false, syncStatus: { phase: "loading", pending: 0 } });
     },
 
     async transferGuest(state) {
       const uid = get().user?.id;
+
       if (!uid) throw new Error("Sign in before transferring guest data");
       localStorage.setItem(`gym_guest_transfer:${uid}`, JSON.stringify(state));
       localStorage.setItem(`gym_active:${uid}`, JSON.stringify(state.active));
@@ -217,33 +238,43 @@ export const useStore = create<Store>()((set, get) => {
     },
     async pushState() {
       if (!get().user) return;
+
       if (get().syncStatus.phase === "offline" || get().syncStatus.phase === "conflict")
         throw new Error(
           "Your latest changes haven’t synced yet. You’re still signed in; reconnect or review changes and try again.",
         );
+
       if (!trainingSync) await get().pullState();
       await trainingSync?.flush();
     },
     async pullState() {
       const uid = get().user?.id;
+
       if (!uid) return;
+
       if (syncUser === uid && syncStart) {
         await syncStart;
         await trainingSync?.flush();
+
         return;
       }
+
       await trainingSync?.close();
+
       if (get().user?.id !== uid) return;
       syncUser = uid;
       const profileCache = parseStoredState(localStorage.getItem(`gym_cache:${uid}`));
+
       if (profileCache)
         set({
           appState: Object.assign(cloneValue(DEFAULT_STATE), profileCache),
           profileLoaded: true,
         });
+
       const cached = parseStoredState(
         `{"active":${localStorage.getItem(`gym_active:${uid}`) ?? "null"}}`,
       );
+
       if (cached?.active) set({ appState: Object.assign(cloneValue(get().appState), cached) });
       trainingSync = new TrainingSync(
         uid,
@@ -261,11 +292,14 @@ export const useStore = create<Store>()((set, get) => {
         },
       );
       const transfer = parseStoredState(localStorage.getItem(`gym_guest_transfer:${uid}`));
+
       if (transfer) {
         trainingSync.enqueue({}, Object.assign(cloneValue(DEFAULT_STATE), transfer));
         localStorage.removeItem(`gym_guest_transfer:${uid}`);
       }
+
       syncStart = trainingSync.start();
+
       try {
         await syncStart;
       } catch (error) {
@@ -302,32 +336,40 @@ export const useStore = create<Store>()((set, get) => {
     async boot() {
       if (isBooting || get().isReady) return;
       isBooting = true;
+
       try {
         // Mobile build: no backend either — restore from the file mirror (the durable copy;
         // localStorage may have been evicted since the last run) and go straight in.
         if (MOBILE) {
           const saved = await nativeLoad();
           const localState = get().appState;
+
           if (saved && (!hasData(localState) || (saved._ts || 0) >= (localState._ts || 0))) {
             persist(Object.assign(cloneValue(DEFAULT_STATE), saved), false);
           } else if (hasData(localState)) {
             void nativeSave(localState); // first run after an update from a file-less version: seed the mirror
           }
+
           get().setGuest(true);
           void syncReminder(get().appState);
           set({ isReady: true });
+
           return;
         }
+
         // Demo build (GitHub Pages): no backend at all — seed once, stay in guest mode.
         if (DEMO) {
           if (!localStorage.getItem(DEMO_SEEDED)) {
             localStorage.setItem(DEMO_SEEDED, "1");
             await get().resetDemo();
           }
+
           get().setGuest(true);
           set({ isReady: true });
+
           return;
         }
+
         try {
           const me = await getSession();
           get().setUser(me.user);
@@ -336,6 +378,7 @@ export const useStore = create<Store>()((set, get) => {
           // Re-stamp the reminder's timezone on every load — keeps it correct if you're travelling,
           // without needing to revisit Settings.
           const tz = localTZ();
+
           if (get().appState.reminder?.on && get().appState.reminder.tz !== tz) {
             get().update((s) => {
               s.reminder = { ...s.reminder, tz };
@@ -352,6 +395,7 @@ export const useStore = create<Store>()((set, get) => {
               .catch(() => {});
           }
         }
+
         set({ isReady: true });
       } finally {
         isBooting = false;

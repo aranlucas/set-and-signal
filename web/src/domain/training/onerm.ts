@@ -24,6 +24,7 @@ export const FORMULAS: Record<"epley" | "brzycki" | "lombardi", FormulaFn> = {
   // Lombardi 1989 — w · r^0.10
   lombardi: (w, r) => w * Math.pow(r, 0.1),
 };
+
 export const DEFAULT_FORMULA = "epley";
 
 const isFormulaName = (value: string): value is keyof typeof FORMULAS => value in FORMULAS;
@@ -32,18 +33,25 @@ const isFormulaName = (value: string): value is keyof typeof FORMULAS => value i
 // missing/zero/negative load, no reps, non-finite input, or more reps than REP_CAP.
 // A single rep is not an estimate — it is the measurement — and comes back unchanged.
 export function estimate1RM(
+  // eslint-disable-next-line anti-slop/no-unknown-parameters -- Public calculator accepts untrusted load input; Number coercion is followed by finite, positive and rep-cap validation.
   w: unknown,
+  // eslint-disable-next-line anti-slop/no-unknown-parameters -- Untrusted repetition input is converted and checked before any formula evaluates.
   r?: unknown,
   formula: string = DEFAULT_FORMULA,
 ): number | null {
   const weight = Number(w);
   const reps = Number(r);
+
   if (!isFinite(weight) || !isFinite(reps)) return null;
+
   if (weight <= 0 || reps < 1) return null;
+
   if (reps > REP_CAP) return null;
   const fn = isFormulaName(formula) ? FORMULAS[formula] : FORMULAS[DEFAULT_FORMULA];
   const est = reps === 1 ? weight : fn(weight, Math.round(reps));
+
   if (!isFinite(est) || est <= 0) return null;
+
   return Math.round(est * 10) / 10;
 }
 
@@ -55,6 +63,7 @@ interface ScorableSet {
   r?: unknown;
   wu?: boolean;
 }
+
 type ScorableEntry = { sets?: readonly ScorableSet[] } | null | undefined;
 
 // Best estimate out of one workout entry's completed sets.
@@ -68,11 +77,14 @@ export function bestSetOf(
   let best: { est: number; w: number; r: number } | null = null;
   (entry?.sets || []).forEach((s) => {
     if (!s.done) return;
+
     if (s.wu) return;
     const est = estimate1RM(s.w, s.r, formula);
+
     if (est !== null && (!best || est > best.est))
       best = { est, w: Number(s.w), r: Math.round(Number(s.r)) };
   });
+
   return best;
 }
 
@@ -85,6 +97,7 @@ export interface E1rmPoint {
   w: number;
   r: number;
 }
+
 type WorkoutStub = Pick<Workout, "d" | "start" | "entries">;
 
 export function e1rmSeries(
@@ -95,10 +108,13 @@ export function e1rmSeries(
   const pts: E1rmPoint[] = [];
   (state.workouts || []).forEach((w) => {
     const entry = w.entries.find((e) => e.id === exId);
+
     if (!entry) return;
     const best = bestSetOf(entry, formula);
+
     if (best) pts.push({ t: w.start, d: w.d, y: best.est, w: best.w, r: best.r });
   });
+
   return pts;
 }
 
@@ -113,6 +129,7 @@ export function best1RM(
   e1rmSeries(state, exId, formula).forEach((p) => {
     if (!best || p.y > best.est) best = { est: p.y, w: p.w, r: p.r, d: p.d, t: p.t };
   });
+
   return best;
 }
 
@@ -125,7 +142,9 @@ export function is1RMRecord(
   formula: string = DEFAULT_FORMULA,
 ): { est: number; w: number; r: number; prev: number } | null {
   const now = bestSetOf(entry, formula);
+
   if (!now) return null;
   const prev = best1RM(state, exId, formula);
+
   return !prev || now.est > prev.est ? { ...now, prev: prev ? prev.est : 0 } : null;
 }

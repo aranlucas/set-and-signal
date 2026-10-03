@@ -10,13 +10,16 @@ import { toast } from "@/shared/lib/toast";
 import BrandMark from "@/shared/components/BrandMark";
 
 const loadRegistrationDialog = () => import("@/shared/components/RegistrationDialog");
+
 const RegistrationDialog = lazy(loadRegistrationDialog);
 
-const PROVIDER_LABELS: Record<string, string> = {
-  google: "Google",
-  github: "GitHub",
-  apple: "Apple",
-};
+const PROVIDER_LABELS = new Map<string, string>(
+  Object.entries({
+    google: "Google",
+    github: "GitHub",
+    apple: "Apple",
+  } satisfies Record<string, string>),
+);
 
 export default function Login() {
   const { t } = useTranslation();
@@ -100,7 +103,7 @@ export default function Login() {
             >
               <Icon name="person" />
               {t("account.signWith", "Sign in with {{provider}}", {
-                provider: PROVIDER_LABELS[id] ?? id,
+                provider: PROVIDER_LABELS.get(id) ?? id,
               })}
             </Button>
           ))}

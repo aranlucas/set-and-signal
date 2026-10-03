@@ -20,6 +20,7 @@ import { nextPlannedRoutine } from "@/domain/training/schedule";
 import { todayISO } from "@/shared/lib/format";
 
 const loadStartWorkoutSheet = () => import("@/shared/components/StartWorkoutSheet");
+
 const StartWorkoutSheet = lazy(loadStartWorkoutSheet);
 
 function applyPrefs(theme: string, accent: string) {
@@ -28,14 +29,17 @@ function applyPrefs(theme: string, accent: string) {
   de.classList.toggle("dark", isDark);
   de.dataset.accent = isAccent(accent) ? accent : DEFAULT_ACCENT;
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+
   if (meta) meta.content = isDark ? "#131521" : "#f6f7fb";
 }
 
 export default function AppShell() {
   const navigate = useNavigate();
+
   const pageRouteId = useRouterState({
     select: (state) => state.matches[1]?.routeId ?? state.location.pathname,
   });
+
   const theme = useStore((state) => state.appState.theme);
   const accent = useStore((state) => state.appState.accent);
   const language = useStore((state) => state.appState.lang);
@@ -62,6 +66,7 @@ export default function AppShell() {
   useWakeLock(!!activeWorkout && keepAwake !== false);
 
   const authed = user || isGuest;
+
   if (!isReady && !authed)
     return (
       <div
@@ -81,11 +86,15 @@ export default function AppShell() {
         <AppNavigation
           onStart={() => {
             if (user && !profileLoaded) return;
+
             if (activeWorkout) {
               void navigate({ to: "/workout" });
+
               return;
             }
+
             const routine = nextPlannedRoutine(useStore.getState().appState, todayISO());
+
             if (routine?.ex.length) setStartRoutineId(routine.id);
             else void navigate({ to: "/workout" });
           }}

@@ -15,6 +15,7 @@ export function PlannedSessions({
   disabled?: boolean;
 }) {
   const { t } = useTranslation();
+
   return (
     <div className="flex flex-col gap-3">
       {sessions.map((session) => (

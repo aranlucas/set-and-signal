@@ -1,6 +1,8 @@
 /** Cloudscape-inspired 2, 4, 8, 12, 16, 20, 24, 32, and 40px spacing scale. */
 export type LayoutSpacingSize = "xxxs" | "xxs" | "xs" | "s" | "m" | "l" | "xl" | "xxl" | "xxxl";
+
 export type LayoutBreakpoint = "sm" | "md" | "lg" | "xl" | "2xl";
+
 export type ResponsiveLayoutSpacing = Partial<Record<LayoutBreakpoint, LayoutSpacingSize>>;
 
 const gapClasses: Record<LayoutSpacingSize, string> = {
@@ -84,6 +86,7 @@ export function layoutGapClasses(
     responsiveSize &&
       layoutBreakpoints.map((breakpoint) => {
         const breakpointSize = responsiveSize[breakpoint];
+
         return breakpointSize && responsiveGapClasses[breakpoint][breakpointSize];
       }),
   ];

@@ -10,14 +10,17 @@ describe("exercise instruction shards", () => {
     vi.stubGlobal("fetch", (input: URL | RequestInfo) => {
       if (!(input instanceof URL))
         throw new Error("Expected the instruction loader to fetch a URL");
+
       if (input.pathname.includes("/fr/")) {
         return Promise.resolve(new Response(null, { status: 404 }));
       }
+
       const steps = input.pathname.includes("/es/")
         ? [
             "Ponte de pie con los pies separados a la altura de las caderas y coloca la banda alrededor de la base de los dedos del pie.",
           ]
         : ["Stand with your feet hip-width apart and place the band around the ball of your foot."];
+
       return Promise.resolve(
         new Response(JSON.stringify({ "1000": steps, "1001": steps }), {
           status: 200,

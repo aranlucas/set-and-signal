@@ -44,30 +44,38 @@ export function WorkoutDetail({
   close: SheetClose;
 }) {
   const { t } = useTranslation();
+
   const workout = useStore((store) =>
     store.appState.workouts.find((candidate) => candidate.id === workoutId),
   );
+
   const unit = useStore((store) => store.appState.unit);
   const [confirmOpen, setConfirmOpen] = useState(false);
   // Notes stay editable after the fact — a session log you can't correct is a log
   // you stop trusting. Edits write straight into the stored workout.
   const [editingNoteFor, setEditingNoteFor] = useState<Workout["id"] | null>(null);
   const editingNote = editingNoteFor === workoutId;
+
   const { handleSubmit, register, reset } = useForm<{ note: string }>({
     defaultValues: { note: workout?.note ?? "" },
     values: { note: workout?.note ?? "" },
     resolver: valibotResolver(noteFormSchema),
   });
+
   if (!workout) return null;
+
   const saveNote = ({ note }: { note: string }) => {
     updateAppState((draft) => {
       const saved = draft.workouts.find((candidate) => candidate.id === workout.id);
+
       if (!saved) return;
+
       if (note.trim()) saved.note = note;
       else delete saved.note;
     });
     setEditingNoteFor(null);
   };
+
   const deleteWorkout = () => {
     updateAppState((draft) => {
       draft.workouts = draft.workouts.filter((savedWorkout) => savedWorkout.id !== workout.id);
@@ -75,7 +83,9 @@ export function WorkoutDetail({
     void close();
     toast(t("workout.completion.workoutDeleted", "Workout deleted"));
   };
+
   const prSet = new Set(workout.prs);
+
   return (
     <>
       <div className="flex items-center justify-between gap-3">
@@ -154,6 +164,7 @@ export function WorkoutDetail({
       {workout.sessionPlan && <SessionPlanSummary plan={workout.sessionPlan} unit={unit} />}
       {workout.entries.map((entry) => {
         const exercise = EXIDX[entry.id];
+
         return (
           <div
             key={`${workout.id}-${entry.id}-${entry.topW ?? ""}`}
@@ -227,11 +238,14 @@ export function Calendar({
   const { t } = useTranslation();
   const { monthsLong, weekdaysShort } = useDateLabels();
   const st = useStore((store) => store.appState);
+
   const [cur, setCur] = useState<Date>(() => {
     const d = start ? new Date(start) : new Date();
     d.setDate(1);
+
     return d;
   });
+
   const y = cur.getFullYear();
   const mo = cur.getMonth();
   const byDay: Record<string, Workout[]> = {};
@@ -240,24 +254,30 @@ export function Calendar({
   });
   const startOffset = (new Date(y, mo, 1).getDay() + 6) % 7;
   const daysIn = new Date(y, mo + 1, 0).getDate();
+
   const monthWs = st.workouts.filter((w) =>
     w.d.startsWith(y + "-" + String(mo + 1).padStart(2, "0")),
   );
+
   const monthVol = monthWs.reduce((a, w) => a + (w.vol || 0), 0);
   const monthMs = monthWs.reduce((a, w) => a + Math.max(0, (w.end || w.start) - w.start), 0);
   const cells: ReactElement[] = [];
+
   for (let i = 0; i < startOffset; i++) cells.push(<div key={"e" + i} />);
+
   for (let d = 1; d <= daysIn; d++) {
     const iso = y + "-" + String(mo + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0");
     const ws = byDay[iso];
     const sessions = sessionProgress(st, iso);
     const ovr = st.dayPlan[iso] !== undefined;
+
     const marks = sessions.length
       ? sessions.map((session) => ({
           key: session.key,
           status: session.completed ? "done" : ovr ? "ovr" : "plan",
         }))
       : (ws ?? []).map((workout) => ({ key: workout.id, status: "done" }));
+
     cells.push(
       <Button
         variant="tile"
@@ -269,12 +289,16 @@ export function Calendar({
           void close().then(() => {
             if (!ws) {
               onDayOverride?.(iso);
+
               return;
             }
+
             if (ws.length === 1) {
               onWorkoutDetail?.(ws[0]);
+
               return;
             }
+
             onCalendarDay?.(iso, ws);
           });
         }}
@@ -294,6 +318,7 @@ export function Calendar({
       </Button>,
     );
   }
+
   return (
     <>
       <div className="mb-0.5 flex items-center justify-between">
@@ -368,9 +393,11 @@ export function WorkoutRow({
 }): ReactElement {
   const { t } = useTranslation();
   const appState = useStore((state) => state.appState);
+
   const glyph = glyphOf(
     appState.routines.find((routine) => routine.id === workout.routineId)?.emoji,
   );
+
   const content = (
     <>
       {ledger ? (
@@ -406,6 +433,7 @@ export function WorkoutRow({
       <Icon name="chevronRight" className="shrink-0 text-base text-foreground" />
     </>
   );
+
   return onClick ? (
     <Button
       variant={ledger ? "ledger" : "row"}

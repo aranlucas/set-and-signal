@@ -8,6 +8,7 @@ import english from "@/i18n/locales/en/translation";
 import { LANGUAGES, normalizeLanguage } from "@/i18n/languages";
 
 type ResourcePack = { default: Readonly<Record<string, string | string[]>> };
+
 const resourcePacks = import.meta.glob<ResourcePack>("./locales/*/translation.ts");
 
 // Every UI language is its own lazy module; missing packs fall back to bundled English.
@@ -16,6 +17,7 @@ export const i18n = createInstance()
   .use(
     resourcesToBackend((language: string, namespace: string) => {
       const loadResource = resourcePacks[`./locales/${language}/${namespace}.ts`];
+
       return loadResource ? loadResource().then((pack) => pack.default) : Promise.resolve({});
     }),
   );

@@ -1,3 +1,4 @@
+import * as v from "valibot";
 import { ConvexClient } from "convex/browser";
 import { makeFunctionReference } from "convex/server";
 import { api } from "@/shared/lib/api";
@@ -6,58 +7,78 @@ import type { AppState } from "@/shared/lib/types";
 import { joinState, splitState } from "../../../convex/model";
 
 export type SyncPhase = "loading" | "saving" | "saved" | "offline" | "error" | "conflict";
+
 export type SyncStatus = { phase: SyncPhase; pending: number };
+
 export type SyncConflict = { key: string; local: string | null; remote: string | null };
+
 type Change = { key: string; expected: string | null; value: string | null };
+
 const snapshot = makeFunctionReference<"query", Record<string, never>, unknown>(
   "training:snapshot",
 );
+
 const commit = makeFunctionReference<"mutation", { changes: Change[] }, null>("training:commit");
+
 export function changesBetween(before: Partial<AppState>, after: Partial<AppState>): Change[] {
   const old = new Map(splitState(before).map((row) => [row.key, row.value]));
   const next = new Map(splitState(after).map((row) => [row.key, row.value]));
+
   return [...new Set([...old.keys(), ...next.keys()])].flatMap((key) => {
     const expected = old.get(key) ?? null;
     const value = next.get(key) ?? null;
+
     return expected === value ? [] : [{ key, expected, value }];
   });
 }
+
 async function credentials(uid: string) {
-  const result = await api("/api/convex/token");
-  if (
-    !result ||
-    typeof result !== "object" ||
-    !("token" in result) ||
-    typeof result.token !== "string" ||
-    !("url" in result) ||
-    typeof result.url !== "string" ||
-    !("userId" in result) ||
-    result.userId !== uid
-  )
-    throw new Error("Your session changed. Sign in again.");
-  return { token: result.token, url: result.url };
+  const parsed = v.safeParse(
+    v.object({ token: v.string(), url: v.string(), userId: v.literal(uid) }),
+    await api("/api/convex/token"),
+  );
+
+  if (!parsed.success) throw new Error("Your session changed. Sign in again.");
+
+  return { token: parsed.output.token, url: parsed.output.url };
 }
+
+const changeSchema = v.object({
+  key: v.string(),
+  expected: v.nullable(v.string()),
+  value: v.nullable(v.string()),
+});
+
 function readQueue(key: string): Change[][] {
-  const parsed: unknown = JSON.parse(localStorage.getItem(key) ?? "[]");
-  if (!Array.isArray(parsed)) throw new Error("Invalid pending training edits");
-  return parsed.map((batch: unknown) => {
-    if (!Array.isArray(batch)) throw new Error("Invalid pending training edits");
-    return batch.map((entry: unknown) => {
-      if (
-        !entry ||
-        typeof entry !== "object" ||
-        !("key" in entry) ||
-        typeof entry.key !== "string" ||
-        !("expected" in entry) ||
-        !(entry.expected === null || typeof entry.expected === "string") ||
-        !("value" in entry) ||
-        !(entry.value === null || typeof entry.value === "string")
-      )
-        throw new Error("Invalid pending training edit");
-      return { key: entry.key, expected: entry.expected, value: entry.value };
+  const parsed = v.safeParse(v.array(v.unknown()), JSON.parse(localStorage.getItem(key) ?? "[]"));
+
+  if (!parsed.success) throw new Error("Invalid pending training edits");
+
+  return parsed.output.map((batchInput) => {
+    const batch = v.safeParse(v.array(v.unknown()), batchInput);
+
+    if (!batch.success) throw new Error("Invalid pending training edits");
+
+    return batch.output.map((entry) => {
+      const change = v.safeParse(changeSchema, entry);
+
+      if (!change.success) throw new Error("Invalid pending training edit");
+
+      return change.output;
     });
   });
 }
+
+export interface TrainingSyncDependencies {
+  createClient: (url: string) => ConvexClient;
+  credentials: typeof credentials;
+}
+
+const defaultDependencies: TrainingSyncDependencies = {
+  createClient: (url) => new ConvexClient(url),
+  credentials,
+};
+
 export class TrainingSync {
   private client: ConvexClient | undefined;
   private stop: (() => void) | undefined;
@@ -70,15 +91,18 @@ export class TrainingSync {
   private readonly key: string;
   private readonly uid: string;
   private readonly receive: (state: ParsedAppStatePatch) => void;
-  private readonly failed: (error: unknown) => void;
+  private readonly failed: (cause: unknown) => void;
   private readonly status: (status: SyncStatus) => void;
+  private readonly dependencies: TrainingSyncDependencies;
   constructor(
     uid: string,
     receive: (state: ParsedAppStatePatch) => void,
-    failed: (error: unknown) => void,
+    failed: (cause: unknown) => void,
     status: (status: SyncStatus) => void = () => {},
+    dependencies: TrainingSyncDependencies = defaultDependencies,
   ) {
     this.uid = uid;
+    this.dependencies = dependencies;
     this.receive = receive;
     this.status = status;
     this.failed = (error) => {
@@ -88,10 +112,12 @@ export class TrainingSync {
       this.publish();
       failed(error);
     };
+
     this.key = `gym_pending_convex:${uid}`;
     const cached = parseStoredState(localStorage.getItem(`gym_cache:${uid}`));
     this.known = new Map(splitState(cached ?? {}).map((row) => [row.key, row.value]));
     this.queue = readQueue(this.key);
+
     for (const batch of this.queue)
       for (const change of batch) {
         if (change.value === null) this.known.delete(change.key);
@@ -113,28 +139,34 @@ export class TrainingSync {
         ),
       ),
     );
+
     if (state) this.receive(state);
   }
   async start() {
     if (this.queue.length) this.showPending();
     this.status({ phase: "loading", pending: this.queue.length });
     let initial;
+
     try {
-      initial = await credentials(this.uid);
+      initial = await this.dependencies.credentials(this.uid);
     } catch (error) {
       this.failed(error);
       throw error;
     }
+
     if (this.closed) return;
-    const client = new ConvexClient(initial.url);
+    const client = this.dependencies.createClient(initial.url);
     this.client = client;
     this.stopConnection = client.subscribeToConnectionState((connection) => {
       if (this.closed || this.problem) return;
+
       if (!connection.isWebSocketConnected)
         this.status({ phase: "offline", pending: this.queue.length });
       else this.publish();
     });
-    client.setAuth(async () => (this.closed ? null : (await credentials(this.uid)).token));
+    client.setAuth(async () =>
+      this.closed ? null : (await this.dependencies.credentials(this.uid)).token,
+    );
     this.stop = client.onUpdate(
       snapshot,
       {},
@@ -143,24 +175,30 @@ export class TrainingSync {
       },
       this.failed,
     );
+
     try {
       await this.flush();
       const value = await client.query(snapshot, {});
+
       if (!this.closed && !this.queue.length) this.accept(value);
     } catch (error) {
       this.failed(error);
       throw error;
     }
   }
+  // eslint-disable-next-line anti-slop/no-unknown-parameters -- Convex subscription data is untrusted; null resets state and every other value is immediately checked by parseStoredState before admission.
   private accept(value: unknown) {
     if (value === null) {
       this.known.clear();
       this.receive({});
       this.problem = undefined;
       this.publish();
+
       return;
     }
+
     const state = parseStoredState(JSON.stringify(value));
+
     if (!state) throw new Error("Invalid training data from Convex");
     this.known = new Map(splitState(state).map((row) => [row.key, row.value]));
     this.receive(state);
@@ -178,14 +216,18 @@ export class TrainingSync {
       value: change.value,
       expected: this.known.get(change.key) ?? null,
     }));
+
     if (!changes.length) return;
     // Throw before admitting the edit or advancing its baseline if storage rejects it.
     this.persistQueue([...this.queue, changes]);
+
     for (const change of changes) {
       if (change.value === null) this.known.delete(change.key);
       else this.known.set(change.key, change.value);
     }
+
     this.publish();
+
     if (this.client && !this.problem) void this.flush().catch(this.failed);
   }
   flush(): Promise<void> {
@@ -193,40 +235,51 @@ export class TrainingSync {
     this.flushing = this.drain().then(
       () => {
         this.flushing = undefined;
+
         if (this.queue.length && this.client && !this.closed) return this.flush();
       },
-      (error: unknown) => {
+      (cause: unknown) => {
         this.flushing = undefined;
-        throw error;
+        throw cause;
       },
     );
+
     return this.flushing;
   }
   private async drain() {
     const client = this.client;
+
     if (this.closed) return;
+
     if (!client) {
       if (this.queue.length)
         throw new Error("Connect to save your pending edits before signing out.");
+
       return;
     }
+
     while (this.queue.length && !this.closed) {
       const changes = this.queue[0];
+
       if (!changes) break;
       // Each batch assumes the preceding batch committed; parallel writes break revisions.
       // eslint-disable-next-line no-await-in-loop
       await client.mutation(commit, { changes });
+
       if (this.closed) return;
       // Replaying a committed batch is safe; forgetting an unpersisted acknowledgment is not.
       this.persistQueue(this.queue.slice(1));
     }
+
     const value = await client.query(snapshot, {});
+
     if (!this.closed && !this.queue.length) this.accept(value);
   }
   saveRecovery() {
     const url = URL.createObjectURL(
       new Blob([JSON.stringify(this.queue, null, 2)], { type: "application/json" }),
     );
+
     const link = document.createElement("a");
     link.href = url;
     link.download = "set-and-signal-pending-edits.json";
@@ -236,12 +289,15 @@ export class TrainingSync {
   async conflicts(): Promise<SyncConflict[]> {
     if (!this.client) throw new Error("Reconnect to review changes.");
     const value: unknown = await this.client.query(snapshot, {});
+
     const remote = new Map(
       splitState(parseStoredState(JSON.stringify(value)) ?? {}).map((row) => [row.key, row.value]),
     );
+
     return (this.queue[0] ?? [])
       .filter((change) => {
         const current = remote.get(change.key) ?? null;
+
         return current !== change.expected && current !== change.value;
       })
       .map((change) => ({
@@ -258,21 +314,28 @@ export class TrainingSync {
     );
     const reviewed = new Map(conflicts.map((conflict) => [conflict.key, conflict]));
     const seen = new Set<string>();
+
     const next = this.queue
       .map((batch) =>
         batch.flatMap((change) => {
           const conflict = reviewed.get(change.key);
+
           if (!conflict) return [change];
+
           if (choice === "remote") return [];
+
           if (seen.has(change.key)) return [change];
           seen.add(change.key);
+
           return [{ ...change, expected: conflict.remote }];
         }),
       )
       .filter((batch) => batch.length);
+
     this.persistQueue(next);
     this.problem = undefined;
     this.publish();
+
     try {
       await this.flush();
     } catch (error) {

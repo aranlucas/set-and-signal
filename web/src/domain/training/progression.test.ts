@@ -20,9 +20,13 @@ const LIFT = EXDB.find(
   (e) =>
     e.bp !== "cardio" && !["upper legs", "lower legs", "back", "hips", "glutes"].includes(e.bp),
 )!.id;
+
 const HEAVY = EXDB.find((e) => e.bp === "upper legs" && e.eq === "barbell")!.id;
+
 const DUMBBELL_HEAVY = EXDB.find((e) => e.bp === "upper legs" && e.eq === "dumbbell")!.id;
+
 const GOBLET = "1760";
+
 const CARDIO = EXDB.find((e) => e.bp === "cardio")!.id;
 
 // Build a state whose history is a list of sessions given as [weight, ...repsPerSet].
@@ -57,6 +61,7 @@ describe("readSession", () => {
         { w: 60, r: 6, done: true },
       ],
     });
+
     expect(s.ok).toBe(true);
     expect(s.weight).toBe(60);
     expect(s.amrap).toBe(6);
@@ -87,6 +92,7 @@ describe("readSession", () => {
         { w: 60, r: 0, done: false },
       ],
     });
+
     expect(s.ok).toBe(false);
     expect(s.weight).toBe(60); // the working weight is still known from the sets that counted
   });
@@ -121,6 +127,7 @@ describe("readSession", () => {
         { w: 155, r: 8, done: true },
       ],
     });
+
     expect(s.ok).toBe(true);
     expect(s.weight).toBe(155);
   });
@@ -148,6 +155,7 @@ describe("readSession", () => {
         { sec: 50, w: 0, done: true },
       ],
     });
+
     expect(s.mode).toBe("time");
     expect(s.ok).toBe(true);
     expect(s.best).toBe(50);
@@ -253,6 +261,7 @@ describe("linear progression", () => {
       ]),
       cfg,
     );
+
     expect(p.kind).toBe("deload");
     expect(p.weight).toBe(55); // 60 × 0.9 = 54 → nearest loadable 2.5 step
     expect(DELOAD_AFTER.linear).toBe(2);
@@ -267,6 +276,7 @@ describe("linear progression", () => {
       ]),
       cfg,
     );
+
     expect(p.kind).toBe("hold");
   });
 
@@ -278,6 +288,7 @@ describe("linear progression", () => {
       ]),
       cfg,
     );
+
     expect(p.kind).toBe("deload");
     expect(p.weight).toBe(2.5);
   });
@@ -292,6 +303,7 @@ describe("linear progression", () => {
       ]),
       cfg,
     );
+
     expect(p.weight).toBeLessThan(5);
   });
 
@@ -302,6 +314,7 @@ describe("linear progression", () => {
       reps: 5,
       prog: "linear",
     });
+
     expect(p.weight).toBe(105);
   });
 
@@ -325,6 +338,7 @@ describe("bodyweight exercises", () => {
     bodyweight: true,
     prog: "linear",
   };
+
   const bw = (rows: Array<Array<number | null>>) => hist(LIFT, rows, { sets: 3, reps: 10 });
 
   it("never invents a weight to deload to — there is nothing to take off a push-up", () => {
@@ -336,6 +350,7 @@ describe("bodyweight exercises", () => {
       ]),
       cfg,
     );
+
     expect(p.kind).toBe("hold");
     expect(p.weight).toBe(0);
     expect(p.reps).toBe(10);
@@ -367,12 +382,14 @@ describe("bodyweight exercises", () => {
 
   it("stops adding sets at the cap and says what to do instead", () => {
     const at15 = hist(LIFT, [[0, 15, 15, 15]], { sets: 3, reps: 15 });
+
     const p = nextPrescription(at15, {
       ...cfg,
       sets: MAX_BW_SETS,
       reps: 10,
       repsMax: 15,
     });
+
     expect(p.kind).toBe("hold");
     expect(p.sets).toBeUndefined();
     expect(Array.isArray(p.why) ? p.why[0] : p.why?.defaultValue).toMatch(/harder variation/);
@@ -380,11 +397,13 @@ describe("bodyweight exercises", () => {
 
   it("leaves a belted set to the normal policies — there is a load to add now", () => {
     const belted = hist(LIFT, [[10, 10, 10, 10]], { sets: 3, reps: 10 });
+
     const p = nextPrescription(belted, {
       ...cfg,
       bodyweight: true,
       repsMax: 15,
     });
+
     expect(p.kind).toBe("up");
     expect(p.weight).toBeGreaterThan(10);
     expect(p.sets).toBeUndefined();
@@ -415,6 +434,7 @@ describe("bodyweight exercises", () => {
         ]),
         { ...cfg, prog },
       );
+
       expect(p.weight).toBe(0);
       expect(p.kind).toBe("hold");
     }
@@ -464,6 +484,7 @@ describe("Greyskull LP", () => {
       ]),
       cfg,
     );
+
     expect(p.kind).toBe("deload");
     expect(p.weight).toBe(50); // 55 × 0.9 = 49.5 → nearest loadable 2.5 step
   });
@@ -504,6 +525,7 @@ describe("double progression", () => {
       [40, 9, 9, 9],
       [40, 9, 9, 9],
     ];
+
     const p = nextPrescription(hist(LIFT, rows, { sets: 3, reps: 12 }), cfg);
     expect(p.kind).toBe("deload");
     expect(p.reps).toBe(8);
@@ -519,7 +541,9 @@ describe("timed progression", () => {
     sec: 45,
     prog: "time",
   };
+
   const T = { sets: 2, sec: 45, mode: "time" } as const;
+
   const timeHist = (rows: number[][]) => ({
     unit: "kg" as const,
     workouts: rows.map((row, i) => ({
@@ -556,6 +580,7 @@ describe("timed progression", () => {
       ]),
       cfg,
     );
+
     expect(p.kind).toBe("deload");
     expect(p.sec).toBe(40); // 45 × 0.9 = 40.5 → nearest 5 s step
   });
@@ -575,6 +600,7 @@ describe('policy "off"', () => {
       reps: 5,
       prog: "off",
     });
+
     expect(p.kind).toBe("off");
     expect(p.weight).toBeUndefined();
   });
@@ -617,6 +643,7 @@ describe("sessionsFor", () => {
         },
       ],
     };
+
     expect(sessionsFor(state, LIFT).map((s) => s.d)).toEqual(["2026-01-01"]);
   });
 
@@ -630,6 +657,7 @@ describe("sessionsFor", () => {
         },
       ],
     };
+
     expect(sessionsFor(state, LIFT)).toHaveLength(1);
   });
 });
@@ -649,6 +677,7 @@ describe("history logged before targets were recorded", () => {
       ], // no target
     })),
   });
+
   const cfg: ExConfig = {
     id: LIFT,
     sets: 3,
@@ -668,6 +697,7 @@ describe("history logged before targets were recorded", () => {
       importedHistory(Array.from({ length: 11 }, () => [60, 5, 5, 5])),
       cfg,
     );
+
     expect(p.kind).toBe("up");
   });
 
@@ -721,12 +751,14 @@ describe("applyPrescription", () => {
       { w: 0, r: 10, done: false },
       { w: 0, r: 10, done: false },
     ];
+
     const out = applyPrescription(three, {
       kind: "up",
       weight: 0,
       reps: 10,
       sets: 4,
     });
+
     expect(out).toHaveLength(4);
     expect(out[3]).toEqual({ w: 0, r: 10, done: false });
   });
@@ -738,6 +770,7 @@ describe("applyPrescription", () => {
 
 describe("apartment full-body working weights", () => {
   const cfg: ExConfig = { id: GOBLET, sets: 3, reps: 8, weight: 0, prog: "linear" };
+
   const routine = {
     id: "apt-full-body",
     name: "Apartment Full Body",
@@ -769,6 +802,7 @@ describe("apartment full-body working weights", () => {
         },
       ],
     };
+
     const p = nextPrescription(state, cfg, routine);
     expect(p.kind).toBe("up");
     expect(p.weight).toBe(160);
@@ -798,6 +832,7 @@ describe("apartment full-body working weights", () => {
       cfg,
       routine,
     );
+
     expect(p.kind).toBe("hold");
     expect(p.weight).toBe(155);
   });
@@ -824,6 +859,7 @@ describe("apartment full-body working weights", () => {
       cfg,
       routine,
     );
+
     expect(p.kind).toBe("deload");
     expect(p.weight).toBe(140); // 155 × 0.9 = 139.5 → nearest 5 lb step
   });
@@ -852,6 +888,7 @@ describe("apartment full-body working weights", () => {
       cfg,
       routine,
     );
+
     expect(p.kind).toBe("hold");
     expect(p.weight).toBe(0);
     expect(p.reps).toBe(8);
@@ -877,6 +914,7 @@ describe("apartment full-body working weights", () => {
         },
       ],
     };
+
     const updated = syncSourceRoutineWeights(state, routine, [GOBLET]);
     expect(updated.id).toBe("apt-full-body");
     expect(updated.name).toBe("Apartment Full Body");

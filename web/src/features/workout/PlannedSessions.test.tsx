@@ -1,15 +1,8 @@
-import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { renderWithTranslations as renderToStaticMarkup } from "@/test/render-with-i18n";
+import { describe, expect, it } from "vitest";
 import { PlannedSessions } from "./PlannedSessions";
 import type { PlannedSession } from "@/domain/training/schedule";
 
-vi.mock("react-i18next", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("react-i18next")>()),
-  useTranslation: () => ({
-    t: (_key: string, fallback: string, values?: Record<string, string | number>) =>
-      fallback.replaceAll(/\{\{(\w+)\}\}/gu, (_match, key: string) => String(values?.[key] ?? "")),
-  }),
-}));
 const sessions: PlannedSession[] = [
   {
     key: "rehab:1",
@@ -41,6 +34,7 @@ describe("daily planned workouts", () => {
     const markup = renderToStaticMarkup(
       <PlannedSessions sessions={sessions} onStart={() => {}} disabled />,
     );
+
     expect(markup).toContain('disabled=""');
   });
 });

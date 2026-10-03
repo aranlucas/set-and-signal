@@ -1,3 +1,4 @@
+import * as validation from "valibot";
 import { EXDB } from "@/generated/exercises-data.js";
 import {
   EXIDX,
@@ -8,7 +9,9 @@ import { translate } from "@/i18n/translate.js";
 import type { CatalogExercise, CustomEx, Exercise } from "@/shared/lib/types.js";
 
 const SEARCH_MARKS_RE = /\p{Mark}+/gu;
+
 const SEARCH_SEPARATORS_RE = /[^\p{Letter}\p{Number}]+/gu;
+
 const SEARCH_WHITESPACE_RE = /\s+/gu;
 
 type SearchableExercise = {
@@ -29,6 +32,7 @@ export type ExerciseSearchFilters = {
 registerExerciseCatalog(EXDB);
 
 export { EXDB, EXIDX, registerCustom };
+
 export const BODYPARTS: string[] = [...new Set(EXDB.map((e) => e.bp))].sort();
 
 // Equipment options present in a given list of exercises, most common first (issue #6).
@@ -39,6 +43,7 @@ export function equipmentOf(list: ReadonlyArray<{ eq?: string }>): string[] {
   list.forEach((exercise) => {
     if (exercise.eq) equipmentCounts[exercise.eq] = (equipmentCounts[exercise.eq] || 0) + 1;
   });
+
   return Object.keys(equipmentCounts).sort(
     (left, right) => equipmentCounts[right] - equipmentCounts[left] || (left < right ? -1 : 1),
   );
@@ -72,10 +77,13 @@ export function searchExercises<T extends SearchableExercise>(
   return exercises
     .flatMap((exercise, index) => {
       if (filters.bodyPart && exercise.bp !== filters.bodyPart) return [];
+
       if (filters.equipment && exercise.eq !== filters.equipment) return [];
+
       if (tokens.length === 0) return [{ exercise, index, score: 0 }];
 
       const normalizedName = normalizeSearchText(exercise.n);
+
       const searchableText = normalizeSearchText(
         [
           exercise.n,
@@ -86,9 +94,13 @@ export function searchExercises<T extends SearchableExercise>(
           ...(exercise.sm || []),
           exercise.desc,
         ]
-          .filter((value): value is string => typeof value === "string" && value.length > 0)
+          .filter(
+            (value): value is string =>
+              validation.is(validation.string(), value) && value.length > 0,
+          )
           .join(" "),
       );
+
       if (!tokens.every((token) => searchableText.includes(token))) return [];
 
       const score =
@@ -99,6 +111,7 @@ export function searchExercises<T extends SearchableExercise>(
             : tokens.every((token) => normalizedName.includes(token))
               ? 2
               : 3;
+
       return [{ exercise, index, score }];
     })
     .sort((left, right) => left.score - right.score || left.index - right.index)
@@ -109,33 +122,37 @@ export function searchExercises<T extends SearchableExercise>(
 // have separate attribution/redistribution terms. The default is a pinned, cacheable CDN copy;
 // deployments can override both bases at build time with an approved media host.
 const MEDIA_COMMIT = "7455efae41b330c265e7cd4b78dfa848e7ce5ebd";
+
 const MEDIA_CDN = `https://cdn.jsdelivr.net/gh/hasaneyldrm/exercises-dataset@${MEDIA_COMMIT}`;
-const IMG_BASE =
-  typeof import.meta.env.VITE_IMG_BASE === "string"
-    ? import.meta.env.VITE_IMG_BASE
-    : `${MEDIA_CDN}/images/`;
-const GIF_BASE =
-  typeof import.meta.env.VITE_GIF_BASE === "string"
-    ? import.meta.env.VITE_GIF_BASE
-    : `${MEDIA_CDN}/videos/`;
+
+const IMG_BASE = validation.is(validation.string(), import.meta.env.VITE_IMG_BASE)
+  ? import.meta.env.VITE_IMG_BASE
+  : `${MEDIA_CDN}/images/`;
+
+const GIF_BASE = validation.is(validation.string(), import.meta.env.VITE_GIF_BASE)
+  ? import.meta.env.VITE_GIF_BASE
+  : `${MEDIA_CDN}/videos/`;
+
 export const imgSrc = (ex: Exercise) => IMG_BASE + ex.img;
+
 export const gifSrc = (ex: Exercise) => GIF_BASE + ex.gif;
 
 // Cardio exercises log time + speed instead of weight × reps.
 export const isCardio = (idOrEx: string | { bp?: string } | null | undefined) =>
-  (typeof idOrEx === "string" ? EXIDX[idOrEx] : idOrEx)?.bp === "cardio";
+  (validation.is(validation.string(), idOrEx) ? EXIDX[idOrEx] : idOrEx)?.bp === "cardio";
 
 // Exercises the dataset already knows carry no external load (issue #32) — a quarter of the
 // catalogue. This seeds the `bw` flag on a fresh config so a push-up never asks for a weight
 // nobody was going to enter. It is only the default: the flag lives on the config, so a dip
 // done with a belt can turn it off and a custom exercise can turn it on.
 export const isBodyweightEq = (idOrEx: string | { eq?: string } | null | undefined) =>
-  (typeof idOrEx === "string" ? EXIDX[idOrEx] : idOrEx)?.eq === "body weight";
+  (validation.is(validation.string(), idOrEx) ? EXIDX[idOrEx] : idOrEx)?.eq === "body weight";
 
 const BARBELL_EQUIPMENT = new Set(["barbell", "olympic barbell", "ez barbell", "trap bar"]);
 
 export const isBarbellEq = (idOrEx: string | { eq?: string } | null | undefined) => {
-  const equipment = (typeof idOrEx === "string" ? EXIDX[idOrEx] : idOrEx)?.eq;
+  const equipment = (validation.is(validation.string(), idOrEx) ? EXIDX[idOrEx] : idOrEx)?.eq;
+
   return !!equipment && BARBELL_EQUIPMENT.has(equipment);
 };
 
@@ -145,7 +162,9 @@ export const isBarbellEq = (idOrEx: string | { eq?: string } | null | undefined)
 // down on the first `ex.n`.
 export const exOr = (id: string): CatalogExercise => {
   const found = EXIDX[id];
+
   if (found && "img" in found) return found;
+
   if (found)
     return {
       id: found.id,
@@ -158,6 +177,7 @@ export const exOr = (id: string): CatalogExercise => {
       img: "",
       gif: "",
     };
+
   return {
     id,
     n: translate("sharing.unknownExercise", "Unknown exercise"),

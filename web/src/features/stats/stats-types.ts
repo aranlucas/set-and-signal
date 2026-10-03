@@ -35,14 +35,17 @@ export const weightDeltaColor = (
   targetW: number | null,
 ) => {
   if (!delta) return "var(--muted-foreground)";
+
   if (!targetW) return "var(--foreground)";
   const up = targetW > currentW;
+
   return delta > 0 === up ? "var(--primary)" : "var(--destructive)";
 };
 
 // Cardio sets carry neither rating field; the raters only ever read these two keys.
 export const ratingOf = (set: LoggedSet): { rir?: number | null; rpe?: number | null } =>
   "rir" in set || "rpe" in set ? set : {};
+
 // Cardio sets carry speed, timed sets sec, reps sets weight. Read the shape so
 // mixed-mode history scores an absent field as zero instead of combining units.
 export const loggedMetric = (set: LoggedSet): number =>

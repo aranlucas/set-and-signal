@@ -15,6 +15,7 @@ export function CalendarDaySheet({
   onWorkoutDetail?: (workout: Workout) => void;
 }) {
   const { t } = useTranslation();
+
   return (
     <>
       <h3>{fmtDate(t, iso, true)}</h3>

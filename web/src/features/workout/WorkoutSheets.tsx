@@ -29,6 +29,7 @@ function TopWeightSheet({
   setWorkoutSheet,
 }: WorkoutSheetProps & { state: Extract<WorkoutSheetState, { type: "top-weight" }> }) {
   const { t } = useTranslation();
+
   return (
     <RouteBottomSheet
       title={t("workout.adjustTopWeight", "Adjust top weight")}
@@ -49,6 +50,7 @@ function WorkoutCompleteSheet({
   state: Extract<WorkoutSheetState, { type: "workout-complete" }>;
 }) {
   const { t } = useTranslation();
+
   return (
     <RouteBottomSheet
       title={t("workout.completion.sWholeWorkout", "That's the whole workout!")}
@@ -69,11 +71,13 @@ function DetailSheet({
   const { t } = useTranslation();
   const [confirmation, setConfirmation] = useState<ConfirmDialogOptions | null>(null);
   const customExercise = isCustomExercise(state.exercise) ? state.exercise : null;
+
   const openCustom = (
     existingExercise: CustomEx | null,
     onDone?: (exercise: SheetEx | null) => void,
     prefillName?: string,
   ) => setWorkoutSheet({ type: "custom", existingExercise, onDone, prefillName });
+
   return (
     <>
       <RouteBottomSheet
@@ -128,11 +132,13 @@ function PickerSheet({
   setWorkoutSheet,
 }: WorkoutSheetProps & { state: Extract<WorkoutSheetState, { type: "picker" }> }) {
   const { t } = useTranslation();
+
   const openCustom = (
     existingExercise: CustomEx | null,
     onDone?: (exercise: SheetEx | null) => void,
     prefillName?: string,
   ) => setWorkoutSheet({ type: "custom", existingExercise, onDone, prefillName });
+
   return (
     <RouteBottomSheet
       title={t("exercise.addExercise", "Add exercise")}
@@ -151,6 +157,7 @@ function AddToRoutineSheet({
   setWorkoutSheet,
 }: WorkoutSheetProps & { state: Extract<WorkoutSheetState, { type: "add-to-routine" }> }) {
   const { t } = useTranslation();
+
   return (
     <RouteBottomSheet
       title={t("exercise.add", "Add “{{exercise}}”", { exercise: state.exercise.n })}
@@ -206,6 +213,7 @@ function CustomSheet({
   close,
 }: WorkoutSheetProps & { state: Extract<WorkoutSheetState, { type: "custom" }> }) {
   const { t } = useTranslation();
+
   return (
     <RouteBottomSheet
       title={
@@ -236,6 +244,7 @@ export function FinishSummarySheet({
   close: SheetClose;
 }) {
   const { t } = useTranslation();
+
   return (
     <RouteBottomSheet
       title={t("workout.completion.workoutComplete", "Workout complete!")}
@@ -260,6 +269,7 @@ export function WorkoutSheetHost({
   onComplete: () => void;
 }) {
   if (!workoutSheet) return null;
+
   switch (workoutSheet.type) {
     case "top-weight":
       return (

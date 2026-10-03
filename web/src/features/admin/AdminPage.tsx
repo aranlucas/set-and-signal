@@ -41,15 +41,22 @@ type LiveUser = AdminUser & { live: AdminLiveInfo };
 const formatRelativeTime = (timestamp: number | null | undefined) => {
   if (!timestamp) return "never";
   const secondsAgo = Math.max(0, (Date.now() - timestamp) / 1000);
+
   if (secondsAgo < 60) return "just now";
+
   if (secondsAgo < 3600) return Math.floor(secondsAgo / 60) + "m ago";
+
   if (secondsAgo < 86400) return Math.floor(secondsAgo / 3600) + "h ago";
+
   return Math.floor(secondsAgo / 86400) + "d ago";
 };
+
 const formatDuration = (milliseconds: number) => {
   const minutes = Math.max(0, Math.floor(milliseconds / 60000));
+
   return minutes < 60 ? minutes + "m" : Math.floor(minutes / 60) + "h" + (minutes % 60) + "m";
 };
+
 function UserDetail({
   id,
   onChanged,
@@ -62,11 +69,14 @@ function UserDetail({
   const { t } = useTranslation();
   const [confirmDisable, setConfirmDisable] = useState(false);
   const queryClient = useQueryClient();
+
   const userQuery = useQuery({
     queryKey: ["admin", "user", id],
     queryFn: () => apiParsed("/api/admin/user?id=" + encodeURIComponent(id), adminUserResponse),
   });
+
   const details = userQuery.data;
+
   const disableMutation = useMutation({
     mutationFn: (payload: { uid: string; disabled: boolean }) =>
       api("/api/admin/user/disable", {
@@ -81,17 +91,21 @@ function UserDetail({
     },
     onError: (e) => toast(e.message),
   });
+
   if (userQuery.isError)
     return (
       <div className="text-sm leading-snug text-foreground/60">
         {userQuery.error.message || "Failed to load user details."}
       </div>
     );
+
   if (!details) return <div className="text-sm leading-snug text-foreground/60">Loading…</div>;
   const userRecord = details.user;
+
   const setDisabled = (disabled: boolean) => {
     if (!disableMutation.isPending) disableMutation.mutate({ uid: userRecord.id, disabled });
   };
+
   return (
     <>
       <h3 className="capitalize">{userRecord.name}</h3>
@@ -202,6 +216,7 @@ function UserDetail({
 
 function InvitesCard({ invites }: { invites: AdminInvite[] | undefined }) {
   const queryClient = useQueryClient();
+
   const generateInviteMutation = useMutation({
     mutationFn: () =>
       apiParsed("/api/admin/invites/new", adminInviteResponse, {
@@ -215,6 +230,7 @@ function InvitesCard({ invites }: { invites: AdminInvite[] | undefined }) {
     },
     onError: (e) => toast(e.message),
   });
+
   const revokeInviteMutation = useMutation({
     mutationFn: (code: string) =>
       api("/api/admin/invites/revoke", {
@@ -227,9 +243,11 @@ function InvitesCard({ invites }: { invites: AdminInvite[] | undefined }) {
     },
     onError: (e) => toast(e.message),
   });
+
   const inviteList = invites || [];
   const unusedInvites = inviteList.filter((invite) => !invite.usedBy);
   const redeemedInvites = inviteList.filter((invite) => invite.usedBy);
+
   return (
     <div className="mb-3 rounded-lg bg-card p-4">
       <div className="flex items-center justify-between gap-3">
@@ -286,6 +304,7 @@ function InvitesCard({ invites }: { invites: AdminInvite[] | undefined }) {
     </div>
   );
 }
+
 function AdminContent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -302,11 +321,13 @@ function AdminContent() {
     enabled: isAdmin,
     refetchInterval: 15000,
   });
+
   const invitesQuery = useQuery({
     queryKey: ["admin", "invites"],
     queryFn: () => apiParsed("/api/admin/invites", adminInvitesResponse),
     enabled: isAdmin,
   });
+
   const [currentTime] = useState(() => Date.now());
 
   if (!isAdmin) return null;
@@ -316,9 +337,11 @@ function AdminContent() {
   const openUser = (id: string) => setDetailUserId(id);
   const userList = users?.users || [];
   const liveUsers = userList.filter((userRecord): userRecord is LiveUser => !!userRecord.live);
+
   const activeCount = userList.filter(
     (userRecord) => userRecord.lastSync && currentTime - userRecord.lastSync < 7 * 86400000,
   ).length;
+
   const disabledCount = userList.filter((userRecord) => userRecord.disabled).length;
 
   return (
@@ -493,6 +516,7 @@ function AdminContent() {
               }
               close={() => {
                 setDetailUserId(null);
+
                 return Promise.resolve();
               }}
             />

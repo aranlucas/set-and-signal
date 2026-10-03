@@ -22,18 +22,23 @@ export function StatsHeaderAndActivity({
   const { t } = useTranslation();
   const nav = useNavigate();
   const [now] = useState(() => Date.now());
+
   const recentBodyweight = appState.bodyweight.filter(
     (bodyweight) => (bodyweight.t || new Date(bodyweight.d).getTime()) > now - 30 * 86400000,
   );
+
   const firstRecentBodyweight = recentBodyweight[0];
   const lastRecentBodyweight = recentBodyweight.at(-1);
+
   const bodyweightDelta =
     firstRecentBodyweight && lastRecentBodyweight
       ? lastRecentBodyweight.w - firstRecentBodyweight.w
       : null;
+
   const monthWorkouts = appState.workouts.filter(
     (workout) => workout.d.slice(0, 7) === todayISO().slice(0, 7),
   ).length;
+
   return (
     <>
       <Header
@@ -95,6 +100,7 @@ export function StatsHeaderAndActivity({
           appState={appState}
           onDay={(iso) => {
             const workouts = appState.workouts.filter((workout) => workout.d === iso);
+
             if (workouts.length === 1) onSheet({ kind: "workout", workout: workouts[0] });
             else if (workouts.length > 0) onSheet({ kind: "calendar", start: iso });
           }}

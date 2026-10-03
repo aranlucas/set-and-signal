@@ -18,6 +18,7 @@ export default function App() {
   useEffect(() => {
     void boot();
   }, [boot]);
+
   return (
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={queryClient}>

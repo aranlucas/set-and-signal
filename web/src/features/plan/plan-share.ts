@@ -1,3 +1,4 @@
+import * as validation from "valibot";
 // Build, validate, and merge the small JSON file used to share a weekly plan.
 // It contains only routines, their schedule, and referenced custom exercises; workouts,
 // weigh-ins, settings, and other personal data never travel with it.
@@ -19,16 +20,20 @@ import type {
 } from "@/shared/lib/types.js";
 
 const PLAN_FMT = 2;
+
 const WEEK_ORDER: Weekday[] = [1, 2, 3, 4, 5, 6, 0]; // Mon-first, matching the Plan screen
-const WEEKDAY_BY_KEY: Readonly<Record<string, Weekday>> = {
-  "0": 0,
-  "1": 1,
-  "2": 2,
-  "3": 3,
-  "4": 4,
-  "5": 5,
-  "6": 6,
-};
+
+const WEEKDAY_BY_KEY = new Map<string, Weekday>(
+  Object.entries({
+    "0": 0,
+    "1": 1,
+    "2": 2,
+    "3": 3,
+    "4": 4,
+    "5": 5,
+    "6": 6,
+  } satisfies Record<string, Weekday>),
+);
 
 /** What parsePlan hands back: a validated bundle plus the counts the confirm screen shows. */
 export interface ParsedPlan {
@@ -46,32 +51,45 @@ export interface ParsedPlan {
 function cleanEx(exercise: ExConfig): ExConfig {
   const cleanedConfig: ExConfig = { id: exercise.id, sets: exercise.sets };
   const mode = modeOf(exercise);
+
   if (mode === "cardio") {
     if (exercise.min != null) cleanedConfig.min = exercise.min;
+
     if (exercise.speed != null) cleanedConfig.speed = exercise.speed;
   } else if (mode === "time") {
     // Written out even though 'reps' is the fallback for a non-cardio id: a plan file that
     // dropped the mode would turn a 45-second plank into a 45-rep one at the other end.
     cleanedConfig.mode = "time";
+
     if (exercise.sec != null) cleanedConfig.sec = exercise.sec;
+
     if (exercise.weight) cleanedConfig.weight = exercise.weight;
   } else {
     if (exercise.reps != null) cleanedConfig.reps = exercise.reps;
+
     if (exercise.weight) cleanedConfig.weight = exercise.weight;
   }
+
   // How the exercise is logged travels too (issues #31/#32) — the bodyweight flag only when
   // it disagrees with the catalogue, since agreeing is what the other end already assumes.
   if (exercise.bodyweight != null && exercise.bodyweight !== isBodyweightEq(exercise.id))
     cleanedConfig.bodyweight = exercise.bodyweight;
+
   // Only on reps work — `side` counts reps, and a timed hold has none to split.
   if (exercise.side && mode !== "time" && mode !== "cardio") cleanedConfig.side = true;
+
   // Progression settings travel with the plan — a shared Greyskull routine that arrives
   // without its rule is just a list of weights.
   if (exercise.prog) cleanedConfig.prog = exercise.prog;
+
   if (exercise.inc != null && exercise.inc > 0) cleanedConfig.inc = exercise.inc;
+
   if (exercise.repsMin != null) cleanedConfig.repsMin = exercise.repsMin;
+
   if (exercise.repsMax != null) cleanedConfig.repsMax = exercise.repsMax;
+
   if (exercise.sg) cleanedConfig.sg = exercise.sg;
+
   return cleanedConfig;
 }
 
@@ -91,17 +109,22 @@ export function buildPlanBundle(
       routine.prog ? { prog: routine.prog } : {},
     ),
   );
+
   const usedIds = new Set(routines.flatMap((r) => r.ex.map((e) => e.id)));
+
   const customEx: PlanBundleCustom[] = (appState.customEx || []).flatMap((c) =>
     usedIds.has(c.id)
       ? [Object.assign({ id: c.id, n: c.n, bp: c.bp }, c.desc ? { desc: c.desc } : {})]
       : [],
   );
+
   const week: Partial<Record<string, DaySession[]>> = {};
   WEEK_ORDER.forEach((d) => {
     const sessions = appState.week?.[d];
+
     if (sessions?.length) week[d] = sessions.map((session) => Object.assign({}, session));
   });
+
   return {
     opengym_plan: PLAN_FMT,
     exported: todayISO(),
@@ -123,22 +146,31 @@ export function buildPlanBundle(
  */
 export function parsePlan(raw: string | PlanBundle): ParsedPlan {
   let planData: PlanBundle;
+
   try {
-    planData = parsePayload(planBundle, typeof raw === "string" ? JSON.parse(raw) : raw);
+    planData = parsePayload(
+      planBundle,
+      validation.is(validation.string(), raw) ? JSON.parse(raw) : raw,
+    );
   } catch {
     throw new Error(translate("sharing.invalidPlanFile", "this isn’t a Set & Signal plan file"));
   }
+
   const customEx = planData.customEx;
   const known = new Set(customEx.map((c) => c.id));
   let dropped = 0;
+
   const routines = planData.routines.map((routine) => ({
     ...routine,
     ex: routine.ex.filter((exercise) => {
       const ok = known.has(exercise.id) || !!EXIDX[exercise.id];
+
       if (!ok) dropped++;
+
       return ok;
     }),
   }));
+
   return {
     name: planData.name.trim(),
     routines,
@@ -162,59 +194,68 @@ export function mergePlan(
   appStateDraft: Pick<AppState, "customEx" | "routines" | "week">,
   bundle: Pick<PlanBundle, "customEx" | "routines" | "week">,
   { schedule }: { schedule?: boolean } = {},
-): { routines: number } {
+) {
   appStateDraft.customEx = appStateDraft.customEx || [];
   const exerciseIdMap: Record<string, Id> = {};
   bundle.customEx.forEach((c) => {
     const existingExercise = appStateDraft.customEx.find(
       (x) => (x.n || "").toLowerCase() === (c.n || "").toLowerCase() && x.bp === c.bp,
     );
+
     if (existingExercise) {
       exerciseIdMap[c.id] = existingExercise.id;
+
       return;
     }
+
     const newExerciseId = uid();
     exerciseIdMap[c.id] = newExerciseId;
-    appStateDraft.customEx.push({
-      id: newExerciseId,
-      n: c.n,
-      bp: c.bp,
-      ...(c.desc ? { desc: c.desc } : {}),
-    });
+    const custom: AppState["customEx"][number] = { id: newExerciseId, n: c.n, bp: c.bp };
+
+    if (c.desc) custom.desc = c.desc;
+    appStateDraft.customEx.push(custom);
   });
   const routineIdMap: Record<Id, Id> = {};
   bundle.routines.forEach((routine) => {
     const newRoutineId = uid();
     routineIdMap[routine.id] = newRoutineId;
-    appStateDraft.routines.push({
+
+    const imported: AppState["routines"][number] = {
       id: newRoutineId,
       name: routine.name || translate("sharing.sharedRoutine", "Shared routine"),
       // A bundle routine may carry no emoji; Routine types it required, but an absent glyph
       // is exactly what the original stored and every consumer renders nothing for it.
       emoji: routine.emoji || "",
-      ...(routine.prog ? { prog: routine.prog } : {}),
       ex: (routine.ex || []).map((exercise) =>
         Object.assign(exercise, {
           id: exerciseIdMap[exercise.id] || exercise.id,
         }),
       ),
-    });
+    };
+
+    if (routine.prog) imported.prog = routine.prog;
+    appStateDraft.routines.push(imported);
   });
+
   if (schedule) {
     WEEK_ORDER.forEach((d) => {
       delete appStateDraft.week[d];
     });
     Object.entries(bundle.week || {}).forEach(([d, sessions]) => {
       // bundle weeks are plain JSON keyed by weekday digits
-      const weekday = WEEKDAY_BY_KEY[d];
+      const weekday = WEEKDAY_BY_KEY.get(d);
+
       if (weekday !== undefined) {
         const remapped = (sessions ?? []).flatMap((session) => {
           const routineId = routineIdMap[session.routineId];
+
           return routineId ? [{ ...session, routineId }] : [];
         });
+
         if (remapped.length) appStateDraft.week[weekday] = remapped;
       }
     });
   }
+
   return { routines: bundle.routines.length };
 }

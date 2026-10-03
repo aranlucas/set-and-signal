@@ -49,8 +49,10 @@ export default function Home() {
   const today = todayISO();
   const todaySessions = sessionProgress(state, today);
   const routine = todaySessions.find((session) => !session.completed)?.routine ?? null;
+
   const finishedToday =
     todaySessions.length > 0 && todaySessions.every((session) => session.completed);
+
   const activeRoutine = state.active
     ? {
         id: state.active.routineId ?? state.active.id,
@@ -62,17 +64,22 @@ export default function Home() {
         })),
       }
     : routine;
+
   const summary = weeklySummary(state.workouts, today);
   const trend = volumeTrend(state.workouts, today, chartWeeks);
   const maxVolume = Math.max(1, ...trend.map((week) => week.volume));
+
   const planned = Object.values(state.week).reduce(
     (total, sessions) => total + (sessions?.length ?? 0),
     0,
   );
+
   const streak = streakWeeks(state);
+
   const recent = state.workouts
     .toSorted((a, b) => b.d.localeCompare(a.d) || b.start - a.start)
     .slice(0, 3);
+
   const latest = latestProgress(state);
   const weight = lastBW(state);
   const targetMuscles = rankOf(loadOfRoutine(activeRoutine)).worked.slice(0, 3);
@@ -80,11 +87,14 @@ export default function Home() {
   const sets = activeRoutine?.ex.reduce((total, exercise) => total + exercise.sets, 0) ?? 0;
   const monday = new Date(today + "T12:00:00");
   monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7) + weekOffset * 7);
+
   const dates = Array.from({ length: 7 }, (_, index) => {
     const date = new Date(monday);
     date.setDate(date.getDate() + index);
+
     return date;
   });
+
   const start = () => {
     if (state.active) void navigate({ to: "/workout" });
     else if (routine)
@@ -95,13 +105,17 @@ export default function Home() {
       });
     else void navigate({ to: "/workout" });
   };
+
   const viewRoutine = () => {
     if (state.active) {
       void navigate({ to: "/workout" });
+
       return;
     }
+
     if (activeRoutine) void navigate({ to: "/plan/r/$id", params: { id: activeRoutine.id } });
   };
+
   return (
     <div className="training-dashboard">
       <div className="dashboard-heading">
@@ -375,20 +389,24 @@ export default function Home() {
                 const iso = isoOf(date);
                 const sessions = sessionProgress(state, iso);
                 const dayWorkouts = state.workouts.filter((workout) => workout.d === iso);
+
                 const sessionLabels = sessions
                   .map(
                     (session) =>
                       state.routines.find((candidate) => candidate.id === session.routineId)?.name,
                   )
                   .filter(Boolean);
+
                 const allCompleted =
                   sessions.length > 0 && sessions.every((session) => session.completed);
+
                 const statusLabel =
                   allCompleted || (!sessions.length && dayWorkouts.length > 0)
                     ? t("calendar.status.completed", "Done")
                     : sessionLabels.length
                       ? sessionLabels.join(", ")
                       : t("home.recoveryDay", "Recovery day");
+
                 return (
                   <Button
                     variant="plain"
@@ -413,7 +431,9 @@ export default function Home() {
                           const scheduled = state.routines.some(
                             (candidate) => candidate.id === session.routineId,
                           );
+
                           const completed = session.completed;
+
                           return (
                             <span
                               key={session.key}
@@ -452,6 +472,7 @@ export default function Home() {
                 <div>
                   {activeRoutine.ex.slice(0, 3).map((exercise) => {
                     const data = exerciseMetadata(exercise.id);
+
                     return (
                       <Button
                         variant="plain"

@@ -1,15 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/app/store/useStore", () => ({
-  useStore: {
-    getState: () => ({ user: null, appState: { sound: false } }),
-  },
-}));
+vi.hoisted(() => {
+  const values = new Map<string, string>();
+  vi.stubGlobal("localStorage", {
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      values.set(key, value);
+    },
+    removeItem: (key: string) => {
+      values.delete(key);
+    },
+  });
+});
+
+import { useStore } from "@/app/store/useStore";
 
 import { useWorkoutTimer } from "@/features/workout/useWorkoutTimer";
 
 describe("workout timer lifecycle", () => {
   beforeEach(() => {
+    useStore.setState({ user: null, appState: { ...useStore.getState().appState, sound: false } });
     useWorkoutTimer.setState({ timer: null, work: null });
   });
 

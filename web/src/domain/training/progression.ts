@@ -35,7 +35,7 @@ import type {
 const reason = (
   key: TranslationMessage["key"],
   defaultValue: string,
-  values?: Record<string, unknown>,
+  values?: TranslationMessage["values"],
 ): TranslationMessage => ({ key, defaultValue, values });
 
 // Which policies can sensibly drive which logging mode.
@@ -53,14 +53,17 @@ export const DELOAD_AFTER: Record<Exclude<PolicyId, "off">, number> = {
   double: 3,
   time: 3,
 };
+
 const DELOAD_FACTOR = 0.9;
 
 // Body parts where a 5 kg jump is normal rather than brutal.
 const HEAVY_BP = new Set(["upper legs", "lower legs", "back", "hips", "glutes"]);
+
 const COMPACT_EQ = new Set(["dumbbell", "kettlebell"]);
 
 function equipmentOf(exId: Id): string {
   const exercise = EXIDX[exId];
+
   return (exercise && "eq" in exercise && exercise.eq ? exercise.eq : "").toLowerCase();
 }
 
@@ -70,11 +73,16 @@ export function defaultIncrement(exId: Id, unit: Unit): number {
   const exercise = EXIDX[exId];
   const compact = COMPACT_EQ.has(equipmentOf(exId));
   const isHeavy = !!exercise && HEAVY_BP.has(exercise.bp);
+
   if (compact) return unit === "lb" ? 5 : 2.5;
+
   if (unit === "lb") return isHeavy ? 10 : 5;
+
   return isHeavy ? 5 : 2.5;
 }
+
 export const DEFAULT_SEC_INCREMENT = 5;
+
 // Where adding another set of push-ups stops being progress and starts being a way to spend
 // an evening. Past this the honest advice is load or a harder variation (issue #33).
 export const MAX_BW_SETS = 6;
@@ -93,24 +101,31 @@ export function policyFor(
 ): PolicyId {
   const resolvedMode = mode || modeOf(cfg || {});
   const allowedPolicies = POLICIES_FOR[resolvedMode] || ["off"];
+
   const selectedPolicy =
     (cfg && cfg.prog) || (routine && routine.prog) || (resolvedMode === "reps" ? "linear" : "off");
+
   return allowedPolicies.includes(selectedPolicy) ? selectedPolicy : "off";
 }
 
 const round1 = (v: number) => Math.round(v * 10) / 10;
+
 // Snap to a loadable multiple of the step.
 function snap(v: number, step: number): number {
   if (!(step > 0)) return round1(v);
+
   return round1(Math.round(v / step) * step);
 }
+
 // Back off by DELOAD_FACTOR, landing on something you can actually load. Rounding to the
 // nearest step keeps the cut close to the intended 10 %, but on small weights the nearest
 // step can be the weight you started from — so a deload that did not actually reduce
 // anything takes one step down instead. Never goes below a single step.
 function deloadTo(currentWeight: number, step: number): number {
   let deloadedWeight = snap(currentWeight * DELOAD_FACTOR, step);
+
   if (deloadedWeight >= currentWeight) deloadedWeight = snap(currentWeight - step, step);
+
   return Math.max(step, deloadedWeight);
 }
 
@@ -137,6 +152,7 @@ export function readSession(
   if (mode === "time") {
     const goal = target.sec || 0;
     const held = loggedSets.map((set) => (set.done ? set.sec || 0 : 0));
+
     return {
       mode,
       goal,
@@ -147,8 +163,10 @@ export function readSession(
         goal > 0 && hasEnoughSets && held.length > 0 && held.every((duration) => duration >= goal),
     };
   }
+
   const goal = target.reps || 0;
   const reps = loggedSets.map((set) => (set.done ? set.r || 0 : 0));
+
   return {
     mode,
     goal,
@@ -174,19 +192,23 @@ export function sessionsFor(
   const sessions: SessionRow[] = [];
   (state.workouts || []).forEach((workout) => {
     const entry = workout.entries.find((candidate) => candidate.id === exId);
+
     if (entry && entry.sets.some((set) => set.done))
       sessions.push({ d: workout.d, ...readSession(entry, fallback) });
   });
+
   return sessions;
 }
 
 // How many sessions in a row ended in a miss, counting back from the most recent.
 export function stallCount(sessions: ReadonlyArray<{ ok: boolean }>): number {
   let missedSessions = 0;
+
   for (let i = sessions.length - 1; i >= 0; i--) {
     if (sessions[i].ok) break;
     missedSessions++;
   }
+
   return missedSessions;
 }
 
@@ -206,16 +228,19 @@ export function nextPrescription(
   const mode = modeOf(cfg);
   const policy = policyFor(cfg, routine, mode);
   const unit: Unit = state.unit || "lb";
+
   const increment =
     cfg.inc != null && cfg.inc > 0
       ? cfg.inc
       : mode === "time"
         ? DEFAULT_SEC_INCREMENT
         : defaultIncrement(cfg.id, unit);
+
   if (policy === "off") return { policy, kind: "off" };
 
   const sessions = sessionsFor(state, cfg.id, cfg).filter((session) => session.mode === mode);
   const last = sessions.at(-1);
+
   if (!last)
     return {
       policy,
@@ -232,6 +257,7 @@ export function nextPrescription(
   if (mode === "time") {
     if (last.ok) {
       const sec = (last.goal || cfg.sec || 0) + increment;
+
       return {
         policy,
         kind: "up",
@@ -243,8 +269,10 @@ export function nextPrescription(
         ),
       };
     }
+
     if (stalls >= deloadAt) {
       const sec = deloadTo(last.goal || cfg.sec || 0, 5);
+
       return {
         policy,
         kind: "deload",
@@ -256,6 +284,7 @@ export function nextPrescription(
         ),
       };
     }
+
     return {
       policy,
       kind: "hold",
@@ -268,6 +297,7 @@ export function nextPrescription(
   }
 
   const currentWeight = last.weight;
+
   // Bodyweight work carries no external load, so there is nothing to add or take away —
   // "deload your push-ups to 2.5 kg" is not advice. Progress in reps instead. This runs ahead
   // of the individual policies because it is true for all of them. A dip done with a belt has
@@ -275,6 +305,7 @@ export function nextPrescription(
   // data, not a bodyweight session — hold the plan rather than inventing extra reps.
   if (currentWeight <= 0 && isBw(cfg)) {
     const goal = last.goal || cfg.reps || 0;
+
     if (!last.ok || goal <= 0)
       return {
         policy,
@@ -290,9 +321,11 @@ export function nextPrescription(
     // reps go back to the bottom and a set is added instead, which is how bodyweight work
     // actually progresses once a set of 30 push-ups stops being a strength stimulus.
     const top = cfg.repsMax != null && cfg.repsMax > 0 ? cfg.repsMax : 0;
+
     if (top > 0 && goal >= top) {
       const sets = Math.max(1, cfg.sets || last.count || 1) + 1;
       const bottom = Math.max(1, Math.min(cfg.reps || top, top));
+
       if (sets <= MAX_BW_SETS)
         return {
           policy,
@@ -306,6 +339,7 @@ export function nextPrescription(
             { reps: goal, resetReps: bottom },
           ),
         };
+
       // Out of sets worth adding: more volume is no longer the answer, load or a harder
       // variation is — and that is a decision for a person, not a policy.
       return {
@@ -320,8 +354,10 @@ export function nextPrescription(
         ),
       };
     }
+
     // Unilateral work steps by two, so the total stays even and both sides get the rep.
     const nextReps = goal + repStep(cfg);
+
     return {
       policy,
       kind: "up",
@@ -334,8 +370,10 @@ export function nextPrescription(
       ),
     };
   }
+
   if (currentWeight <= 0) {
     const goal = last.goal || cfg.reps || 0;
+
     return {
       policy,
       kind: "hold",
@@ -347,9 +385,11 @@ export function nextPrescription(
       ),
     };
   }
+
   if (policy === "double") {
     const top = cfg.reps || last.goal || 10;
     const bottom = Math.min(cfg.repsMin || Math.max(1, top - 2), top);
+
     if (last.ok)
       return {
         policy,
@@ -362,8 +402,10 @@ export function nextPrescription(
           { amount: increment, unit, reps: bottom },
         ),
       };
+
     if (stalls >= deloadAt) {
       const dw = deloadTo(currentWeight, increment);
+
       return {
         policy,
         kind: "deload",
@@ -376,7 +418,9 @@ export function nextPrescription(
         ),
       };
     }
+
     const aim = Math.min(top, Math.max(bottom, (last.low ?? 0) + repStep(cfg)));
+
     return {
       policy,
       kind: "hold",
@@ -397,6 +441,7 @@ export function nextPrescription(
     const amrap = last.amrap;
     const dbl = policy === "greyskull" && last.goal > 0 && amrap != null && amrap >= last.goal * 2;
     const step = dbl ? increment * 2 : increment;
+
     return {
       policy,
       kind: "up",
@@ -414,8 +459,10 @@ export function nextPrescription(
           ),
     };
   }
+
   if (stalls >= deloadAt) {
     const dw = deloadTo(currentWeight, increment);
+
     return {
       policy,
       kind: "deload",
@@ -434,6 +481,7 @@ export function nextPrescription(
             ),
     };
   }
+
   return {
     policy,
     kind: "hold",
@@ -459,23 +507,32 @@ export function applyPrescription<T extends LoggedSet>(
   sets.forEach((set) => {
     if (set.done) {
       updatedSets.push(set);
+
       return;
     }
+
     const nextSet = { ...set };
+
     if (prescription.weight != null && "w" in nextSet) nextSet.w = prescription.weight;
+
     if (prescription.reps != null && "r" in nextSet) nextSet.r = prescription.reps;
+
     if (prescription.sec != null && "sec" in nextSet) nextSet.sec = prescription.sec;
     updatedSets.push(nextSet);
   });
+
   // A policy that decided on a set count gets to grow the list — bodyweight progression adds
   // a set where a barbell would have added a plate. Only ever upwards, and only by copying a
   // row that is already there: a session in progress must not lose a set it has logged.
   if (prescription.sets != null && prescription.sets > updatedSets.length) {
     const templateSet = updatedSets.at(-1);
+
     if (!templateSet) return updatedSets;
+
     while (updatedSets.length < prescription.sets)
       updatedSets.push({ ...templateSet, done: false });
   }
+
   return updatedSets;
 }
 
@@ -486,10 +543,15 @@ export function applyPrescriptionToConfig(
 ): ExConfig {
   if (!prescription || prescription.kind === "off") return cfg;
   const next: ExConfig = { ...cfg };
+
   if (prescription.weight != null) next.weight = prescription.weight;
+
   if (prescription.reps != null) next.reps = prescription.reps;
+
   if (prescription.sets != null) next.sets = prescription.sets;
+
   if (prescription.sec != null) next.sec = prescription.sec;
+
   return next;
 }
 
@@ -504,14 +566,17 @@ export function syncSourceRoutineWeights<T extends { ex: ExConfig[]; prog?: Poli
   exerciseIds: readonly Id[],
 ): T {
   const wanted = new Set(exerciseIds);
+
   return {
     ...routine,
     ex: routine.ex.map((cfg) => {
       if (!wanted.has(cfg.id)) return cfg;
       const prescription = nextPrescription(state, cfg, routine);
       const updated = applyPrescriptionToConfig(cfg, prescription);
+
       if ((updated.weight ?? 0) > 0) return updated;
       const last = sessionsFor(state, cfg.id, cfg).at(-1)?.weight ?? 0;
+
       return last > 0 ? { ...updated, weight: last } : updated;
     }),
   };

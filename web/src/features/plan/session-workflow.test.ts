@@ -1,4 +1,5 @@
 import { beforeEach, expect, it, vi } from "vitest";
+
 const saved = vi.hoisted(() => {
   const storage = new Map<string, string>();
   vi.stubGlobal("localStorage", {
@@ -6,14 +7,10 @@ const saved = vi.hoisted(() => {
     setItem: (key: string, value: string) => storage.set(key, value),
     removeItem: (key: string) => storage.delete(key),
   });
+
   return storage;
 });
-vi.mock("@/shared/lib/api.js", () => ({
-  api: vi.fn<() => Promise<unknown>>(),
-  getSession: vi.fn<() => Promise<unknown>>(),
-  ApiError: class extends Error {},
-}));
-vi.mock("@/shared/lib/sound", () => ({ beep: vi.fn<() => void>(), vibrate: vi.fn<() => void>() }));
+
 import { useStore } from "@/app/store/useStore";
 import { DEFAULT_APP_STATE } from "@/domain/training/default-state";
 import {
@@ -32,13 +29,17 @@ const source = {
   emoji: "run",
   ex: [{ id: "3666", sets: 1, min: 40, speed: 7 }],
 };
+
 const constraints = {
-  equipment: ["stationary bike"] as ["stationary bike"],
+  equipment: ["stationary bike"] satisfies ["stationary bike"],
   budgetMin: 20,
   restSec: 45,
 };
+
 const rows = adaptSession(source, constraints, [{ amount: 10 }]);
+
 const copy = createSessionRoutine(source, constraints, rows, "synthetic-copy", "Hotel bike");
+
 const draft: SessionDraft = {
   source,
   constraints,
@@ -46,8 +47,15 @@ const draft: SessionDraft = {
   copyId: copy.id,
   name: copy.name,
 };
+
 beforeEach(() => {
   saved.clear();
+  vi.stubGlobal(
+    "fetch",
+    vi
+      .fn<typeof fetch>()
+      .mockRejectedValue(new Error("Unexpected network request in local workflow test")),
+  );
   useStore.setState({ user: null, appState: structuredClone(DEFAULT_APP_STATE) });
 });
 
@@ -60,6 +68,7 @@ it("resumes a validated, account-scoped device draft", () => {
   expect(loadSessionDraft("bob")).toBeNull();
   expect(useStore.getState().appState.active).toBeNull();
 });
+
 it("preserves state after failed saving, then saves a separate copy and undoes safely", () => {
   useStore.getState().update((state) => state.routines.push(structuredClone(source)));
   const oldState = structuredClone(useStore.getState().appState);
@@ -81,6 +90,7 @@ it("preserves state after failed saving, then saves a separate copy and undoes s
   });
   expect(useStore.getState().appState.routines).toEqual([source]);
 });
+
 it("starts edited targets, resumes and finishes with snapshots without rewriting source or history", () => {
   const state = structuredClone(DEFAULT_APP_STATE);
   state.routines = [structuredClone(source), structuredClone(copy)];

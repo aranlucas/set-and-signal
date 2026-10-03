@@ -40,18 +40,24 @@ export default function History() {
       EXIDX[id]?.n || state.customEx.find((exercise) => exercise.id === id)?.n,
     [state.customEx],
   );
+
   const matchingWorkouts = useMemo(
     () => filterHistoryWorkouts(state.workouts, filters, today, exerciseName),
     [state.workouts, filters, today, exerciseName],
   );
+
   const summary = useMemo(() => summarizeHistoryWorkouts(matchingWorkouts), [matchingWorkouts]);
+
   const monthGroups = useMemo(
     () => groupHistoryWorkoutsByMonth(matchingWorkouts),
     [matchingWorkouts],
   );
+
   const activeFilters = hasActiveFilters(filters);
+
   const closeSheet = () => {
     setWorkout(null);
+
     return Promise.resolve();
   };
 
@@ -260,6 +266,7 @@ function SummaryMetric({
 
 function EmptyHistory({ onStart }: { onStart: () => void }) {
   const { t } = useTranslation();
+
   return (
     <div className="rounded-2xl bg-card px-5 py-12 text-center shadow-sm">
       <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-3xl text-primary">
@@ -284,6 +291,7 @@ function EmptyHistory({ onStart }: { onStart: () => void }) {
 
 function EmptyFilteredHistory({ onReset }: { onReset: () => void }) {
   const { t } = useTranslation();
+
   return (
     <div className="rounded-2xl bg-card px-5 py-12 text-center shadow-sm">
       <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-muted text-3xl text-muted-foreground">

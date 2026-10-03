@@ -27,6 +27,7 @@ describe("effectiveSessions", () => {
     const state = scheduleState({
       1: [{ routineId: "a" }, { routineId: "b" }],
     });
+
     expect(effectiveSessions(state, "2026-09-14")).toEqual([
       { routineId: "a" },
       { routineId: "b" },
@@ -40,6 +41,7 @@ describe("effectiveSessions", () => {
     const state = scheduleState({
       1: [{ routineId: "a" }, { routineId: "missing" }],
     });
+
     expect(effectiveSessions(state, "2026-09-14")).toEqual([{ routineId: "a" }]);
   });
 
@@ -55,6 +57,7 @@ describe("effectiveSessions", () => {
       { 1: [{ routineId: "a" }] },
       { "2026-09-14": { sessions: [{ routineId: "b" }, { routineId: "a" }] } },
     );
+
     expect(effectiveSessions(state, "2026-09-14")).toEqual([
       { routineId: "b" },
       { routineId: "a" },
@@ -88,6 +91,7 @@ describe("session progress", () => {
       ...scheduleState({ 1: [{ routineId: "a" }, { routineId: "b" }, { routineId: "b" }] }),
       workouts: [logged("a"), logged("b", "2026-09-13")],
     };
+
     expect(nextPlannedRoutine(state, "2026-09-14")?.id).toBe("b");
     state.workouts.push(logged("b"));
     expect(sessionProgress(state, "2026-09-14").map((session) => session.completed)).toEqual([
@@ -105,6 +109,7 @@ describe("session progress", () => {
       { 1: [{ routineId: "a" }] },
       { "2026-09-14": { sessions: [{ routineId: "deleted" }] } },
     );
+
     expect(effectiveRoutineIds(state, "2026-09-14")).toEqual(["a"]);
     state.dayPlan["2026-09-14"] = { sessions: [] };
     expect(effectiveRoutineIds(state, "2026-09-14")).toEqual([]);

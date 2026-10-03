@@ -1,15 +1,7 @@
-import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { renderWithTranslations as renderToStaticMarkup } from "@/test/render-with-i18n";
+import { describe, expect, it } from "vitest";
 import { SessionPlanSummary } from "./SessionPlanSummary";
 import type { SessionPlan } from "@/shared/lib/types";
-
-vi.mock("react-i18next", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("react-i18next")>()),
-  useTranslation: () => ({
-    t: (_key: string, fallback: string, values?: Record<string, string | number>) =>
-      fallback.replaceAll(/\{\{(\w+)\}\}/gu, (_match, key: string) => String(values?.[key] ?? "")),
-  }),
-}));
 
 const plan: SessionPlan = {
   sourceId: "synthetic-source",

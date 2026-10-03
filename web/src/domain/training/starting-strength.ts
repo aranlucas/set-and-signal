@@ -1,6 +1,6 @@
 import { CURATED, curatedRoutines } from "@/features/plan/curated.js";
 import { weekdayFromNumber } from "@/shared/lib/format.js";
-import type { DaySession, Routine, Unit, Weekday } from "@/shared/lib/types.js";
+import type { DaySession, Unit, Weekday } from "@/shared/lib/types.js";
 
 export type StrengthExperience = "new" | "some" | "confident";
 
@@ -13,6 +13,7 @@ export const STARTING_STRENGTH_LIFTS = [
 ] as const;
 
 export type StartingStrengthLiftId = (typeof STARTING_STRENGTH_LIFTS)[number]["id"];
+
 export type StartingStrengthWeights = Record<StartingStrengthLiftId, number>;
 
 const STARTING_STRENGTH_LIFT_IDS = new Set<string>(STARTING_STRENGTH_LIFTS.map((lift) => lift.id));
@@ -43,14 +44,13 @@ export function suggestedStartingWeights(
   return { ...SUGGESTED_STARTING_WEIGHTS[unit][experience] };
 }
 
-export function createStartingStrengthPlan(weights: StartingStrengthWeights): {
-  routines: Routine[];
-  week: Partial<Record<Weekday, DaySession[]>>;
-} {
+export function createStartingStrengthPlan(weights: StartingStrengthWeights) {
   const plan = CURATED.find((candidate) => candidate.key === "linear-5x5");
+
   if (!plan) throw new Error("StrongLifts starter plan is missing");
 
   const routines = curatedRoutines(plan);
+
   for (const routine of routines) {
     for (const exercise of routine.ex) {
       exercise.weight = isStartingStrengthLiftId(exercise.id)
@@ -58,10 +58,13 @@ export function createStartingStrengthPlan(weights: StartingStrengthWeights): {
         : (exercise.weight ?? 0);
     }
   }
+
   const week: Partial<Record<Weekday, DaySession[]>> = {};
+
   for (const [day, routineIndex] of Object.entries(plan.week)) {
     const weekday = weekdayFromNumber(Number(day));
     const routine = routines[routineIndex];
+
     if (weekday != null && routine) week[weekday] = [{ routineId: routine.id }];
   }
 

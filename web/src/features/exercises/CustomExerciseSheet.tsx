@@ -29,6 +29,7 @@ export function CustomExerciseForm({
 }) {
   const { t } = useTranslation();
   const metadata = useExerciseMetadataLabels();
+
   const {
     handleSubmit,
     control,
@@ -47,29 +48,35 @@ export function CustomExerciseForm({
     },
     resolver: valibotResolver(createCustomExerciseFormSchema(t)),
   });
+
   const bodyPart = useWatch({ control, name: "bodyPart" });
 
   const saveExercise = (values: { name: string; bodyPart: string; description: string }) => {
     const trimmedName = values.name.trim();
+
     const duplicateExercise = allExercises(getAppState()).find(
       (exercise) =>
         exercise.n.toLowerCase() === trimmedName.toLowerCase() &&
         exercise.id !== existingExercise?.id,
     );
+
     if (duplicateExercise) {
       toast(
         t("customExercise.alreadyExists", "“{{name}}” already exists", {
           name: duplicateExercise.n,
         }),
       );
+
       return;
     }
 
     const trimmedDescription = values.description.trim().slice(0, 1000);
     const exerciseId = existingExercise ? existingExercise.id : "c" + uid();
+
     if (existingExercise) {
       updateAppState((state) => {
         const customExercise = state.customEx.find((exercise) => exercise.id === exerciseId);
+
         if (customExercise) {
           customExercise.n = trimmedName;
           customExercise.bp = values.bodyPart;
@@ -89,6 +96,7 @@ export function CustomExerciseForm({
         });
       });
     }
+
     void close();
     toast(
       existingExercise

@@ -13,13 +13,16 @@ import type { SheetClose } from "@/shared/lib/types";
 export function CuratedPlans({ close }: { close: SheetClose }) {
   const { t } = useTranslation();
   const metadata = useExerciseMetadataLabels();
+
   const load = (p: (typeof CURATED)[number]) => {
     const rs = curatedRoutines(p);
     updateAppState((appState) => {
       rs.forEach((routine) => appState.routines.push(routine));
+
       for (const [day, routineIndex] of Object.entries(p.week)) {
         const weekday = weekdayFromNumber(Number(day));
         const routine = rs[routineIndex];
+
         if (weekday != null && routine) appState.week[weekday] = [{ routineId: routine.id }];
       }
     });
@@ -30,6 +33,7 @@ export function CuratedPlans({ close }: { close: SheetClose }) {
       }),
     );
   };
+
   return (
     <>
       <h3>{t("plans.curated.title", "Curated plans")}</h3>
@@ -43,6 +47,7 @@ export function CuratedPlans({ close }: { close: SheetClose }) {
         <SpaceBetween size="xs">
           {CURATED.map((p) => {
             const n = p.routines.reduce((a, r) => a + r[2].length, 0);
+
             return (
               <Button
                 variant="row"

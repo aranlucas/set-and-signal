@@ -19,8 +19,10 @@ import { effortOf, modeOf, type SetFields } from "@/domain/training/history.js";
 import type { Workout, WorkoutEntry } from "@/shared/lib/types.js";
 
 const demoState = buildDemoState();
+
 const eachSet = (fn: (s: SetFields, w: Workout, e: WorkoutEntry) => void) =>
   demoState.workouts.forEach((w) => w.entries.forEach((e) => e.sets.forEach((s) => fn(s, w, e))));
+
 const sum = effortSummary(demoState, 0); // 0 = the whole history
 
 describe("demo seed — effort", () => {
@@ -62,17 +64,31 @@ describe("demo seed — effort", () => {
     });
     const ids = Object.keys(rated);
     expect(ids.filter((id) => rated[id] === 0)).toEqual(["0605"]);
+
     // …while the rest carry enough rated sessions for a curve of their own (needs 3).
     const shortSessions = ids
       .filter((id) => id !== "0605")
       .map((id) => {
         const sessions = demoState.workouts.filter((w) => {
           const en = w.entries.find((e) => e.id === id);
-          // demo history is all rep sets; SetFields just satisfies avgRir's shape
-          return en && avgRir(en.sets.filter((s) => s.done) as SetFields[]) != null;
+
+          // Completed logged sets retain their real discriminated contracts.
+          return (
+            en &&
+            avgRir(
+              en.sets
+                .filter((s) => s.done)
+                .map((set) => ({
+                  rir: "rir" in set ? set.rir : undefined,
+                  rpe: "rpe" in set ? set.rpe : undefined,
+                })),
+            ) != null
+          );
         });
+
         return sessions.length < 3 ? id : null;
       });
+
     expect(shortSessions.filter((id): id is string => id !== null)).toEqual([]);
   });
 
@@ -140,6 +156,7 @@ describe("demo seed — effort", () => {
 
   it("is deterministic — two builds produce the same ratings", () => {
     const b: DemoState = buildDemoState();
+
     const flat = (st: { workouts: Array<{ entries: Array<{ sets: SetFields[] }> }> }) =>
       st.workouts
         .map((w) =>
@@ -148,6 +165,7 @@ describe("demo seed — effort", () => {
             .join("|"),
         )
         .join(";");
+
     expect(flat(b)).toBe(flat(demoState));
   });
 });

@@ -27,10 +27,12 @@ export function Segmented<V extends string>({
     0,
     options.findIndex((option) => option.value === value),
   );
+
   const indicatorStyle: CSSProperties = {
     "--segment-width": `calc((100% - 4px) / ${options.length})`,
     "--segment-offset": `calc(100% * ${selectedIndex})`,
   };
+
   return (
     <ToggleGroup
       className={cn("relative isolate flex rounded-md bg-input p-0.5", className)}
@@ -38,6 +40,7 @@ export function Segmented<V extends string>({
       value={[value]}
       onValueChange={(selectedValues) => {
         const selectedOption = options.find((option) => option.value === selectedValues[0]);
+
         if (selectedOption) onChange(selectedOption.value);
       }}
     >

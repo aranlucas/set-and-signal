@@ -15,6 +15,7 @@ function removeCustomExerciseFromState(exercise: CustomEx | SheetEx): void {
     state.workouts.forEach((workout) =>
       workout.entries.forEach((entry) => {
         if (entry.id !== exercise.id) return;
+
         // Preserve the exercise metadata used by history and recovery maps.
         if (!entry.muscleSnapshot || Object.keys(entry.muscleSnapshot).length === 0)
           entry.muscleSnapshot = exerciseMuscleSnapshot(exercise);
@@ -29,14 +30,16 @@ export function removeCustomExercise(exercise: CustomEx, afterDelete?: () => voi
     toast(
       translate("customExercise.finishCurrentWorkoutFirst", "Finish your current workout first"),
     );
+
     return;
   }
+
   removeCustomExerciseFromState(exercise);
   toast(translate("customExercise.exerciseDeleted", "Exercise deleted"));
   afterDelete?.();
 }
 
-export function exerciseUsage(appState: AppState): Record<string, number> {
+export function exerciseUsage(appState: AppState) {
   const usageByExercise: Record<string, number> = {};
   appState.routines.forEach((routine) =>
     routine.ex.forEach((exercise) => {
@@ -48,5 +51,6 @@ export function exerciseUsage(appState: AppState): Record<string, number> {
       usageByExercise[entry.id] = (usageByExercise[entry.id] || 0) + 1;
     }),
   );
+
   return usageByExercise;
 }

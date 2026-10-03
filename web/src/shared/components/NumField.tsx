@@ -25,18 +25,21 @@ export function NumberField({
   const commit = (raw: string) => {
     let sanitizedValue = raw.replaceAll(",", ".").replaceAll(/[^0-9.]/g, "");
     const decimalIndex = sanitizedValue.indexOf(".");
+
     if (decimalIndex !== -1) {
       sanitizedValue = decimal
         ? sanitizedValue.slice(0, decimalIndex + 1) +
           sanitizedValue.slice(decimalIndex + 1).replaceAll(".", "")
         : sanitizedValue.slice(0, decimalIndex);
     }
+
     const numericValue =
       sanitizedValue === "" || sanitizedValue === "."
         ? nullable
           ? null
           : 0
         : Math.max(0, parseFloat(sanitizedValue));
+
     setDraft(sanitizedValue);
     onChange(numericValue);
   };

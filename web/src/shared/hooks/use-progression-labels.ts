@@ -5,6 +5,7 @@ type PolicyLabels = Record<PolicyId, { name: string; description: string }>;
 
 export function useProgressionLabels(): PolicyLabels {
   const { t } = useTranslation();
+
   return {
     off: {
       name: t("progression.noAutomaticProgression", "No automatic progression"),

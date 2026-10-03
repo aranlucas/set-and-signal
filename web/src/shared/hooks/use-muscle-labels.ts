@@ -3,6 +3,7 @@ import type { MuscleSlug } from "@/domain/exercises/muscles";
 
 export function useMuscleLabels(): Record<MuscleSlug, string> {
   const { t } = useTranslation();
+
   return {
     trapezius: t("muscleMap.traps", "Traps"),
     deltoids: t("muscleMap.shoulders", "Shoulders"),

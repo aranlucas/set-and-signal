@@ -60,9 +60,12 @@ describe("estimate1RM", () => {
     const spread = (r: number) =>
       Math.max(...Object.keys(FORMULAS).map((f) => estimate1RM(100, r, f)!)) -
       Math.min(...Object.keys(FORMULAS).map((f) => estimate1RM(100, r, f)!));
+
     expect(spread(1)).toBe(0); // one rep is measured, not estimated
+
     for (let r = 2; r <= 8; r++) expect(spread(r)).toBeLessThan(6);
     const upTo: number[] = [];
+
     for (let r = 1; r < REP_CAP; r++) upTo.push(spread(r));
     expect(spread(REP_CAP)).toBeGreaterThan(Math.max(...upTo)); // why REP_CAP exists
   });
@@ -82,6 +85,7 @@ describe("bestSetOf", () => {
         { w: 120, r: 1, done: true }, // 120.0
       ],
     };
+
     expect(bestSetOf(entry)).toEqual({ est: 121, w: 110, r: 3 });
   });
 
@@ -93,6 +97,7 @@ describe("bestSetOf", () => {
         { w: 200, r: 5, done: false },
       ],
     };
+
     expect(bestSetOf(entry)!.w).toBe(100);
   });
 

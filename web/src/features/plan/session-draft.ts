@@ -6,6 +6,7 @@ const number = v.pipe(
   v.number(),
   v.check((value: number) => Number.isFinite(value)),
 );
+
 const sessionDraft = v.object({
   source: routine,
   copyId: v.string(),
@@ -20,15 +21,19 @@ const sessionDraft = v.object({
   ),
   savedCopy: v.optional(routine),
 });
+
 export type SessionDraft = v.InferOutput<typeof sessionDraft>;
+
 const keyFor = (account: string | null) =>
   `gym_session_plan_v1:${account ? `account:${account}` : "guest"}`;
 
 export function loadSessionDraft(account: string | null): SessionDraft | null {
   try {
     const raw = localStorage.getItem(keyFor(account));
+
     if (!raw) return null;
     const parsed = v.safeParse(sessionDraft, JSON.parse(raw));
+
     return parsed.success ? parsed.output : null;
   } catch {
     return null;

@@ -85,6 +85,7 @@ describe("history summaries and month groups", () => {
       workout({ id: "one", vol: 500, start: 1_000, end: 121_000 }),
       workout({ id: "two", vol: 250, start: 10_000, end: 70_000 }),
     ];
+
     expect(summarizeHistoryWorkouts(workouts)).toEqual({
       sessions: 2,
       volume: 750,
@@ -98,6 +99,7 @@ describe("history summaries and month groups", () => {
       workout({ id: "aug", d: "2026-08-31" }),
       workout({ id: "aug-2", d: "2026-08-01" }),
     ];
+
     expect(groupHistoryWorkoutsByMonth(workouts)).toEqual([
       { month: "2026-09", workouts: [workouts[0]] },
       { month: "2026-08", workouts: [workouts[1], workouts[2]] },

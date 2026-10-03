@@ -48,10 +48,13 @@ function Elapsed({ start }: { start: number }) {
           : `${hours ? `${hours}:` : ""}${hours ? String(minutes).padStart(2, "0") : minutes}:${String(seconds % 60).padStart(2, "0")}`,
       );
     };
+
     tick();
     const iv = setInterval(tick, 1000);
+
     return () => clearInterval(iv);
   }, [start, t]);
+
   return <span>{elapsedText}</span>;
 }
 
@@ -72,6 +75,7 @@ function WorkoutSessionHeader({
 }) {
   const { t } = useTranslation();
   const hosted = useStore((state) => !!state.user);
+
   return (
     <header className="session-header">
       <div className="min-w-0">
@@ -120,16 +124,21 @@ function WorkoutProgressSummary({
 }) {
   const { t } = useTranslation();
   const appState = useStore((state) => state.appState);
+
   const completedExercises = activeWorkout.entries.filter((entry) => {
     const workingSets = entry.sets.filter((set) => !isWarmup(set));
+
     return workingSets.length > 0 && workingSets.every((set) => set.done);
   }).length;
+
   const percentage = total > 0 ? Math.round((done / total) * 100) : 0;
   const volume = workoutVolume(activeWorkout);
+
   const currentLabel =
     currentUnit >= 0 && units[currentUnit]
       ? units[currentUnit].map((index) => exOr(activeWorkout.entries[index].id).n).join(" + ")
       : t("workout.sessionSummary.readyToStart", "Ready to start");
+
   const progressLabel = t("workout.sessionSummary.sessionProgress", "Session progress");
   const completeLabel = t("workout.sessionSummary.complete", "complete");
   const setsLabel = t("workout.sessionSummary.sets", "sets");
@@ -194,7 +203,9 @@ function WorkoutExerciseNavigator({
   onSelect: (entryIndex: number) => void;
 }) {
   const { t } = useTranslation();
+
   if (units.length < 2) return null;
+
   return (
     <section
       className="session-exercise-flow mb-4"
@@ -213,10 +224,12 @@ function WorkoutExerciseNavigator({
           const workingSets = unit.flatMap((entryIndex) =>
             activeWorkout.entries[entryIndex].sets.filter((set) => !isWarmup(set)),
           );
+
           const completed = workingSets.length > 0 && workingSets.every((set) => set.done);
           const started = workingSets.some((set) => set.done);
           const names = unit.map((entryIndex) => exOr(activeWorkout.entries[entryIndex].id).n);
           const label = names.join(" + ");
+
           return (
             <Button
               key={unit[0]}
@@ -308,6 +321,7 @@ function WorkoutExerciseList({
   setWorkoutSheet: SetWorkoutSheet;
 }) {
   const { t } = useTranslation();
+
   if (!activeWorkout.entries.length) {
     return (
       <div className="px-5 py-11 text-center text-base leading-normal text-foreground/60">
@@ -321,6 +335,7 @@ function WorkoutExerciseList({
       </div>
     );
   }
+
   return (
     <>
       <div className="mb-1.5 text-sm leading-snug text-foreground/60">
@@ -397,14 +412,19 @@ export function WorkoutSessionView({
   const stopWork = useWorkoutTimer((state) => state.stopWork);
   const [workoutSheet, setWorkoutSheet] = useState<WorkoutSheetState | null>(null);
   const [confirmation, setConfirmation] = useState<ConfirmDialogOptions | null>(null);
+
   const closeWorkoutSheet: SheetClose = () => {
     setWorkoutSheet(null);
+
     return Promise.resolve();
   };
+
   const completeActiveWorkout = () => {
     const summary = completeWorkout();
+
     if (summary) onComplete(summary);
   };
+
   const A = activeWorkout;
   const units = supersetUnits(A.entries);
   const cur = Math.min(A.cur, Math.max(0, A.entries.length - 1));
@@ -438,8 +458,10 @@ export function WorkoutSessionView({
   useEffect(() => {
     if (!userId) return;
     let stopped = false;
+
     const ping = (active: boolean) => {
       const A2 = useStore.getState().appState.active;
+
       if (!A2) return;
       const u = supersetUnits(A2.entries);
       const c = Math.min(A2.cur, Math.max(0, A2.entries.length - 1));
@@ -458,13 +480,17 @@ export function WorkoutSessionView({
         }),
       }).catch(() => {});
     };
+
     ping(true);
+
     const iv = setInterval(() => {
       if (!stopped) ping(true);
     }, 20000);
+
     return () => {
       stopped = true;
       clearInterval(iv);
+
       // best-effort "left" signal: sendBeacon survives a tab close, fetch covers in-app nav
       try {
         navigator.sendBeacon?.(
@@ -476,6 +502,7 @@ export function WorkoutSessionView({
       } catch {
         /* */
       }
+
       api("/api/activity", {
         method: "POST",
         body: JSON.stringify({ active: false }),
@@ -596,13 +623,16 @@ export function WorkoutSessionView({
                         onSave: (config) =>
                           update((s) => {
                             const act = s.active;
+
                             if (!act) return;
                             const full = { ...config, id: exercise.id };
+
                             const plan = nextPrescription(
                               s,
                               full,
                               s.routines.find((r) => r.id === act.routineId) ?? null,
                             );
+
                             act.entries.push({
                               id: exercise.id,
                               target: { ...config },
@@ -625,7 +655,9 @@ export function WorkoutSessionView({
                 const exDone = A.entries.filter(
                   (e) => e.sets.length && e.sets.every((s) => s.done),
                 ).length;
+
                 const allDone = A.entries.length > 0 && exDone === A.entries.length;
+
                 return (
                   <Button
                     variant={allDone ? "default" : "quiet"}

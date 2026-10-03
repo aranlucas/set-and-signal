@@ -26,6 +26,7 @@ const source: Routine = {
     { id: "3666", sets: 1, min: 25, speed: 8 },
   ],
 };
+
 const constraints = { equipment: ["dumbbell", "stationary bike"], budgetMin: 30, restSec: 90 };
 
 describe("equipment and time session planning", () => {
@@ -37,6 +38,7 @@ describe("equipment and time session planning", () => {
         { id: "0047", sets: 3, reps: 8 },
       ],
     };
+
     const rows = adaptSession(press, { ...constraints, equipment: [] });
     expect(rows[0].planned?.id).toBe("0662");
     expect(rows[1].planned).toBeNull();
@@ -52,6 +54,7 @@ describe("equipment and time session planning", () => {
   });
   it("uses catalogue identities and explicitly known equipment requirements", () => {
     expect(new Set(SESSION_MOVEMENTS.map((entry) => entry.id)).size).toBe(SESSION_MOVEMENTS.length);
+
     for (const entry of SESSION_MOVEMENTS) expect(EXIDX[entry.id]).toBeDefined();
   });
   it.each(
@@ -67,6 +70,7 @@ describe("equipment and time session planning", () => {
     ].map((equipment) => ({ equipment })),
   )("never selects a movement with missing equipment: $equipment", ({ equipment }) => {
     const rows = adaptSession(source, { ...constraints, equipment });
+
     for (const row of rows) {
       if (!row.planned) continue;
       const requirements = SESSION_MOVEMENTS.find((candidate) => candidate.id === row.planned?.id);
@@ -78,10 +82,12 @@ describe("equipment and time session planning", () => {
     expect(
       availableAlternatives(original, ["barbell"]).some((entry) => entry.id === original.id),
     ).toBe(false);
+
     const row = adaptSession(source, {
       ...constraints,
       equipment: ["barbell", "bench", "squat rack"],
     })[1];
+
     expect(row.reason).toBe("kept");
     expect(row.planned?.weight).toBe(40);
     expect(row.planned?.sg).toBeUndefined();
@@ -101,6 +107,7 @@ describe("equipment and time session planning", () => {
         { id: "synthetic-custom", sets: 2, reps: 10 },
       ],
     };
+
     const rows = adaptSession(routine, constraints);
     expect(rows.map((row) => row.reason)).toEqual(["unavailable", "unknown"]);
     expect(rows.every((row) => row.planned === null)).toBe(true);
@@ -183,6 +190,7 @@ describe("equipment and time session planning", () => {
       "copy",
       "Copy",
     );
+
     const state = structuredClone(DEFAULT_APP_STATE);
     state.routines = [source, copy];
     expect(canUndoSessionCopy(state, copy)).toBe(true);

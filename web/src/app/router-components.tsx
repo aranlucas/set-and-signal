@@ -23,6 +23,7 @@ export function NotFoundView() {
 }
 
 export function AdminGate() {
-  const user = useStore((state) => state.user) as { admin?: boolean } | null;
+  const user = useStore((state) => state.user);
+
   return user?.admin ? <Admin /> : <Navigate to="/home" replace />;
 }

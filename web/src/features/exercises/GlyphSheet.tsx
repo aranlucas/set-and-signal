@@ -18,6 +18,7 @@ export function GlyphPicker({
   const { t } = useTranslation();
   const groups = useGlyphGroups();
   const currentGlyph = glyphOf(current);
+
   return (
     <>
       <h3>{t("exercise.pickIcon", "Pick an icon")}</h3>
