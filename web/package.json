@@ -61,7 +61,7 @@
     "@vitejs/plugin-react": "^6.1.2",
     "convex-test": "^0.0.60",
     "i18next-cli": "^1.74.6",
-    "oxfmt": "^0.72.0",
+    "oxfmt": "^0.71.0",
     "oxlint": "1.87.0",
     "oxlint-tailwindcss": "^1.14.0",
     "oxlint-tsgolint": "^7.0.2003",
