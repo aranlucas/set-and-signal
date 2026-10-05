@@ -9,5 +9,5 @@
     "format:write": "pnpm --dir web format:write",
     "typecheck": "pnpm --dir web typecheck"
   },
-  "packageManager": "pnpm@12.8.1"
+  "packageManager": "pnpm@12.9.1"
 }
