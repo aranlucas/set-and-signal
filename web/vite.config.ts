@@ -14,6 +14,13 @@ const proxy: Record<string, ProxyOptions> = {};
 
 proxy["/api"] = { target: backend, changeOrigin: true };
 
+// Keep login cookies, OAuth callbacks, and MCP discovery on the browser origin.
+if (process.env.PORTLESS_URL) {
+  proxy["/oauth"] = { target: backend, changeOrigin: true };
+  proxy["/.well-known"] = { target: backend, changeOrigin: true };
+  proxy["/mcp"] = { target: backend, changeOrigin: true };
+}
+
 if (media) {
   proxy["/img"] = { target: media, changeOrigin: true };
   proxy["/gif"] = { target: media, changeOrigin: true };

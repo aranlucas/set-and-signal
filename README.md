@@ -33,15 +33,22 @@ without `CONVEX_URL`; the full training setup and storage rules are in
 ```bash
 pnpm install --frozen-lockfile
 CONVEX_URL=https://YOUR-DEPLOYMENT.convex.cloud \
-PUBLIC_URL=http://localhost:3000 \
-DATA_DIR="$PWD/data" ORIGIN=http://localhost:5173 go run ./cmd/opengym-api
+ORIGIN=https://set-and-signal.localhost RP_ID=set-and-signal.localhost \
+DATA_DIR="$PWD/data" go run ./cmd/opengym-api
 ```
 
-Run the web app in a second terminal:
+Run the web app in a second terminal and open `https://set-and-signal.localhost`:
 
 ```bash
 pnpm --dir web dev
 ```
+
+The web app runs through [Portless](https://github.com/vercel-labs/portless) (a dev
+dependency); its first run may ask for `sudo` to bind port 443 and trust a local
+certificate. Vite proxies `/api`, `/oauth`, `/.well-known`, and `/mcp` to the API on
+port 3000, so OAuth callbacks, session cookies, and the local MCP endpoint all use
+the web origin. Passkeys registered for `localhost` do not carry over to the new
+hostname.
 
 For a fresh development deployment, run `pnpm exec convex dev` from `web` and
 follow the setup guide to configure `AUTH_ISSUER` and `AUTH_JWKS`. Keep the
