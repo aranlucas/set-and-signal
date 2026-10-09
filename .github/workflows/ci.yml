@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up pnpm, Node.js, and dependencies
+        uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        with:
+          cache: true
+          require-lockfile: true
+
+      - parallel:
+          - name: Go test (race)
+            run: go test -race ./...
+
+          - name: Go vet
+            run: go vet ./...
+
+          - name: Go modernization fixes
+            run: go fix -diff ./...
+
+          - name: Web lint
+            run: pnpm --dir web format && pnpm --dir web lint:strict
+
+          - name: Web typecheck
+            run: pnpm --dir web typecheck && pnpm --dir web convex:check
+
+          - name: Web test
+            run: pnpm --dir web test
+
+          - name: Web build
+            run: pnpm --dir web build
+
+      - name: Check whitespace
+        run: git diff --check
