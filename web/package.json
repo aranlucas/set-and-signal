@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm instructions:generate && vite",
+    "dev": "pnpm instructions:generate && portless run --name set-and-signal vite",
     "build": "pnpm typecheck && vite build",
     "preview": "vite preview",
     "lint": "pnpm lint:strict",
@@ -23,7 +23,7 @@
     "convex:check": "tsc --noEmit -p convex/tsconfig.json",
     "typecheck": "pnpm instructions:generate && tsc -b && pnpm convex:check",
     "lint:anti-slop": "oxlint --config .oxlintrc.anti-slop.json .",
-    "dev:portless": "pnpm instructions:generate && portless run --name set-and-signal vite"
+    "dev:direct": "pnpm instructions:generate && vite"
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",

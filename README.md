@@ -25,76 +25,71 @@ read/write MCP surface protected by the same account boundary as the web app.
 
 ## Run locally
 
-Requires Go 1.27+, Node.js 24+, pnpm 12+, PostgreSQL-compatible Convex
-deployment, and an OAuth or passkey configuration. The API refuses to start
-without `CONVEX_URL`; the full training setup and storage rules are in
-[docs/convex.md](docs/convex.md).
+Requires Go 1.27+, Node.js 24+, pnpm 12+, a Convex deployment, and an OAuth or
+passkey configuration. The API refuses to start without `CONVEX_URL`; the full
+training setup and storage rules are in [docs/convex.md](docs/convex.md).
 
-```bash
-pnpm install --frozen-lockfile
-CONVEX_URL=https://YOUR-DEPLOYMENT.convex.cloud \
-PUBLIC_URL=http://localhost:3000 \
-DATA_DIR="$PWD/data" ORIGIN=http://localhost:5173 go run ./cmd/opengym-api
-```
-
-Run the web app in a second terminal:
-
-```bash
-pnpm --dir web dev
-```
-
-For a fresh development deployment, run `pnpm exec convex dev` from `web` and
-follow the setup guide to configure `AUTH_ISSUER` and `AUTH_JWKS`. Keep the
-generated `web/.env.local`, signing keys, and any provider credentials out of
-Git.
-
-### Named local URLs (optional)
-
-Install [Portless](https://github.com/vercel-labs/portless/tree/v0.15.7) once with Node.js 24 or newer:
+Install [Portless](https://github.com/vercel-labs/portless/tree/v0.15.7) globally.
+Start its shared proxy before deriving the URLs, then launch the API in the first
+terminal:
 
 ```bash
 npm install -g portless@0.15.7
-```
-
-Start the shared proxy before deriving the URLs, then launch the API in the first
-terminal. Supply your development Convex deployment and keep the existing
-Convex/auth setup from above:
-
-```bash
+pnpm install --frozen-lockfile
 portless proxy start
 export ORIGIN="$(portless get set-and-signal)"
 export PUBLIC_URL="$ORIGIN"
 export RP_ID="$(node -e 'console.log(new URL(process.env.ORIGIN).hostname)')"
 CONVEX_URL=https://YOUR-DEPLOYMENT.convex.cloud \
-DATA_DIR="$PWD/data" pnpm dev:api:portless
+DATA_DIR="$PWD/data" pnpm dev:api
 ```
 
-Launch Vite from the repository root in a second terminal:
+Launch the web app from the repository root in a second terminal:
 
 ```bash
-API_TARGET="$(portless get api.set-and-signal)" pnpm dev:portless
+API_TARGET="$(portless get api.set-and-signal)" pnpm dev
 ```
 
 Open `https://set-and-signal.localhost` (or the printed URL). The API runs at
 `https://api.set-and-signal.localhost` on its own assigned port. The frontend
-still generates exercise instructions before starting Vite; Portless wraps Vite
-directly so its dynamic port and HMR flags reach the actual server.
+generates exercise instructions before starting Vite; Portless wraps Vite
+directly so its dynamic port and HMR flags reach the server.
 
-During this optional flow, Vite proxies `/api`, `/oauth`, `/.well-known`, and
-`/mcp` to `API_TARGET` with `changeOrigin: true`. `PUBLIC_URL` deliberately matches
-the **frontend** origin so OAuth discovery, callbacks, and session cookies stay on
-the same browser host. Use the frontend `/mcp` URL for local MCP clients. The
-usual `pnpm --dir web dev` flow retains its existing proxy configuration.
+Vite proxies `/api`, `/oauth`, `/.well-known`, and `/mcp` to `API_TARGET` with
+`changeOrigin: true`. `PUBLIC_URL` matches the **frontend** origin so OAuth
+discovery, callbacks, and session cookies stay on the same browser host. Use the
+frontend `/mcp` URL for local MCP clients.
 
-`portless get` includes the active proxy settings and Git worktree prefix; run
+For a fresh development deployment, run `pnpm exec convex dev` from `web` and
+configure `AUTH_ISSUER` to match `PUBLIC_URL`, along with `AUTH_JWKS`, as described
+in [docs/convex.md](docs/convex.md). Keep generated `web/.env.local`, signing keys,
+and provider credentials out of Git.
+
+### Direct development
+
+Use `pnpm dev:api:direct` for the original Go command and `pnpm dev:direct`
+(or `pnpm --dir web dev:direct`) for the original instruction-generation/Vite
+command. Supply the prior localhost configuration to the API:
+
+```bash
+CONVEX_URL=https://YOUR-DEPLOYMENT.convex.cloud \
+PUBLIC_URL=http://localhost:3000 \
+DATA_DIR="$PWD/data" ORIGIN=http://localhost:5173 RP_ID=localhost pnpm dev:api:direct
+```
+
+Then run `pnpm dev:direct` in another terminal; its API target defaults to
+`http://127.0.0.1:3000` and it retains the original proxy routes.
+
+### Worktrees and authentication
+
+`portless get` includes active proxy settings and the Git worktree prefix; run
 both terminals from the same checkout. Use a separate `DATA_DIR` for isolated
 worktree data. Passkeys registered for `localhost` are not credentials for the
 new relying-party hostname; register a development passkey for the named origin.
-For OIDC, authorize the exact frontend `/oauth/callback/<provider>` URL with the
-provider. Providers such as Google reject `.localhost` callback domains; use a
-local subdomain of a domain you own with Portless's `--tld` option, or retain the
-existing localhost workflow for that provider. Keep Convex's configured issuer
-aligned with `PUBLIC_URL` as described in [docs/convex.md](docs/convex.md).
+Authorize the exact frontend `/oauth/callback/<provider>` URL with each OIDC
+provider. Google rejects `.localhost` callback domains; use a local subdomain of
+a domain you own with Portless's `--tld` option, or use direct development for
+that provider.
 
 Portless starts a shared HTTPS proxy and may request local administrator access on
 first use to bind port 443 and trust its development certificate. Use the URL it
