@@ -9,9 +9,7 @@
     "format:write": "pnpm --dir web format:write",
     "typecheck": "pnpm --dir web typecheck",
     "dev": "pnpm --dir web dev",
-    "dev:direct": "pnpm --dir web dev:direct",
-    "dev:api": "portless run --name api.set-and-signal pnpm run dev:api:direct",
-    "dev:api:direct": "go run ./cmd/opengym-api"
+    "dev:api": "portless run --name api.set-and-signal go run ./cmd/opengym-api"
   },
   "packageManager": "pnpm@12.9.1"
 }

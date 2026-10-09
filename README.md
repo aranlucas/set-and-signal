@@ -65,21 +65,6 @@ configure `AUTH_ISSUER` to match `PUBLIC_URL`, along with `AUTH_JWKS`, as descri
 in [docs/convex.md](docs/convex.md). Keep generated `web/.env.local`, signing keys,
 and provider credentials out of Git.
 
-### Direct development
-
-Use `pnpm dev:api:direct` for the original Go command and `pnpm dev:direct`
-(or `pnpm --dir web dev:direct`) for the original instruction-generation/Vite
-command. Supply the prior localhost configuration to the API:
-
-```bash
-CONVEX_URL=https://YOUR-DEPLOYMENT.convex.cloud \
-PUBLIC_URL=http://localhost:3000 \
-DATA_DIR="$PWD/data" ORIGIN=http://localhost:5173 RP_ID=localhost pnpm dev:api:direct
-```
-
-Then run `pnpm dev:direct` in another terminal; its API target defaults to
-`http://127.0.0.1:3000` and it retains the original proxy routes.
-
 ### Worktrees and authentication
 
 `portless get` includes active proxy settings and the Git worktree prefix; run
@@ -88,8 +73,7 @@ worktree data. Passkeys registered for `localhost` are not credentials for the
 new relying-party hostname; register a development passkey for the named origin.
 Authorize the exact frontend `/oauth/callback/<provider>` URL with each OIDC
 provider. Google rejects `.localhost` callback domains; use a local subdomain of
-a domain you own with Portless's `--tld` option, or use direct development for
-that provider.
+a domain you own with Portless's `--tld` option.
 
 Portless starts a shared HTTPS proxy and may request local administrator access on
 first use to bind port 443 and trust its development certificate. Use the URL it
