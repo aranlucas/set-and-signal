@@ -25,60 +25,35 @@ read/write MCP surface protected by the same account boundary as the web app.
 
 ## Run locally
 
-Requires Go 1.27+, Node.js 24+, pnpm 12+, a Convex deployment, and an OAuth or
-passkey configuration. The API refuses to start without `CONVEX_URL`; the full
-training setup and storage rules are in [docs/convex.md](docs/convex.md).
-
-Install [Portless](https://github.com/vercel-labs/portless/tree/v0.15.7) globally.
-Start its shared proxy before deriving the URLs, then launch the API in the first
-terminal:
+Requires Go 1.27+, Node.js 24+, pnpm 12+, PostgreSQL-compatible Convex
+deployment, and an OAuth or passkey configuration. The API refuses to start
+without `CONVEX_URL`; the full training setup and storage rules are in
+[docs/convex.md](docs/convex.md).
 
 ```bash
-npm install -g portless@0.15.7
 pnpm install --frozen-lockfile
-portless proxy start
-export ORIGIN="$(portless get set-and-signal)"
-export PUBLIC_URL="$ORIGIN"
-export RP_ID="$(node -e 'console.log(new URL(process.env.ORIGIN).hostname)')"
 CONVEX_URL=https://YOUR-DEPLOYMENT.convex.cloud \
-DATA_DIR="$PWD/data" pnpm dev:api
+ORIGIN=https://set-and-signal.localhost RP_ID=set-and-signal.localhost \
+DATA_DIR="$PWD/data" go run ./cmd/opengym-api
 ```
 
-Launch the web app from the repository root in a second terminal:
+Run the web app in a second terminal and open `https://set-and-signal.localhost`:
 
 ```bash
-API_TARGET="$(portless get api.set-and-signal)" pnpm dev
+pnpm --dir web dev
 ```
 
-Open `https://set-and-signal.localhost` (or the printed URL). The API runs at
-`https://api.set-and-signal.localhost` on its own assigned port. The frontend
-generates exercise instructions before starting Vite; Portless wraps Vite
-directly so its dynamic port and HMR flags reach the server.
-
-Vite proxies `/api`, `/oauth`, `/.well-known`, and `/mcp` to `API_TARGET` with
-`changeOrigin: true`. `PUBLIC_URL` matches the **frontend** origin so OAuth
-discovery, callbacks, and session cookies stay on the same browser host. Use the
-frontend `/mcp` URL for local MCP clients.
+The web app runs through [Portless](https://github.com/vercel-labs/portless) (a dev
+dependency); its first run may ask for `sudo` to bind port 443 and trust a local
+certificate. Vite proxies `/api`, `/oauth`, `/.well-known`, and `/mcp` to the API on
+port 3000, so OAuth callbacks, session cookies, and the local MCP endpoint all use
+the web origin. Passkeys registered for `localhost` do not carry over to the new
+hostname.
 
 For a fresh development deployment, run `pnpm exec convex dev` from `web` and
-configure `AUTH_ISSUER` to match `PUBLIC_URL`, along with `AUTH_JWKS`, as described
-in [docs/convex.md](docs/convex.md). Keep generated `web/.env.local`, signing keys,
-and provider credentials out of Git.
-
-### Worktrees and authentication
-
-`portless get` includes active proxy settings and the Git worktree prefix; run
-both terminals from the same checkout. Use a separate `DATA_DIR` for isolated
-worktree data. Passkeys registered for `localhost` are not credentials for the
-new relying-party hostname; register a development passkey for the named origin.
-Authorize the exact frontend `/oauth/callback/<provider>` URL with each OIDC
-provider. Google rejects `.localhost` callback domains; use a local subdomain of
-a domain you own with Portless's `--tld` option.
-
-Portless starts a shared HTTPS proxy and may request local administrator access on
-first use to bind port 443 and trust its development certificate. Use the URL it
-prints if your proxy uses a custom port or domain. Stop the command with Ctrl+C;
-`portless doctor` checks local proxy, certificate, and DNS setup.
+follow the setup guide to configure `AUTH_ISSUER` and `AUTH_JWKS`. Keep the
+generated `web/.env.local`, signing keys, and any provider credentials out of
+Git.
 
 ## Verify
 

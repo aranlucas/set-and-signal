@@ -283,6 +283,9 @@ importers:
       oxlint-tsgolint:
         specifier: ^7.0.2003
         version: 7.0.2003
+      portless:
+        specifier: 0.15.7
+        version: 0.15.7
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
@@ -2975,6 +2978,12 @@ packages:
   pkg-up@3.1.0:
     resolution: {integrity: sha512-nDywThFk1i4BQK4twPQ6TA4RT8bDY96yeuCVBWL3ePARCiEKDRSrNGbFIgUJpLp+XeIR65v8ra7WuJOFUBtkMA==}
     engines: {node: '>=8'}
+
+  portless@0.15.7:
+    resolution: {integrity: sha512-fffMnzfwU/0chJmOMmeAOjFouRsZUmdJagxdqE4DATLw83ssAnHX4BzvNqOI5vBgsuvWLX5ZLg63bzs7zdVFNw==}
+    engines: {node: '>=24'}
+    os: [darwin, linux, win32]
+    hasBin: true
 
   postcss-selector-parser@7.1.6:
     resolution: {integrity: sha512-7qASPzhKF2l2KLboRZux8CCTRMdGiV08vWmyKzPz22qZ7ZjQBOeY7rNzNoCLSUiftJ7HUq0GERHmxw/t0dCdMw==}
@@ -5685,6 +5694,8 @@ snapshots:
   pkg-up@3.1.0:
     dependencies:
       find-up: 3.0.0
+
+  portless@0.15.7: {}
 
   postcss-selector-parser@7.1.6:
     dependencies:
