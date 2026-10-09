@@ -30,25 +30,23 @@ deployment, and an OAuth or passkey configuration. The API refuses to start
 without `CONVEX_URL`; the full training setup and storage rules are in
 [docs/convex.md](docs/convex.md).
 
+Start the API and web app together, then open `https://set-and-signal.localhost`:
+
 ```bash
 pnpm install --frozen-lockfile
-CONVEX_URL=https://YOUR-DEPLOYMENT.convex.cloud \
-ORIGIN=https://set-and-signal.localhost RP_ID=set-and-signal.localhost \
-DATA_DIR="$PWD/data" go run ./cmd/opengym-api
+pnpm dev
 ```
 
-Run the web app in a second terminal and open `https://set-and-signal.localhost`:
+`pnpm dev` runs `dev:api` and `dev:web` in parallel. The API reads `CONVEX_URL` from
+`web/.env.local` and stores data in `./data`.
 
-```bash
-pnpm --dir web dev
-```
-
-The web app runs through [Portless](https://github.com/vercel-labs/portless) (a dev
-dependency); its first run may ask for `sudo` to bind port 443 and trust a local
-certificate. Vite proxies `/api`, `/oauth`, `/.well-known`, and `/mcp` to the API on
-port 3000, so OAuth callbacks, session cookies, and the local MCP endpoint all use
-the web origin. Passkeys registered for `localhost` do not carry over to the new
-hostname.
+Both run through [Portless](https://github.com/vercel-labs/portless) (a dev
+dependency): the API at `https://api.set-and-signal.localhost`, the web app at
+`https://set-and-signal.localhost`. The first run may ask for `sudo` to bind port 443
+and trust a local certificate. Vite proxies `/api`, `/oauth`, `/.well-known`, and
+`/mcp` to the API, so OAuth callbacks, session cookies, and the local MCP endpoint
+all use the web origin. Passkeys registered for `localhost` do not carry over to the
+new hostname.
 
 For a fresh development deployment, run `pnpm exec convex dev` from `web` and
 follow the setup guide to configure `AUTH_ISSUER` and `AUTH_JWKS`. Keep the

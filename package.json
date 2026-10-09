@@ -3,11 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "pnpm run \"/^dev:/\"",
+    "dev:web": "API_TARGET=https://api.set-and-signal.localhost pnpm --dir web dev",
+    "dev:api": "set -a && . ./web/.env.local && set +a && ORIGIN=https://set-and-signal.localhost RP_ID=set-and-signal.localhost DATA_DIR=\"$PWD/data\" portless run --name api.set-and-signal go run ./cmd/opengym-api",
     "lint": "pnpm --dir web lint",
     "lint:strict": "pnpm --dir web lint:strict",
     "format": "pnpm --dir web format",
     "format:write": "pnpm --dir web format:write",
     "typecheck": "pnpm --dir web typecheck"
   },
-  "packageManager": "pnpm@12.9.1"
+  "packageManager": "pnpm@12.9.1",
+  "devDependencies": {
+    "portless": "0.15.7"
+  }
 }
