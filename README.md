@@ -48,6 +48,59 @@ follow the setup guide to configure `AUTH_ISSUER` and `AUTH_JWKS`. Keep the
 generated `web/.env.local`, signing keys, and any provider credentials out of
 Git.
 
+### Named local URLs (optional)
+
+Install [Portless](https://github.com/vercel-labs/portless/tree/v0.15.7) once with Node.js 24 or newer:
+
+```bash
+npm install -g portless@0.15.7
+```
+
+Start the shared proxy before deriving the URLs, then launch the API in the first
+terminal. Supply your development Convex deployment and keep the existing
+Convex/auth setup from above:
+
+```bash
+portless proxy start
+export ORIGIN="$(portless get set-and-signal)"
+export PUBLIC_URL="$ORIGIN"
+export RP_ID="$(node -e 'console.log(new URL(process.env.ORIGIN).hostname)')"
+CONVEX_URL=https://YOUR-DEPLOYMENT.convex.cloud \
+DATA_DIR="$PWD/data" pnpm dev:api:portless
+```
+
+Launch Vite from the repository root in a second terminal:
+
+```bash
+API_TARGET="$(portless get api.set-and-signal)" pnpm dev:portless
+```
+
+Open `https://set-and-signal.localhost` (or the printed URL). The API runs at
+`https://api.set-and-signal.localhost` on its own assigned port. The frontend
+still generates exercise instructions before starting Vite; Portless wraps Vite
+directly so its dynamic port and HMR flags reach the actual server.
+
+During this optional flow, Vite proxies `/api`, `/oauth`, `/.well-known`, and
+`/mcp` to `API_TARGET` with `changeOrigin: true`. `PUBLIC_URL` deliberately matches
+the **frontend** origin so OAuth discovery, callbacks, and session cookies stay on
+the same browser host. Use the frontend `/mcp` URL for local MCP clients. The
+usual `pnpm --dir web dev` flow retains its existing proxy configuration.
+
+`portless get` includes the active proxy settings and Git worktree prefix; run
+both terminals from the same checkout. Use a separate `DATA_DIR` for isolated
+worktree data. Passkeys registered for `localhost` are not credentials for the
+new relying-party hostname; register a development passkey for the named origin.
+For OIDC, authorize the exact frontend `/oauth/callback/<provider>` URL with the
+provider. Providers such as Google reject `.localhost` callback domains; use a
+local subdomain of a domain you own with Portless's `--tld` option, or retain the
+existing localhost workflow for that provider. Keep Convex's configured issuer
+aligned with `PUBLIC_URL` as described in [docs/convex.md](docs/convex.md).
+
+Portless starts a shared HTTPS proxy and may request local administrator access on
+first use to bind port 443 and trust its development certificate. Use the URL it
+prints if your proxy uses a custom port or domain. Stop the command with Ctrl+C;
+`portless doctor` checks local proxy, certificate, and DNS setup.
+
 ## Verify
 
 ```bash

@@ -7,7 +7,9 @@
     "lint:strict": "pnpm --dir web lint:strict",
     "format": "pnpm --dir web format",
     "format:write": "pnpm --dir web format:write",
-    "typecheck": "pnpm --dir web typecheck"
+    "typecheck": "pnpm --dir web typecheck",
+    "dev:portless": "pnpm --dir web dev:portless",
+    "dev:api:portless": "portless run --name api.set-and-signal go run ./cmd/opengym-api"
   },
   "packageManager": "pnpm@12.9.1"
 }

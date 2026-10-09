@@ -22,7 +22,8 @@
     "convex:deploy": "convex deploy",
     "convex:check": "tsc --noEmit -p convex/tsconfig.json",
     "typecheck": "pnpm instructions:generate && tsc -b && pnpm convex:check",
-    "lint:anti-slop": "oxlint --config .oxlintrc.anti-slop.json ."
+    "lint:anti-slop": "oxlint --config .oxlintrc.anti-slop.json .",
+    "dev:portless": "pnpm instructions:generate && portless run --name set-and-signal vite"
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",
