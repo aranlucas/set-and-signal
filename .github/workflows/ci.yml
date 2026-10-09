@@ -48,14 +48,11 @@ jobs:
           - name: Web lint
             run: pnpm --dir web format && pnpm --dir web lint:strict
 
-          - name: Web typecheck
-            run: pnpm --dir web typecheck && pnpm --dir web convex:check
-
           - name: Web test
             run: pnpm --dir web test
 
-          - name: Web build
-            run: pnpm --dir web build
+          - name: Web typecheck and build
+            run: pnpm --dir web typecheck && pnpm --dir web convex:check && pnpm --dir web build
 
       - name: Check whitespace
         run: git diff --check
