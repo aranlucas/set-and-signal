@@ -44,7 +44,7 @@
     "react-dom": "^19.3.0",
     "react-error-boundary": "^6.1.6",
     "react-hook-form": "^7.89.0",
-    "react-i18next": "^17.0.15",
+    "react-i18next": "^17.0.16",
     "react-to-print": "^3.3.0",
     "shadcn": "^4.21.2",
     "sonner": "^2.0.8",
