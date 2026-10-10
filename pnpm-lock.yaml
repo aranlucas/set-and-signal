@@ -273,8 +273,8 @@ importers:
         specifier: ^0.0.60
         version: 0.0.60(convex@1.46.0(react@19.3.0))
       i18next-cli:
-        specifier: ^1.74.6
-        version: 1.74.6(@types/node@26.6.4)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@7.0.2)
+        specifier: ^1.74.8
+        version: 1.74.8(@types/node@26.6.4)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@7.0.2)
       oxfmt:
         specifier: ^0.72.0
         version: 0.72.0
@@ -2393,8 +2393,8 @@ packages:
     resolution: {integrity: sha512-eKCa6bwnJhvxj14kZk5NCPc6Hb6BdsU9DZcOnmQKSnO1VKrfV0zCvtttPZUsBvjmNDn8rpcJfpwSYnHBjc95MQ==}
     engines: {node: '>=18.18.0'}
 
-  i18next-cli@1.74.6:
-    resolution: {integrity: sha512-S/dpQSyLRYD/H41ua7Fzq6Xvsu8LrW/6v0hOsyMnrwxJhjGXMLMhKoYQ+xfytOe9ZC2T9hXIwz0ZztqO6pPodA==}
+  i18next-cli@1.74.8:
+    resolution: {integrity: sha512-bDVkDmsZznXohDjNVT3j8zwAfWX0pFL+Rw0LZ1MfpjIudFJSi5Cpcwh38TLhVTMiLRnx4F9vj7RGzQuYscatfA==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -5175,7 +5175,7 @@ snapshots:
 
   human-signals@8.0.1: {}
 
-  i18next-cli@1.74.6(@types/node@26.6.4)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@7.0.2):
+  i18next-cli@1.74.8(@types/node@26.6.4)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@7.0.2):
     dependencies:
       '@croct/json5-parser': 0.2.2
       '@swc/core': 1.16.13
