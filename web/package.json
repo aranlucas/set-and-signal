@@ -22,7 +22,9 @@
     "convex:deploy": "convex deploy",
     "convex:check": "tsc --noEmit -p convex/tsconfig.json",
     "typecheck": "pnpm instructions:generate && tsc -b && pnpm convex:check",
-    "lint:anti-slop": "oxlint --config .oxlintrc.anti-slop.json ."
+    "lint:anti-slop": "oxlint --config .oxlintrc.anti-slop.json .",
+    "lint:fix": "oxlint --fix",
+    "format:check": "oxfmt --check"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
@@ -61,8 +63,8 @@
     "@vitejs/plugin-react": "^6.1.2",
     "convex-test": "^0.0.61",
     "i18next-cli": "^1.75.2",
-    "oxfmt": "^0.72.0",
-    "oxlint": "1.87.0",
+    "oxfmt": "^0.73.0",
+    "oxlint": "^1.88.0",
     "oxlint-tailwindcss": "^1.16.0",
     "oxlint-tsgolint": "^7.0.2004",
     "portless": "0.15.7",
