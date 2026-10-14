@@ -9,9 +9,7 @@ const sourceFiles = Object.entries(
     import: "default",
     eager: true,
   }),
-).filter(
-  ([filename]) => !filename.endsWith("../../src/i18n/.test.ts") && !filename.includes("/locales/"),
-);
+).filter(([filename]) => !filename.endsWith(".test.ts") && !filename.includes("/locales/"));
 
 const pluralSuffix = /_(zero|one|two|few|many|other)$/u;
 
@@ -87,11 +85,11 @@ describe("translation source calls", () => {
     ];
 
     for (const [filename, source] of sourceFiles) {
-      if (filename.endsWith("../../src/i18n/.tsx") && /\btranslate\(/u.test(source)) {
+      if (filename.endsWith(".tsx") && /\btranslate\(/u.test(source)) {
         failures.push(`${filename} calls the imperative translator from React`);
       }
 
-      if (filename.endsWith("../../src/i18n/.tsx")) {
+      if (filename.endsWith(".tsx")) {
         for (const match of source.matchAll(/\bt\(\s*([^"'`\s])/gu)) {
           const call = source.slice(match.index, match.index + 80);
           const isDeferredMessage = /^t\(\s*why\.key/u.test(call);
