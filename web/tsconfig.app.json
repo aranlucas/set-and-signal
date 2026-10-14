@@ -22,7 +22,7 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "paths": { "@/*": ["./src/*"] }
+    "paths": { "@/*": ["./src/*"], "@test/*": ["./test/*"] }
   },
-  "include": ["src"]
+  "include": ["src", "test"]
 }
