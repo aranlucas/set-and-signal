@@ -1,14 +1,12 @@
 # Anti-slop policy
 
-The vendored plugin is the complete canonical `src/` tree from
-[dmmulroy/anti-slop](https://github.com/dmmulroy/anti-slop) at
-`c44ef22ca116d0ba62a3ff663a0bd13a3f3fa40b`, including upstream tests,
-MIT license, and nested ESLint Stylistic provenance. Its local record is
-`web/tools/oxlint/anti-slop/UPSTREAM.md`.
+Oxforge supplies all 18 generic rules through its published anti-slop dependency.
+Native `oxc/no-accumulating-spread` remains an error. The existing standalone
+lint pass imports the shared rule map rather than keeping a local copy.
 
-Oxlint and `@oxlint/plugins` are pinned together at the already-resolved
-1.86.0. All 18 generic rules and native `oxc/no-accumulating-spread` are errors.
-There is no direct Effect dependency, so the opt-in Effect policy is not enabled.
+Only the opt-in Effect rules and their tests remain in `web/tools/oxlint/effect/`,
+with their original license and provenance. There is no direct Effect dependency,
+so that policy remains disabled.
 
 The existing strict, type-aware frontend checks retain their scope and settings.
 `lint:strict` additionally runs `lint:anti-slop` across all owned web/backend/build
@@ -53,5 +51,5 @@ container from a state-driven view. Browser globals use Vitest's scoped global
 stubs and are restored. Existing persistence/concurrency/isolation tests remain.
 
 The application Vitest config explicitly selects `test/**/*.test.*`; upstream
-RuleTester fixtures are retained under the vendor directory and can be run
-separately. The formatter excludes vendored assets so their bytes remain auditable.
+Effect RuleTester fixtures remain in `tools/oxlint/effect/test/` and run separately.
+The formatter excludes those retained upstream assets.

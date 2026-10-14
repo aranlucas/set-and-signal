@@ -1,6 +1,6 @@
 import { RuleTester } from "oxlint/plugins-dev";
 
-import { noManualEffectErrorTagRule } from "../../../effect/rules/no-manual-effect-error-tag.ts";
+import { noManualEffectErrorTagRule } from "../../rules/no-manual-effect-error-tag.ts";
 
 new RuleTester().run(
 	"no-manual-effect-error-tag",

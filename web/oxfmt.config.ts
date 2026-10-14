@@ -28,7 +28,7 @@ const config = {
       ".pi/**",
       ".roo/**",
       ".windsurf/**",
-      "tools/oxlint/anti-slop/**",
+      "tools/oxlint/effect/**",
     ],
   ],
 };

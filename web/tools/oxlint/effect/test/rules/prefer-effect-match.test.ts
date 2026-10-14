@@ -1,6 +1,6 @@
 import { RuleTester } from "oxlint/plugins-dev";
 
-import { preferEffectMatchRule } from "../../../effect/rules/prefer-effect-match.ts";
+import { preferEffectMatchRule } from "../../rules/prefer-effect-match.ts";
 
 new RuleTester().run("prefer-effect-match", preferEffectMatchRule, {
 	valid: [

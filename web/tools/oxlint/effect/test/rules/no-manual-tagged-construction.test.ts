@@ -1,6 +1,6 @@
 import { RuleTester } from "oxlint/plugins-dev";
 
-import { noManualTaggedConstructionRule } from "../../../effect/rules/no-manual-tagged-construction.ts";
+import { noManualTaggedConstructionRule } from "../../rules/no-manual-tagged-construction.ts";
 
 new RuleTester().run(
 	"no-manual-tagged-construction",

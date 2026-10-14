@@ -1,6 +1,6 @@
 import { RuleTester } from "oxlint/plugins-dev";
 
-import { noServiceConstructorImportsRule } from "../../../effect/rules/no-service-constructor-imports.ts";
+import { noServiceConstructorImportsRule } from "../../rules/no-service-constructor-imports.ts";
 
 new RuleTester().run(
 	"no-service-constructor-imports",

@@ -1,6 +1,6 @@
 import { RuleTester } from "oxlint/plugins-dev";
 
-import { noManualTagComparisonRule } from "../../../effect/rules/no-manual-tag-comparison.ts";
+import { noManualTagComparisonRule } from "../../rules/no-manual-tag-comparison.ts";
 
 new RuleTester().run("no-manual-tag-comparison", noManualTagComparisonRule, {
 	valid: [
