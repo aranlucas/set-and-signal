@@ -1,11 +1,10 @@
-import base from "@aranlucas/oxforge/format-config";
+import base from "@aranlucas/oxforge/format-tailwind";
 
 const config = {
   ...base,
   sortTailwindcss: {
+    ...base.sortTailwindcss,
     stylesheet: "src/app/index.css",
-    functions: ["cn", "clsx", "cva", "twMerge", "twJoin"],
-    attributes: ["classNames", "containerClassName", "labelClassName"],
   },
   ignorePatterns: [
     ...(base.ignorePatterns ?? []),

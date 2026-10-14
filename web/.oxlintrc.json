@@ -49,16 +49,6 @@
       }
     ],
     "typescript/no-unsafe-type-assertion": "error",
-    "typescript/no-misused-promises": "error",
-    "typescript/no-unnecessary-type-assertion": "error",
-    "typescript/no-unnecessary-type-conversion": "error",
-    "typescript/no-unsafe-argument": "error",
-    "typescript/no-unsafe-assignment": "error",
-    "typescript/no-unsafe-member-access": "error",
-    "typescript/no-unsafe-return": "error",
-    "typescript/no-unsafe-call": "error",
-    "react/rules-of-hooks": "error",
-    "react/exhaustive-deps": "error",
     "react/only-export-components": [
       "error",
       {
@@ -217,7 +207,6 @@
         "allow": ["plain", "metric-name", "metric-bar", "metric-value", "chk", "icn", "toaster"]
       }
     ],
-    "oxc/no-accumulating-spread": "error",
     "typescript/prefer-nullish-coalescing": "off"
   },
   "ignorePatterns": [

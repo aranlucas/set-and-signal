@@ -15,16 +15,11 @@
     },
     "build-frontend": {
       "inputs": [{ "step": "install-frontend" }],
-      "commands": [
-        "pnpm --dir web run build",
-        "test -s web/dist/index.html"
-      ]
+      "commands": ["pnpm --dir web run build", "test -s web/dist/index.html"]
     },
     "build": {
       "inputs": [{ "step": "build-frontend" }],
-      "commands": [
-        { "cmd": "go build -o out ./cmd/opengym-api" }
-      ]
+      "commands": [{ "cmd": "go build -o out ./cmd/opengym-api" }]
     }
   },
   "deploy": {
