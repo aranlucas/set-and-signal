@@ -33,7 +33,10 @@ export function beginWorkout(
 ): void {
   const state = getAppState();
 
-  if (state.active) return;
+  if (state.active) {
+    return;
+  }
+
   const routine = routineId ? state.routines.find((candidate) => candidate.id === routineId) : null;
 
   const entries: ActiveEntry[] = (routine ? routine.ex : []).map((config) => {
@@ -67,7 +70,9 @@ export function beginWorkout(
       entries,
     };
 
-    if (routine?.sessionPlan) draft.active.sessionPlan = structuredClone(routine.sessionPlan);
+    if (routine?.sessionPlan) {
+      draft.active.sessionPlan = structuredClone(routine.sessionPlan);
+    }
   });
   useWorkoutTimer.getState().stopRest();
 }
@@ -88,7 +93,10 @@ export function completeWorkout(): FinishSummaryPayload | null {
   const state = getAppState();
   const activeWorkout = state.active;
 
-  if (!activeWorkout) return null;
+  if (!activeWorkout) {
+    return null;
+  }
+
   const personalRecords: Id[] = [];
   const personalRecordSet = new Set<Id>();
 
@@ -138,7 +146,9 @@ export function completeWorkout(): FinishSummaryPayload | null {
               target: entry.target || null,
             };
 
-            if (snapshot && Object.keys(snapshot).length > 0) logged.muscleSnapshot = snapshot;
+            if (snapshot && Object.keys(snapshot).length > 0) {
+              logged.muscleSnapshot = snapshot;
+            }
 
             return [logged];
           })()
@@ -148,7 +158,9 @@ export function completeWorkout(): FinishSummaryPayload | null {
     vol: 0,
   };
 
-  if (activeWorkout.sessionPlan) workout.sessionPlan = structuredClone(activeWorkout.sessionPlan);
+  if (activeWorkout.sessionPlan) {
+    workout.sessionPlan = structuredClone(activeWorkout.sessionPlan);
+  }
 
   workout.vol = workoutVolume(workout);
   updateAppState((draft) => {

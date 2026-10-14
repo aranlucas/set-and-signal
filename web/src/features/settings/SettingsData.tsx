@@ -82,10 +82,13 @@ export function SettingsData({ user, requestConfirmation, onOpenSheet }: Setting
   const doImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
-    if (!file) return;
+    if (!file) {
+      return;
+    }
+
     void file
       .text()
-      .then((contents) => {
+      .then((contents): undefined => {
         try {
           const restoredState = parseBackup(contents);
           requestConfirmation({
@@ -205,7 +208,10 @@ export function SettingsData({ user, requestConfirmation, onOpenSheet }: Setting
         onChange={(event) => {
           const file = event.target.files?.[0];
 
-          if (file) importFromApp(file, (parsed) => onOpenSheet({ kind: "import", parsed }));
+          if (file) {
+            importFromApp(file, (parsed) => onOpenSheet({ kind: "import", parsed }));
+          }
+
           event.target.value = "";
         }}
       />

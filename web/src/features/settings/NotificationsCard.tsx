@@ -18,7 +18,9 @@ interface CardProps {
 }
 
 export function NotificationsCard({ appState, update, notify }: CardProps) {
-  if (MOBILE) return <MobileReminderCard appState={appState} update={update} notify={notify} />;
+  if (MOBILE) {
+    return <MobileReminderCard appState={appState} update={update} notify={notify} />;
+  }
 
   return <PushCard appState={appState} update={update} notify={notify} />;
 }
@@ -147,7 +149,7 @@ function PushCard({ appState, update, notify }: CardProps) {
     onError: (e) => notify(e.message || t("settings.testFailed", "Test failed")),
   });
 
-  if (!supported)
+  if (!supported) {
     return (
       <Section title={t("settings.notifications", "Notifications")}>
         <Row
@@ -157,6 +159,7 @@ function PushCard({ appState, update, notify }: CardProps) {
         />
       </Section>
     );
+  }
 
   return (
     <>

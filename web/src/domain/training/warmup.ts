@@ -24,7 +24,10 @@ export const warmupRound = (unit: Unit): number => (unit === "lb" ? 5 : 2.5);
  * the working sets. Returns [] when the working weight is too light to warrant one.
  */
 export function warmupSets(topWeight: number, unit: Unit): RepsSet[] {
-  if (!(topWeight > 0)) return [];
+  if (!(topWeight > 0)) {
+    return [];
+  }
+
   const step = warmupRound(unit);
   const floor = Math.min(step * 2, topWeight);
   const sets: RepsSet[] = [];
@@ -32,9 +35,14 @@ export function warmupSets(topWeight: number, unit: Unit): RepsSet[] {
   for (const { pct, reps } of WARMUP_RAMP) {
     const w = Math.round((topWeight * pct) / step) * step;
 
-    if (w < floor || w >= topWeight) continue;
+    if (w < floor || w >= topWeight) {
+      continue;
+    }
 
-    if (sets.length > 0 && sets.at(-1)!.w === w) continue; // ramp plateaued at this weight
+    if (sets.at(-1)?.w === w) {
+      continue;
+    } // ramp plateaued at this weight
+
     sets.push({ w, r: reps, done: false, wu: true });
   }
 

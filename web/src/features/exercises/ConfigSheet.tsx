@@ -100,7 +100,10 @@ function ProgressionFields({
   const progressionLabels = useProgressionLabels();
   const policyOptions: PolicyId[] = POLICIES_FOR[mode] || ["off"];
 
-  if (policyOptions.length < 2) return null;
+  if (policyOptions.length < 2) {
+    return null;
+  }
+
   const inheritedPolicy = progressionPolicyFor({ id: exercise.id }, routine, mode);
   const activePolicy = progressionPolicyFor({ ...config, id: exercise.id }, routine, mode);
 
@@ -445,7 +448,9 @@ function ConfigOptions({
 function ConfigRangeHelp({ config }: ConfigRangeHelpProps) {
   const { t } = useTranslation();
 
-  if (!(config.repsMax && config.repsMax > 0)) return null;
+  if (!(config.repsMax && config.repsMax > 0)) {
+    return null;
+  }
 
   return (
     <div className="-mt-2.5 mb-4.5 text-sm leading-snug text-muted-foreground">
@@ -523,12 +528,19 @@ export function ExConfigSheet({
     const sets = Math.max(1, Math.round(submittedConfig.sets) || (cardio ? 1 : 3));
     const progression: Partial<ExConfig> = {};
 
-    if (submittedConfig.prog) progression.prog = submittedConfig.prog;
+    if (submittedConfig.prog) {
+      progression.prog = submittedConfig.prog;
+    }
 
-    if (submittedConfig.inc && submittedConfig.inc > 0) progression.inc = submittedConfig.inc;
+    if (submittedConfig.inc && submittedConfig.inc > 0) {
+      progression.inc = submittedConfig.inc;
+    }
+
     const flags: Partial<ExConfig> = {};
 
-    if (bodyweight !== isBodyweightEq(exercise.id)) flags.bodyweight = bodyweight;
+    if (bodyweight !== isBodyweightEq(exercise.id)) {
+      flags.bodyweight = bodyweight;
+    }
 
     if (cardio) {
       onSave({
@@ -561,23 +573,28 @@ export function ExConfigSheet({
         ...progression,
       };
 
-      if (perSide) savedConfig.side = true;
+      if (perSide) {
+        savedConfig.side = true;
+      }
 
       if (
         progressionPolicyFor({ ...submittedConfig, id: exercise.id }, routine, "reps") === "double"
-      )
+      ) {
         savedConfig.repsMin = Math.min(
           reps,
           Math.max(1, Math.round(submittedConfig.repsMin ?? 0) || Math.max(1, reps - 2)),
         );
+      }
 
       if (
         bodyweight &&
         !(savedConfig.weight && savedConfig.weight > 0) &&
         submittedConfig.repsMax &&
         submittedConfig.repsMax > 0
-      )
+      ) {
         savedConfig.repsMax = Math.max(reps, Math.round(submittedConfig.repsMax));
+      }
+
       onSave(savedConfig);
     }
   };
@@ -645,7 +662,7 @@ export function ExConfigSheet({
           <Button
             type="button"
             onClick={() =>
-              void close().then(() => {
+              void close().then((): undefined => {
                 openCustom(customExercise);
 
                 return undefined;
@@ -661,7 +678,7 @@ export function ExConfigSheet({
             type="button"
             variant="destructive"
             onClick={() =>
-              void close().then(() => {
+              void close().then((): undefined => {
                 onDelete();
 
                 return undefined;

@@ -60,7 +60,10 @@ export default function TabBar({ onStart, onStartIntent }: TabBarProps) {
   const user = useStore((state) => state.user);
   const isGuest = useStore((state) => state.isGuest);
 
-  if (!user && !isGuest) return null;
+  if (!user && !isGuest) {
+    return null;
+  }
+
   const currentSection = loc.pathname.split("/")[1] || "home";
   const activeTab = SECTION_TABS.get(currentSection) ?? null;
 

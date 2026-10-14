@@ -28,6 +28,10 @@ export const sheetTitle = (active: StatsSheet, t: Translate): string => {
       return active.workout.name;
     case "day-override":
       return fmtDate(t, active.iso, true);
+    default: {
+      const exhaustive: never = active;
+      throw new Error(`Unsupported stats sheet: ${String(exhaustive)}`);
+    }
   }
 };
 
@@ -36,9 +40,14 @@ export const weightDeltaColor = (
   currentW: number,
   targetW: number | null,
 ) => {
-  if (!delta) return "var(--muted-foreground)";
+  if (!delta) {
+    return "var(--muted-foreground)";
+  }
 
-  if (!targetW) return "var(--foreground)";
+  if (!targetW) {
+    return "var(--foreground)";
+  }
+
   const up = targetW > currentW;
 
   return delta > 0 === up ? "var(--primary)" : "var(--destructive)";

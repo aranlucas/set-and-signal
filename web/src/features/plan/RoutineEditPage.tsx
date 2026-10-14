@@ -92,13 +92,17 @@ export default function RoutineEdit() {
     resolver: valibotResolver(routineNameFormSchema),
   });
 
-  if (!routine) return <Navigate to="/plan" replace />;
+  if (!routine) {
+    return <Navigate to="/plan" replace />;
+  }
 
   const updateRoutine = (recipe: (currentRoutine: Routine) => void) =>
     update((nextState) => {
       const currentRoutine = nextState.routines.find((candidate) => candidate.id === id);
 
-      if (currentRoutine) recipe(currentRoutine);
+      if (currentRoutine) {
+        recipe(currentRoutine);
+      }
     });
 
   const edit = (fn: (ex: ExConfig[]) => void) =>
@@ -108,19 +112,26 @@ export default function RoutineEdit() {
     edit((ex) => {
       const j = i + dir;
 
-      if (j < 0 || j >= ex.length) return;
+      if (j < 0 || j >= ex.length) {
+        return;
+      }
+
       [ex[i], ex[j]] = [ex[j], ex[i]];
       cleanupSg(ex);
     });
 
   const toggleLink = (i: number) =>
     edit((ex) => {
-      if (i < 1) return;
+      if (i < 1) {
+        return;
+      }
+
       const cur = ex[i];
       const prev = ex[i - 1];
 
-      if (cur.sg && prev.sg && cur.sg === prev.sg) delete cur.sg;
-      else {
+      if (cur.sg && prev.sg && cur.sg === prev.sg) {
+        delete cur.sg;
+      } else {
         const gid = prev.sg || "sg" + uid();
         prev.sg = gid;
         cur.sg = gid;
@@ -138,7 +149,10 @@ export default function RoutineEdit() {
     const name = draftName.trim() || t("workout.type.routine", "Routine");
     reset({ name });
 
-    if (name === routine.name) return;
+    if (name === routine.name) {
+      return;
+    }
+
     updateRoutine((currentRoutine) => {
       currentRoutine.name = name;
     });
@@ -284,27 +298,41 @@ export default function RoutineEdit() {
                   for (const weekdayKey of Object.keys(s.week)) {
                     const weekday = weekdayFromNumber(Number(weekdayKey));
 
-                    if (weekday == null) continue;
+                    if (weekday == null) {
+                      continue;
+                    }
+
                     const sessions = s.week[weekday];
 
-                    if (!sessions?.length) continue;
+                    if (!sessions?.length) {
+                      continue;
+                    }
+
                     const next = sessions.filter((session) => session.routineId !== id);
 
-                    if (next.length) s.week[weekday] = next;
-                    else delete s.week[weekday];
+                    if (next.length) {
+                      s.week[weekday] = next;
+                    } else {
+                      delete s.week[weekday];
+                    }
                   }
 
                   for (const k of Object.keys(s.dayPlan)) {
                     const entry = s.dayPlan[k];
 
-                    if (!entry || entry.rest || !entry.sessions?.length) continue;
+                    if (!entry || entry.rest || !entry.sessions?.length) {
+                      continue;
+                    }
 
                     const next = (entry.sessions ?? []).filter(
                       (session) => session.routineId !== id,
                     );
 
-                    if (!next.length) delete s.dayPlan[k];
-                    else s.dayPlan[k] = { sessions: next };
+                    if (!next.length) {
+                      delete s.dayPlan[k];
+                    } else {
+                      s.dayPlan[k] = { sessions: next };
+                    }
                   }
                 });
                 void nav({ to: "/plan" }).catch(console.error);
@@ -324,7 +352,9 @@ export default function RoutineEdit() {
       <AlertDialog
         open={confirmation !== null}
         onOpenChange={(open) => {
-          if (!open) setConfirmation(null);
+          if (!open) {
+            setConfirmation(null);
+          }
         }}
       >
         <AlertDialogContent>
@@ -497,7 +527,10 @@ function RoutineCoverage({ routine, body }: RoutineCoverageProps) {
   const { t } = useTranslation();
   const muscleLabels = useMuscleLabels();
 
-  if (routine.ex.length === 0) return null;
+  if (routine.ex.length === 0) {
+    return null;
+  }
+
   const load = loadOfRoutine(routine);
   const { worked } = rankOf(load);
 
@@ -575,7 +608,10 @@ function RoutineSheet({ sheet, setSheet, closeSheet, setConfirmation }: RoutineS
                 ? () => {
                     const customExercise = sheet.existingExercise;
 
-                    if (!customExercise) return;
+                    if (!customExercise) {
+                      return;
+                    }
+
                     setConfirmation({
                       title: t("customExercise.delete", "Delete “{{name}}”?", {
                         name: customExercise.n,

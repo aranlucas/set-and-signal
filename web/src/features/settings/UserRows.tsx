@@ -19,7 +19,9 @@ export function UserRows({ requestConfirmation }: UserRowsProps) {
   const syncStatus = useStore((state) => state.syncStatus);
   const pending = syncStatus.pending > 0 || syncStatus.phase === "conflict";
 
-  if (!user) return null;
+  if (!user) {
+    return null;
+  }
 
   return (
     <>

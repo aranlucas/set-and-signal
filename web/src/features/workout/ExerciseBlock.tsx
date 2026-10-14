@@ -79,7 +79,10 @@ export function ExerciseBlock({
   const working = useWorkoutTimer((state) => state.work);
   const [setKeys] = useState(() => new Map<string, string>());
 
-  if (!appState.active) return null;
+  if (!appState.active) {
+    return null;
+  }
+
   const A: ActiveWorkout = appState.active;
   const entry = A.entries[entryIdx];
 
@@ -87,7 +90,10 @@ export function ExerciseBlock({
     const mapKey = `${entry.id}:${position}`;
     const existing = setKeys.get(mapKey);
 
-    if (existing) return existing;
+    if (existing) {
+      return existing;
+    }
+
     const key = `${entry.id}-set-${setKeys.size}`;
     setKeys.set(mapKey, key);
 
@@ -181,7 +187,10 @@ export function ExerciseBlock({
   const bump = (s: LoggedSet, i: number, col: Col, dir: number) => {
     const cur = fieldOf(s, col.f);
 
-    if (col.eff) return onField(i, col.f, stepEffort(col.eff, cur ?? null, dir));
+    if (col.eff) {
+      return onField(i, col.f, stepEffort(col.eff, cur ?? null, dir));
+    }
+
     onField(
       i,
       col.f,

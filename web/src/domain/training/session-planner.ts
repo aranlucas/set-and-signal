@@ -108,7 +108,9 @@ export const SESSION_MOVEMENTS: readonly SessionMovement[] = [
 export function availableAlternatives(config: ExConfig, equipment: readonly string[]) {
   const source = SESSION_MOVEMENTS.find((candidate) => candidate.id === config.id);
 
-  if (!source) return [];
+  if (!source) {
+    return [];
+  }
 
   return SESSION_MOVEMENTS.filter(
     (candidate) =>
@@ -192,7 +194,10 @@ export function adaptSession(
             ? "kept"
             : "swap";
 
-    if (!candidate) return { key, original, planned: null, options, reason };
+    if (!candidate) {
+      return { key, original, planned: null, options, reason };
+    }
+
     used.add(candidate.id);
     const mode = modeOf(original);
     const changed = candidate.id !== original.id;
@@ -216,12 +221,18 @@ export function adaptSession(
     delete planned.sg;
     planned.prog = "off";
 
-    if (choice?.sets !== undefined) planned.sets = choice.sets;
+    if (choice?.sets !== undefined) {
+      planned.sets = choice.sets;
+    }
 
     if (choice?.amount !== undefined) {
-      if (mode === "time") planned.sec = choice.amount;
-      else if (mode === "cardio") planned.min = choice.amount;
-      else planned.reps = choice.amount;
+      if (mode === "time") {
+        planned.sec = choice.amount;
+      } else if (mode === "cardio") {
+        planned.min = choice.amount;
+      } else {
+        planned.reps = choice.amount;
+      }
     }
 
     return { key, original: { ...original }, planned, options, reason };
@@ -253,7 +264,10 @@ export function validSessionConfig(config: ExConfig) {
 /** Includes 5 min preparation, 1 min setup/exercise, work and between-set rest.
  * Rep tempo is assumed 3 sec/rep. This is a planning estimate, never a promise. */
 export function estimateSessionMinutes(configs: readonly ExConfig[], restSec: number) {
-  if (!configs.length) return 0;
+  if (!configs.length) {
+    return 0;
+  }
+
   let seconds = 300;
 
   for (const config of configs) {
@@ -302,7 +316,7 @@ export function fitSession(rows: SessionRow[], constraints: SessionConstraints):
   for (let step = 0; step < 500 && estimate() > constraints.budgetMin; step++) {
     const reducible = configs
       .flatMap((config, index) => (config && config.sets > 1 ? [{ config, index }] : []))
-      .sort((a, b) => (b.config?.sets ?? 0) - (a.config?.sets ?? 0))[0];
+      .toSorted((a, b) => (b.config?.sets ?? 0) - (a.config?.sets ?? 0))[0];
 
     if (reducible?.config) {
       reducible.config.sets--;
@@ -324,7 +338,10 @@ export function fitSession(rows: SessionRow[], constraints: SessionConstraints):
 
     const lastIndex = configs.findLastIndex((config) => config !== null);
 
-    if (lastIndex < 0) break;
+    if (lastIndex < 0) {
+      break;
+    }
+
     configs[lastIndex] = null;
     choices[lastIndex] = { id: "" };
   }

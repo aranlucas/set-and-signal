@@ -185,11 +185,17 @@ export function buildDemoState(): DemoState {
 
     const routine = byWeekday.get(day.getDay());
 
-    if (!routine) continue;
+    if (!routine) {
+      continue;
+    }
 
-    if (random() < 0.09) continue; // life happens — a few missed sessions
+    if (random() < 0.09) {
+      continue;
+    } // life happens — a few missed sessions
 
-    if (iso === isoOf(today) && currentHour < 18) continue; // leave today's session to try out, unless it's already evening
+    if (iso === isoOf(today) && currentHour < 18) {
+      continue;
+    } // leave today's session to try out, unless it's already evening
 
     const prs: Id[] = [];
     const blockWeek = Math.round((monday(day) - monday(start)) / (7 * 86400000));
@@ -238,8 +244,11 @@ export function buildDemoState(): DemoState {
         if (rateable && random() > UNRATED) {
           // RPE's floor of 6 is a convention about which sets are worth rating, so an easy
           // set logged in RPE genuinely loses the distance it was from failure.
-          if (effortScale === "rpe") set.rpe = clamp(10 - rir, 6, 10);
-          else set.rir = rir;
+          if (effortScale === "rpe") {
+            set.rpe = clamp(10 - rir, 6, 10);
+          } else {
+            set.rir = rir;
+          }
         }
 
         sets.push(set);

@@ -17,7 +17,9 @@ export type SheetEx = (Exercise | CustomEx) & {
 };
 
 export const toCatalogExercise = (exercise: SheetEx): CatalogExercise => {
-  if ("img" in exercise) return exercise;
+  if ("img" in exercise) {
+    return exercise;
+  }
 
   return {
     ...exercise,

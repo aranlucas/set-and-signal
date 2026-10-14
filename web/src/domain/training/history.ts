@@ -77,7 +77,9 @@ export interface WorkoutLike {
 export function modeOf(cfg?: AnyConfig | null): Mode {
   const modeValue = cfg?.mode;
 
-  if (modeValue === "reps" || modeValue === "time" || modeValue === "cardio") return modeValue;
+  if (modeValue === "reps" || modeValue === "time" || modeValue === "cardio") {
+    return modeValue;
+  }
 
   return isCardio(cfg?.id) ? "cardio" : "reps";
 }
@@ -149,12 +151,19 @@ export function stepEffort(
 ): number | null {
   const scale = kind && kind !== "none" ? EFFORT[kind] : null;
 
-  if (!scale) return cur ?? null;
+  if (!scale) {
+    return cur ?? null;
+  }
 
-  if (cur == null) return dir < 0 ? null : scale.min;
+  if (cur == null) {
+    return dir < 0 ? null : scale.min;
+  }
+
   const nextValue = Math.round((cur + dir * scale.step) * 100) / 100;
 
-  if (dir < 0 && nextValue < scale.min) return null;
+  if (dir < 0 && nextValue < scale.min) {
+    return null;
+  }
 
   // only the ceiling is enforced on the way up: a value typed below the floor (nothing stops
   // someone entering RPE 3) still steps in even increments instead of snapping to the floor.
@@ -186,10 +195,16 @@ export function setLabel(id: Id, s: SetFields, cfg?: AnyConfig | null): string {
   // never read as a working set.
   const wu = isWarmup(s) ? "WU " : "";
 
-  if (mode === "cardio") return `${wu}${s.min || 0} min @ ${fmtNum(s.speed || 0)} km/h`;
+  if (mode === "cardio") {
+    return `${wu}${s.min || 0} min @ ${fmtNum(s.speed || 0)} km/h`;
+  }
+
   const weight = s.w || 0;
 
-  if (mode === "time") return wu + fmtSec(s.sec) + (weight > 0 ? ` · ${fmtNum(weight)}` : "");
+  if (mode === "time") {
+    return wu + fmtSec(s.sec) + (weight > 0 ? ` · ${fmtNum(weight)}` : "");
+  }
+
   // Bodyweight reads as what you did — "12", or "+10 × 12" once there is a belt involved —
   // rather than "0×12", which says a set was performed with no weight and means nothing.
   // A per-side set needs no mark here: the number logged is the total, the same as every
@@ -209,14 +224,18 @@ export function setLabel(id: Id, s: SetFields, cfg?: AnyConfig | null): string {
 export function defaultConfig(id: Id, mode?: Mode, barWeight = 0): Omit<ExConfig, "id"> {
   const resolvedMode = mode || modeOf({ id });
 
-  if (resolvedMode === "cardio") return { sets: 1, min: 20, speed: 8 };
+  if (resolvedMode === "cardio") {
+    return { sets: 1, min: 20, speed: 8 };
+  }
+
   // Written only when it is true, so a barbell config is byte-for-byte what it was before
   // the flag existed and a plan file gains nothing it does not need.
   const bodyweightDefaults = isBodyweightEq(id) ? { bodyweight: true } : {};
   const startingWeight = isBarbellEq(id) ? Math.max(0, barWeight) : 0;
 
-  if (resolvedMode === "time")
+  if (resolvedMode === "time") {
     return { sets: 3, sec: 45, weight: startingWeight, mode: "time", ...bodyweightDefaults };
+  }
 
   return { sets: 3, reps: 10, weight: startingWeight, mode: "reps", ...bodyweightDefaults };
 }
@@ -229,9 +248,13 @@ export function exLine(cfg: AnyConfig, unit: string): string {
   // Added weight reads as added: "+10 kg" on a dip belt, "60 kg" on a barbell.
   const load = cfg.weight ? " · " + (isBw(cfg) ? "+" : "") + fmtNum(cfg.weight) + " " + unit : "";
 
-  if (mode === "cardio") return `${n} × ${cfg.min || 20} min @ ${fmtNum(cfg.speed || 8)} km/h`;
+  if (mode === "cardio") {
+    return `${n} × ${cfg.min || 20} min @ ${fmtNum(cfg.speed || 8)} km/h`;
+  }
 
-  if (mode === "time") return `${n} × ${fmtSec(cfg.sec || 45)}${load}`;
+  if (mode === "time") {
+    return `${n} × ${fmtSec(cfg.sec || 45)}${load}`;
+  }
 
   // This is the line with room for it, so the split is spelled out: "3 × 16 · 8/side".
   const split = isPerSide(cfg)
@@ -247,8 +270,9 @@ export function exLine(cfg: AnyConfig, unit: string): string {
 // Drop superset ids that no longer have an adjacent partner (after unlink/reorder/remove).
 export function cleanupSg<T extends CleanupSgResult>(ex: T[]) {
   for (const [index, exercise] of ex.entries()) {
-    if (exercise.sg && !(ex[index - 1]?.sg === exercise.sg || ex[index + 1]?.sg === exercise.sg))
+    if (exercise.sg && !(ex[index - 1]?.sg === exercise.sg || ex[index + 1]?.sg === exercise.sg)) {
       delete exercise.sg;
+    }
   }
 }
 
@@ -275,12 +299,21 @@ export function sessionLoad(entry?: SessionLoadProps | null, fallback?: AnyConfi
   const loggedSets = (entry?.sets || []).filter((set) => !isWarmup(set));
   const logged = Math.max(0, ...loggedSets.flatMap((set) => (set.done ? [set.w || 0] : [])));
 
-  if (logged > 0) return logged;
+  if (logged > 0) {
+    return logged;
+  }
 
-  if (entry?.topW && entry.topW > 0) return entry.topW;
+  if (entry?.topW && entry.topW > 0) {
+    return entry.topW;
+  }
+
   const target = entry?.target || fallback || {};
 
-  if ((target.weight ?? 0) > 0) return target.weight!;
+  const targetWeight = target.weight ?? 0;
+
+  if (targetWeight > 0) {
+    return targetWeight;
+  }
 
   return 0;
 }
@@ -296,12 +329,13 @@ export function lastEntryFor(state: LastEntryForProps, exId: Id): LastEntry | nu
     // `target` is what the session prescribed; finished workouts carry it so labels and the
     // progression engine can read a session back the way it was logged. Older workouts have
     // none — modeOf() falls back to the body part for them, which is what they were.
-    if (entry?.sets?.some((set) => set.done))
+    if (entry?.sets?.some((set) => set.done)) {
       return {
         d: state.workouts[i].d,
         sets: working(entry.sets).filter((set) => set.done),
         target: entry.target || null,
       };
+    }
   }
 
   return null;
@@ -312,7 +346,9 @@ export function bestWeightFor(state: BestWeightForProps, exId: Id): number {
 
   for (const workout of state.workouts) {
     for (const entry of workout.entries) {
-      if (entry.id === exId) bestWeight = entryBestWeight(entry, bestWeight);
+      if (entry.id === exId) {
+        bestWeight = entryBestWeight(entry, bestWeight);
+      }
     }
   }
 
@@ -321,7 +357,9 @@ export function bestWeightFor(state: BestWeightForProps, exId: Id): number {
 
 function entryBestWeight(entry: WorkoutLike["entries"][number], bestWeight: number): number {
   for (const set of entry.sets) {
-    if (set.done && (set.w || 0) > bestWeight && !isWarmup(set)) bestWeight = set.w || 0;
+    if (set.done && (set.w || 0) > bestWeight && !isWarmup(set)) {
+      bestWeight = set.w || 0;
+    }
   }
 
   return entry.topW && entry.topW > bestWeight ? entry.topW : bestWeight;
@@ -359,7 +397,8 @@ export function buildSets(state: BuildSetsProps, cfg: ExConfig): LoggedSet[] {
   const emptyBar =
     state.unit && isBarbellEq(cfg.id) && !isBw(cfg) ? barWeightFor(state.unit, state.plates) : 0;
 
-  const configuredWeight = (cfg.weight ?? 0) > 0 ? cfg.weight! : emptyBar;
+  const requestedWeight = cfg.weight ?? 0;
+  const configuredWeight = requestedWeight > 0 ? requestedWeight : emptyBar;
 
   if (mode === "cardio") {
     const sets: CardioSet[] = [];
@@ -384,9 +423,10 @@ export function buildSets(state: BuildSetsProps, cfg: ExConfig): LoggedSet[] {
       // exercise from reps to time must not seed the duration from a rep count.
       const prev = prevAt(i);
       const carried = prev && (prev.sec ?? 0) > 0 ? prev : null;
+      const previousWeight = carried?.w ?? 0;
       sets.push({
         sec: carried?.sec ?? cfg.sec ?? 45,
-        w: carried && (carried.w ?? 0) > 0 ? carried.w! : configuredWeight,
+        w: previousWeight > 0 ? previousWeight : configuredWeight,
         done: false,
       });
     }
@@ -422,7 +462,9 @@ export function workoutVolume(w: Pick<WorkoutLike, "entries">): number {
   // already in the rep count that arrives here. Warm-up sets are preparation, not volume.
   for (const e of w.entries) {
     for (const s of working(e.sets)) {
-      if (s.done) v += (s.w || 0) * (s.r || 0);
+      if (s.done) {
+        v += (s.w || 0) * (s.r || 0);
+      }
     }
   }
 
@@ -434,7 +476,9 @@ export function setsDone(w: Pick<WorkoutLike, "entries">): number {
 
   for (const e of w.entries) {
     for (const s of working(e.sets)) {
-      if (s.done) n++;
+      if (s.done) {
+        n++;
+      }
     }
   }
 
@@ -446,12 +490,15 @@ export function setsDoneActive(
 ): number {
   let n = 0;
 
-  if (activeWorkout)
+  if (activeWorkout) {
     for (const entry of activeWorkout.entries) {
       for (const set of working(entry.sets)) {
-        if (set.done) n++;
+        if (set.done) {
+          n++;
+        }
       }
     }
+  }
 
   return n;
 }
@@ -467,9 +514,11 @@ export function supersetUnits(items: ReadonlyArray<SupersetUnitsProps>): number[
   for (const [index, item] of items.entries()) {
     const previousItem = items[index - 1];
 
-    if (index > 0 && item.sg && previousItem?.sg && item.sg === previousItem.sg)
+    if (index > 0 && item.sg && previousItem?.sg && item.sg === previousItem.sg) {
       units.at(-1)?.push(index);
-    else units.push([index]);
+    } else {
+      units.push([index]);
+    }
   }
 
   return units;
@@ -480,7 +529,10 @@ export function unitOf(units: number[][], idx: number): number[] {
 }
 
 export function streakWeeks(state: StreakWeeksProps): number {
-  if (state.workouts.length === 0) return 0;
+  if (state.workouts.length === 0) {
+    return 0;
+  }
+
   const weeks = new Set(state.workouts.map((workout) => weekKey(workout.d)));
   let streak = 0;
   const cur = new Date();
@@ -488,8 +540,12 @@ export function streakWeeks(state: StreakWeeksProps): number {
   for (let i = 0; i < 520; i++) {
     const week = weekKey(isoOf(cur));
 
-    if (weeks.has(week)) streak++;
-    else if (i > 0) break;
+    if (weeks.has(week)) {
+      streak++;
+    } else if (i > 0) {
+      break;
+    }
+
     cur.setDate(cur.getDate() - 7);
   }
 

@@ -16,10 +16,16 @@ const urlBase64ToUint8Array = (b64: string) => {
 };
 
 export async function enablePush() {
-  if (!pushSupported()) throw new Error("Push notifications are not supported in this browser");
+  if (!pushSupported()) {
+    throw new Error("Push notifications are not supported in this browser");
+  }
+
   const perm = await Notification.requestPermission();
 
-  if (perm !== "granted") throw new Error("Notifications permission was not granted");
+  if (perm !== "granted") {
+    throw new Error("Notifications permission was not granted");
+  }
+
   const [reg, { key }] = await Promise.all([navigator.serviceWorker.ready, getPushKey()]);
 
   const subscription = await reg.pushManager.subscribe({
@@ -34,11 +40,17 @@ export async function enablePush() {
 }
 
 export async function disablePush() {
-  if (!pushSupported()) return;
+  if (!pushSupported()) {
+    return;
+  }
+
   const reg = await navigator.serviceWorker.ready;
   const sub = await reg.pushManager.getSubscription();
 
-  if (!sub) return;
+  if (!sub) {
+    return;
+  }
+
   await sub.unsubscribe();
   await api("/api/push/unsubscribe", {
     method: "POST",

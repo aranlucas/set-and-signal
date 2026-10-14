@@ -76,7 +76,9 @@ export default function Library() {
 
   const filteredExercises: SheetEx[] = allExercises(state)
     .flatMap((exercise) => {
-      if (bodyPart && exercise.bp !== bodyPart) return [];
+      if (bodyPart && exercise.bp !== bodyPart) {
+        return [];
+      }
 
       const score = exerciseSearchScore(
         {
@@ -88,7 +90,7 @@ export default function Library() {
 
       return score === null ? [] : [{ exercise, score }];
     })
-    .sort((a, b) => a.score - b.score)
+    .toSorted((a, b) => a.score - b.score)
     .map(({ exercise }) => exercise);
 
   const equipmentOptions = equipmentOf(filteredExercises);
@@ -209,7 +211,9 @@ export default function Library() {
               kind: "custom",
               existingExercise: null,
               onDone: (exercise) => {
-                if (exercise) setSheet({ kind: "detail", exercise });
+                if (exercise) {
+                  setSheet({ kind: "detail", exercise });
+                }
               },
               prefillName: searchQuery.trim(),
             })
@@ -241,25 +245,28 @@ export default function Library() {
                 type="button"
                 className="flex min-w-0 flex-1 items-center text-left"
                 onPointerEnter={() => {
-                  if ("img" in exercise)
+                  if ("img" in exercise) {
                     preloadExerciseInstructions(
                       i18n.resolvedLanguage || i18n.language,
                       exercise.id,
                     );
+                  }
                 }}
                 onPointerDown={() => {
-                  if ("img" in exercise)
+                  if ("img" in exercise) {
                     preloadExerciseInstructions(
                       i18n.resolvedLanguage || i18n.language,
                       exercise.id,
                     );
+                  }
                 }}
                 onFocus={() => {
-                  if ("img" in exercise)
+                  if ("img" in exercise) {
                     preloadExerciseInstructions(
                       i18n.resolvedLanguage || i18n.language,
                       exercise.id,
                     );
+                  }
                 }}
                 onClick={() => setSheet({ kind: "detail", exercise })}
                 aria-label={t("exercise.viewDetailsLabel", "View details for {{exercise}}", {
@@ -360,7 +367,10 @@ function LibrarySheetOverlay({
               openAddToRoutine={(exercise) => setSheet({ kind: "add", exercise })}
               openCustom={(exercise) => setSheet({ kind: "custom", existingExercise: exercise })}
               onDelete={() => {
-                if (!isCustomExercise(sheet.exercise)) return;
+                if (!isCustomExercise(sheet.exercise)) {
+                  return;
+                }
+
                 const customExercise = sheet.exercise;
                 setConfirmation({
                   title: t("customExercise.delete", "Delete “{{name}}”?", {
@@ -397,7 +407,10 @@ function LibrarySheetOverlay({
                   ? () => {
                       const customExercise = sheet.existingExercise;
 
-                      if (!customExercise) return;
+                      if (!customExercise) {
+                        return;
+                      }
+
                       setConfirmation({
                         title: t("customExercise.delete", "Delete “{{name}}”?", {
                           name: customExercise.n,
@@ -433,7 +446,9 @@ function LibrarySheetOverlay({
       <AlertDialog
         open={confirmation !== null}
         onOpenChange={(open) => {
-          if (!open) setConfirmation(null);
+          if (!open) {
+            setConfirmation(null);
+          }
         }}
       >
         <AlertDialogContent>

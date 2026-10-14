@@ -92,10 +92,13 @@ export function PlanTools({ close, openImport }: PlanToolsProps) {
     const file = event.target.files?.[0];
     event.target.value = "";
 
-    if (!file) return;
+    if (!file) {
+      return;
+    }
+
     void file
       .text()
-      .then(async (contents) => {
+      .then(async (contents): Promise<undefined> => {
         try {
           const bundle = parsePlan(contents);
           await close();
@@ -303,8 +306,12 @@ export function DayOverride({ iso, close }: DayOverrideProps) {
 
       const index = sessions.findIndex((session) => session.routineId === routineId);
 
-      if (index >= 0) sessions.splice(index, 1);
-      else sessions.push({ routineId });
+      if (index >= 0) {
+        sessions.splice(index, 1);
+      } else {
+        sessions.push({ routineId });
+      }
+
       appState.dayPlan[iso] = { sessions };
     });
     void close().catch(console.error);
@@ -428,8 +435,11 @@ export function DayAssign({ day, close }: DayAssignProps) {
       if (index >= 0) {
         const next = current.filter((session) => session.routineId !== routineId);
 
-        if (next.length) state.week[day] = next;
-        else delete state.week[day];
+        if (next.length) {
+          state.week[day] = next;
+        } else {
+          delete state.week[day];
+        }
       } else {
         state.week[day] = [...current, { routineId }];
       }

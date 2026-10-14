@@ -55,42 +55,67 @@ function cleanEx(exercise: ExConfig): ExConfig {
   const mode = modeOf(exercise);
 
   if (mode === "cardio") {
-    if (exercise.min != null) cleanedConfig.min = exercise.min;
+    if (exercise.min != null) {
+      cleanedConfig.min = exercise.min;
+    }
 
-    if (exercise.speed != null) cleanedConfig.speed = exercise.speed;
+    if (exercise.speed != null) {
+      cleanedConfig.speed = exercise.speed;
+    }
   } else if (mode === "time") {
     // Written out even though 'reps' is the fallback for a non-cardio id: a plan file that
     // dropped the mode would turn a 45-second plank into a 45-rep one at the other end.
     cleanedConfig.mode = "time";
 
-    if (exercise.sec != null) cleanedConfig.sec = exercise.sec;
+    if (exercise.sec != null) {
+      cleanedConfig.sec = exercise.sec;
+    }
 
-    if (exercise.weight) cleanedConfig.weight = exercise.weight;
+    if (exercise.weight) {
+      cleanedConfig.weight = exercise.weight;
+    }
   } else {
-    if (exercise.reps != null) cleanedConfig.reps = exercise.reps;
+    if (exercise.reps != null) {
+      cleanedConfig.reps = exercise.reps;
+    }
 
-    if (exercise.weight) cleanedConfig.weight = exercise.weight;
+    if (exercise.weight) {
+      cleanedConfig.weight = exercise.weight;
+    }
   }
 
   // How the exercise is logged travels too (issues #31/#32) — the bodyweight flag only when
   // it disagrees with the catalogue, since agreeing is what the other end already assumes.
-  if (exercise.bodyweight != null && exercise.bodyweight !== isBodyweightEq(exercise.id))
+  if (exercise.bodyweight != null && exercise.bodyweight !== isBodyweightEq(exercise.id)) {
     cleanedConfig.bodyweight = exercise.bodyweight;
+  }
 
   // Only on reps work — `side` counts reps, and a timed hold has none to split.
-  if (exercise.side && mode !== "time" && mode !== "cardio") cleanedConfig.side = true;
+  if (exercise.side && mode !== "time" && mode !== "cardio") {
+    cleanedConfig.side = true;
+  }
 
   // Progression settings travel with the plan — a shared Greyskull routine that arrives
   // without its rule is just a list of weights.
-  if (exercise.prog) cleanedConfig.prog = exercise.prog;
+  if (exercise.prog) {
+    cleanedConfig.prog = exercise.prog;
+  }
 
-  if (exercise.inc != null && exercise.inc > 0) cleanedConfig.inc = exercise.inc;
+  if (exercise.inc != null && exercise.inc > 0) {
+    cleanedConfig.inc = exercise.inc;
+  }
 
-  if (exercise.repsMin != null) cleanedConfig.repsMin = exercise.repsMin;
+  if (exercise.repsMin != null) {
+    cleanedConfig.repsMin = exercise.repsMin;
+  }
 
-  if (exercise.repsMax != null) cleanedConfig.repsMax = exercise.repsMax;
+  if (exercise.repsMax != null) {
+    cleanedConfig.repsMax = exercise.repsMax;
+  }
 
-  if (exercise.sg) cleanedConfig.sg = exercise.sg;
+  if (exercise.sg) {
+    cleanedConfig.sg = exercise.sg;
+  }
 
   return cleanedConfig;
 }
@@ -125,7 +150,9 @@ export function buildPlanBundle(
   for (const d of WEEK_ORDER) {
     const sessions = appState.week?.[d];
 
-    if (sessions?.length) week[d] = sessions.map((session) => Object.assign({}, session));
+    if (sessions?.length) {
+      week[d] = sessions.map((session) => Object.assign({}, session));
+    }
   }
 
   return {
@@ -168,7 +195,9 @@ export function parsePlan(raw: string | PlanBundle): ParsedPlan {
     ex: routine.ex.filter((exercise) => {
       const ok = known.has(exercise.id) || !!EXIDX[exercise.id];
 
-      if (!ok) dropped++;
+      if (!ok) {
+        dropped++;
+      }
 
       return ok;
     }),
@@ -216,7 +245,10 @@ export function mergePlan(
     exerciseIdMap[c.id] = newExerciseId;
     const custom: AppState["customEx"][number] = { id: newExerciseId, n: c.n, bp: c.bp };
 
-    if (c.desc) custom.desc = c.desc;
+    if (c.desc) {
+      custom.desc = c.desc;
+    }
+
     appStateDraft.customEx.push(custom);
   }
 
@@ -239,7 +271,10 @@ export function mergePlan(
       ),
     };
 
-    if (routine.prog) imported.prog = routine.prog;
+    if (routine.prog) {
+      imported.prog = routine.prog;
+    }
+
     appStateDraft.routines.push(imported);
   }
 
@@ -259,7 +294,9 @@ export function mergePlan(
           return routineId ? [{ ...session, routineId }] : [];
         });
 
-        if (remapped.length) appStateDraft.week[weekday] = remapped;
+        if (remapped.length) {
+          appStateDraft.week[weekday] = remapped;
+        }
       }
     }
   }

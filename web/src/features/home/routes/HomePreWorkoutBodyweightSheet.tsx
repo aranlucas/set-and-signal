@@ -18,13 +18,17 @@ export default function HomePreWorkoutBodyweightSheet() {
 
   const close = () => navigate({ to: "/home", replace: true, resetScroll: false });
 
-  if (!routineExists) return <Navigate to="/home" replace />;
+  if (!routineExists) {
+    return <Navigate to="/home" replace />;
+  }
 
   return (
     <Sheet
       open
       onOpenChange={(open) => {
-        if (!open) void close().catch(console.error);
+        if (!open) {
+          void close().catch(console.error);
+        }
       }}
     >
       <SheetContent side="bottom" variant="panel" showCloseButton={false}>

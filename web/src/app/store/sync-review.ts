@@ -39,16 +39,21 @@ export function conflictTitle(conflict: SyncConflict): string {
 
   const named = v.safeParse(v.object({ name: v.string() }), value);
 
-  if (named.success) return named.output.name;
+  if (named.success) {
+    return named.output.name;
+  }
 
   return conflict.key.split("/").map(humanize).filter(Boolean).join(" · ");
 }
 
 function flatten(value: JsonValue, path = ""): Record<string, string> {
-  if (value === null) return Object.fromEntries([[path || "Item", "Removed"]]);
+  if (value === null) {
+    return Object.fromEntries([[path || "Item", "Removed"]]);
+  }
 
-  if (v.is(v.union([v.string(), v.number(), v.boolean()]), value))
+  if (v.is(v.union([v.string(), v.number(), v.boolean()]), value)) {
     return Object.fromEntries([[path || "Value", String(value)]]);
+  }
 
   return Object.fromEntries(
     Object.entries(value).flatMap(([key, item]) =>

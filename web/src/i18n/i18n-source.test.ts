@@ -28,7 +28,10 @@ describe("translation source calls", () => {
       for (const match of source.matchAll(literalCall)) {
         const key = match[2];
 
-        if (/^\d+$/u.test(key)) continue;
+        if (/^\d+$/u.test(key)) {
+          continue;
+        }
+
         const line = source.slice(0, match.index).split("\n").length;
 
         if (!/^[a-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+$/u.test(key)) {
@@ -38,8 +41,9 @@ describe("translation source calls", () => {
 
         const afterKey = source.slice(match.index + match[0].length);
 
-        if (!/^\s*,\s*["'`]/u.test(afterKey))
+        if (!/^\s*,\s*["'`]/u.test(afterKey)) {
           failures.push(`${filename}:${line} missing English default ${key}`);
+        }
       }
     }
 
@@ -62,7 +66,9 @@ describe("translation source calls", () => {
         const all = [...source.matchAll(keyCall)].length;
         const counted = [...source.matchAll(call)].length;
 
-        if (all !== counted) failures.push(`${filename}:${base} ${counted}/${all} counted`);
+        if (all !== counted) {
+          failures.push(`${filename}:${base} ${counted}/${all} counted`);
+        }
       }
     }
 
@@ -96,7 +102,9 @@ describe("translation source calls", () => {
       }
 
       for (const name of compatibilityNames) {
-        if (source.includes(name)) failures.push(`${filename} contains ${name}`);
+        if (source.includes(name)) {
+          failures.push(`${filename} contains ${name}`);
+        }
       }
     }
 
@@ -117,11 +125,15 @@ describe("translation source calls", () => {
       values.add(exercise.eq);
       values.add(exercise.tg);
 
-      for (const muscle of exercise.sm) values.add(muscle);
+      for (const muscle of exercise.sm) {
+        values.add(muscle);
+      }
     }
 
     for (const plan of CURATED) {
-      for (const equipment of plan.eq) values.add(equipment);
+      for (const equipment of plan.eq) {
+        values.add(equipment);
+      }
     }
 
     const missing = [...values].filter((value) => !metadataSource?.includes(JSON.stringify(value)));

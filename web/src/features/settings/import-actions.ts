@@ -9,7 +9,7 @@ export type ParsedImport = Exclude<ParseResult, { error: string }>;
 export function importFromApp(file: File, onParsed: (parsed: ParsedImport) => void): void {
   void file
     .text()
-    .then((contents) => {
+    .then((contents): undefined => {
       let parsed: ParseResult;
 
       try {
@@ -17,14 +17,14 @@ export function importFromApp(file: File, onParsed: (parsed: ParsedImport) => vo
       } catch {
         toast(translate("import.couldNotReadFile", "Could not read that file"));
 
-        return;
+        return undefined;
       }
 
       if ("error" in parsed) {
         if (parsed.error === "empty") {
           toast(translate("import.fileEmpty", "That file is empty"));
 
-          return;
+          return undefined;
         }
 
         toast(
@@ -34,7 +34,7 @@ export function importFromApp(file: File, onParsed: (parsed: ParsedImport) => vo
           ),
         );
 
-        return;
+        return undefined;
       }
 
       if (
@@ -42,7 +42,7 @@ export function importFromApp(file: File, onParsed: (parsed: ParsedImport) => vo
       ) {
         toast(translate("import.nothingImportFile", "Nothing to import from that file"));
 
-        return;
+        return undefined;
       }
 
       onParsed(parsed);

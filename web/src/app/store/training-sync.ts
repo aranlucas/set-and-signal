@@ -40,7 +40,9 @@ async function credentials(uid: string) {
     await api("/api/convex/token"),
   );
 
-  if (!parsed.success) throw new Error("Your session changed. Sign in again.");
+  if (!parsed.success) {
+    throw new Error("Your session changed. Sign in again.");
+  }
 
   return { token: parsed.output.token, url: parsed.output.url };
 }
@@ -54,17 +56,23 @@ const changeSchema = v.object({
 function readQueue(key: string): Change[][] {
   const parsed = v.safeParse(v.array(v.unknown()), JSON.parse(localStorage.getItem(key) ?? "[]"));
 
-  if (!parsed.success) throw new Error("Invalid pending training edits");
+  if (!parsed.success) {
+    throw new Error("Invalid pending training edits");
+  }
 
   return parsed.output.map((batchInput) => {
     const batch = v.safeParse(v.array(v.unknown()), batchInput);
 
-    if (!batch.success) throw new Error("Invalid pending training edits");
+    if (!batch.success) {
+      throw new Error("Invalid pending training edits");
+    }
 
     return batch.output.map((entry) => {
       const change = v.safeParse(changeSchema, entry);
 
-      if (!change.success) throw new Error("Invalid pending training edit");
+      if (!change.success) {
+        throw new Error("Invalid pending training edit");
+      }
 
       return change.output;
     });
@@ -108,7 +116,10 @@ export class TrainingSync {
     this.receive = receive;
     this.status = status;
     this.failed = (error) => {
-      if (this.closed) return;
+      if (this.closed) {
+        return;
+      }
+
       this.problem =
         error instanceof Error && error.message.includes("CONFLICT") ? "conflict" : "error";
       this.publish();
@@ -120,14 +131,21 @@ export class TrainingSync {
     this.known = new Map(splitState(cached ?? {}).map((row) => [row.key, row.value]));
     this.queue = readQueue(this.key);
 
-    for (const batch of this.queue)
+    for (const batch of this.queue) {
       for (const change of batch) {
-        if (change.value === null) this.known.delete(change.key);
-        else this.known.set(change.key, change.value);
+        if (change.value === null) {
+          this.known.delete(change.key);
+        } else {
+          this.known.set(change.key, change.value);
+        }
       }
+    }
   }
   private publish() {
-    if (this.closed) return;
+    if (this.closed) {
+      return;
+    }
+
     const online = navigator?.onLine !== false;
     const phase = !online ? "offline" : (this.problem ?? (this.queue.length ? "saving" : "saved"));
     this.status({ phase, pending: this.queue.length });
@@ -142,10 +160,15 @@ export class TrainingSync {
       ),
     );
 
-    if (state) this.receive(state);
+    if (state) {
+      this.receive(state);
+    }
   }
   async start() {
-    if (this.queue.length) this.showPending();
+    if (this.queue.length) {
+      this.showPending();
+    }
+
     this.status({ phase: "loading", pending: this.queue.length });
     let initial;
 
@@ -156,15 +179,22 @@ export class TrainingSync {
       throw error;
     }
 
-    if (this.closed) return;
+    if (this.closed) {
+      return;
+    }
+
     const client = this.dependencies.createClient(initial.url);
     this.client = client;
     this.stopConnection = client.subscribeToConnectionState((connection) => {
-      if (this.closed || this.problem) return;
+      if (this.closed || this.problem) {
+        return;
+      }
 
-      if (!connection.isWebSocketConnected)
+      if (!connection.isWebSocketConnected) {
         this.status({ phase: "offline", pending: this.queue.length });
-      else this.publish();
+      } else {
+        this.publish();
+      }
     });
     client.setAuth(async () =>
       this.closed ? null : (await this.dependencies.credentials(this.uid)).token,
@@ -173,7 +203,9 @@ export class TrainingSync {
       snapshot,
       {},
       (value) => {
-        if (!this.closed && !this.queue.length) this.accept(value);
+        if (!this.closed && !this.queue.length) {
+          this.accept(value);
+        }
       },
       this.failed,
     );
@@ -182,7 +214,9 @@ export class TrainingSync {
       await this.flush();
       const value = await client.query(snapshot, {});
 
-      if (!this.closed && !this.queue.length) this.accept(value);
+      if (!this.closed && !this.queue.length) {
+        this.accept(value);
+      }
     } catch (error) {
       this.failed(error);
       throw error;
@@ -201,7 +235,10 @@ export class TrainingSync {
 
     const state = parseStoredState(JSON.stringify(value));
 
-    if (!state) throw new Error("Invalid training data from Convex");
+    if (!state) {
+      throw new Error("Invalid training data from Convex");
+    }
+
     this.known = new Map(splitState(state).map((row) => [row.key, row.value]));
     this.receive(state);
     this.problem = undefined;
@@ -219,26 +256,39 @@ export class TrainingSync {
       expected: this.known.get(change.key) ?? null,
     }));
 
-    if (!changes.length) return;
+    if (!changes.length) {
+      return;
+    }
+
     // Throw before admitting the edit or advancing its baseline if storage rejects it.
     this.persistQueue([...this.queue, changes]);
 
     for (const change of changes) {
-      if (change.value === null) this.known.delete(change.key);
-      else this.known.set(change.key, change.value);
+      if (change.value === null) {
+        this.known.delete(change.key);
+      } else {
+        this.known.set(change.key, change.value);
+      }
     }
 
     this.publish();
 
-    if (this.client && !this.problem) void this.flush().catch(this.failed);
+    if (this.client && !this.problem) {
+      void this.flush().catch(this.failed);
+    }
   }
   flush(): Promise<void> {
-    if (this.flushing) return this.flushing;
+    if (this.flushing) {
+      return this.flushing;
+    }
+
     this.flushing = this.drain().then(
-      () => {
+      (): Promise<void> | undefined => {
         this.flushing = undefined;
 
-        if (this.queue.length && this.client && !this.closed) return this.flush();
+        if (this.queue.length && this.client && !this.closed) {
+          return this.flush();
+        }
 
         return undefined;
       },
@@ -253,11 +303,14 @@ export class TrainingSync {
   private async drain() {
     const client = this.client;
 
-    if (this.closed) return;
+    if (this.closed) {
+      return;
+    }
 
     if (!client) {
-      if (this.queue.length)
+      if (this.queue.length) {
         throw new Error("Connect to save your pending edits before signing out.");
+      }
 
       return;
     }
@@ -265,19 +318,27 @@ export class TrainingSync {
     while (this.queue.length && !this.closed) {
       const changes = this.queue[0];
 
-      if (!changes) break;
+      if (!changes) {
+        break;
+      }
+
       // Each batch assumes the preceding batch committed; parallel writes break revisions.
       // eslint-disable-next-line no-await-in-loop
       await client.mutation(commit, { changes });
 
-      if (this.closed) return;
+      if (this.closed) {
+        return;
+      }
+
       // Replaying a committed batch is safe; forgetting an unpersisted acknowledgment is not.
       this.persistQueue(this.queue.slice(1));
     }
 
     const value = await client.query(snapshot, {});
 
-    if (!this.closed && !this.queue.length) this.accept(value);
+    if (!this.closed && !this.queue.length) {
+      this.accept(value);
+    }
   }
   saveRecovery() {
     const url = URL.createObjectURL(
@@ -291,7 +352,10 @@ export class TrainingSync {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   async conflicts(): Promise<SyncConflict[]> {
-    if (!this.client) throw new Error("Reconnect to review changes.");
+    if (!this.client) {
+      throw new Error("Reconnect to review changes.");
+    }
+
     const value: unknown = await this.client.query(snapshot, {});
 
     const remote = new Map(
@@ -324,11 +388,18 @@ export class TrainingSync {
         batch.flatMap((change) => {
           const conflict = reviewed.get(change.key);
 
-          if (!conflict) return [change];
+          if (!conflict) {
+            return [change];
+          }
 
-          if (choice === "remote") return [];
+          if (choice === "remote") {
+            return [];
+          }
 
-          if (seen.has(change.key)) return [change];
+          if (seen.has(change.key)) {
+            return [change];
+          }
+
           seen.add(change.key);
 
           return [{ ...change, expected: conflict.remote }];

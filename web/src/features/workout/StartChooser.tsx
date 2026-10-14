@@ -129,7 +129,9 @@ export function StartChooserView({ appState }: StartChooserViewProps) {
         open={sheetOpen}
         onOpenChange={(open) => {
           // This workflow closes only through one of its explicit start/change actions.
-          if (open) setSheetOpen(true);
+          if (open) {
+            setSheetOpen(true);
+          }
         }}
         title={t("weight.quickCheck", "Quick check-in")}
       >

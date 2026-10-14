@@ -233,7 +233,9 @@ function WorkoutExerciseNavigator({
 }: WorkoutExerciseNavigatorProps) {
   const { t } = useTranslation();
 
-  if (units.length < 2) return null;
+  if (units.length < 2) {
+    return null;
+  }
 
   return (
     <section
@@ -431,7 +433,9 @@ export function WorkoutSessionView({ activeWorkout, onComplete }: WorkoutSession
   const completeActiveWorkout = () => {
     const summary = completeWorkout();
 
-    if (summary) onComplete(summary);
+    if (summary) {
+      onComplete(summary);
+    }
   };
 
   const A = activeWorkout;
@@ -464,14 +468,20 @@ export function WorkoutSessionView({ activeWorkout, onComplete }: WorkoutSession
 
   // Live-presence heartbeat so the admin dashboard can show who's training now. Signed-in only —
   // guests have no server session. Reads fresh state each tick so progress stays current.
-  useEffect(() => {
-    if (!userId) return;
+  useEffect((): (() => void) | undefined => {
+    if (!userId) {
+      return undefined;
+    }
+
     let stopped = false;
 
     const ping = (active: boolean) => {
       const A2 = useStore.getState().appState.active;
 
-      if (!A2) return;
+      if (!A2) {
+        return;
+      }
+
       const u = supersetUnits(A2.entries);
       const c = Math.min(A2.cur, Math.max(0, A2.entries.length - 1));
       const ui = u.findIndex((x) => x.includes(c));
@@ -493,7 +503,9 @@ export function WorkoutSessionView({ activeWorkout, onComplete }: WorkoutSession
     ping(true);
 
     const iv = setInterval(() => {
-      if (!stopped) ping(true);
+      if (!stopped) {
+        ping(true);
+      }
     }, 20000);
 
     return () => {
@@ -565,7 +577,9 @@ export function WorkoutSessionView({ activeWorkout, onComplete }: WorkoutSession
               currentUnit={unitIdx}
               onSelect={(entryIndex) =>
                 update((state) => {
-                  if (state.active) state.active.cur = entryIndex;
+                  if (state.active) {
+                    state.active.cur = entryIndex;
+                  }
                 })
               }
             />
@@ -599,7 +613,9 @@ export function WorkoutSessionView({ activeWorkout, onComplete }: WorkoutSession
                   disabled={unitIdx <= 0}
                   onClick={() =>
                     update((s) => {
-                      if (s.active) s.active.cur = units[unitIdx - 1][0];
+                      if (s.active) {
+                        s.active.cur = units[unitIdx - 1][0];
+                      }
                     })
                   }
                 >
@@ -611,7 +627,9 @@ export function WorkoutSessionView({ activeWorkout, onComplete }: WorkoutSession
                   disabled={unitIdx < 0 || unitIdx >= units.length - 1}
                   onClick={() =>
                     update((s) => {
-                      if (s.active) s.active.cur = units[unitIdx + 1][0];
+                      if (s.active) {
+                        s.active.cur = units[unitIdx + 1][0];
+                      }
                     })
                   }
                 >
@@ -633,7 +651,10 @@ export function WorkoutSessionView({ activeWorkout, onComplete }: WorkoutSession
                           update((s) => {
                             const act = s.active;
 
-                            if (!act) return;
+                            if (!act) {
+                              return;
+                            }
+
                             const full = { ...config, id: exercise.id };
 
                             const plan = nextPrescription(
@@ -698,7 +719,9 @@ export function WorkoutSessionView({ activeWorkout, onComplete }: WorkoutSession
           {...confirmation}
           open
           onOpenChange={(open) => {
-            if (!open) setConfirmation(null);
+            if (!open) {
+              setConfirmation(null);
+            }
           }}
         />
       )}

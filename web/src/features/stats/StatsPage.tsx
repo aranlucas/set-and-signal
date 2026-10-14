@@ -84,7 +84,9 @@ export default function Stats() {
     for (const entry of workout.entries) {
       const name = entry.muscleSnapshot?.n;
 
-      if (name && !historicalNames.has(entry.id)) historicalNames.set(entry.id, name);
+      if (name && !historicalNames.has(entry.id)) {
+        historicalNames.set(entry.id, name);
+      }
     }
   }
 
@@ -92,7 +94,7 @@ export default function Stats() {
 
   const exHist = [...new Set(appState.workouts.flatMap((w) => w.entries.map((e) => e.id)))]
     .filter((id) => EXIDX[id] || historicalNames.has(id))
-    .sort((a, b) => exerciseName(a).localeCompare(exerciseName(b)) || a.localeCompare(b));
+    .toSorted((a, b) => exerciseName(a).localeCompare(exerciseName(b)) || a.localeCompare(b));
 
   const curEx = exId && exHist.includes(exId) ? exId : exHist[0] || null;
 
@@ -104,7 +106,9 @@ export default function Stats() {
         for (let i = appState.workouts.length - 1; i >= 0; i--) {
           const en = appState.workouts[i].entries.find((e) => e.id === curEx);
 
-          if (en) return modeOf({ ...en.target, id: curEx });
+          if (en) {
+            return modeOf({ ...en.target, id: curEx });
+          }
         }
 
         return modeOf({ id: curEx });
@@ -122,7 +126,10 @@ export default function Stats() {
     for (const w of appState.workouts) {
       const en = w.entries.find((e) => e.id === curEx);
 
-      if (!en) continue;
+      if (!en) {
+        continue;
+      }
+
       const doneSets = en.sets.filter((s) => s.done && !isWarmup(s));
 
       const mx = Math.max(
@@ -131,13 +138,18 @@ export default function Stats() {
         curCardio || curTimed ? 0 : en.topW || 0,
       );
 
-      if (mx <= 0) continue;
+      if (mx <= 0) {
+        continue;
+      }
+
       exPts.push({ t: w.start, y: mx, d: w.d, sets: doneSets, target: en.target ?? null });
 
-      if (mx > exBest) exBest = mx;
+      if (mx > exBest) {
+        exBest = mx;
+      }
     }
 
-    exList = exPts.slice(-5).reverse();
+    exList = exPts.slice(-5).toReversed();
   }
 
   // Estimated 1RM (issue #18) — only reps-mode training produces one, so cardio and timed
@@ -175,9 +187,13 @@ export default function Stats() {
 
   const exOpts: ExOptsValue[] = [{ value: "top", label: t("progression.topSet", "Top set") }];
 
-  if (showE1) exOpts.push({ value: "e1rm", label: t("progression.est1rm", "Est. 1RM") });
+  if (showE1) {
+    exOpts.push({ value: "e1rm", label: t("progression.est1rm", "Est. 1RM") });
+  }
 
-  if (showEff) exOpts.push({ value: "effort", label: t("stats.effort.effort", "Effort") });
+  if (showEff) {
+    exOpts.push({ value: "effort", label: t("stats.effort.effort", "Effort") });
+  }
 
   return (
     <>
@@ -226,7 +242,7 @@ export default function Stats() {
           </div>
           <Grid columns={{ default: 1, lg: 2 }} gap="xs">
             {[...appState.workouts]
-              .reverse()
+              .toReversed()
               .slice(0, 6)
               .map((w) => (
                 <WorkoutRow
@@ -241,7 +257,9 @@ export default function Stats() {
       <Sheet
         open={activeSheet !== null}
         onOpenChange={(open) => {
-          if (!open) setActiveSheet(null);
+          if (!open) {
+            setActiveSheet(null);
+          }
         }}
       >
         <SheetContent side="bottom" variant="panel" showCloseButton={false}>

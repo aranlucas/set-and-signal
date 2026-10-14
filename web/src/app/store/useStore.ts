@@ -33,7 +33,9 @@ function loadState(): AppState {
       ? parseStoredState(`{"active":${localStorage.getItem(`gym_active:${user.id}`) ?? "null"}}`)
       : null;
 
-    if (storedState || draft) return Object.assign(cloneValue(DEFAULT_STATE), storedState, draft);
+    if (storedState || draft) {
+      return Object.assign(cloneValue(DEFAULT_STATE), storedState, draft);
+    }
   } catch {
     /* ignore */
   }
@@ -94,8 +96,10 @@ export const useStore = create<Store>()((set, get) => {
       localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(nextState));
     } else {
       if (push) {
-        if (!trainingSync)
+        if (!trainingSync) {
           throw new Error("Training connection is not ready. Your existing draft is preserved.");
+        }
+
         trainingSync.enqueue(previous, nextState);
       }
 
@@ -107,7 +111,9 @@ export const useStore = create<Store>()((set, get) => {
 
     set({ appState: nextState });
 
-    if (MOBILE) nativePersist();
+    if (MOBILE) {
+      nativePersist();
+    }
   };
 
   // A setting changed right before switching away/closing the tab must not get lost mid-debounce
@@ -116,7 +122,9 @@ export const useStore = create<Store>()((set, get) => {
   // kills the app.
   if (typeof document !== "undefined") {
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState !== "hidden") return;
+      if (document.visibilityState !== "hidden") {
+        return;
+      }
 
       if (MOBILE && saveTimerId) {
         clearTimeout(saveTimerId);
@@ -192,8 +200,12 @@ export const useStore = create<Store>()((set, get) => {
     },
 
     setGuest(isGuest) {
-      if (isGuest) localStorage.setItem("gym_guest", "1");
-      else localStorage.removeItem("gym_guest");
+      if (isGuest) {
+        localStorage.setItem("gym_guest", "1");
+      } else {
+        localStorage.removeItem("gym_guest");
+      }
+
       set({ isGuest });
     },
 
@@ -201,7 +213,10 @@ export const useStore = create<Store>()((set, get) => {
       if (user) {
         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
         localStorage.removeItem("gym_guest");
-      } else localStorage.removeItem(USER_STORAGE_KEY);
+      } else {
+        localStorage.removeItem(USER_STORAGE_KEY);
+      }
+
       const previousUser = get().user?.id;
 
       if (previousUser && !user) {
@@ -227,33 +242,45 @@ export const useStore = create<Store>()((set, get) => {
 
       set(user ? { user, isGuest: false } : { user });
 
-      if (previousUser !== user?.id)
+      if (previousUser !== user?.id) {
         set({ profileLoaded: false, syncStatus: { phase: "loading", pending: 0 } });
+      }
     },
 
     async transferGuest(state) {
       const uid = get().user?.id;
 
-      if (!uid) throw new Error("Sign in before transferring guest data");
+      if (!uid) {
+        throw new Error("Sign in before transferring guest data");
+      }
+
       localStorage.setItem(`gym_guest_transfer:${uid}`, JSON.stringify(state));
       localStorage.setItem(`gym_active:${uid}`, JSON.stringify(state.active));
       await get().pullState();
     },
     async pushState() {
-      if (!get().user) return;
+      if (!get().user) {
+        return;
+      }
 
-      if (get().syncStatus.phase === "offline" || get().syncStatus.phase === "conflict")
+      if (get().syncStatus.phase === "offline" || get().syncStatus.phase === "conflict") {
         throw new Error(
           "Your latest changes haven’t synced yet. You’re still signed in; reconnect or review changes and try again.",
         );
+      }
 
-      if (!trainingSync) await get().pullState();
+      if (!trainingSync) {
+        await get().pullState();
+      }
+
       await trainingSync?.flush();
     },
     async pullState() {
       const uid = get().user?.id;
 
-      if (!uid) return;
+      if (!uid) {
+        return;
+      }
 
       if (syncUser === uid && syncStart) {
         await syncStart;
@@ -264,25 +291,35 @@ export const useStore = create<Store>()((set, get) => {
 
       await trainingSync?.close();
 
-      if (get().user?.id !== uid) return;
+      if (get().user?.id !== uid) {
+        return;
+      }
+
       syncUser = uid;
       const profileCache = parseStoredState(localStorage.getItem(`gym_cache:${uid}`));
 
-      if (profileCache)
+      if (profileCache) {
         set({
           appState: Object.assign(cloneValue(DEFAULT_STATE), profileCache),
           profileLoaded: true,
         });
+      }
 
       const cached = parseStoredState(
         `{"active":${localStorage.getItem(`gym_active:${uid}`) ?? "null"}}`,
       );
 
-      if (cached?.active) set({ appState: Object.assign(cloneValue(get().appState), cached) });
+      if (cached?.active) {
+        set({ appState: Object.assign(cloneValue(get().appState), cached) });
+      }
+
       trainingSync = new TrainingSync(
         uid,
         (remote) => {
-          if (get().user?.id !== uid) return;
+          if (get().user?.id !== uid) {
+            return;
+          }
+
           const active = get().appState.active;
           const nextState = Object.assign(cloneValue(DEFAULT_STATE), remote, { active });
           localStorage.setItem(`gym_cache:${uid}`, JSON.stringify(remote));
@@ -291,7 +328,9 @@ export const useStore = create<Store>()((set, get) => {
         },
         () => {},
         (syncStatus) => {
-          if (get().user?.id === uid) set({ syncStatus });
+          if (get().user?.id === uid) {
+            set({ syncStatus });
+          }
         },
       );
       const transfer = parseStoredState(localStorage.getItem(`gym_guest_transfer:${uid}`));
@@ -306,7 +345,10 @@ export const useStore = create<Store>()((set, get) => {
       try {
         await syncStart;
       } catch (error) {
-        if (syncUser === uid) syncStart = undefined;
+        if (syncUser === uid) {
+          syncStart = undefined;
+        }
+
         throw error;
       }
     },
@@ -337,7 +379,10 @@ export const useStore = create<Store>()((set, get) => {
 
     // Boot: ask the server who we are, then pull.
     async boot() {
-      if (isBooting || get().isReady) return;
+      if (isBooting || get().isReady) {
+        return;
+      }
+
       isBooting = true;
 
       try {

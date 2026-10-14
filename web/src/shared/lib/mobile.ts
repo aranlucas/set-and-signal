@@ -64,13 +64,20 @@ export async function syncReminder(appState: AppState, interactive = false): Pro
     }).catch(() => {});
     const reminder = appState.reminder;
 
-    if (!reminder?.on) return true;
+    if (!reminder?.on) {
+      return true;
+    }
+
     let permission = await LocalNotifications.checkPermissions();
 
-    if (permission.display !== "granted" && interactive)
+    if (permission.display !== "granted" && interactive) {
       permission = await LocalNotifications.requestPermissions();
+    }
 
-    if (permission.display !== "granted") return false;
+    if (permission.display !== "granted") {
+      return false;
+    }
+
     const [hour, minute] = (reminder.time || "08:00").split(":").map(Number);
 
     const notifications = Object.entries(appState.week).flatMap(([day, sessions]) => {
@@ -80,7 +87,9 @@ export async function syncReminder(appState: AppState, interactive = false): Pro
         return routine ? [routine.name] : [];
       });
 
-      if (!names.length) return [];
+      if (!names.length) {
+        return [];
+      }
 
       return [
         {
@@ -102,7 +111,9 @@ export async function syncReminder(appState: AppState, interactive = false): Pro
       ];
     });
 
-    if (notifications.length > 0) await LocalNotifications.schedule({ notifications });
+    if (notifications.length > 0) {
+      await LocalNotifications.schedule({ notifications });
+    }
 
     return true;
   } catch {

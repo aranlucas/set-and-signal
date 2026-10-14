@@ -86,7 +86,10 @@ function ToolNumberField({
         setDraft(raw);
         const parsed = Number(raw.replace(",", "."));
 
-        if (!Number.isFinite(parsed)) return;
+        if (!Number.isFinite(parsed)) {
+          return;
+        }
+
         const bounded = clampToolNumber(parsed, min, max);
         onChange(integer ? Math.round(bounded) : bounded);
       }}
@@ -107,6 +110,10 @@ function formulaLabel(
       return t("tools.formulaBrzycki", "Brzycki");
     case "lombardi":
       return t("tools.formulaLombardi", "Lombardi");
+    default: {
+      const exhaustive: never = formula;
+      throw new Error(`Unsupported formula: ${String(exhaustive)}`);
+    }
   }
 }
 
@@ -177,7 +184,10 @@ export default function ToolsPage() {
   const loadTargets = oneRm === null ? [] : trainingLoads(oneRm, unit);
 
   const changeUnit = (nextUnit: Unit) => {
-    if (nextUnit === unit) return;
+    if (nextUnit === unit) {
+      return;
+    }
+
     update((state) => {
       state.unit = nextUnit;
       state.plates = defaultPlateSetup(nextUnit);
@@ -186,7 +196,10 @@ export default function ToolsPage() {
 
   const togglePlate = (plate: number) => {
     update((state) => {
-      if (!state.plates) state.plates = defaultPlateSetup(state.unit);
+      if (!state.plates) {
+        state.plates = defaultPlateSetup(state.unit);
+      }
+
       const available = Array.isArray(state.plates.avail) ? state.plates.avail : [];
       state.plates.avail = available.includes(plate)
         ? available.filter((candidate) => candidate !== plate)
@@ -263,7 +276,10 @@ export default function ToolsPage() {
                 value={setup.bar}
                 onChange={(bar) => {
                   update((state) => {
-                    if (!state.plates) state.plates = defaultPlateSetup(state.unit);
+                    if (!state.plates) {
+                      state.plates = defaultPlateSetup(state.unit);
+                    }
+
                     state.plates.bar = normalizeToolWeight(bar);
                   });
                 }}

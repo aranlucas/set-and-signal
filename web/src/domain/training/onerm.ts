@@ -58,15 +58,24 @@ export function estimate1RM(
   const weight = Number(w);
   const reps = Number(r);
 
-  if (!isFinite(weight) || !isFinite(reps)) return null;
+  if (!isFinite(weight) || !isFinite(reps)) {
+    return null;
+  }
 
-  if (weight <= 0 || reps < 1) return null;
+  if (weight <= 0 || reps < 1) {
+    return null;
+  }
 
-  if (reps > REP_CAP) return null;
+  if (reps > REP_CAP) {
+    return null;
+  }
+
   const fn = isFormulaName(formula) ? FORMULAS[formula] : FORMULAS[DEFAULT_FORMULA];
   const est = reps === 1 ? weight : fn(weight, Math.round(reps));
 
-  if (!isFinite(est) || est <= 0) return null;
+  if (!isFinite(est) || est <= 0) {
+    return null;
+  }
 
   return Math.round(est * 10) / 10;
 }
@@ -93,13 +102,19 @@ export function bestSetOf(
   let best: BestValue | null = null;
 
   for (const s of entry?.sets || []) {
-    if (!s.done) continue;
+    if (!s.done) {
+      continue;
+    }
 
-    if (s.wu) continue;
+    if (s.wu) {
+      continue;
+    }
+
     const est = estimate1RM(s.w, s.r, formula);
 
-    if (est !== null && (!best || est > best.est))
+    if (est !== null && (!best || est > best.est)) {
       best = { est, w: Number(s.w), r: Math.round(Number(s.r)) };
+    }
   }
 
   return best;
@@ -127,10 +142,15 @@ export function e1rmSeries(
   for (const w of state.workouts || []) {
     const entry = w.entries.find((e) => e.id === exId);
 
-    if (!entry) continue;
+    if (!entry) {
+      continue;
+    }
+
     const best = bestSetOf(entry, formula);
 
-    if (best) pts.push({ t: w.start, d: w.d, y: best.est, w: best.w, r: best.r });
+    if (best) {
+      pts.push({ t: w.start, d: w.d, y: best.est, w: best.w, r: best.r });
+    }
   }
 
   return pts;
@@ -146,7 +166,9 @@ export function best1RM(
   let best: BestValue2 | null = null;
 
   for (const p of e1rmSeries(state, exId, formula)) {
-    if (!best || p.y > best.est) best = { est: p.y, w: p.w, r: p.r, d: p.d, t: p.t };
+    if (!best || p.y > best.est) {
+      best = { est: p.y, w: p.w, r: p.r, d: p.d, t: p.t };
+    }
   }
 
   return best;
@@ -162,7 +184,10 @@ export function is1RMRecord(
 ): Is1RMRecordResult | null {
   const now = bestSetOf(entry, formula);
 
-  if (!now) return null;
+  if (!now) {
+    return null;
+  }
+
   const prev = best1RM(state, exId, formula);
 
   return !prev || now.est > prev.est ? { ...now, prev: prev ? prev.est : 0 } : null;

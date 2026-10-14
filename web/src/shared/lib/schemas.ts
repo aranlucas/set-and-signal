@@ -16,11 +16,17 @@ export type JsonValue =
   | { [key: string]: JsonValue };
 
 const isJsonValue = (value: unknown): value is JsonValue => {
-  if (value === null || v.is(v.union([v.boolean(), v.string(), v.number()]), value)) return true;
+  if (value === null || v.is(v.union([v.boolean(), v.string(), v.number()]), value)) {
+    return true;
+  }
 
-  if (Array.isArray(value)) return value.every(isJsonValue);
+  if (Array.isArray(value)) {
+    return value.every(isJsonValue);
+  }
 
-  if (v.is(v.object({}), value)) return Object.values(value).every(isJsonValue);
+  if (v.is(v.object({}), value)) {
+    return Object.values(value).every(isJsonValue);
+  }
 
   return false;
 };
@@ -463,7 +469,9 @@ export function payloadMessage(payload: unknown): string | undefined {
 }
 
 export function parseStoredState(raw: string | null): ParsedAppStatePatch | null {
-  if (!raw) return null;
+  if (!raw) {
+    return null;
+  }
 
   try {
     return parsePayload(appStatePatch, JSON.parse(raw));

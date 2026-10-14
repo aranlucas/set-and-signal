@@ -38,15 +38,18 @@ export default function AppNavigation({ onStart }: AppNavigationProps) {
   const [mobile, setMobile] = useState(() => window.innerWidth < 1024);
   const sidebar = useRef<HTMLElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
+  useEffect((): (() => void) | undefined => {
     const media = window.matchMedia("(max-width: 1023px)");
     const change = () => setMobile(media.matches);
     media.addEventListener("change", change);
 
     return () => media.removeEventListener("change", change);
   }, []);
-  useEffect(() => {
-    if (!open || !mobile) return;
+  useEffect((): (() => void) | undefined => {
+    if (!open || !mobile) {
+      return undefined;
+    }
+
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const opener = menuButton.current;
@@ -60,7 +63,9 @@ export default function AppNavigation({ onStart }: AppNavigationProps) {
         return;
       }
 
-      if (event.key !== "Tab") return;
+      if (event.key !== "Tab") {
+        return;
+      }
 
       const elements = Array.from(
         panel?.querySelectorAll<HTMLElement>("a[href], button:not([disabled])") ?? [],
@@ -69,7 +74,9 @@ export default function AppNavigation({ onStart }: AppNavigationProps) {
       const first = elements.at(0);
       const last = elements.at(-1);
 
-      if (!first || !last) return;
+      if (!first || !last) {
+        return;
+      }
 
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();

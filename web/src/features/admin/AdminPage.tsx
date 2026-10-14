@@ -49,14 +49,23 @@ type LiveUser = AdminUser & { live: AdminLiveInfo };
 // out of the per-language string packs.
 
 const formatRelativeTime = (timestamp: number | null | undefined) => {
-  if (!timestamp) return "never";
+  if (!timestamp) {
+    return "never";
+  }
+
   const secondsAgo = Math.max(0, (Date.now() - timestamp) / 1000);
 
-  if (secondsAgo < 60) return "just now";
+  if (secondsAgo < 60) {
+    return "just now";
+  }
 
-  if (secondsAgo < 3600) return Math.floor(secondsAgo / 60) + "m ago";
+  if (secondsAgo < 3600) {
+    return Math.floor(secondsAgo / 60) + "m ago";
+  }
 
-  if (secondsAgo < 86400) return Math.floor(secondsAgo / 3600) + "h ago";
+  if (secondsAgo < 86400) {
+    return Math.floor(secondsAgo / 3600) + "h ago";
+  }
 
   return Math.floor(secondsAgo / 86400) + "d ago";
 };
@@ -94,18 +103,24 @@ function UserDetail({ id, onChanged, close }: UserDetailProps) {
     onError: (e) => toast(e.message),
   });
 
-  if (userQuery.isError)
+  if (userQuery.isError) {
     return (
       <div className="text-sm leading-snug text-foreground/60">
         {userQuery.error.message || "Failed to load user details."}
       </div>
     );
+  }
 
-  if (!details) return <div className="text-sm leading-snug text-foreground/60">Loading…</div>;
+  if (!details) {
+    return <div className="text-sm leading-snug text-foreground/60">Loading…</div>;
+  }
+
   const userRecord = details.user;
 
   const setDisabled = (disabled: boolean) => {
-    if (!disableMutation.isPending) disableMutation.mutate({ uid: userRecord.id, disabled });
+    if (!disableMutation.isPending) {
+      disableMutation.mutate({ uid: userRecord.id, disabled });
+    }
   };
 
   return (
@@ -258,7 +273,9 @@ function InvitesCard({ invites }: InvitesCardProps) {
           variant="default"
           size="sm"
           onClick={() => {
-            if (!generateInviteMutation.isPending) generateInviteMutation.mutate();
+            if (!generateInviteMutation.isPending) {
+              generateInviteMutation.mutate();
+            }
           }}
         >
           <Icon name="plus" />
@@ -332,7 +349,10 @@ function AdminContent() {
 
   const [currentTime] = useState(() => Date.now());
 
-  if (!isAdmin) return null;
+  if (!isAdmin) {
+    return null;
+  }
+
   const users = usersQuery.data;
   const invites = invitesQuery.data?.invites;
 
@@ -502,7 +522,9 @@ function AdminContent() {
       <Sheet
         open={detailUserId !== null}
         onOpenChange={(open) => {
-          if (!open) setDetailUserId(null);
+          if (!open) {
+            setDetailUserId(null);
+          }
         }}
       >
         <SheetContent side="bottom" variant="panel" showCloseButton={false}>

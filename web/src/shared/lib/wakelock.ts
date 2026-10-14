@@ -16,9 +16,14 @@ let isRequested = false; // do we currently want the screen to stay on?
 let isAcquiring = false; // a request() is in flight — don't stack a second one
 
 async function acquireWakeLock() {
-  if (!isRequested || sentinel || isAcquiring || !wakeLockSupported()) return;
+  if (!isRequested || sentinel || isAcquiring || !wakeLockSupported()) {
+    return;
+  }
 
-  if (document.visibilityState !== "visible") return; // request() rejects on a hidden document
+  if (document.visibilityState !== "visible") {
+    return;
+  } // request() rejects on a hidden document
+
   isAcquiring = true;
 
   try {
@@ -32,7 +37,9 @@ async function acquireWakeLock() {
 
     sentinel = requestedSentinel;
     requestedSentinel.addEventListener("release", () => {
-      if (sentinel === requestedSentinel) sentinel = null;
+      if (sentinel === requestedSentinel) {
+        sentinel = null;
+      }
     });
   } catch {
     // iOS refuses in Low Power Mode, and some browsers refuse on low battery. Nothing to
@@ -45,11 +52,16 @@ async function acquireWakeLock() {
 }
 
 const handleVisibilityChange = () => {
-  if (document.visibilityState === "visible") void acquireWakeLock().catch(console.error);
+  if (document.visibilityState === "visible") {
+    void acquireWakeLock().catch(console.error);
+  }
 };
 
 export function requestWakeLock() {
-  if (isRequested) return;
+  if (isRequested) {
+    return;
+  }
+
   isRequested = true;
   document.addEventListener("visibilitychange", handleVisibilityChange);
   void acquireWakeLock().catch(console.error);
@@ -61,13 +73,18 @@ export function releaseWakeLock() {
   const releasedSentinel = sentinel;
   sentinel = null;
 
-  if (releasedSentinel) releasedSentinel.release().catch(() => {});
+  if (releasedSentinel) {
+    releasedSentinel.release().catch(() => {});
+  }
 }
 
 // Holds the lock for as long as `enabled` stays true.
 export function useWakeLock(enabled: boolean) {
-  useEffect(() => {
-    if (!enabled) return;
+  useEffect((): (() => void) | undefined => {
+    if (!enabled) {
+      return undefined;
+    }
+
     requestWakeLock();
 
     return releaseWakeLock;

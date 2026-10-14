@@ -239,7 +239,9 @@ export default function History() {
       <Sheet
         open={workout !== null}
         onOpenChange={(open) => {
-          if (!open) setWorkout(null);
+          if (!open) {
+            setWorkout(null);
+          }
         }}
       >
         <SheetContent side="bottom" variant="panel" showCloseButton={false}>

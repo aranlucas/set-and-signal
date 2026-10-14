@@ -95,9 +95,13 @@ export function defaultIncrement(exId: Id, unit: Unit): number {
   const compact = COMPACT_EQ.has(equipmentOf(exId));
   const isHeavy = !!exercise && HEAVY_BP.has(exercise.bp);
 
-  if (compact) return unit === "lb" ? 5 : 2.5;
+  if (compact) {
+    return unit === "lb" ? 5 : 2.5;
+  }
 
-  if (unit === "lb") return isHeavy ? 10 : 5;
+  if (unit === "lb") {
+    return isHeavy ? 10 : 5;
+  }
 
   return isHeavy ? 5 : 2.5;
 }
@@ -132,7 +136,9 @@ const round1 = (v: number) => Math.round(v * 10) / 10;
 
 // Snap to a loadable multiple of the step.
 function snap(v: number, step: number): number {
-  if (!(step > 0)) return round1(v);
+  if (!(step > 0)) {
+    return round1(v);
+  }
 
   return round1(Math.round(v / step) * step);
 }
@@ -144,7 +150,9 @@ function snap(v: number, step: number): number {
 function deloadTo(currentWeight: number, step: number): number {
   let deloadedWeight = snap(currentWeight * DELOAD_FACTOR, step);
 
-  if (deloadedWeight >= currentWeight) deloadedWeight = snap(currentWeight - step, step);
+  if (deloadedWeight >= currentWeight) {
+    deloadedWeight = snap(currentWeight - step, step);
+  }
 
   return Math.max(step, deloadedWeight);
 }
@@ -214,8 +222,9 @@ export function sessionsFor(
   for (const workout of state.workouts || []) {
     const entry = workout.entries.find((candidate) => candidate.id === exId);
 
-    if (entry?.sets?.some((set) => set.done))
+    if (entry?.sets?.some((set) => set.done)) {
       sessions.push({ d: workout.d, ...readSession(entry, fallback) });
+    }
   }
 
   return sessions;
@@ -226,7 +235,10 @@ export function stallCount(sessions: ReadonlyArray<StallCountProps>): number {
   let missedSessions = 0;
 
   for (let i = sessions.length - 1; i >= 0; i--) {
-    if (sessions[i].ok) break;
+    if (sessions[i].ok) {
+      break;
+    }
+
     missedSessions++;
   }
 
@@ -257,12 +269,14 @@ export function nextPrescription(
         ? DEFAULT_SEC_INCREMENT
         : defaultIncrement(cfg.id, unit);
 
-  if (policy === "off") return { policy, kind: "off" };
+  if (policy === "off") {
+    return { policy, kind: "off" };
+  }
 
   const sessions = sessionsFor(state, cfg.id, cfg).filter((session) => session.mode === mode);
   const last = sessions.at(-1);
 
-  if (!last)
+  if (!last) {
     return {
       policy,
       kind: "first",
@@ -271,6 +285,7 @@ export function nextPrescription(
         "Nothing logged yet — this session sets the baseline.",
       ),
     };
+  }
 
   const stalls = stallCount(sessions);
   const deloadAt = DELOAD_AFTER[policy] || 3;
@@ -327,7 +342,7 @@ export function nextPrescription(
   if (currentWeight <= 0 && isBw(cfg)) {
     const goal = last.goal || cfg.reps || 0;
 
-    if (!last.ok || goal <= 0)
+    if (!last.ok || goal <= 0) {
       return {
         policy,
         kind: "hold",
@@ -338,6 +353,8 @@ export function nextPrescription(
           "Bodyweight — same target again until every set is clean.",
         ),
       };
+    }
+
     // A ceiling turns "+1 rep forever" into a plan (issue #33). Past the top of the range the
     // reps go back to the bottom and a set is added instead, which is how bodyweight work
     // actually progresses once a set of 30 push-ups stops being a strength stimulus.
@@ -347,7 +364,7 @@ export function nextPrescription(
       const sets = Math.max(1, cfg.sets || last.count || 1) + 1;
       const bottom = Math.max(1, Math.min(cfg.reps || top, top));
 
-      if (sets <= MAX_BW_SETS)
+      if (sets <= MAX_BW_SETS) {
         return {
           policy,
           kind: "up",
@@ -360,6 +377,7 @@ export function nextPrescription(
             { reps: goal, resetReps: bottom },
           ),
         };
+      }
 
       // Out of sets worth adding: more volume is no longer the answer, load or a harder
       // variation is — and that is a decision for a person, not a policy.
@@ -411,7 +429,7 @@ export function nextPrescription(
     const top = cfg.reps || last.goal || 10;
     const bottom = Math.min(cfg.repsMin || Math.max(1, top - 2), top);
 
-    if (last.ok)
+    if (last.ok) {
       return {
         policy,
         kind: "up",
@@ -423,6 +441,7 @@ export function nextPrescription(
           { amount: increment, unit, reps: bottom },
         ),
       };
+    }
 
     if (stalls >= deloadAt) {
       const dw = deloadTo(currentWeight, increment);
@@ -523,7 +542,10 @@ export function applyPrescription<T extends LoggedSet>(
   sets: T[],
   prescription?: Partial<Prescription> | null,
 ): T[] {
-  if (!prescription || prescription.kind === "off" || prescription.kind === "first") return sets;
+  if (!prescription || prescription.kind === "off" || prescription.kind === "first") {
+    return sets;
+  }
+
   const updatedSets: T[] = [];
 
   for (const set of sets) {
@@ -535,11 +557,18 @@ export function applyPrescription<T extends LoggedSet>(
 
     const nextSet = { ...set };
 
-    if (prescription.weight != null && "w" in nextSet) nextSet.w = prescription.weight;
+    if (prescription.weight != null && "w" in nextSet) {
+      nextSet.w = prescription.weight;
+    }
 
-    if (prescription.reps != null && "r" in nextSet) nextSet.r = prescription.reps;
+    if (prescription.reps != null && "r" in nextSet) {
+      nextSet.r = prescription.reps;
+    }
 
-    if (prescription.sec != null && "sec" in nextSet) nextSet.sec = prescription.sec;
+    if (prescription.sec != null && "sec" in nextSet) {
+      nextSet.sec = prescription.sec;
+    }
+
     updatedSets.push(nextSet);
   }
 
@@ -549,10 +578,13 @@ export function applyPrescription<T extends LoggedSet>(
   if (prescription.sets != null && prescription.sets > updatedSets.length) {
     const templateSet = updatedSets.at(-1);
 
-    if (!templateSet) return updatedSets;
+    if (!templateSet) {
+      return updatedSets;
+    }
 
-    while (updatedSets.length < prescription.sets)
+    while (updatedSets.length < prescription.sets) {
       updatedSets.push({ ...templateSet, done: false });
+    }
   }
 
   return updatedSets;
@@ -563,16 +595,27 @@ export function applyPrescriptionToConfig(
   cfg: ExConfig,
   prescription?: Partial<Prescription> | null,
 ): ExConfig {
-  if (!prescription || prescription.kind === "off") return cfg;
+  if (!prescription || prescription.kind === "off") {
+    return cfg;
+  }
+
   const next: ExConfig = { ...cfg };
 
-  if (prescription.weight != null) next.weight = prescription.weight;
+  if (prescription.weight != null) {
+    next.weight = prescription.weight;
+  }
 
-  if (prescription.reps != null) next.reps = prescription.reps;
+  if (prescription.reps != null) {
+    next.reps = prescription.reps;
+  }
 
-  if (prescription.sets != null) next.sets = prescription.sets;
+  if (prescription.sets != null) {
+    next.sets = prescription.sets;
+  }
 
-  if (prescription.sec != null) next.sec = prescription.sec;
+  if (prescription.sec != null) {
+    next.sec = prescription.sec;
+  }
 
   return next;
 }
@@ -592,11 +635,17 @@ export function syncSourceRoutineWeights<T extends SyncSourceRoutineWeightsResul
   return {
     ...routine,
     ex: routine.ex.map((cfg) => {
-      if (!wanted.has(cfg.id)) return cfg;
+      if (!wanted.has(cfg.id)) {
+        return cfg;
+      }
+
       const prescription = nextPrescription(state, cfg, routine);
       const updated = applyPrescriptionToConfig(cfg, prescription);
 
-      if ((updated.weight ?? 0) > 0) return updated;
+      if ((updated.weight ?? 0) > 0) {
+        return updated;
+      }
+
       const last = sessionsFor(state, cfg.id, cfg).at(-1)?.weight ?? 0;
 
       return last > 0 ? { ...updated, weight: last } : updated;

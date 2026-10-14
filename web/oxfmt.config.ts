@@ -2,12 +2,6 @@ import base from "@aranlucas/oxforge/format-config";
 
 const config = {
   ...base,
-  printWidth: 100,
-  tabWidth: 2,
-  useTabs: false,
-  semi: true,
-  singleQuote: false,
-  trailingComma: "all",
   sortTailwindcss: {
     stylesheet: "src/app/index.css",
     functions: ["cn", "clsx", "cva", "twMerge", "twJoin"],

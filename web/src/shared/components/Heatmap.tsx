@@ -46,7 +46,9 @@ export default function Heatmap({ appState, onDay }: HeatmapProps) {
   const todayKey = useToday();
   const wrapRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (wrapRef.current) wrapRef.current.scrollLeft = wrapRef.current.scrollWidth;
+    if (wrapRef.current) {
+      wrapRef.current.scrollLeft = wrapRef.current.scrollWidth;
+    }
   }, []);
 
   const activityByDate: Record<string, ActivityByDateValue> = {};
@@ -69,7 +71,9 @@ export default function Heatmap({ appState, onDay }: HeatmapProps) {
   const minutes: number[] = [];
 
   for (const activity of Object.values(activityByDate)) {
-    if (activity.minutes > 0) minutes.push(activity.minutes);
+    if (activity.minutes > 0) {
+      minutes.push(activity.minutes);
+    }
   }
 
   const sortedMinutes = minutes.toSorted((a, b) => a - b);
@@ -86,15 +90,25 @@ export default function Heatmap({ appState, onDay }: HeatmapProps) {
   const highThreshold = percentile(0.75);
 
   const levelForActivity = (activity?: LevelForActivityProps) => {
-    if (activity === undefined) return 0;
+    if (activity === undefined) {
+      return 0;
+    }
 
-    if (activity.minutes === 0) return 1;
+    if (activity.minutes === 0) {
+      return 1;
+    }
 
-    if (activity.minutes >= highThreshold) return 4;
+    if (activity.minutes >= highThreshold) {
+      return 4;
+    }
 
-    if (activity.minutes >= mediumThreshold) return 3;
+    if (activity.minutes >= mediumThreshold) {
+      return 3;
+    }
 
-    if (activity.minutes >= lowThreshold) return 2;
+    if (activity.minutes >= lowThreshold) {
+      return 2;
+    }
 
     return 1;
   };
@@ -119,7 +133,10 @@ export default function Heatmap({ appState, onDay }: HeatmapProps) {
       label: shouldShowMonth ? monthsShort[monthIndex] : "",
     });
 
-    if (columnStart.getDate() <= 7) lastMonth = monthIndex;
+    if (columnStart.getDate() <= 7) {
+      lastMonth = monthIndex;
+    }
+
     const dayCells = [];
 
     for (let dayIndex = 0; dayIndex < 7; dayIndex++) {

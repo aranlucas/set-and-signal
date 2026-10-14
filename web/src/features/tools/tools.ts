@@ -16,7 +16,9 @@ export function clampToolNumber(value: unknown, min: number, max: number, fallba
   const parsed =
     validation.is(validation.string(), value) && value.trim() === "" ? fallback : Number(value);
 
-  if (!Number.isFinite(parsed)) return safeFallback;
+  if (!Number.isFinite(parsed)) {
+    return safeFallback;
+  }
 
   return Math.min(max, Math.max(min, parsed));
 }
@@ -48,7 +50,10 @@ export function formatTimer(seconds: number): string {
  * warmupRound so the suggestions can be used at the rack without mental math.
  */
 export function trainingLoads(oneRepMax: number, unit: Unit) {
-  if (!Number.isFinite(oneRepMax) || oneRepMax <= 0) return [];
+  if (!Number.isFinite(oneRepMax) || oneRepMax <= 0) {
+    return [];
+  }
+
   const step = unit === "lb" ? 5 : 2.5;
 
   return TRAINING_LOAD_PCTS.map((pct) => ({

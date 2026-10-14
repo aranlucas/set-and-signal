@@ -53,7 +53,10 @@ export function workoutsToCsv(
       let order = 0;
 
       for (const set of entry.sets) {
-        if (!set.done) continue;
+        if (!set.done) {
+          continue;
+        }
+
         order++;
         const isWarmup = "wu" in set && set.wu;
 

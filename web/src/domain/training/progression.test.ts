@@ -1,3 +1,4 @@
+import { requireFixture } from "@/test/require-fixture";
 import { describe, it, expect } from "vitest";
 import {
   readSession,
@@ -16,33 +17,39 @@ import {
 import { EXDB } from "@/domain/exercises/exercises.js";
 import type { ExConfig } from "@/shared/lib/types.js";
 
-const LIFT = EXDB.find(
-  (e) =>
-    e.bp !== "cardio" && !["upper legs", "lower legs", "back", "hips", "glutes"].includes(e.bp),
-)!.id;
+const LIFT = requireFixture(
+  EXDB.find(
+    (e) =>
+      e.bp !== "cardio" && !["upper legs", "lower legs", "back", "hips", "glutes"].includes(e.bp),
+  ),
+).id;
 
-const HEAVY = EXDB.find((e) => e.bp === "upper legs" && e.eq === "barbell")!.id;
+const HEAVY = requireFixture(EXDB.find((e) => e.bp === "upper legs" && e.eq === "barbell")).id;
 
-const DUMBBELL_HEAVY = EXDB.find((e) => e.bp === "upper legs" && e.eq === "dumbbell")!.id;
+const DUMBBELL_HEAVY = requireFixture(
+  EXDB.find((e) => e.bp === "upper legs" && e.eq === "dumbbell"),
+).id;
 
 const GOBLET = "1760";
 
-const CARDIO = EXDB.find((e) => e.bp === "cardio")!.id;
+const CARDIO = requireFixture(EXDB.find((e) => e.bp === "cardio")).id;
 
 // Build a state whose history is a list of sessions given as [weight, ...repsPerSet].
 // A rep count of null means "the set was never checked off".
-const hist = (id: string, rows: Array<Array<number | null>>, target?: Partial<ExConfig>) => ({
+type SessionHistoryRow = [weight: number, ...reps: Array<number | null>];
+
+const hist = (id: string, rows: SessionHistoryRow[], target?: Partial<ExConfig>) => ({
   unit: "kg" as const,
   workouts: rows.map((row, i) => ({
     d: "2026-01-0" + (i + 1),
     entries: [
       {
         id,
-        target: target || { sets: 3, reps: 5, weight: row[0]! },
+        target: target || { sets: 3, reps: 5, weight: row[0] },
         sets: row
           .slice(1)
           .map((r) =>
-            r === null ? { w: row[0]!, r: 0, done: false } : { w: row[0]!, r, done: true },
+            r === null ? { w: row[0], r: 0, done: false } : { w: row[0], r, done: true },
           ),
       },
     ],
@@ -339,7 +346,7 @@ describe("bodyweight exercises", () => {
     prog: "linear",
   };
 
-  const bw = (rows: Array<Array<number | null>>) => hist(LIFT, rows, { sets: 3, reps: 10 });
+  const bw = (rows: SessionHistoryRow[]) => hist(LIFT, rows, { sets: 3, reps: 10 });
 
   it("never invents a weight to deload to — there is nothing to take off a push-up", () => {
     const p = nextPrescription(
@@ -520,7 +527,7 @@ describe("double progression", () => {
   });
 
   it("deloads after a run of stalls and restarts at the bottom of the range", () => {
-    const rows = [
+    const rows: SessionHistoryRow[] = [
       [40, 9, 9, 9],
       [40, 9, 9, 9],
       [40, 9, 9, 9],

@@ -43,7 +43,9 @@ export function Segmented<V extends string>({
       onValueChange={(selectedValues) => {
         const selectedOption = options.find((option) => option.value === selectedValues[0]);
 
-        if (selectedOption) onChange(selectedOption.value);
+        if (selectedOption) {
+          onChange(selectedOption.value);
+        }
       }}
     >
       <span

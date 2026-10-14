@@ -28,13 +28,18 @@ const utcDay = (iso: string): number => {
 
 /** A practical session estimate, based on the user's configured rest time and planned work. */
 export function estimateRoutineMinutes(routine: Routine | null, restSeconds: number): number {
-  if (!routine?.ex.length) return 0;
+  if (!routine?.ex.length) {
+    return 0;
+  }
+
   const transitionSeconds = Math.max(0, routine.ex.length - 1) * 75;
   const setupSeconds = routine.ex.length * 60;
 
   const workSeconds = routine.ex.reduce((total, exercise) => {
-    if (exercise.mode === "cardio" || "min" in exercise)
+    if (exercise.mode === "cardio" || "min" in exercise) {
       return total + Math.max(1, exercise.sets || 1) * Math.max(1, exercise.min || 20) * 60;
+    }
+
     const secondsPerSet = exercise.mode === "time" ? Math.max(15, exercise.sec || 45) : 45;
     const sets = Math.max(1, exercise.sets || 1);
 
@@ -68,7 +73,10 @@ export function recoveryForRoutine(
     for (const workout of workouts) {
       const age = Math.max(0, Math.floor((utcDay(todayIso) - utcDay(workout.d)) / MS_PER_DAY));
 
-      if (age >= 6) continue;
+      if (age >= 6) {
+        continue;
+      }
+
       const effectiveSets = loadOfWorkouts([workout])[muscle] || 0;
       fatigue += effectiveSets * 9 * ((6 - age) / 6);
     }
@@ -89,10 +97,16 @@ export function latestProgress(state: Pick<AppState, "workouts">): ProgressInsig
   for (const exerciseId of recentExerciseIds) {
     const series = e1rmSeries(state, exerciseId);
 
-    if (!series.length) continue;
+    if (!series.length) {
+      continue;
+    }
+
     const latest = series.at(-1);
 
-    if (!latest) continue;
+    if (!latest) {
+      continue;
+    }
+
     const previous = series.length > 1 ? series.at(-2) : null;
     const delta = previous ? Math.round((latest.y - previous.y) * 10) / 10 : null;
 

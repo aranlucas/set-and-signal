@@ -1,3 +1,4 @@
+import { requireFixture } from "@/test/require-fixture";
 import { describe, it, expect } from "vitest";
 import {
   modeOf,
@@ -21,15 +22,15 @@ import {
 import { EXDB } from "@/domain/exercises/exercises.js";
 
 // Real ids out of the shipped catalogue, so the body-part fallback is exercised for real.
-const CARDIO = EXDB.find((e) => e.bp === "cardio")!.id;
+const CARDIO = requireFixture(EXDB.find((e) => e.bp === "cardio")).id;
 
 // A *loaded* lift: the catalogue's first non-cardio entry is a sit-up, which since issue #32
 // defaults to bodyweight and would quietly send every label test down the other path.
-const LIFT = EXDB.find((e) => e.bp !== "cardio" && e.eq !== "body weight")!.id;
+const LIFT = requireFixture(EXDB.find((e) => e.bp !== "cardio" && e.eq !== "body weight")).id;
 
-const BW = EXDB.find((e) => e.eq === "body weight")!.id;
+const BW = requireFixture(EXDB.find((e) => e.eq === "body weight")).id;
 
-const BARBELL = EXDB.find((e) => e.eq === "barbell")!.id;
+const BARBELL = requireFixture(EXDB.find((e) => e.eq === "barbell")).id;
 
 describe("bestWeightsFor", () => {
   it("keeps completed working-set records and confirmed top weights across sessions", () => {
@@ -223,7 +224,10 @@ describe("stepEffort", () => {
   it("keeps halves clean instead of drifting into float dust", () => {
     let v: number | null = null;
 
-    for (let i = 0; i < 6; i++) v = stepEffort("rpe", v, 1);
+    for (let i = 0; i < 6; i++) {
+      v = stepEffort("rpe", v, 1);
+    }
+
     expect(v).toBe(8.5);
     expect(stepEffort("rir", 0.1 + 0.2, 1)).toBe(0.8);
   });
@@ -269,7 +273,10 @@ describe("logging effort across a session", () => {
     // four + taps from empty on an RPE profile: 6, 6.5, 7, 7.5
     let v: number | null = null;
 
-    for (let i = 0; i < 4; i++) v = stepEffort("rpe", v, 1);
+    for (let i = 0; i < 4; i++) {
+      v = stepEffort("rpe", v, 1);
+    }
+
     expect(setLabel(LIFT, { w: 80, r: 5, rpe: v })).toBe("80×5 (RPE 7.5)");
   });
 

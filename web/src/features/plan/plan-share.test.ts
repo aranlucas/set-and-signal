@@ -1,3 +1,4 @@
+import { requireFixture } from "@/test/require-fixture";
 import { describe, expect, it } from "vitest";
 import { buildPlanBundle, mergePlan, parsePlan } from "./plan-share";
 import { DEFAULT_APP_STATE } from "@/domain/training/default-state";
@@ -16,7 +17,7 @@ describe("multi-session plan sharing", () => {
     expect(exported.opengym_plan).toBe(2);
     const destination = structuredClone(DEFAULT_APP_STATE);
     mergePlan(destination, parsePlan(JSON.stringify(exported)), { schedule: true });
-    const sessions = destination.week[2]!;
+    const sessions = requireFixture(destination.week[2]);
     expect(
       sessions.map(
         (session) => destination.routines.find((routine) => routine.id === session.routineId)?.name,

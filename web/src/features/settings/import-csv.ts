@@ -126,25 +126,40 @@ export function parseCSV(text: unknown): string[][] {
         if (s[i + 1] === '"') {
           field += '"';
           i++;
-        } else quoted = false;
-      } else field += c;
-    } else if (c === '"') quoted = true;
-    else if (c === ",") {
+        } else {
+          quoted = false;
+        }
+      } else {
+        field += c;
+      }
+    } else if (c === '"') {
+      quoted = true;
+    } else if (c === ",") {
       row.push(field);
       field = "";
     } else if (c === "\n" || c === "\r") {
-      if (c === "\r" && s[i + 1] === "\n") i++;
+      if (c === "\r" && s[i + 1] === "\n") {
+        i++;
+      }
+
       row.push(field);
       field = "";
 
-      if (row.some((x) => x !== "")) rows.push(row);
+      if (row.some((x) => x !== "")) {
+        rows.push(row);
+      }
+
       row = [];
-    } else field += c;
+    } else {
+      field += c;
+    }
   }
 
   row.push(field);
 
-  if (row.some((x) => x !== "")) rows.push(row);
+  if (row.some((x) => x !== "")) {
+    rows.push(row);
+  }
 
   return rows;
 }
@@ -203,15 +218,25 @@ function mapHeader(header: string[]) {
 export function detectSource(header: string[]): string | null {
   const h = new Set(header.map(norm));
 
-  if (h.has("exercise title") && h.has("set index")) return "Hevy";
+  if (h.has("exercise title") && h.has("set index")) {
+    return "Hevy";
+  }
 
-  if (h.has("exercise name") && h.has("set order")) return "Strong";
+  if (h.has("exercise name") && h.has("set order")) {
+    return "Strong";
+  }
 
-  if (h.has("exercise") && h.has("kind")) return "FitNotes (iOS)";
+  if (h.has("exercise") && h.has("kind")) {
+    return "FitNotes (iOS)";
+  }
 
-  if (h.has("exercise") && h.has("weight unit")) return "FitNotes";
+  if (h.has("exercise") && h.has("weight unit")) {
+    return "FitNotes";
+  }
 
-  if (h.has("exercise") && h.has("category")) return "FitNotes";
+  if (h.has("exercise") && h.has("category")) {
+    return "FitNotes";
+  }
 
   return null;
 }
@@ -275,7 +300,7 @@ function wordsOf(name: string | null | undefined): string[] {
   return k.split(" ").filter((w) => w && !FILLER.has(w));
 }
 
-const keyOf = (name: string | null | undefined) => wordsOf(name).sort().join(" ");
+const keyOf = (name: string | null | undefined) => wordsOf(name).toSorted().join(" ");
 
 interface IndexEntry {
   id: Id;
@@ -286,15 +311,21 @@ interface IndexEntry {
 let INDEX: INDEXValue | null = null;
 
 function buildIndex() {
-  if (INDEX) return INDEX;
+  if (INDEX) {
+    return INDEX;
+  }
+
   const all: IndexEntry[] = [];
   const index = { exact: new Map<string, Id>(), all };
 
   for (const e of EXDB) {
     const w = wordsOf(e.n);
-    const k = w.slice().sort().join(" ");
+    const k = w.slice().toSorted().join(" ");
 
-    if (!index.exact.has(k)) index.exact.set(k, e.id);
+    if (!index.exact.has(k)) {
+      index.exact.set(k, e.id);
+    }
+
     index.all.push({ id: e.id, set: new Set(w), n: w.length });
   }
 
@@ -379,7 +410,9 @@ const aliasIndex = () => {
   if (!ALIAS_IDX) {
     ALIAS_IDX = new Map();
 
-    for (const [key, id] of ALIAS_EX) ALIAS_IDX.set(wordsOf(key).sort().join(" "), id);
+    for (const [key, id] of ALIAS_EX) {
+      ALIAS_IDX.set(wordsOf(key).toSorted().join(" "), id);
+    }
   }
 
   return ALIAS_IDX;
@@ -398,16 +431,25 @@ export function matchExercise(name: string | null | undefined): Id | null {
   const idx = buildIndex();
   const w = wordsOf(name);
 
-  if (w.length === 0) return null;
+  if (w.length === 0) {
+    return null;
+  }
+
   // Compared as a sorted bag of words, so "Squat (Barbell)" finds the 'barbell squat'
   // alias — the exporters disagree about whether the equipment leads or trails.
-  const sorted = w.slice().sort().join(" ");
+  const sorted = w.slice().toSorted().join(" ");
   const aliased = aliasIndex().get(sorted);
 
-  if (aliased && EXIDX[aliased]) return aliased;
+  if (aliased && EXIDX[aliased]) {
+    return aliased;
+  }
+
   const exact = idx.exact.get(sorted);
 
-  if (exact) return exact;
+  if (exact) {
+    return exact;
+  }
+
   const q = new Set(w);
   let best: Id | null = null;
   let bestExtra = Infinity;
@@ -416,22 +458,30 @@ export function matchExercise(name: string | null | undefined): Id | null {
   for (const c of idx.all) {
     let ok = true;
 
-    for (const word of q)
+    for (const word of q) {
       if (!c.set.has(word)) {
         ok = false;
         break;
       }
+    }
 
-    if (!ok) continue;
+    if (!ok) {
+      continue;
+    }
+
     const extra = c.n - q.size;
 
-    if (extra > 2) continue;
+    if (extra > 2) {
+      continue;
+    }
 
     if (extra < bestExtra) {
       best = c.id;
       bestExtra = extra;
       ties = 1;
-    } else if (extra === bestExtra) ties++;
+    } else if (extra === bestExtra) {
+      ties++;
+    }
   }
 
   return ties === 1 ? best : null;
@@ -490,10 +540,15 @@ const num = (v: string | undefined) => {
 const effortNum = (raw: string | undefined, zeroMeansRated: boolean): number | null => {
   const s = textValue(raw).trim();
 
-  if (!s) return null;
+  if (!s) {
+    return null;
+  }
+
   const n = parseFloat(s.replace(",", "."));
 
-  if (!isFinite(n) || n < 0 || (n === 0 && !zeroMeansRated)) return null;
+  if (!isFinite(n) || n < 0 || (n === 0 && !zeroMeansRated)) {
+    return null;
+  }
 
   return Math.min(10, Math.round(n * 100) / 100);
 };
@@ -525,25 +580,32 @@ export function parseWhen(s: unknown): When | null {
   const v = textValue(s).trim();
   let m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ](\d{1,2}):(\d{2}))?/);
 
-  if (m) return { d: `${m[1]}-${p2(m[2])}-${p2(m[3])}`, t: hm(m[4], m[5]) };
+  if (m) {
+    return { d: `${m[1]}-${p2(m[2])}-${p2(m[3])}`, t: hm(m[4], m[5]) };
+  }
+
   m = v.match(/^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?\s+(\d{4})(?:,?\s+(\d{1,2}):(\d{2}))?/);
 
   const dayFirstMonth = m ? MON.get(m[2].toLowerCase()) : undefined;
 
-  if (m && dayFirstMonth)
+  if (m && dayFirstMonth) {
     return {
       d: `${m[3]}-${p2(dayFirstMonth)}-${p2(m[1])}`,
       t: hm(m[4], m[5]),
     };
+  }
+
   m = v.match(/^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})(?:,?\s+(\d{1,2}):(\d{2}))?/);
 
   const monthFirstMonth = m ? MON.get(m[1].toLowerCase()) : undefined;
 
-  if (m && monthFirstMonth)
+  if (m && monthFirstMonth) {
     return {
       d: `${m[3]}-${p2(monthFirstMonth)}-${p2(m[2])}`,
       t: hm(m[4], m[5]),
     };
+  }
+
   // Day-first when ambiguous: FitNotes/Strong/Hevy all write unambiguous dates, so a
   // bare numeric one came through a spreadsheet, and those are usually European.
   m = v.match(/^(\d{1,2})[/.](\d{1,2})[/.](\d{4})(?:[, ]+(\d{1,2}):(\d{2}))?/);
@@ -551,7 +613,10 @@ export function parseWhen(s: unknown): When | null {
   if (m) {
     const [, a, b, y] = m;
 
-    if (!a || !b || !y) return null;
+    if (!a || !b || !y) {
+      return null;
+    }
+
     const day = +a > 12 ? a : +b > 12 ? b : a;
     const mon = day === a ? b : a;
 
@@ -568,7 +633,9 @@ const hm = (h?: string, mi?: string) =>
 function toMinutes(v: string | undefined): number {
   const s = textValue(v).trim();
 
-  if (!s) return 0;
+  if (!s) {
+    return 0;
+  }
 
   if (s.includes(":")) {
     const p = s.split(":").map((x) => parseInt(x, 10) || 0);
@@ -581,7 +648,9 @@ function toMinutes(v: string | undefined): number {
   const m = s.match(/(\d+)\s*h/i);
   const mm = s.match(/(\d+)\s*m/i); // Strong's "2h 38m"
 
-  if (m || mm) return (m ? Number(m[1] || 0) * 60 : 0) + (mm ? Number(mm[1] || 0) : 0);
+  if (m || mm) {
+    return (m ? Number(m[1] || 0) * 60 : 0) + (mm ? Number(mm[1] || 0) : 0);
+  }
 
   return Math.round(num(s) * 10) / 10;
 }
@@ -623,10 +692,16 @@ export function parseWorkoutCSV(
 ): WorkoutsImport {
   const rows = parseCSV(text);
 
-  if (rows.length < 2) return { error: "empty" };
+  if (rows.length < 2) {
+    return { error: "empty" };
+  }
+
   const [headerRow, ...dataRows] = rows;
 
-  if (!headerRow) return { error: "empty" };
+  if (!headerRow) {
+    return { error: "empty" };
+  }
+
   const map = mapHeader(headerRow);
   const source = detectSource(headerRow);
 
@@ -637,7 +712,9 @@ export function parseWorkoutCSV(
         : null
       : ("date" as const);
 
-  if (!dateCol || map.exercise === undefined) return { error: "unrecognised" };
+  if (!dateCol || map.exercise === undefined) {
+    return { error: "unrecognised" };
+  }
 
   const resolved = new Map<string, Id | null>(); // exercise name -> dataset id | null, resolved once
 
@@ -681,9 +758,13 @@ export function parseWorkoutCSV(
       rowUnit = u.startsWith("lb") ? "lb" : u.startsWith("kg") ? "kg" : "";
     }
 
-    if (rowUnit === "lb") sawLb = true;
+    if (rowUnit === "lb") {
+      sawLb = true;
+    }
 
-    if (rowUnit === "kg") sawKg = true;
+    if (rowUnit === "kg") {
+      sawKg = true;
+    }
 
     const reps = Math.round(num(cell(r, "reps")));
     const secs = num(cell(r, "seconds"));
@@ -699,7 +780,9 @@ export function parseWorkoutCSV(
       continue;
     }
 
-    if (/warm/i.test(cell(r, "setType"))) warmups++;
+    if (/warm/i.test(cell(r, "setType"))) {
+      warmups++;
+    }
 
     const key = keyOf(name);
     let id = resolved.get(key);
@@ -709,8 +792,9 @@ export function parseWorkoutCSV(
       resolved.set(key, id);
     }
 
-    if (id) matched++;
-    else {
+    if (id) {
+      matched++;
+    } else {
       let c = created.get(key);
 
       if (!c) {
@@ -770,20 +854,28 @@ export function parseWorkoutCSV(
       byDate.set(when.d, day);
     }
 
-    if (!day.name) day.name = cell(r, "workoutName") || "";
+    if (!day.name) {
+      day.name = cell(r, "workoutName") || "";
+    }
 
     if (map.endTime !== undefined) {
       const e = parseWhen(cell(r, "endTime"));
 
-      if (e?.t != null) day.end = e.t;
+      if (e?.t != null) {
+        day.end = e.t;
+      }
     } else if (map.time !== undefined && !map.seconds && reps) {
       /* FitNotes' Time is per-set */
     }
 
     const exerciseSets = day.ex.get(id);
 
-    if (exerciseSets) exerciseSets.push(set);
-    else day.ex.set(id, [set]);
+    if (exerciseSets) {
+      exerciseSets.push(set);
+    } else {
+      day.ex.set(id, [set]);
+    }
+
     sets++;
   }
 
@@ -794,27 +886,29 @@ export function parseWorkoutCSV(
   // "185 lb" into 185 kg.
   const fileUnit: "" | Unit = sawLb && !sawKg ? "lb" : sawKg && !sawLb ? "kg" : "";
   const mixedUnits = sawLb && sawKg;
-  const toKg = (x: number) => Math.round(x * LB_TO_KG * 10) / 10;
-  const toLb = (x: number) => Math.round((x / LB_TO_KG) * 10) / 10;
 
   // A row without its own unit follows the file's, and a file that says nothing is taken
   // to already be in the profile's unit.
   const convRow = (s: RowSet): number => {
     const u = s.u || fileUnit;
 
-    if (!u || u === unit) return s.w || 0;
+    if (!u || u === unit) {
+      return s.w || 0;
+    }
 
     return u === "lb" ? toKg(s.w || 0) : toLb(s.w || 0);
   };
 
   const converted = (!!fileUnit && fileUnit !== unit) || mixedUnits;
 
-  const dates = [...byDate.keys()].sort();
+  const dates = [...byDate.keys()].toSorted();
 
   const workouts: Workout[] = dates.flatMap((d) => {
     const day = byDate.get(d);
 
-    if (!day) return [];
+    if (!day) {
+      return [];
+    }
 
     // rows carry either the cardio pair (min/speed) or w/r (+optional effort) by
     // construction, so the widened arrays are runtime-guaranteed to hold LoggedSets
@@ -833,9 +927,13 @@ export function parseWorkoutCSV(
           r: set.r || 0,
         };
 
-        if (set.rir != null) repsSet.rir = set.rir;
+        if (set.rir != null) {
+          repsSet.rir = set.rir;
+        }
 
-        if (set.rpe != null) repsSet.rpe = set.rpe;
+        if (set.rpe != null) {
+          repsSet.rpe = set.rpe;
+        }
 
         return repsSet;
       });
@@ -875,7 +973,7 @@ export function parseWorkoutCSV(
     matched: new Set([...resolved.values()].filter(Boolean)).size,
     matchedSets: matched,
     created: created.size,
-    unmatchedNames: [...unmatched].sort(),
+    unmatchedNames: [...unmatched].toSorted(),
     sets,
     skipped,
     warmups,
@@ -918,12 +1016,20 @@ export function parseBodyweight(
       const dt = /startDate="([^"]+)"/.exec(tag) || /creationDate="([^"]+)"/.exec(tag);
       const u = /unit="([^"]+)"/.exec(tag);
 
-      if (!val || !dt) continue;
+      if (!val || !dt) {
+        continue;
+      }
+
       const when = parseWhen(dt[1]);
 
-      if (!when) continue;
+      if (!when) {
+        continue;
+      }
 
-      if (u) fileUnit = /lb/i.test(u[1]) ? "lb" : "kg";
+      if (u) {
+        fileUnit = /lb/i.test(u[1]) ? "lb" : "kg";
+      }
+
       out.set(when.d, {
         w: parseFloat(val[1]),
         t: new Date(dt[1]).getTime() || null,
@@ -932,30 +1038,47 @@ export function parseBodyweight(
   } else {
     const rows = parseCSV(s);
 
-    if (rows.length < 2) return { error: "empty" };
+    if (rows.length < 2) {
+      return { error: "empty" };
+    }
+
     const headerRow = rows[0];
 
-    if (!headerRow) return { error: "empty" };
+    if (!headerRow) {
+      return { error: "empty" };
+    }
+
     const map = mapHeader(headerRow);
     // a weight-only CSV: whichever weight column it has
     const wCol = map.weightKg ?? map.weightLb ?? map.weight;
     const dCol = map.date ?? map.startTime;
 
-    if (wCol === undefined || dCol === undefined) return { error: "unrecognised" };
+    if (wCol === undefined || dCol === undefined) {
+      return { error: "unrecognised" };
+    }
 
-    if (map.weightKg !== undefined) fileUnit = "kg";
-    else if (map.weightLb !== undefined) fileUnit = "lb";
+    if (map.weightKg !== undefined) {
+      fileUnit = "kg";
+    } else if (map.weightLb !== undefined) {
+      fileUnit = "lb";
+    }
 
     for (let i = 1; i < rows.length; i++) {
       const when = parseWhen(rows[i]?.[dCol] ?? "");
       const w = num(rows[i]?.[wCol]);
 
-      if (!when || !w) continue;
+      if (!when || !w) {
+        continue;
+      }
+
       out.set(when.d, { w, t: new Date(when.d).getTime() + (when.t ?? 0) });
     }
   }
 
-  if (out.size === 0) return { error: "unrecognised" };
+  if (out.size === 0) {
+    return { error: "unrecognised" };
+  }
+
   const converted = !!fileUnit && fileUnit !== unit;
 
   const conv = converted
@@ -964,11 +1087,13 @@ export function parseBodyweight(
       : (x: number) => Math.round((x / LB_TO_KG) * 10) / 10
     : (x: number) => Math.round(x * 10) / 10;
 
-  const dates = [...out.keys()].sort();
+  const dates = [...out.keys()].toSorted();
   const firstDate = dates[0];
   const lastDate = dates.at(-1);
 
-  if (!firstDate || !lastDate) return { error: "unrecognised" };
+  if (!firstDate || !lastDate) {
+    return { error: "unrecognised" };
+  }
 
   return {
     kind: "bodyweight",
@@ -990,10 +1115,16 @@ export function parseBodyweight(
 export function parseImport(text: unknown, opts?: ParseImportProps): ParseResult {
   const s = String(text);
 
-  if (s.includes("HKQuantityTypeIdentifier") || /^\s*</.test(s)) return parseBodyweight(s, opts);
+  if (s.includes("HKQuantityTypeIdentifier") || /^\s*</.test(s)) {
+    return parseBodyweight(s, opts);
+  }
+
   const asWorkouts = parseWorkoutCSV(s, opts);
 
-  if (!("error" in asWorkouts)) return asWorkouts;
+  if (!("error" in asWorkouts)) {
+    return asWorkouts;
+  }
+
   const asWeights = parseBodyweight(s, opts);
 
   return "error" in asWeights ? asWorkouts : asWeights;
@@ -1010,7 +1141,7 @@ export function mergeImport(
   if ("kind" in parsed && parsed.kind === "bodyweight") {
     const have = new Set(state.bodyweight.map((b) => b.d));
     const fresh = parsed.bodyweight.filter((b) => !have.has(b.d));
-    state.bodyweight = [...state.bodyweight, ...fresh].sort((a, b) => (a.d < b.d ? -1 : 1));
+    state.bodyweight = [...state.bodyweight, ...fresh].toSorted((a, b) => (a.d < b.d ? -1 : 1));
 
     return {
       added: fresh.length,
@@ -1024,18 +1155,22 @@ export function mergeImport(
     const used = new Set(fresh.flatMap((w) => w.entries.map((e) => e.id)));
     const customs = parsed.customEx.filter((c) => used.has(c.id) && !EXIDX[c.id]);
     state.customEx = [...(state.customEx || []), ...customs];
-    state.workouts = [...state.workouts, ...fresh].sort((a, b) => (a.d < b.d ? -1 : 1));
+    state.workouts = [...state.workouts, ...fresh].toSorted((a, b) => (a.d < b.d ? -1 : 1));
 
     // seed the weight suggestions from the newest imported set of each lift
     for (const w of fresh) {
       for (const e of w.entries) {
         const mx = Math.max(0, ...e.sets.map((s) => fields(s).w || 0), e.topW || 0);
 
-        if (mx <= 0) continue;
+        if (mx <= 0) {
+          continue;
+        }
 
         const cur = state.exWeights[e.id];
 
-        if (!cur || w.d >= cur.d) state.exWeights[e.id] = { w: mx, d: w.d };
+        if (!cur || w.d >= cur.d) {
+          state.exWeights[e.id] = { w: mx, d: w.d };
+        }
       }
     }
 
@@ -1047,3 +1182,7 @@ export function mergeImport(
 
   return { added: 0, skipped: 0 };
 }
+
+const toKg = (x: number) => Math.round(x * LB_TO_KG * 10) / 10;
+
+const toLb = (x: number) => Math.round((x / LB_TO_KG) * 10) / 10;

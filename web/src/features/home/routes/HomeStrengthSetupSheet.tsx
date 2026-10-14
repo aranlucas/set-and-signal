@@ -163,8 +163,9 @@ export default function HomeStrengthSetupSheet() {
   ];
 
   useEffect(() => {
-    if (hasRoutines)
+    if (hasRoutines) {
       void navigate({ to: "/home", replace: true, resetScroll: false }).catch(console.error);
+    }
   }, [hasRoutines, navigate]);
 
   const chooseExperience = (nextExperience: StrengthExperience) => {
@@ -178,8 +179,11 @@ export default function HomeStrengthSetupSheet() {
   };
 
   const reviewFirstWeek = async () => {
-    if (await trigger("weights")) setStep(2);
-    else toast(t("startingSetup.validWeights", "Enter a starting weight for every lift"));
+    if (await trigger("weights")) {
+      setStep(2);
+    } else {
+      toast(t("startingSetup.validWeights", "Enter a starting weight for every lift"));
+    }
   };
 
   const finish = ({ unit: selectedUnit, weights }: StartingStrengthFormValues) => {
@@ -201,7 +205,9 @@ export default function HomeStrengthSetupSheet() {
     <Sheet
       open
       onOpenChange={(open) => {
-        if (!open) void close().catch(console.error);
+        if (!open) {
+          void close().catch(console.error);
+        }
       }}
     >
       <SheetContent
@@ -227,8 +233,11 @@ export default function HomeStrengthSetupSheet() {
               type="button"
               className="flex size-9 items-center justify-center"
               onClick={() => {
-                if (step === 0) void close().catch(console.error);
-                else setStep(previousStep(step));
+                if (step === 0) {
+                  void close().catch(console.error);
+                } else {
+                  setStep(previousStep(step));
+                }
               }}
               aria-label={step === 0 ? t("common.close", "Close") : t("common.previous", "Prev")}
             >
@@ -431,8 +440,11 @@ export default function HomeStrengthSetupSheet() {
                 type="button"
                 variant="default"
                 onClick={() => {
-                  if (step === 0) setStep(1);
-                  else void reviewFirstWeek().catch(console.error);
+                  if (step === 0) {
+                    setStep(1);
+                  } else {
+                    void reviewFirstWeek().catch(console.error);
+                  }
                 }}
               >
                 {step === 0

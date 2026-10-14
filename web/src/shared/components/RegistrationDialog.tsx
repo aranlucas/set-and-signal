@@ -82,8 +82,10 @@ function RegistrationDialogContent({ open, onOpenChange }: RegistrationDialogPro
       if (
         error instanceof Error &&
         (error.name === "NotAllowedError" || error.name === "AbortError")
-      )
+      ) {
         return;
+      }
+
       toast(
         error instanceof Error && error.message
           ? error.message

@@ -108,8 +108,11 @@ describe("demo seed — effort", () => {
     let rir = 0;
     let rpe = 0;
     eachSet((s) => {
-      if (s.rir != null) rir++;
-      else if (s.rpe != null) rpe++;
+      if (s.rir != null) {
+        rir++;
+      } else if (s.rpe != null) {
+        rpe++;
+      }
     });
     expect(rir).toBeGreaterThan(0);
     expect(rpe).toBeGreaterThan(0);
@@ -125,7 +128,7 @@ describe("demo seed — effort", () => {
     }
 
     // Sorted oldest first, one point per calendar week.
-    expect(wks.map((w) => w.t)).toEqual(wks.map((w) => w.t).sort((a, b) => a - b));
+    expect(wks.map((w) => w.t)).toEqual(wks.map((w) => w.t).toSorted((a, b) => a - b));
     expect(new Set(wks.map((w) => w.t)).size).toBe(wks.length);
   });
 
@@ -154,13 +157,17 @@ describe("demo seed — effort", () => {
   it("has hard sets to filter the muscle map by", () => {
     let hard = 0;
     eachSet((s) => {
-      if (isHardSet(s)) hard++;
+      if (isHardSet(s)) {
+        hard++;
+      }
     });
     expect(hard).toBe(sum.hard);
     expect(hard).toBeGreaterThan(50);
     const invalidHardSets: SetFields[] = [];
     eachSet((s) => {
-      if (isHardSet(s) && (rirOf(s) ?? Infinity) > HARD_RIR) invalidHardSets.push(s);
+      if (isHardSet(s) && (rirOf(s) ?? Infinity) > HARD_RIR) {
+        invalidHardSets.push(s);
+      }
     });
     expect(invalidHardSets).toEqual([]);
   });
@@ -168,19 +175,19 @@ describe("demo seed — effort", () => {
   it("is deterministic — two builds produce the same ratings", () => {
     const b: DemoState = buildDemoState();
 
-    const flat = (st: FlatProps) =>
-      st.workouts
-        .map((w) =>
-          w.entries
-            .map((e) =>
-              e.sets
-                .map((s) => `${String(s.w)}x${String(s.r)}/${s.rir ?? ""}/${s.rpe ?? ""}`)
-                .join(","),
-            )
-            .join("|"),
-        )
-        .join(";");
-
     expect(flat(b)).toBe(flat(demoState));
   });
 });
+
+const flat = (st: FlatProps) =>
+  st.workouts
+    .map((w) =>
+      w.entries
+        .map((e) =>
+          e.sets
+            .map((s) => `${String(s.w)}x${String(s.r)}/${s.rir ?? ""}/${s.rpe ?? ""}`)
+            .join(","),
+        )
+        .join("|"),
+    )
+    .join(";");

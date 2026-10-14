@@ -29,16 +29,23 @@ const targetStr = (cur: ExConfig | undefined, g: AiPlanEntry): string => {
   const sets = g.sets ?? cur?.sets;
 
   if (g.sec !== undefined || cur?.sec !== undefined || cur?.mode === "time") {
-    if (sets) parts.push(sets + "×");
+    if (sets) {
+      parts.push(sets + "×");
+    }
+
     parts.push((g.sec ?? cur?.sec ?? 45) + "s");
-  } else if (g.min !== undefined || g.speed !== undefined || cur?.min !== undefined)
+  } else if (g.min !== undefined || g.speed !== undefined || cur?.min !== undefined) {
     parts.push((g.min ?? cur?.min ?? 20) + " min @ " + (g.speed ?? cur?.speed ?? "—"));
-  else if (g.reps !== undefined || !cur?.bodyweight) {
+  } else if (g.reps !== undefined || !cur?.bodyweight) {
     parts.push((sets ? sets + "×" : "") + (g.reps ?? cur?.reps ?? 10));
     const w = g.weight ?? cur?.weight;
 
-    if (!cur?.bodyweight && w) parts.push("@ " + fmtNum(w) + " " + getAppState().unit);
-  } else if (sets) parts.push(sets + "×" + (g.reps ?? cur?.reps ?? 10));
+    if (!cur?.bodyweight && w) {
+      parts.push("@ " + fmtNum(w) + " " + getAppState().unit);
+    }
+  } else if (sets) {
+    parts.push(sets + "×" + (g.reps ?? cur?.reps ?? 10));
+  }
 
   return parts.join(" ");
 };
@@ -53,16 +60,19 @@ export function AiPlan({ close }: AiPlanProps) {
     queryFn: async (): Promise<AiPlanResult> => {
       const status = await apiParsed("/api/ai/status", aiStatusResponse);
 
-      if (!status.enabled)
+      if (!status.enabled) {
         throw new Error(
           t("ai.missingKeyError", "This instance has no AI key configured (OPENROUTER_API_KEY)."),
         );
+      }
+
       const routine = effectiveRoutine(getAppState(), todayISO());
 
-      if (!routine)
+      if (!routine) {
         throw new Error(
           t("ai.noRoutineError", "Nothing scheduled today — assign a routine to this day first."),
         );
+      }
 
       return apiParsed("/api/ai/next-workout", aiPlanResponse, {
         method: "POST",
@@ -74,41 +84,64 @@ export function AiPlan({ close }: AiPlanProps) {
   const res = planQuery.data;
 
   const apply = () => {
-    if (!res) return;
+    if (!res) {
+      return;
+    }
+
     updateAppState((appState) => {
       const routine = effectiveRoutine(appState, todayISO());
 
-      if (!routine) return;
+      if (!routine) {
+        return;
+      }
+
       const byId = new Map(routine.ex.map((exercise) => [exercise.id, exercise]));
 
       for (const g of res.suggestion.entries) {
         const exerciseConfig = byId.get(g.id);
 
-        if (!exerciseConfig) continue;
+        if (!exerciseConfig) {
+          continue;
+        }
 
         if (g.swapTo && EXIDX[g.swapTo]) {
           exerciseConfig.id = g.swapTo;
 
-          for (const key of ["weight", "sec", "min", "speed"] as const) delete exerciseConfig[key];
+          for (const key of ["weight", "sec", "min", "speed"] as const) {
+            delete exerciseConfig[key];
+          }
         }
 
-        if (g.sets !== undefined) exerciseConfig.sets = g.sets;
+        if (g.sets !== undefined) {
+          exerciseConfig.sets = g.sets;
+        }
 
-        if (g.reps !== undefined) exerciseConfig.reps = g.reps;
+        if (g.reps !== undefined) {
+          exerciseConfig.reps = g.reps;
+        }
 
-        if (g.weight !== undefined) exerciseConfig.weight = g.weight;
+        if (g.weight !== undefined) {
+          exerciseConfig.weight = g.weight;
+        }
 
-        if (g.sec !== undefined) exerciseConfig.sec = g.sec;
+        if (g.sec !== undefined) {
+          exerciseConfig.sec = g.sec;
+        }
 
-        if (g.min !== undefined) exerciseConfig.min = g.min;
+        if (g.min !== undefined) {
+          exerciseConfig.min = g.min;
+        }
 
-        if (g.speed !== undefined) exerciseConfig.speed = g.speed;
+        if (g.speed !== undefined) {
+          exerciseConfig.speed = g.speed;
+        }
 
-        if (exerciseConfig.weight)
+        if (exerciseConfig.weight) {
           appState.exWeights[exerciseConfig.id] = {
             w: exerciseConfig.weight,
             d: todayISO(),
           };
+        }
       }
     });
     setApplied(true);

@@ -48,9 +48,13 @@ const W = (n: number, sets: Array<WProps>): Workout => {
         sets: sets.map<RepsSet>((set) => {
           const repsSet: RepsSet = { w: 60, r: 8, done: set.done ?? true };
 
-          if (validation.is(validation.number(), set.rir)) repsSet.rir = set.rir;
+          if (validation.is(validation.number(), set.rir)) {
+            repsSet.rir = set.rir;
+          }
 
-          if (validation.is(validation.number(), set.rpe)) repsSet.rpe = set.rpe;
+          if (validation.is(validation.number(), set.rpe)) {
+            repsSet.rpe = set.rpe;
+          }
 
           return repsSet;
         }),

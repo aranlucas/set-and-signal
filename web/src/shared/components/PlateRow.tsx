@@ -41,7 +41,10 @@ export function PlateRow({ weight }: PlateRowProps) {
   const savedSetup = useStore((state) => state.appState.plates);
   const setup = effectivePlateSetup(unit, savedSetup);
 
-  if (!setup.on || weight < setup.bar) return null;
+  if (!setup.on || weight < setup.bar) {
+    return null;
+  }
+
   const result = platesFor(weight, setup);
   const max = result ? Math.max(...result.perSide.map((plate) => plate.w)) : 0;
 

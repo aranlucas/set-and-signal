@@ -88,7 +88,10 @@ export default function Plan() {
                   (candidate) => candidate.id === session.routineId,
                 );
 
-                if (!routine) return [];
+                if (!routine) {
+                  return [];
+                }
+
                 const occurrence = (occurrences.get(routine.id) ?? 0) + 1;
                 occurrences.set(routine.id, occurrence);
 
