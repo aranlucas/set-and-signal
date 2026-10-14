@@ -63,11 +63,6 @@ export function MeasuresSheet({ close }: MeasuresSheetProps) {
     toast(t("measurements.saved", "Measurements saved"));
   };
 
-  const del = (date: string) =>
-    updateAppState((draft) => {
-      draft.measures = (draft.measures || []).filter((entry) => entry.d !== date);
-    });
-
   const recent = [...(measures || [])].toReversed().slice(0, 3);
 
   return (
@@ -125,12 +120,14 @@ export function MeasuresSheet({ close }: MeasuresSheetProps) {
                   {fields.flatMap((field) => {
                     const value = entryMeasure[field.key];
 
-                    return value == null ? [] : [
-                      <span key={field.key} className="whitespace-nowrap">
-                        <span className="text-muted-foreground">{field.label} </span>
-                        <b>{fmtNum(value)}</b>
-                      </span>,
-                    ];
+                    return value == null
+                      ? []
+                      : [
+                          <span key={field.key} className="whitespace-nowrap">
+                            <span className="text-muted-foreground">{field.label} </span>
+                            <b>{fmtNum(value)}</b>
+                          </span>,
+                        ];
                   })}
                   <Button
                     variant="square"
@@ -150,3 +147,8 @@ export function MeasuresSheet({ close }: MeasuresSheetProps) {
     </>
   );
 }
+
+const del = (date: string) =>
+  updateAppState((draft) => {
+    draft.measures = (draft.measures || []).filter((entry) => entry.d !== date);
+  });

@@ -662,8 +662,10 @@ export function ExConfigSheet({
           <Button
             type="button"
             onClick={() =>
-              void close().then(() => {
+              void close().then((): undefined => {
                 openCustom(customExercise);
+
+                return undefined;
               })
             }
           >
@@ -676,8 +678,10 @@ export function ExConfigSheet({
             type="button"
             variant="destructive"
             onClick={() =>
-              void close().then(() => {
+              void close().then((): undefined => {
                 onDelete();
+
+                return undefined;
               })
             }
           >

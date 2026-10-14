@@ -110,6 +110,10 @@ function formulaLabel(
       return t("tools.formulaBrzycki", "Brzycki");
     case "lombardi":
       return t("tools.formulaLombardi", "Lombardi");
+    default: {
+      const exhaustive: never = formula;
+      throw new Error(`Unsupported formula: ${String(exhaustive)}`);
+    }
   }
 }
 

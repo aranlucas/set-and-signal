@@ -209,8 +209,10 @@ export function ExerciseDetail({
         variant="default"
         className="my-2.5 mb-1 w-full"
         onClick={() =>
-          void close().then(() => {
+          void close().then((): undefined => {
             openAddToRoutine(exercise);
+
+            return undefined;
           })
         }
       >
@@ -222,8 +224,10 @@ export function ExerciseDetail({
           <Button
             className="min-w-0 flex-1"
             onClick={() =>
-              void close().then(() => {
+              void close().then((): undefined => {
                 openCustom(customExercise);
+
+                return undefined;
               })
             }
           >
@@ -234,8 +238,10 @@ export function ExerciseDetail({
             variant="destructive"
             className="min-w-0 flex-1"
             onClick={() =>
-              void close().then(() => {
+              void close().then((): undefined => {
                 onDelete?.();
+
+                return undefined;
               })
             }
           >

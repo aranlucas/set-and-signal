@@ -80,9 +80,9 @@ export function releaseWakeLock() {
 
 // Holds the lock for as long as `enabled` stays true.
 export function useWakeLock(enabled: boolean) {
-  useEffect(() => {
+  useEffect((): (() => void) | undefined => {
     if (!enabled) {
-      return;
+      return undefined;
     }
 
     requestWakeLock();

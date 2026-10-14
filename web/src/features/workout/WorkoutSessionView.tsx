@@ -468,9 +468,9 @@ export function WorkoutSessionView({ activeWorkout, onComplete }: WorkoutSession
 
   // Live-presence heartbeat so the admin dashboard can show who's training now. Signed-in only —
   // guests have no server session. Reads fresh state each tick so progress stays current.
-  useEffect(() => {
+  useEffect((): (() => void) | undefined => {
     if (!userId) {
-      return;
+      return undefined;
     }
 
     let stopped = false;

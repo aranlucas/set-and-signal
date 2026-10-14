@@ -130,17 +130,19 @@ export function useExerciseInstructions(
 
   const [loaded, setLoaded] = useState<LoadedValue | undefined>();
 
-  useEffect(() => {
+  useEffect((): (() => void) | undefined => {
     if (!enabled) {
-      return;
+      return undefined;
     }
 
     let active = true;
     void loadExerciseInstructions(normalizedLanguage, exerciseId)
-      .then((result) => {
+      .then((result): undefined => {
         if (active) {
           setLoaded({ requestKey, result });
         }
+
+        return undefined;
       })
       .catch(() => {
         if (active) {

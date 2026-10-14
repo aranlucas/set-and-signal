@@ -886,8 +886,6 @@ export function parseWorkoutCSV(
   // "185 lb" into 185 kg.
   const fileUnit: "" | Unit = sawLb && !sawKg ? "lb" : sawKg && !sawLb ? "kg" : "";
   const mixedUnits = sawLb && sawKg;
-  const toKg = (x: number) => Math.round(x * LB_TO_KG * 10) / 10;
-  const toLb = (x: number) => Math.round((x / LB_TO_KG) * 10) / 10;
 
   // A row without its own unit follows the file's, and a file that says nothing is taken
   // to already be in the profile's unit.
@@ -1184,3 +1182,7 @@ export function mergeImport(
 
   return { added: 0, skipped: 0 };
 }
+
+const toKg = (x: number) => Math.round(x * LB_TO_KG * 10) / 10;
+
+const toLb = (x: number) => Math.round((x / LB_TO_KG) * 10) / 10;

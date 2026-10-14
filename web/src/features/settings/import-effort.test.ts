@@ -146,9 +146,6 @@ describe("importing effort from another app", () => {
 // The backup is the whole state serialised, so effort travels with it by construction. This
 // pins that it stays true — a set losing its rating on a backup round trip would be silent.
 describe("effort in a backup", () => {
-  // structuredClone exercises the same JSON-compatible values without weakening the fixture type.
-  const roundTrip = <T extends object>(state: T): T => structuredClone(state);
-
   it("exports and re-imports both scales and the setting", () => {
     const appState = {
       unit: "kg",
@@ -188,3 +185,6 @@ describe("effort in a backup", () => {
     );
   });
 });
+
+// structuredClone exercises the same JSON-compatible values without weakening the fixture type.
+const roundTrip = <T extends object>(state: T): T => structuredClone(state);

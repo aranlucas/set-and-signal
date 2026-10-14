@@ -175,19 +175,19 @@ describe("demo seed — effort", () => {
   it("is deterministic — two builds produce the same ratings", () => {
     const b: DemoState = buildDemoState();
 
-    const flat = (st: FlatProps) =>
-      st.workouts
-        .map((w) =>
-          w.entries
-            .map((e) =>
-              e.sets
-                .map((s) => `${String(s.w)}x${String(s.r)}/${s.rir ?? ""}/${s.rpe ?? ""}`)
-                .join(","),
-            )
-            .join("|"),
-        )
-        .join(";");
-
     expect(flat(b)).toBe(flat(demoState));
   });
 });
+
+const flat = (st: FlatProps) =>
+  st.workouts
+    .map((w) =>
+      w.entries
+        .map((e) =>
+          e.sets
+            .map((s) => `${String(s.w)}x${String(s.r)}/${s.rir ?? ""}/${s.rpe ?? ""}`)
+            .join(","),
+        )
+        .join("|"),
+    )
+    .join(";");

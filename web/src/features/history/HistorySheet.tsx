@@ -309,20 +309,22 @@ export function Calendar({
         className="flex aspect-square flex-col items-center justify-center"
         onClick={() => {
           void close()
-            .then(() => {
+            .then((): undefined => {
               if (!ws) {
                 onDayOverride?.(iso);
 
-                return;
+                return undefined;
               }
 
               if (ws.length === 1) {
                 onWorkoutDetail?.(ws[0]);
 
-                return;
+                return undefined;
               }
 
               onCalendarDay?.(iso, ws);
+
+              return undefined;
             })
             .catch(console.error);
         }}

@@ -88,7 +88,7 @@ export function SettingsData({ user, requestConfirmation, onOpenSheet }: Setting
 
     void file
       .text()
-      .then((contents) => {
+      .then((contents): undefined => {
         try {
           const restoredState = parseBackup(contents);
           requestConfirmation({
@@ -111,6 +111,8 @@ export function SettingsData({ user, requestConfirmation, onOpenSheet }: Setting
             }),
           );
         }
+
+        return undefined;
       })
       .catch((cause: unknown) =>
         toast(

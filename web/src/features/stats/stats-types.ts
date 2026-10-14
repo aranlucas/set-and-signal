@@ -28,6 +28,10 @@ export const sheetTitle = (active: StatsSheet, t: Translate): string => {
       return active.workout.name;
     case "day-override":
       return fmtDate(t, active.iso, true);
+    default: {
+      const exhaustive: never = active;
+      throw new Error(`Unsupported stats sheet: ${String(exhaustive)}`);
+    }
   }
 };
 

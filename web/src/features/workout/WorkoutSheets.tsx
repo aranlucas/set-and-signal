@@ -317,4 +317,6 @@ export function WorkoutSheetHost({
     case "custom":
       return <CustomSheet state={workoutSheet} close={close} setWorkoutSheet={setWorkoutSheet} />;
   }
+
+  return null;
 }

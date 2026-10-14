@@ -1,19 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "eslint",
-    "typescript",
-    "oxc",
-    "unicorn",
-    "react",
-    "import",
-    "jsx-a11y",
-    "vitest"
-  ],
-  "jsPlugins": [
-    "oxlint-tailwindcss",
-    "@shadcn/lint"
-  ],
+  "plugins": ["eslint", "typescript", "oxc", "unicorn", "react", "import", "jsx-a11y", "vitest"],
+  "jsPlugins": ["oxlint-tailwindcss", "@shadcn/lint"],
   "env": {
     "browser": true,
     "es2022": true
@@ -52,20 +40,12 @@
         "skipComments": true
       }
     ],
-    "eslint/eqeqeq": [
-      "error",
-      "smart"
-    ],
-    "eslint/one-var": [
-      "error",
-      "never"
-    ],
+    "eslint/eqeqeq": ["error", "smart"],
+    "eslint/one-var": ["error", "never"],
     "eslint/no-underscore-dangle": [
       "error",
       {
-        "allow": [
-          "_ts"
-        ]
+        "allow": ["_ts"]
       }
     ],
     "typescript/no-unsafe-type-assertion": "error",
@@ -225,9 +205,7 @@
     "shadcn/no-raw-colors": [
       "error",
       {
-        "allow": [
-          "fill-none"
-        ]
+        "allow": ["fill-none"]
       }
     ],
     "shadcn/no-arbitrary-values": "error",
@@ -236,15 +214,7 @@
     "shadcn/no-unknown-classes": [
       "error",
       {
-        "allow": [
-          "plain",
-          "metric-name",
-          "metric-bar",
-          "metric-value",
-          "chk",
-          "icn",
-          "toaster"
-        ]
+        "allow": ["plain", "metric-name", "metric-bar", "metric-value", "chk", "icn", "toaster"]
       }
     ],
     "oxc/no-accumulating-spread": "error",
@@ -304,25 +274,19 @@
   ],
   "overrides": [
     {
-      "files": [
-        "src/shared/ui/button.tsx"
-      ],
+      "files": ["src/shared/ui/button.tsx"],
       "rules": {
         "react/only-export-components": "off"
       }
     },
     {
-      "files": [
-        "src/shared/ui/field.tsx"
-      ],
+      "files": ["src/shared/ui/field.tsx"],
       "rules": {
         "jsx-a11y/prefer-tag-over-role": "off"
       }
     },
     {
-      "files": [
-        "src/shared/ui/label.tsx"
-      ],
+      "files": ["src/shared/ui/label.tsx"],
       "rules": {
         "jsx-a11y/label-has-associated-control": "off"
       }
@@ -340,9 +304,7 @@
       }
     },
     {
-      "files": [
-        "src/shared/ui/**"
-      ],
+      "files": ["src/shared/ui/**"],
       "rules": {
         "shadcn/no-restyle": "off",
         "shadcn/require-static-classes": "off"

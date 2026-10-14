@@ -52,9 +52,9 @@ const EMPTY_LOAD: Record<string, number> = {};
 
 function useBodyPaths(): BodyPaths | null {
   const [bodyPaths, setBodyPaths] = useState(cachedBodyPaths);
-  useEffect(() => {
+  useEffect((): (() => void) | undefined => {
     if (cachedBodyPaths) {
-      return;
+      return undefined;
     }
 
     let isMounted = true;
@@ -62,10 +62,12 @@ function useBodyPaths(): BodyPaths | null {
       bodyPathsPromise ||
       import("@/domain/exercises/body-paths").then((module) => (cachedBodyPaths = module.default));
     bodyPathsPromise
-      .then((loadedPaths) => {
+      .then((loadedPaths): undefined => {
         if (isMounted) {
           setBodyPaths(loadedPaths);
         }
+
+        return undefined;
       })
       .catch(() => {});
 

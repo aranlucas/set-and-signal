@@ -58,9 +58,6 @@ describe("estimate1RM", () => {
 
   it("keeps the formulas within a few percent up to 8 reps, and diverges most at the cap", () => {
     // 100 × r ≤ REP_CAP always estimates, so the null branch never fires here
-    const spread = (r: number) =>
-      Math.max(...Object.keys(FORMULAS).map((f) => requireFixture(estimate1RM(100, r, f)))) -
-      Math.min(...Object.keys(FORMULAS).map((f) => requireFixture(estimate1RM(100, r, f))));
 
     expect(spread(1)).toBe(0); // one rep is measured, not estimated
 
@@ -221,3 +218,7 @@ describe("is1RMRecord", () => {
     expect(is1RMRecord(state, "bench", skipped)).toBeNull();
   });
 });
+
+const spread = (r: number) =>
+  Math.max(...Object.keys(FORMULAS).map((f) => requireFixture(estimate1RM(100, r, f)))) -
+  Math.min(...Object.keys(FORMULAS).map((f) => requireFixture(estimate1RM(100, r, f))));

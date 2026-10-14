@@ -98,7 +98,7 @@ export function PlanTools({ close, openImport }: PlanToolsProps) {
 
     void file
       .text()
-      .then(async (contents) => {
+      .then(async (contents): Promise<undefined> => {
         try {
           const bundle = parsePlan(contents);
           await close();
@@ -110,6 +110,8 @@ export function PlanTools({ close, openImport }: PlanToolsProps) {
             }),
           );
         }
+
+        return undefined;
       })
       .catch(console.error);
   };

@@ -21,6 +21,8 @@ export const fieldOf = (set: LoggedSet, field: SetField): number | undefined => 
     case "rpe":
       return "r" in set || "sec" in set ? set.rpe : undefined;
   }
+
+  return undefined;
 };
 
 export const setFieldValue = (set: LoggedSet, field: SetField, value: number | null) => {

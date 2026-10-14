@@ -38,16 +38,16 @@ export default function AppNavigation({ onStart }: AppNavigationProps) {
   const [mobile, setMobile] = useState(() => window.innerWidth < 1024);
   const sidebar = useRef<HTMLElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
+  useEffect((): (() => void) | undefined => {
     const media = window.matchMedia("(max-width: 1023px)");
     const change = () => setMobile(media.matches);
     media.addEventListener("change", change);
 
     return () => media.removeEventListener("change", change);
   }, []);
-  useEffect(() => {
+  useEffect((): (() => void) | undefined => {
     if (!open || !mobile) {
-      return;
+      return undefined;
     }
 
     const previousOverflow = document.body.style.overflow;

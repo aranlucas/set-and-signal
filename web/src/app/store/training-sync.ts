@@ -283,12 +283,14 @@ export class TrainingSync {
     }
 
     this.flushing = this.drain().then(
-      () => {
+      (): Promise<void> | undefined => {
         this.flushing = undefined;
 
         if (this.queue.length && this.client && !this.closed) {
           return this.flush();
         }
+
+        return undefined;
       },
       (cause: unknown) => {
         this.flushing = undefined;

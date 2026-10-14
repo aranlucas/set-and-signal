@@ -17,14 +17,18 @@ import {
 import { EXDB } from "@/domain/exercises/exercises.js";
 import type { ExConfig } from "@/shared/lib/types.js";
 
-const LIFT = requireFixture(EXDB.find(
-  (e) =>
-    e.bp !== "cardio" && !["upper legs", "lower legs", "back", "hips", "glutes"].includes(e.bp),
-)).id;
+const LIFT = requireFixture(
+  EXDB.find(
+    (e) =>
+      e.bp !== "cardio" && !["upper legs", "lower legs", "back", "hips", "glutes"].includes(e.bp),
+  ),
+).id;
 
 const HEAVY = requireFixture(EXDB.find((e) => e.bp === "upper legs" && e.eq === "barbell")).id;
 
-const DUMBBELL_HEAVY = requireFixture(EXDB.find((e) => e.bp === "upper legs" && e.eq === "dumbbell")).id;
+const DUMBBELL_HEAVY = requireFixture(
+  EXDB.find((e) => e.bp === "upper legs" && e.eq === "dumbbell"),
+).id;
 
 const GOBLET = "1760";
 
