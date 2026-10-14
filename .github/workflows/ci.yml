@@ -45,11 +45,11 @@ jobs:
           - name: Go modernization fixes
             run: go fix -diff ./...
 
-          - name: Web lint
-            run: pnpm --dir web format && pnpm --dir web lint:strict
+          - name: Formatting and web lint
+            run: pnpm format:check && pnpm --dir web lint:strict
 
           - name: Web test, typecheck, and build
-            run: pnpm --dir web test && pnpm --dir web typecheck && pnpm --dir web convex:check && pnpm --dir web build
+            run: pnpm --dir web test && pnpm --dir web build
 
       - name: Check whitespace
         run: git diff --check

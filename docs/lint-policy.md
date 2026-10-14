@@ -1,21 +1,14 @@
-# Anti-slop policy
+# Lint policy
 
-The vendored plugin is the complete canonical `src/` tree from
-[dmmulroy/anti-slop](https://github.com/dmmulroy/anti-slop) at
-`c44ef22ca116d0ba62a3ff663a0bd13a3f3fa40b`, including upstream tests,
-MIT license, and nested ESLint Stylistic provenance. Its local record is
-`web/tools/oxlint/anti-slop/UPSTREAM.md`.
+Oxforge owns the shared rules and their tests. This repository does not maintain
+local lint-rule implementations or a separate vendor copy.
 
-Oxlint and `@oxlint/plugins` are pinned together at the already-resolved
-1.86.0. All 18 generic rules and native `oxc/no-accumulating-spread` are errors.
-There is no direct Effect dependency, so the opt-in Effect policy is not enabled.
-
-The existing strict, type-aware frontend checks retain their scope and settings.
-`lint:strict` additionally runs `lint:anti-slop` across all owned web/backend/build
-JavaScript and TypeScript. That second config adds generic policy to previously
-unlinted files without imposing the frontend-only ESLint restrictions on Convex
-transactions or sequential filesystem build scripts. Agent assets and vendored
-rules are excluded; no application source or tests were blanket-excluded.
+The strict, type-aware frontend check retains its scope and settings.
+`lint:strict` also runs `lint:policy` across all owned web, backend, and build
+JavaScript and TypeScript. This thin config imports the shared Oxforge rule maps
+so Convex transactions and sequential build scripts keep their existing policy
+without inheriting frontend-only restrictions. Agent assets remain excluded;
+application source and tests are not blanket-excluded.
 
 ## Documented boundary exceptions
 
@@ -52,6 +45,4 @@ real translation and router providers; the start chooser separates its store
 container from a state-driven view. Browser globals use Vitest's scoped global
 stubs and are restored. Existing persistence/concurrency/isolation tests remain.
 
-The application Vitest config explicitly selects `test/**/*.test.*`; upstream
-RuleTester fixtures are retained under the vendor directory and can be run
-separately. The formatter excludes vendored assets so their bytes remain auditable.
+The application Vitest config explicitly selects `test/**/*.test.*`.

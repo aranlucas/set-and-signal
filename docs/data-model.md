@@ -2,13 +2,13 @@
 
 ## Ownership
 
-| Data | Authoritative storage | Access pattern |
-| --- | --- | --- |
-| Accounts, credentials, OAuth, push subscriptions | SQLite tables | Keyed lookups and transactional changes |
-| Saved plans, completed workouts, measurements, settings | Convex owner-scoped records | Reactive browser reads; atomic record mutations; typed Go mutations |
-| Active workout | Device-local application state | Frequent set edits; resume after reload |
-| Guest data | Browser localStorage | Local persistence |
-| Standalone mobile data | Local state plus `workset-state.json` mirror | Offline use, restore after WebView storage eviction |
+| Data                                                    | Authoritative storage                        | Access pattern                                                      |
+| ------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------- |
+| Accounts, credentials, OAuth, push subscriptions        | SQLite tables                                | Keyed lookups and transactional changes                             |
+| Saved plans, completed workouts, measurements, settings | Convex owner-scoped records                  | Reactive browser reads; atomic record mutations; typed Go mutations |
+| Active workout                                          | Device-local application state               | Frequent set edits; resume after reload                             |
+| Guest data                                              | Browser localStorage                         | Local persistence                                                   |
+| Standalone mobile data                                  | Local state plus `workset-state.json` mirror | Offline use, restore after WebView storage eviction                 |
 
 The hosted API requires a configured Convex deployment. SQLite retains identity
 and integration data. Existing SQLite training snapshots are not imported at
