@@ -78,9 +78,14 @@ export function AddToRoutine({ exercise, close, openConfig }: AddToRoutineProps)
               }
             : state.routines.find((candidate) => candidate.id === routineId);
 
-          if (!routine) return;
+          if (!routine) {
+            return;
+          }
 
-          if (createNewRoutine) state.routines.push(routine);
+          if (createNewRoutine) {
+            state.routines.push(routine);
+          }
+
           routine.ex.push(exerciseConfig);
         });
 
@@ -97,8 +102,9 @@ export function AddToRoutine({ exercise, close, openConfig }: AddToRoutineProps)
           }),
         );
 
-        if (createNewRoutine && selectedRoutine)
+        if (createNewRoutine && selectedRoutine) {
           void nav({ to: "/plan/r/$id", params: { id: selectedRoutine.id } }).catch(console.error);
+        }
       },
       null,
       createNewRoutine
@@ -187,12 +193,14 @@ export function ExercisePicker({ onPick, close, openCustom }: ExercisePickerProp
     );
   }
 
-  if (bodyPart === "★")
+  if (bodyPart === "★") {
     matchingExercises = matchingExercises.toSorted(
       (leftExercise, rightExercise) =>
         usageByExercise[rightExercise.id] - usageByExercise[leftExercise.id] ||
         (leftExercise.n < rightExercise.n ? -1 : 1),
     );
+  }
+
   const equipmentOptions = equipmentOf(matchingExercises);
   const activeEquipment = equipmentOptions.includes(equipment) ? equipment : "";
 
@@ -329,7 +337,9 @@ export function ExercisePicker({ onPick, close, openCustom }: ExercisePickerProp
                 openCustom(
                   null,
                   (customExercise) => {
-                    if (customExercise) void pickExercise(customExercise).catch(console.error);
+                    if (customExercise) {
+                      void pickExercise(customExercise).catch(console.error);
+                    }
                   },
                   query.trim(),
                 )

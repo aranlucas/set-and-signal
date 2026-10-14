@@ -7,7 +7,9 @@ import "@/app/index.css";
 
 const rootElement = document.querySelector("#root");
 
-if (!rootElement) throw new Error("Missing #root application mount point");
+if (!rootElement) {
+  throw new Error("Missing #root application mount point");
+}
 
 createRoot(rootElement).render(
   <StrictMode>

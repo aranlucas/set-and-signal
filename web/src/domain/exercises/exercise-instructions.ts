@@ -41,21 +41,31 @@ function loadInstructionPack(language: Language, exerciseId: string): Promise<In
   const cacheKey = `${language}/${shard}`;
   const cached = packCache.get(cacheKey);
 
-  if (cached) return cached;
+  if (cached) {
+    return cached;
+  }
 
   const pending = fetch(instructionPackURL(language, exerciseId), {
     credentials: "same-origin",
   })
     .then(async (response) => {
-      if (!response.ok) throw new Error(`Instruction shard request failed: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Instruction shard request failed: ${response.status}`);
+      }
+
       const pack: unknown = await response.json();
 
-      if (!isInstructionPack(pack)) throw new Error(`Instruction shard is invalid: ${cacheKey}`);
+      if (!isInstructionPack(pack)) {
+        throw new Error(`Instruction shard is invalid: ${cacheKey}`);
+      }
 
       return pack;
     })
     .catch((cause: unknown) => {
-      if (packCache.get(cacheKey) === pending) packCache.delete(cacheKey);
+      if (packCache.get(cacheKey) === pending) {
+        packCache.delete(cacheKey);
+      }
+
       throw cause;
     });
 
@@ -83,7 +93,9 @@ export async function loadExerciseInstructions(
     try {
       const translated = await instructionsFor(preferredLanguage, exerciseId);
 
-      if (translated) return { steps: translated, language: preferredLanguage };
+      if (translated) {
+        return { steps: translated, language: preferredLanguage };
+      }
     } catch {
       // A missing translated shard should not make the exercise detail unusable.
     }
@@ -93,7 +105,9 @@ export async function loadExerciseInstructions(
     try {
       const english = await instructionsFor("en", exerciseId);
 
-      if (english) return { steps: english, language: "en" };
+      if (english) {
+        return { steps: english, language: "en" };
+      }
     } catch {
       // The hook renders an empty state when neither pack can be loaded.
     }
@@ -117,16 +131,21 @@ export function useExerciseInstructions(
   const [loaded, setLoaded] = useState<LoadedValue | undefined>();
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      return;
+    }
+
     let active = true;
     void loadExerciseInstructions(normalizedLanguage, exerciseId)
       .then((result) => {
-        if (active) setLoaded({ requestKey, result });
-
-        return undefined;
+        if (active) {
+          setLoaded({ requestKey, result });
+        }
       })
       .catch(() => {
-        if (active) setLoaded({ requestKey, result: EMPTY_INSTRUCTIONS });
+        if (active) {
+          setLoaded({ requestKey, result: EMPTY_INSTRUCTIONS });
+        }
       });
 
     return () => {
@@ -134,7 +153,9 @@ export function useExerciseInstructions(
     };
   }, [enabled, exerciseId, normalizedLanguage, requestKey]);
 
-  if (!enabled) return EMPTY_INSTRUCTIONS;
+  if (!enabled) {
+    return EMPTY_INSTRUCTIONS;
+  }
 
   return loaded?.requestKey === requestKey ? loaded.result : undefined;
 }

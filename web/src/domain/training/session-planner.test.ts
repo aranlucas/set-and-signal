@@ -55,7 +55,9 @@ describe("equipment and time session planning", () => {
   it("uses catalogue identities and explicitly known equipment requirements", () => {
     expect(new Set(SESSION_MOVEMENTS.map((entry) => entry.id)).size).toBe(SESSION_MOVEMENTS.length);
 
-    for (const entry of SESSION_MOVEMENTS) expect(EXIDX[entry.id]).toBeDefined();
+    for (const entry of SESSION_MOVEMENTS) {
+      expect(EXIDX[entry.id]).toBeDefined();
+    }
   });
   it.each(
     [
@@ -72,7 +74,10 @@ describe("equipment and time session planning", () => {
     const rows = adaptSession(source, { ...constraints, equipment });
 
     for (const row of rows) {
-      if (!row.planned) continue;
+      if (!row.planned) {
+        continue;
+      }
+
       const requirements = SESSION_MOVEMENTS.find((candidate) => candidate.id === row.planned?.id);
       expect(requirements?.needs.every((item) => equipment.includes(item))).toBe(true);
     }

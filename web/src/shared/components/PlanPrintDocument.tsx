@@ -51,12 +51,15 @@ function scheme(t: TFunction, config: ExConfig, unit: string): string {
   let summary =
     mode === "time" ? `${sets} × ${fmtSec(config.sec || 45)}` : `${sets} × ${config.reps ?? 10}`;
 
-  if (config.weight) summary += ` · ${isBw(config) ? "+" : ""}${fmtNum(config.weight)} ${unit}`;
+  if (config.weight) {
+    summary += ` · ${isBw(config) ? "+" : ""}${fmtNum(config.weight)} ${unit}`;
+  }
 
-  if (mode !== "time" && isPerSide(config))
+  if (mode !== "time" && isPerSide(config)) {
     summary += ` · ${t("exercise.measurement.side", "{{reps}}/side", {
       reps: fmtNum(sideReps(config.reps ?? 10)),
     })}`;
+  }
 
   return summary;
 }
@@ -72,13 +75,14 @@ function groupedExercises(exercises: ExConfig[]): ExerciseGroup[] {
     const keyedExercise = { config: exercise, key: `${exercise.id}-${occurrence}` };
     const previousExercise = exercises[index - 1];
 
-    if (index > 0 && exercise.sg && previousExercise?.sg === exercise.sg)
+    if (index > 0 && exercise.sg && previousExercise?.sg === exercise.sg) {
       groups.at(-1)?.exercises.push(keyedExercise);
-    else
+    } else {
       groups.push({
         exercises: [keyedExercise],
         key: exercise.sg ? `${exercise.sg}-${keyedExercise.key}` : keyedExercise.key,
       });
+    }
   }
 
   return groups;

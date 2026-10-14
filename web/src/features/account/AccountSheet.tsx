@@ -138,7 +138,9 @@ export function WeightInput({ value, setValue, unit }: WeightInputProps) {
             first,
           );
 
-          if (number.success) onSlide(number.output);
+          if (number.success) {
+            onSlide(number.output);
+          }
         }}
       />
     </>
@@ -158,7 +160,10 @@ const saveBodyweight = (weight: number) =>
     if (existingEntry) {
       existingEntry.w = weight;
       existingEntry.t = Date.now();
-    } else state.bodyweight.push({ d: date, w: weight, t: Date.now() });
+    } else {
+      state.bodyweight.push({ d: date, w: weight, t: Date.now() });
+    }
+
     state.bodyweight.sort((left, right) => (left.d < right.d ? -1 : 1));
   });
 
@@ -248,7 +253,7 @@ export function BodyweightLogSheet({ close }: BodyweightLogSheetProps) {
   const state = useStore((store) => store.appState);
   const previousBodyweight = lastBW(state);
   const defaultValue = previousBodyweight?.w ?? state.targetW ?? defaultBodyweight(state.unit);
-  const recent = [...state.bodyweight].reverse().slice(0, 3);
+  const recent = [...state.bodyweight].toReversed().slice(0, 3);
 
   return (
     <>

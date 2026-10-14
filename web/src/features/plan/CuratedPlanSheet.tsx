@@ -27,7 +27,9 @@ export function CuratedPlans({ close }: CuratedPlansProps) {
         const weekday = weekdayFromNumber(Number(day));
         const routine = rs[routineIndex];
 
-        if (weekday != null && routine) appState.week[weekday] = [{ routineId: routine.id }];
+        if (weekday != null && routine) {
+          appState.week[weekday] = [{ routineId: routine.id }];
+        }
       }
     });
     void close().catch(console.error);

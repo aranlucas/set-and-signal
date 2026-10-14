@@ -49,9 +49,11 @@ function SettingsContent() {
       await pullState();
       toast(t("account.welcomeBack", "Welcome back, {{name}}", { name: u.name }));
     } catch (e) {
-      if (e instanceof Error && e.name !== "NotAllowedError" && e.name !== "AbortError")
+      if (e instanceof Error && e.name !== "NotAllowedError" && e.name !== "AbortError") {
         toast(e.message || t("account.signFailed", "Sign-in failed"));
-      else if (!(e instanceof Error)) toast(t("account.signFailed", "Sign-in failed"));
+      } else if (!(e instanceof Error)) {
+        toast(t("account.signFailed", "Sign-in failed"));
+      }
     }
   };
 
@@ -202,14 +204,18 @@ function SettingsContent() {
           {...confirmation}
           open
           onOpenChange={(open) => {
-            if (!open) setConfirmation(null);
+            if (!open) {
+              setConfirmation(null);
+            }
           }}
         />
       )}
       <Sheet
         open={activeSheet !== null}
         onOpenChange={(open) => {
-          if (!open) setActiveSheet(null);
+          if (!open) {
+            setActiveSheet(null);
+          }
         }}
       >
         <SheetContent side="bottom" variant="panel" showCloseButton={false}>

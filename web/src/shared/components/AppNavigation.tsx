@@ -46,7 +46,10 @@ export default function AppNavigation({ onStart }: AppNavigationProps) {
     return () => media.removeEventListener("change", change);
   }, []);
   useEffect(() => {
-    if (!open || !mobile) return;
+    if (!open || !mobile) {
+      return;
+    }
+
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const opener = menuButton.current;
@@ -60,7 +63,9 @@ export default function AppNavigation({ onStart }: AppNavigationProps) {
         return;
       }
 
-      if (event.key !== "Tab") return;
+      if (event.key !== "Tab") {
+        return;
+      }
 
       const elements = Array.from(
         panel?.querySelectorAll<HTMLElement>("a[href], button:not([disabled])") ?? [],
@@ -69,7 +74,9 @@ export default function AppNavigation({ onStart }: AppNavigationProps) {
       const first = elements.at(0);
       const last = elements.at(-1);
 
-      if (!first || !last) return;
+      if (!first || !last) {
+        return;
+      }
 
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();

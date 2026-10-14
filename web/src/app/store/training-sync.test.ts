@@ -387,7 +387,10 @@ describe("reviewing competing edits", () => {
     const conflicts = await sync.conflicts();
     const originalSetItem = localStorage.setItem.bind(localStorage);
     vi.spyOn(localStorage, "setItem").mockImplementation((key, value) => {
-      if (key === "gym_pending_convex:alice") throw new Error("Storage unavailable");
+      if (key === "gym_pending_convex:alice") {
+        throw new Error("Storage unavailable");
+      }
+
       originalSetItem(key, value);
     });
     await expect(sync.resolve(conflicts, "remote")).rejects.toThrow("Storage unavailable");

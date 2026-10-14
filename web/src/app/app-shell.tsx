@@ -29,7 +29,9 @@ function applyPrefs(theme: string, accent: string) {
   de.dataset.accent = isAccent(accent) ? accent : DEFAULT_ACCENT;
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
 
-  if (meta) meta.content = isDark ? "#131521" : "#f6f7fb";
+  if (meta) {
+    meta.content = isDark ? "#131521" : "#f6f7fb";
+  }
 }
 
 export default function AppShell() {
@@ -66,7 +68,7 @@ export default function AppShell() {
 
   const authed = user || isGuest;
 
-  if (!isReady && !authed)
+  if (!isReady && !authed) {
     return (
       <div
         id="app"
@@ -78,13 +80,16 @@ export default function AppShell() {
         </output>
       </div>
     );
+  }
 
   return (
     <>
       {authed && (
         <AppNavigation
           onStart={() => {
-            if (user && !profileLoaded) return;
+            if (user && !profileLoaded) {
+              return;
+            }
 
             if (activeWorkout) {
               void navigate({ to: "/workout" }).catch(console.error);
@@ -94,8 +99,11 @@ export default function AppShell() {
 
             const routine = nextPlannedRoutine(useStore.getState().appState, todayISO());
 
-            if (routine?.ex.length) setStartRoutineId(routine.id);
-            else void navigate({ to: "/workout" }).catch(console.error);
+            if (routine?.ex.length) {
+              setStartRoutineId(routine.id);
+            } else {
+              void navigate({ to: "/workout" }).catch(console.error);
+            }
           }}
         />
       )}
@@ -148,7 +156,9 @@ export default function AppShell() {
             open
             routineId={startRoutineId}
             onOpenChange={(open) => {
-              if (!open) setStartRoutineId(null);
+              if (!open) {
+                setStartRoutineId(null);
+              }
             }}
           />
         </Suspense>

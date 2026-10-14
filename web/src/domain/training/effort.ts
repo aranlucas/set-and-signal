@@ -52,12 +52,18 @@ type RatedSet = LoggedSet & { rir?: number | null; rpe?: number | null };
 export function displayScale(profile: Profile): EffortKind {
   const configuredScale = effortOf(profile);
 
-  if (configuredScale === "rir" || configuredScale === "rpe") return configuredScale;
+  if (configuredScale === "rir" || configuredScale === "rpe") {
+    return configuredScale;
+  }
+
   let rirCount = 0;
   let rpeCount = 0;
   eachDoneSet(profile, (set) => {
-    if (set.rir != null) rirCount++;
-    else if (set.rpe != null) rpeCount++;
+    if (set.rir != null) {
+      rirCount++;
+    } else if (set.rpe != null) {
+      rpeCount++;
+    }
   });
 
   return rpeCount > rirCount ? "rpe" : "rir";
@@ -71,7 +77,9 @@ function eachDoneSet(profile: Profile, visit: (set: RatedSet, workout: Workout) 
   for (const workout of profile.workouts || []) {
     for (const entry of workout.entries || []) {
       for (const set of entry.sets || []) {
-        if (set.done) visit(set, workout);
+        if (set.done) {
+          visit(set, workout);
+        }
       }
     }
   }
@@ -110,15 +118,23 @@ export function effortSummary(profile: Profile, days: number): EffortSummary {
   let sum = 0;
   let hard = 0;
   eachDoneSet(profile, (set, workout) => {
-    if (!inWindow(workout, days)) return;
+    if (!inWindow(workout, days)) {
+      return;
+    }
+
     done++;
     const rating = rirOf(set);
 
-    if (rating == null) return;
+    if (rating == null) {
+      return;
+    }
+
     rated++;
     sum += rating;
 
-    if (rating <= HARD_RIR) hard++;
+    if (rating <= HARD_RIR) {
+      hard++;
+    }
   });
 
   return {
@@ -134,7 +150,9 @@ export function effortSummary(profile: Profile, days: number): EffortSummary {
 export function hasEffort(profile: Profile): boolean {
   let found = false;
   eachDoneSet(profile, (set) => {
-    if (!found && rirOf(set) != null) found = true;
+    if (!found && rirOf(set) != null) {
+      found = true;
+    }
   });
 
   return found;
@@ -156,11 +174,14 @@ export interface EffortWeekPoint {
 export function effortWeeks(profile: Profile, days: number): EffortWeekPoint[] {
   const weeks = new Map<string, WeeksValue>();
   eachDoneSet(profile, (set, workout) => {
-    if (!inWindow(workout, days)) return;
+    if (!inWindow(workout, days)) {
+      return;
+    }
+
     const weekKeyValue = weekKey(workout.d);
     let week = weeks.get(weekKeyValue);
 
-    if (!week)
+    if (!week) {
       weeks.set(
         weekKeyValue,
         (week = {
@@ -171,6 +192,8 @@ export function effortWeeks(profile: Profile, days: number): EffortWeekPoint[] {
           sets: 0,
         }),
       );
+    }
+
     week.sets++;
     const rating = rirOf(set);
 
@@ -182,7 +205,7 @@ export function effortWeeks(profile: Profile, days: number): EffortWeekPoint[] {
 
   return [...weeks.values()]
     .filter((week) => week.n >= 2)
-    .sort((left, right) => left.t - right.t)
+    .toSorted((left, right) => left.t - right.t)
     .map((week) => ({
       t: week.t,
       rir: week.sum / week.n,
@@ -219,10 +242,16 @@ export function effortHistogram(profile: Profile, days: number): EffortBin[] {
   const bins = Array.from({ length: BUCKETS + 1 }, () => 0);
   let rated = 0;
   eachDoneSet(profile, (set, workout) => {
-    if (!inWindow(workout, days)) return;
+    if (!inWindow(workout, days)) {
+      return;
+    }
+
     const rating = rirOf(set);
 
-    if (rating == null) return;
+    if (rating == null) {
+      return;
+    }
+
     rated++;
     bins[Math.min(BUCKETS, Math.max(0, Math.floor(rating)))]++;
   });

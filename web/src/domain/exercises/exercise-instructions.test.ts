@@ -8,8 +8,9 @@ import { instructionShard, INSTRUCTION_SHARD_COUNT } from "@/domain/exercises/in
 describe("exercise instruction shards", () => {
   beforeAll(() => {
     vi.stubGlobal("fetch", (input: URL | RequestInfo) => {
-      if (!(input instanceof URL))
+      if (!(input instanceof URL)) {
         throw new Error("Expected the instruction loader to fetch a URL");
+      }
 
       if (input.pathname.includes("/fr/")) {
         return Promise.resolve(new Response(null, { status: 404 }));

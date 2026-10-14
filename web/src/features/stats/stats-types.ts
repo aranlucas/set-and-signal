@@ -36,9 +36,14 @@ export const weightDeltaColor = (
   currentW: number,
   targetW: number | null,
 ) => {
-  if (!delta) return "var(--muted-foreground)";
+  if (!delta) {
+    return "var(--muted-foreground)";
+  }
 
-  if (!targetW) return "var(--foreground)";
+  if (!targetW) {
+    return "var(--foreground)";
+  }
+
   const up = targetW > currentW;
 
   return delta > 0 === up ? "var(--primary)" : "var(--destructive)";

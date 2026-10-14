@@ -399,7 +399,9 @@ export default function Icon({
 }: IconProps & SVGProps<SVGSVGElement>) {
   const iconContent = P[name];
 
-  if (!iconContent) return null;
+  if (!iconContent) {
+    return null;
+  }
 
   return (
     <svg

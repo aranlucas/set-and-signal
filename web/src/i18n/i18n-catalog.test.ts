@@ -22,12 +22,12 @@ const pluralSuffix = /_(zero|one|two|few|many|other)$/u;
 const variables = (value: string): string[] =>
   [...value.matchAll(/\{\{\s*([A-Za-z][A-Za-z0-9]*)\s*(?:,[^}]*)?\}\}/gu)]
     .map((match) => match[1])
-    .sort();
+    .toSorted();
 
 const canonicalKey = (key: string): string => key.replace(pluralSuffix, "");
 
 const canonicalKeys = (catalog: Readonly<Record<string, string>>): string[] =>
-  [...new Set(Object.keys(catalog).map(canonicalKey))].sort();
+  [...new Set(Object.keys(catalog).map(canonicalKey))].toSorted();
 
 describe("translation catalogs", () => {
   test("keeps every supported locale in exact semantic-key parity with English", () => {
@@ -53,7 +53,7 @@ describe("translation catalogs", () => {
       const base = canonicalKey(key);
       englishByCanonical.set(
         base,
-        [...new Set([...(englishByCanonical.get(base) ?? []), ...variables(value)])].sort(),
+        [...new Set([...(englishByCanonical.get(base) ?? []), ...variables(value)])].toSorted(),
       );
     }
 
@@ -61,7 +61,10 @@ describe("translation catalogs", () => {
       for (const [key, value] of Object.entries(catalog)) {
         // Empty entries are explicit untranslated placeholders. i18next is configured with
         // returnEmptyString: false so these fall through to the English source catalog.
-        if (value === "") continue;
+        if (value === "") {
+          continue;
+        }
+
         expect(variables(value)).toEqual(englishByCanonical.get(canonicalKey(key)));
       }
     }

@@ -47,7 +47,9 @@ export function suggestedStartingWeights(
 export function createStartingStrengthPlan(weights: StartingStrengthWeights) {
   const plan = CURATED.find((candidate) => candidate.key === "linear-5x5");
 
-  if (!plan) throw new Error("StrongLifts starter plan is missing");
+  if (!plan) {
+    throw new Error("StrongLifts starter plan is missing");
+  }
 
   const routines = curatedRoutines(plan);
 
@@ -65,7 +67,9 @@ export function createStartingStrengthPlan(weights: StartingStrengthWeights) {
     const weekday = weekdayFromNumber(Number(day));
     const routine = routines[routineIndex];
 
-    if (weekday != null && routine) week[weekday] = [{ routineId: routine.id }];
+    if (weekday != null && routine) {
+      week[weekday] = [{ routineId: routine.id }];
+    }
   }
 
   return { routines, week };

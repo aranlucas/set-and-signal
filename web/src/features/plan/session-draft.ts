@@ -31,7 +31,10 @@ export function loadSessionDraft(account: string | null): SessionDraft | null {
   try {
     const raw = localStorage.getItem(keyFor(account));
 
-    if (!raw) return null;
+    if (!raw) {
+      return null;
+    }
+
     const parsed = v.safeParse(sessionDraft, JSON.parse(raw));
 
     return parsed.success ? parsed.output : null;

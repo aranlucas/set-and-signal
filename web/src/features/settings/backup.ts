@@ -30,7 +30,9 @@ export function parseBackup(json: string): AppState {
   const restoredPatch = parsePayload(appStatePatch, parsed);
 
   for (const key of REQUIRED_BACKUP_KEYS) {
-    if (!(key in restoredPatch)) throw new Error(`backup.${key} is required`);
+    if (!(key in restoredPatch)) {
+      throw new Error(`backup.${key} is required`);
+    }
   }
 
   // appStatePatch strips unknown top-level properties, preserving the old backup whitelist.

@@ -1,3 +1,4 @@
+import { requireFixture } from "@/test/require-fixture";
 import { beforeEach, expect, it, vi } from "vitest";
 
 type ConstraintsValue = ["stationary bike"];
@@ -122,7 +123,7 @@ it("starts edited targets, resumes and finishes with snapshots without rewriting
   const reloaded = parseStoredState(saved.get("gym_state_v1") ?? null);
   expect(reloaded?.active).toEqual(active);
   useStore.getState().update((next) => {
-    next.active!.entries[0].sets[0].done = true;
+    requireFixture(next.active).entries[0].sets[0].done = true;
   });
   completeWorkout();
   const finished = useStore.getState().appState;

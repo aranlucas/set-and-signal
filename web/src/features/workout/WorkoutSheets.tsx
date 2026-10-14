@@ -63,7 +63,9 @@ function TopWeightSheet({
     <RouteBottomSheet
       title={t("workout.adjustTopWeight", "Adjust top weight")}
       onOpenChange={(open) => {
-        if (!open) void close().catch(console.error);
+        if (!open) {
+          void close().catch(console.error);
+        }
       }}
     >
       <TopWeight entryIdx={state.entryIdx} close={close} setWorkoutSheet={setWorkoutSheet} />
@@ -81,7 +83,9 @@ function WorkoutCompleteSheet({
     <RouteBottomSheet
       title={t("workout.completion.sWholeWorkout", "That's the whole workout!")}
       onOpenChange={(open) => {
-        if (!open) void close().catch(console.error);
+        if (!open) {
+          void close().catch(console.error);
+        }
       }}
     >
       <WorkoutComplete close={close} onFinish={onComplete} />
@@ -105,7 +109,9 @@ function DetailSheet({ state, close, setWorkoutSheet }: WorkoutSheetProps & Deta
       <RouteBottomSheet
         title={state.exercise.n}
         onOpenChange={(open) => {
-          if (!open) void close().catch(console.error);
+          if (!open) {
+            void close().catch(console.error);
+          }
         }}
       >
         <ExerciseDetail
@@ -140,7 +146,9 @@ function DetailSheet({ state, close, setWorkoutSheet }: WorkoutSheetProps & Deta
           {...confirmation}
           open
           onOpenChange={(open) => {
-            if (!open) setConfirmation(null);
+            if (!open) {
+              setConfirmation(null);
+            }
           }}
         />
       )}
@@ -161,7 +169,9 @@ function PickerSheet({ state, close, setWorkoutSheet }: WorkoutSheetProps & Pick
     <RouteBottomSheet
       title={t("exercise.addExercise", "Add exercise")}
       onOpenChange={(open) => {
-        if (!open) void close().catch(console.error);
+        if (!open) {
+          void close().catch(console.error);
+        }
       }}
     >
       <ExercisePicker onPick={state.onPick} close={close} openCustom={openCustom} />
@@ -180,7 +190,9 @@ function AddToRoutineSheet({
     <RouteBottomSheet
       title={t("exercise.add", "Add “{{exercise}}”", { exercise: state.exercise.n })}
       onOpenChange={(open) => {
-        if (!open) void close().catch(console.error);
+        if (!open) {
+          void close().catch(console.error);
+        }
       }}
     >
       <AddToRoutine
@@ -206,7 +218,9 @@ function ConfigSheet({ state, close, setWorkoutSheet }: WorkoutSheetProps & Conf
     <RouteBottomSheet
       title={state.exercise.n}
       onOpenChange={(open) => {
-        if (!open) void close().catch(console.error);
+        if (!open) {
+          void close().catch(console.error);
+        }
       }}
     >
       <ExConfigSheet
@@ -233,7 +247,9 @@ function CustomSheet({ state, close }: WorkoutSheetProps & CustomSheetProps) {
           : t("customExercise.createOwnExercise", "Create your own exercise")
       }
       onOpenChange={(open) => {
-        if (!open) void close().catch(console.error);
+        if (!open) {
+          void close().catch(console.error);
+        }
       }}
     >
       <CustomExerciseForm
@@ -254,7 +270,9 @@ export function FinishSummarySheet({ summary, close }: FinishSummarySheetProps) 
     <RouteBottomSheet
       title={t("workout.completion.workoutComplete", "Workout complete!")}
       onOpenChange={(open) => {
-        if (!open) void close().catch(console.error);
+        if (!open) {
+          void close().catch(console.error);
+        }
       }}
     >
       <FinishSummary {...summary} close={close} />
@@ -268,7 +286,9 @@ export function WorkoutSheetHost({
   setWorkoutSheet,
   onComplete,
 }: WorkoutSheetHostProps) {
-  if (!workoutSheet) return null;
+  if (!workoutSheet) {
+    return null;
+  }
 
   switch (workoutSheet.type) {
     case "top-weight":

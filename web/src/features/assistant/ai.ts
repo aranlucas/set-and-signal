@@ -25,34 +25,55 @@ export function buildDigest(state: DigestState, routine: Routine) {
       name: nameOf(state, exerciseConfig.id),
     };
 
-    if (exerciseConfig.sets !== undefined) digestConfig.sets = exerciseConfig.sets;
+    if (exerciseConfig.sets !== undefined) {
+      digestConfig.sets = exerciseConfig.sets;
+    }
 
-    if (exerciseConfig.reps !== undefined) digestConfig.reps = exerciseConfig.reps;
+    if (exerciseConfig.reps !== undefined) {
+      digestConfig.reps = exerciseConfig.reps;
+    }
 
-    if (exerciseConfig.weight !== undefined) digestConfig.weight = exerciseConfig.weight;
+    if (exerciseConfig.weight !== undefined) {
+      digestConfig.weight = exerciseConfig.weight;
+    }
 
-    if (exerciseConfig.sec !== undefined) digestConfig.sec = exerciseConfig.sec;
+    if (exerciseConfig.sec !== undefined) {
+      digestConfig.sec = exerciseConfig.sec;
+    }
 
-    if (exerciseConfig.min !== undefined) digestConfig.min = exerciseConfig.min;
+    if (exerciseConfig.min !== undefined) {
+      digestConfig.min = exerciseConfig.min;
+    }
 
-    if (exerciseConfig.speed !== undefined) digestConfig.speed = exerciseConfig.speed;
+    if (exerciseConfig.speed !== undefined) {
+      digestConfig.speed = exerciseConfig.speed;
+    }
 
-    if (exerciseConfig.bodyweight !== undefined)
+    if (exerciseConfig.bodyweight !== undefined) {
       digestConfig.bodyweight = exerciseConfig.bodyweight;
+    }
 
-    if (exerciseConfig.side !== undefined) digestConfig.side = exerciseConfig.side;
+    if (exerciseConfig.side !== undefined) {
+      digestConfig.side = exerciseConfig.side;
+    }
+
     digestConfig.lastWeight = state.exWeights?.[exerciseConfig.id]?.w ?? null;
 
     return digestConfig;
   };
 
   const setDigest = (loggedSet: LoggedSet): string | null => {
-    if (!loggedSet.done) return null;
+    if (!loggedSet.done) {
+      return null;
+    }
 
-    if ("sec" in loggedSet)
+    if ("sec" in loggedSet) {
       return (loggedSet.w ? loggedSet.w + state.unit + "×" : "") + loggedSet.sec + "s";
+    }
 
-    if ("min" in loggedSet) return loggedSet.min + "min@" + (loggedSet.speed ?? "?");
+    if ("min" in loggedSet) {
+      return loggedSet.min + "min@" + (loggedSet.speed ?? "?");
+    }
 
     return [loggedSet.w ?? 0, loggedSet.r]
       .filter((value) => value !== null && value !== undefined)

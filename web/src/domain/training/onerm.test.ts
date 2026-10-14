@@ -1,3 +1,4 @@
+import { requireFixture } from "@/test/require-fixture";
 import { describe, it, expect } from "vitest";
 import {
   estimate1RM,
@@ -24,7 +25,7 @@ describe("estimate1RM", () => {
 
   it("rounds to one decimal", () => {
     expect(estimate1RM(101.25, 7)).toBe(124.9);
-    expect(Number.isInteger(estimate1RM(100, 3)! * 10)).toBe(true);
+    expect(Number.isInteger(requireFixture(estimate1RM(100, 3)) * 10)).toBe(true);
   });
 
   it("refuses reps beyond the cap rather than guessing", () => {
@@ -58,15 +59,21 @@ describe("estimate1RM", () => {
   it("keeps the formulas within a few percent up to 8 reps, and diverges most at the cap", () => {
     // 100 × r ≤ REP_CAP always estimates, so the null branch never fires here
     const spread = (r: number) =>
-      Math.max(...Object.keys(FORMULAS).map((f) => estimate1RM(100, r, f)!)) -
-      Math.min(...Object.keys(FORMULAS).map((f) => estimate1RM(100, r, f)!));
+      Math.max(...Object.keys(FORMULAS).map((f) => requireFixture(estimate1RM(100, r, f)))) -
+      Math.min(...Object.keys(FORMULAS).map((f) => requireFixture(estimate1RM(100, r, f))));
 
     expect(spread(1)).toBe(0); // one rep is measured, not estimated
 
-    for (let r = 2; r <= 8; r++) expect(spread(r)).toBeLessThan(6);
+    for (let r = 2; r <= 8; r++) {
+      expect(spread(r)).toBeLessThan(6);
+    }
+
     const upTo: number[] = [];
 
-    for (let r = 1; r < REP_CAP; r++) upTo.push(spread(r));
+    for (let r = 1; r < REP_CAP; r++) {
+      upTo.push(spread(r));
+    }
+
     expect(spread(REP_CAP)).toBeGreaterThan(Math.max(...upTo)); // why REP_CAP exists
   });
 
@@ -98,12 +105,12 @@ describe("bestSetOf", () => {
       ],
     };
 
-    expect(bestSetOf(entry)!.w).toBe(100);
+    expect(requireFixture(bestSetOf(entry)).w).toBe(100);
   });
 
   it("ignores topW, which carries no rep count", () => {
     const entry = { id: "x", topW: 200, sets: [{ w: 100, r: 5, done: true }] };
-    expect(bestSetOf(entry)!.est).toBe(116.7);
+    expect(requireFixture(bestSetOf(entry)).est).toBe(116.7);
   });
 
   it("returns null for cardio and timed entries", () => {
@@ -202,7 +209,7 @@ describe("is1RMRecord", () => {
 
   it("counts the first ever estimate as a record", () => {
     const entry = { id: "deadlift", sets: [{ w: 140, r: 3, done: true }] };
-    const rec = is1RMRecord(state, "deadlift", entry)!;
+    const rec = requireFixture(is1RMRecord(state, "deadlift", entry));
     expect(rec.prev).toBe(0);
     expect(rec.est).toBe(154);
   });

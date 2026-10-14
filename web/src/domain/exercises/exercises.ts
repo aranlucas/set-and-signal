@@ -43,7 +43,7 @@ registerExerciseCatalog(EXDB);
 
 export { EXDB, EXIDX, registerCustom };
 
-export const BODYPARTS: string[] = [...new Set(EXDB.map((e) => e.bp))].sort();
+export const BODYPARTS: string[] = [...new Set(EXDB.map((e) => e.bp))].toSorted();
 
 // Equipment options present in a given list of exercises, most common first (issue #6).
 // Deriving them from the *already filtered* list keeps the chip row short and means
@@ -52,10 +52,12 @@ export function equipmentOf(list: ReadonlyArray<EquipmentOfProps>): string[] {
   const equipmentCounts: Record<string, number> = {};
 
   for (const exercise of list) {
-    if (exercise.eq) equipmentCounts[exercise.eq] = (equipmentCounts[exercise.eq] || 0) + 1;
+    if (exercise.eq) {
+      equipmentCounts[exercise.eq] = (equipmentCounts[exercise.eq] || 0) + 1;
+    }
   }
 
-  return Object.keys(equipmentCounts).sort(
+  return Object.keys(equipmentCounts).toSorted(
     (left, right) => equipmentCounts[right] - equipmentCounts[left] || (left < right ? -1 : 1),
   );
 }
@@ -87,11 +89,17 @@ export function searchExercises<T extends SearchableExercise>(
 
   return exercises
     .flatMap((exercise, index) => {
-      if (filters.bodyPart && exercise.bp !== filters.bodyPart) return [];
+      if (filters.bodyPart && exercise.bp !== filters.bodyPart) {
+        return [];
+      }
 
-      if (filters.equipment && exercise.eq !== filters.equipment) return [];
+      if (filters.equipment && exercise.eq !== filters.equipment) {
+        return [];
+      }
 
-      if (tokens.length === 0) return [{ exercise, index, score: 0 }];
+      if (tokens.length === 0) {
+        return [{ exercise, index, score: 0 }];
+      }
 
       const normalizedName = normalizeSearchText(exercise.n);
 
@@ -112,7 +120,9 @@ export function searchExercises<T extends SearchableExercise>(
           .join(" "),
       );
 
-      if (!tokens.every((token) => searchableText.includes(token))) return [];
+      if (!tokens.every((token) => searchableText.includes(token))) {
+        return [];
+      }
 
       const score =
         normalizedName === normalizedQuery
@@ -125,7 +135,7 @@ export function searchExercises<T extends SearchableExercise>(
 
       return [{ exercise, index, score }];
     })
-    .sort((left, right) => left.score - right.score || left.index - right.index)
+    .toSorted((left, right) => left.score - right.score || left.index - right.index)
     .map(({ exercise }) => exercise);
 }
 
@@ -174,9 +184,11 @@ export const isBarbellEq = (idOrEx: string | IsBarbellEqProps | null | undefined
 export const exOr = (id: string): CatalogExercise => {
   const found = EXIDX[id];
 
-  if (found && "img" in found) return found;
+  if (found && "img" in found) {
+    return found;
+  }
 
-  if (found)
+  if (found) {
     return {
       id: found.id,
       n: found.n,
@@ -188,6 +200,7 @@ export const exOr = (id: string): CatalogExercise => {
       img: "",
       gif: "",
     };
+  }
 
   return {
     id,

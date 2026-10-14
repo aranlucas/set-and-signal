@@ -40,10 +40,14 @@ function fakeBrowser() {
   doc = {
     visibilityState: "visible",
     addEventListener: (type, fn) => {
-      if (type === "visibilitychange") listeners.add(fn);
+      if (type === "visibilitychange") {
+        listeners.add(fn);
+      }
     },
     removeEventListener: (type, fn) => {
-      if (type === "visibilitychange") listeners.delete(fn);
+      if (type === "visibilitychange") {
+        listeners.delete(fn);
+      }
     },
   };
   vi.stubGlobal("document", doc);
@@ -53,7 +57,10 @@ function fakeBrowser() {
         await Promise.resolve();
         requests++;
 
-        if (reject) throw new Error("NotAllowedError"); // iOS Low Power Mode
+        if (reject) {
+          throw new Error("NotAllowedError");
+        } // iOS Low Power Mode
+
         const subs = new Set<() => void>();
 
         const s: FakeSentinel = {
@@ -61,7 +68,10 @@ function fakeBrowser() {
           release: async () => {
             await Promise.resolve();
 
-            if (live === s) live = null;
+            if (live === s) {
+              live = null;
+            }
+
             released++;
 
             for (const fn of subs) {
@@ -92,7 +102,10 @@ const settle = () =>
 const background = async () => {
   doc.visibilityState = "hidden";
 
-  if (live) await live.release();
+  if (live) {
+    await live.release();
+  }
+
   fire();
   await settle();
 };

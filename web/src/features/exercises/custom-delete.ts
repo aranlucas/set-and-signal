@@ -16,11 +16,14 @@ function removeCustomExerciseFromState(exercise: CustomEx | SheetEx): void {
 
     for (const workout of state.workouts) {
       for (const entry of workout.entries) {
-        if (entry.id !== exercise.id) continue;
+        if (entry.id !== exercise.id) {
+          continue;
+        }
 
         // Preserve the exercise metadata used by history and recovery maps.
-        if (!entry.muscleSnapshot || Object.keys(entry.muscleSnapshot).length === 0)
+        if (!entry.muscleSnapshot || Object.keys(entry.muscleSnapshot).length === 0) {
           entry.muscleSnapshot = exerciseMuscleSnapshot(exercise);
+        }
       }
     }
 

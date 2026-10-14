@@ -23,7 +23,9 @@ export default function StartWorkoutSheet({
       open={open}
       onOpenChange={(nextOpen) => {
         // This workflow closes only through one of its explicit start/change actions.
-        if (nextOpen) onOpenChange(true);
+        if (nextOpen) {
+          onOpenChange(true);
+        }
       }}
       title="Quick check-in"
     >

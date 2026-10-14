@@ -43,14 +43,20 @@ export function MeasuresSheet({ close }: MeasuresSheetProps) {
       for (const field of filled) {
         const value = values[field.key];
 
-        if (value != null) rounded[field.key] = Math.round(value * 10) / 10;
+        if (value != null) {
+          rounded[field.key] = Math.round(value * 10) / 10;
+        }
       }
 
       const date = todayISO();
       const at = draft.measures.findIndex((entry) => entry.d === date);
 
-      if (at >= 0) draft.measures[at] = { d: date, ...rounded };
-      else draft.measures.push({ d: date, ...rounded });
+      if (at >= 0) {
+        draft.measures[at] = { d: date, ...rounded };
+      } else {
+        draft.measures.push({ d: date, ...rounded });
+      }
+
       draft.measures.sort((left, right) => (left.d < right.d ? -1 : 1));
     });
     await close();
@@ -62,7 +68,7 @@ export function MeasuresSheet({ close }: MeasuresSheetProps) {
       draft.measures = (draft.measures || []).filter((entry) => entry.d !== date);
     });
 
-  const recent = [...(measures || [])].reverse().slice(0, 3);
+  const recent = [...(measures || [])].toReversed().slice(0, 3);
 
   return (
     <>
@@ -116,14 +122,16 @@ export function MeasuresSheet({ close }: MeasuresSheetProps) {
                   {fmtDate(t, entryMeasure.d, true)}
                 </span>
                 <span className="flex min-w-0 items-center gap-2 text-sm tabular-nums">
-                  {fields
-                    .filter((field) => entryMeasure[field.key] != null)
-                    .map((field) => (
+                  {fields.flatMap((field) => {
+                    const value = entryMeasure[field.key];
+
+                    return value == null ? [] : [
                       <span key={field.key} className="whitespace-nowrap">
                         <span className="text-muted-foreground">{field.label} </span>
-                        <b>{fmtNum(entryMeasure[field.key]!)}</b>
-                      </span>
-                    ))}
+                        <b>{fmtNum(value)}</b>
+                      </span>,
+                    ];
+                  })}
                   <Button
                     variant="square"
                     type="button"

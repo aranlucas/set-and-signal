@@ -73,7 +73,10 @@ export default function LineChart({
     const tip = tipRef.current;
     const wrap = wrapRef.current;
 
-    if (!hover || !tip || !wrap) return;
+    if (!hover || !tip || !wrap) {
+      return;
+    }
+
     const cw = wrap.clientWidth;
     const ch = wrap.clientHeight;
     const tw = tip.offsetWidth;
@@ -87,12 +90,14 @@ export default function LineChart({
     tip.style.top = (cy < th + 14 ? Math.min(ch - th - M, cy + 14) : M) + "px";
   }, [height, hover]);
 
-  if (!points || points.length === 0)
+  if (!points || points.length === 0) {
     return (
       <div className="px-5 py-11 text-center text-sm leading-snug text-foreground/60">
         {t("stats.noDataYet", "No data yet")}
       </div>
     );
+  }
+
   const chartHeight = height;
   const chartPadding = { l: axes ? 34 : 8, r: 12, t: 10, b: axes ? 22 : 8 };
   const single = points.length === 1;
@@ -100,12 +105,14 @@ export default function LineChart({
   const firstPoint = plottedPoints.at(0);
   const finalPoint = plottedPoints.at(-1);
 
-  if (!firstPoint || !finalPoint)
+  if (!firstPoint || !finalPoint) {
     return (
       <div className="px-5 py-11 text-center text-sm leading-snug text-foreground/60">
         {t("stats.noDataYet", "No data yet")}
       </div>
     );
+  }
+
   const yValues = plottedPoints.map((point) => point.y);
   let minY = Math.min(...yValues);
   let maxY = Math.max(...yValues);
@@ -150,11 +157,12 @@ export default function LineChart({
     const pow = Math.pow(10, Math.floor(Math.log10(raw)));
     let step = 10 * pow;
 
-    for (const m of [1, 2, 2.5, 5, 10])
+    for (const m of [1, 2, 2.5, 5, 10]) {
       if (raw <= m * pow) {
         step = m * pow;
         break;
       }
+    }
 
     for (let value = Math.ceil(minY / step) * step; value <= maxY + 1e-9; value += step) {
       const y = yPosition(value);
@@ -212,7 +220,10 @@ export default function LineChart({
     const every = Math.max(1, Math.ceil(ticks.length / 7));
 
     for (const [i, tk] of ticks.entries()) {
-      if (i % every) continue;
+      if (i % every) {
+        continue;
+      }
+
       const x = xPosition(tk.t);
       gridlines.push(
         <g key={"x" + tk.t}>
@@ -256,20 +267,31 @@ export default function LineChart({
   const onMove = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     const c = "touches" in e ? e.touches[0] : e;
 
-    if (!c || !("clientX" in c)) return; // runtime guard kept from JS: synthetic events can lack clientX
+    if (!c || !("clientX" in c)) {
+      return;
+    } // runtime guard kept from JS: synthetic events can lack clientX
+
     const svg = svgRef.current;
 
-    if (!svg) return;
+    if (!svg) {
+      return;
+    }
+
     const r = svg.getBoundingClientRect();
     const w = r.width || VIEWBOX_WIDTH;
     const vx = ((c.clientX - r.left) / w) * VIEWBOX_WIDTH;
     const firstHoverPoint = hoverPoints.at(0);
 
-    if (!firstHoverPoint) return;
+    if (!firstHoverPoint) {
+      return;
+    }
+
     let closestPoint = firstHoverPoint;
 
     for (const point of hoverPoints) {
-      if (Math.abs(point.x - vx) < Math.abs(closestPoint.x - vx)) closestPoint = point;
+      if (Math.abs(point.x - vx) < Math.abs(closestPoint.x - vx)) {
+        closestPoint = point;
+      }
     }
 
     setHover(closestPoint);

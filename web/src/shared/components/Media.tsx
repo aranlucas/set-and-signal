@@ -28,7 +28,10 @@ export default function Media({ exercise, id, compact, minimizable }: MediaProps
   const gifSize = useStore((state) => state.appState.gifSize);
   const update = useStore((state) => state.update);
 
-  if (!exercise.gif) return null;
+  if (!exercise.gif) {
+    return null;
+  }
+
   const isMinimized = minimizable && gifSize === "mini";
 
   const toggleSize = (event: MouseEvent<HTMLButtonElement>) => {
@@ -93,12 +96,13 @@ export default function Media({ exercise, id, compact, minimizable }: MediaProps
 }
 
 export function Thumb({ exercise }: ThumbProps) {
-  if (!exercise.img)
+  if (!exercise.img) {
     return (
       <div className="flex size-12.5 shrink-0 items-center justify-center rounded-md bg-muted text-2xl text-foreground/60">
         <Icon name="dumbbell" />
       </div>
     );
+  }
 
   return (
     <img

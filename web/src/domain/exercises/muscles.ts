@@ -142,7 +142,9 @@ const SECONDARY = 0.4; // a supporting muscle counts this much against a primary
 export function musclesOf(
   ex: MusclesOfProps | null | undefined,
 ): Partial<Record<MuscleSlug, number>> {
-  if (!ex) return {};
+  if (!ex) {
+    return {};
+  }
 
   if (ex.muscleWeights) {
     const snapshotLoad: Partial<Record<MuscleSlug, number>> = {};
@@ -150,11 +152,14 @@ export function musclesOf(
     for (const slug of MUSCLES) {
       const weight = ex.muscleWeights[slug];
 
-      if (weight !== undefined && Number.isFinite(weight) && weight > 0)
+      if (weight !== undefined && Number.isFinite(weight) && weight > 0) {
         snapshotLoad[slug] = weight;
+      }
     }
 
-    if (Object.keys(snapshotLoad).length > 0) return snapshotLoad;
+    if (Object.keys(snapshotLoad).length > 0) {
+      return snapshotLoad;
+    }
   }
 
   const muscleLoad: Partial<Record<MuscleSlug, number>> = {};
@@ -164,7 +169,9 @@ export function musclesOf(
       (validation.is(validation.string(), name) ? name : "").toLowerCase().trim(),
     );
 
-    if (slug) muscleLoad[slug] = Math.max(muscleLoad[slug] || 0, weight);
+    if (slug) {
+      muscleLoad[slug] = Math.max(muscleLoad[slug] || 0, weight);
+    }
   };
 
   addMuscle(ex.tg, 1);
@@ -174,8 +181,9 @@ export function musclesOf(
   }
 
   // Nothing recognised (custom exercises, or a target we don't draw) — use the body part.
-  if (Object.keys(muscleLoad).length === 0)
+  if (Object.keys(muscleLoad).length === 0) {
     Object.assign(muscleLoad, BY_BODYPART.get(ex.bp || "") || {});
+  }
 
   return muscleLoad;
 }
@@ -184,15 +192,25 @@ export function musclesOf(
 export function exerciseMuscleSnapshot(
   ex: ExerciseMuscleSnapshotProps | null | undefined,
 ): MuscleSnapshot {
-  if (!ex) return {};
+  if (!ex) {
+    return {};
+  }
+
   const snapshot: MuscleSnapshot = {};
 
-  if (ex.n) snapshot.n = ex.n;
+  if (ex.n) {
+    snapshot.n = ex.n;
+  }
 
-  if (ex.bp) snapshot.bp = ex.bp;
+  if (ex.bp) {
+    snapshot.bp = ex.bp;
+  }
+
   const weights = musclesOf(ex);
 
-  if (Object.keys(weights).length > 0) snapshot.muscleWeights = { ...weights };
+  if (Object.keys(weights).length > 0) {
+    snapshot.muscleWeights = { ...weights };
+  }
 
   return snapshot;
 }
@@ -209,7 +227,10 @@ export function loadOf(items: ReadonlyArray<LoadOfProps>): Partial<Record<Muscle
   for (const item of items) {
     const { id, sets } = item;
 
-    if (!sets) continue;
+    if (!sets) {
+      continue;
+    }
+
     const snapshot = item.muscleSnapshot;
 
     const snapshotHasWeights =
@@ -224,7 +245,9 @@ export function loadOf(items: ReadonlyArray<LoadOfProps>): Partial<Record<Muscle
     for (const slug of MUSCLES) {
       const contribution = exerciseLoad[slug] || 0;
 
-      if (contribution > 0) load[slug] = (load[slug] || 0) + contribution * sets;
+      if (contribution > 0) {
+        load[slug] = (load[slug] || 0) + contribution * sets;
+      }
     }
   }
 

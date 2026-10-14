@@ -47,7 +47,10 @@ export function useWorkoutSessionActions({
 }: UseWorkoutSessionActionsProps) {
   const mutEntry = (idx: number, fn: (entry: ActiveWorkout["entries"][number]) => void) =>
     update((state) => {
-      if (!state.active) return;
+      if (!state.active) {
+        return;
+      }
+
       fn(state.active.entries[idx]);
     }, true);
 
@@ -55,7 +58,9 @@ export function useWorkoutSessionActions({
     mutEntry(idx, (entry) => {
       const set = entry.sets[setIdx];
 
-      if (set) setFieldValue(set, field, value);
+      if (set) {
+        setFieldValue(set, field, value);
+      }
     });
 
   const modeAt = (idx: number) =>
@@ -92,7 +97,9 @@ export function useWorkoutSessionActions({
 
   const removeSet = (idx: number) =>
     mutEntry(idx, (entry) => {
-      if (entry.sets.length > 1) entry.sets.pop();
+      if (entry.sets.length > 1) {
+        entry.sets.pop();
+      }
     });
 
   // Warm-up ramp: inserts 40/60/80% sets in front of the work sets, or strips them all
@@ -122,13 +129,14 @@ export function useWorkoutSessionActions({
     });
 
     // A ramp needs a load to ramp toward: say so instead of doing nothing.
-    if (!removing && !built)
+    if (!removing && !built) {
       toast(
         t(
           "workout.warmupNeedsWorkingWeight",
           "Set a working weight first — there's nothing to warm up to.",
         ),
       );
+    }
   };
 
   const toggle = (idx: number, setIdx: number) => {
@@ -158,10 +166,16 @@ export function useWorkoutSessionActions({
     mutEntry(idx, (entry) => {
       const set = entry.sets[setIdx];
 
-      if (!set) return;
+      if (!set) {
+        return;
+      }
+
       set.done = !set.done;
 
-      if (!set.done) return;
+      if (!set.done) {
+        return;
+      }
+
       beep(appState.sound, 1040, 0.12);
       vibrate(30);
       const isLastExercise = idx === unit.at(-1);
@@ -172,11 +186,15 @@ export function useWorkoutSessionActions({
         ),
       );
 
-      if (isLastExercise && !unitDone)
+      if (isLastExercise && !unitDone) {
         startRest(activeWorkout.sessionPlan?.restSec ?? appState.restSec);
-      else if (unitDone) stopRest();
+      } else if (unitDone) {
+        stopRest();
+      }
 
-      if (unitDone && isLastUnit) workoutDone = true;
+      if (unitDone && isLastUnit) {
+        workoutDone = true;
+      }
 
       const loaded =
         mode === "reps" &&
@@ -192,26 +210,38 @@ export function useWorkoutSessionActions({
       }
     });
 
-    if (askTop) setWorkoutSheet({ type: "top-weight", entryIdx: idx });
-    else if (workoutDone) setWorkoutSheet({ type: "workout-complete" });
-    else if (exerciseDone && cardio) toast(t("workout.cardioLogged", "Cardio logged"));
-    else if (exerciseDone && mode === "time") toast(t("progression.holdLogged", "Hold logged"));
+    if (askTop) {
+      setWorkoutSheet({ type: "top-weight", entryIdx: idx });
+    } else if (workoutDone) {
+      setWorkoutSheet({ type: "workout-complete" });
+    } else if (exerciseDone && cardio) {
+      toast(t("workout.cardioLogged", "Cardio logged"));
+    } else if (exerciseDone && mode === "time") {
+      toast(t("progression.holdLogged", "Hold logged"));
+    }
   };
 
   const startTimed = (idx: number, setIdx: number) => {
     const entry = activeWorkout.entries[idx];
     const set = entry?.sets[setIdx];
 
-    if (!set || !("sec" in set)) return;
+    if (!set || !("sec" in set)) {
+      return;
+    }
+
     useWorkoutTimer.getState().startWork(set.sec || 45, exOr(entry.id).n, (elapsed) => {
       mutEntry(idx, (nextEntry) => {
         const nextSet = nextEntry.sets[setIdx];
 
-        if (nextSet && "sec" in nextSet) nextSet.sec = elapsed;
+        if (nextSet && "sec" in nextSet) {
+          nextSet.sec = elapsed;
+        }
       });
       const nextSet = useStore.getState().appState.active?.entries[idx]?.sets[setIdx];
 
-      if (nextSet && !nextSet.done) toggle(idx, setIdx);
+      if (nextSet && !nextSet.done) {
+        toggle(idx, setIdx);
+      }
     });
   };
 

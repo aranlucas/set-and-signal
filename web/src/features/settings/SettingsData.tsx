@@ -82,7 +82,10 @@ export function SettingsData({ user, requestConfirmation, onOpenSheet }: Setting
   const doImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
-    if (!file) return;
+    if (!file) {
+      return;
+    }
+
     void file
       .text()
       .then((contents) => {
@@ -108,8 +111,6 @@ export function SettingsData({ user, requestConfirmation, onOpenSheet }: Setting
             }),
           );
         }
-
-        return undefined;
       })
       .catch((cause: unknown) =>
         toast(
@@ -205,7 +206,10 @@ export function SettingsData({ user, requestConfirmation, onOpenSheet }: Setting
         onChange={(event) => {
           const file = event.target.files?.[0];
 
-          if (file) importFromApp(file, (parsed) => onOpenSheet({ kind: "import", parsed }));
+          if (file) {
+            importFromApp(file, (parsed) => onOpenSheet({ kind: "import", parsed }));
+          }
+
           event.target.value = "";
         }}
       />

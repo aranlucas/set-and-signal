@@ -79,7 +79,9 @@ export function TopWeight({ entryIdx, close, setWorkoutSheet }: TopWeightProps) 
 
   const weightValue = useWatch({ control, name: "weight" });
   useEffect(() => {
-    if (!entry) void close().catch(console.error);
+    if (!entry) {
+      void close().catch(console.error);
+    }
   }, [entry, close]);
   const units = supersetUnits(A ? A.entries : []);
   const unit: number[] = entry ? unitOf(units, entryIdx) : [];
@@ -87,14 +89,19 @@ export function TopWeight({ entryIdx, close, setWorkoutSheet }: TopWeightProps) 
   const unitIdx = units.findIndex((u) => u === unit);
   const isLastUnit = unitIdx === units.length - 1;
 
-  if (!entry || !ex) return null;
+  if (!entry || !ex) {
+    return null;
+  }
 
   const commit = async ({ weight: rawWeight }: CommitProps, advance: boolean) => {
     const weight = Math.round((rawWeight || 0) * 10) / 10;
     updateAppState((state) => {
       const activeWorkout = state.active;
 
-      if (!activeWorkout) return;
+      if (!activeWorkout) {
+        return;
+      }
+
       activeWorkout.entries[entryIdx].topW = weight;
       const currentWeight = state.exWeights[entry.id];
       state.exWeights[entry.id] = {
@@ -105,19 +112,24 @@ export function TopWeight({ entryIdx, close, setWorkoutSheet }: TopWeightProps) 
     await close();
 
     if (advance && unitDone) {
-      if (isLastUnit) setWorkoutSheet({ type: "workout-complete" });
-      else
+      if (isLastUnit) {
+        setWorkoutSheet({ type: "workout-complete" });
+      } else {
         updateAppState((state) => {
           const activeWorkout = state.active;
 
-          if (activeWorkout) activeWorkout.cur = units[unitIdx + 1][0];
+          if (activeWorkout) {
+            activeWorkout.cur = units[unitIdx + 1][0];
+          }
         });
-    } else
+      }
+    } else {
       toast(
         t("workout.completion.trackedNextTimeStarts", "Tracked — next time starts at {{weight}}", {
           weight: fmtNum(getAppState().exWeights[entry.id].w) + " " + st.unit,
         }),
       );
+    }
   };
 
   return (
@@ -273,10 +285,15 @@ export function FinishSummary({ workout, prs, e1prs = EMPTY_E1PRS, close }: Fini
     updateAppState((draft) => {
       const saved = draft.workouts.find((candidate) => candidate.id === workout.id);
 
-      if (!saved) return;
+      if (!saved) {
+        return;
+      }
 
-      if (text.trim()) saved.note = text;
-      else delete saved.note;
+      if (text.trim()) {
+        saved.note = text;
+      } else {
+        delete saved.note;
+      }
     });
   };
 

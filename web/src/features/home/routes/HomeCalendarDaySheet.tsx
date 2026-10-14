@@ -25,7 +25,9 @@ export default function HomeCalendarDaySheet() {
     <Sheet
       open
       onOpenChange={(open) => {
-        if (!open) void close().catch(console.error);
+        if (!open) {
+          void close().catch(console.error);
+        }
       }}
     >
       <SheetContent side="bottom" variant="panel" showCloseButton={false}>

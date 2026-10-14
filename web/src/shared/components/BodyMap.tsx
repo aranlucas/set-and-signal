@@ -53,16 +53,19 @@ const EMPTY_LOAD: Record<string, number> = {};
 function useBodyPaths(): BodyPaths | null {
   const [bodyPaths, setBodyPaths] = useState(cachedBodyPaths);
   useEffect(() => {
-    if (cachedBodyPaths) return;
+    if (cachedBodyPaths) {
+      return;
+    }
+
     let isMounted = true;
     bodyPathsPromise =
       bodyPathsPromise ||
       import("@/domain/exercises/body-paths").then((module) => (cachedBodyPaths = module.default));
     bodyPathsPromise
       .then((loadedPaths) => {
-        if (isMounted) setBodyPaths(loadedPaths);
-
-        return undefined;
+        if (isMounted) {
+          setBodyPaths(loadedPaths);
+        }
       })
       .catch(() => {});
 
@@ -82,7 +85,10 @@ function MuscleMapView({ view, muscleLevels, onMuscle, selectedMuscle }: MuscleM
   const activateMuscle = (slug: MuscleSlug) => onMuscle?.(slug);
 
   const handleMuscleKeyDown = (event: KeyboardEvent<SVGPathElement>, slug: MuscleSlug) => {
-    if (event.key !== "Enter" && event.key !== " ") return;
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
     event.preventDefault();
     activateMuscle(slug);
   };

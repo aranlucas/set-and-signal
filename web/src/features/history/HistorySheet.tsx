@@ -76,16 +76,23 @@ export function WorkoutDetail({ workoutId, close }: WorkoutDetailProps) {
     resolver: valibotResolver(noteFormSchema),
   });
 
-  if (!workout) return null;
+  if (!workout) {
+    return null;
+  }
 
   const saveNote = ({ note }: SaveNoteProps) => {
     updateAppState((draft) => {
       const saved = draft.workouts.find((candidate) => candidate.id === workout.id);
 
-      if (!saved) return;
+      if (!saved) {
+        return;
+      }
 
-      if (note.trim()) saved.note = note;
-      else delete saved.note;
+      if (note.trim()) {
+        saved.note = note;
+      } else {
+        delete saved.note;
+      }
     });
     setEditingNoteFor(null);
   };
@@ -276,7 +283,9 @@ export function Calendar({
   const monthMs = monthWs.reduce((a, w) => a + Math.max(0, (w.end || w.start) - w.start), 0);
   const cells: ReactElement[] = [];
 
-  for (let i = 0; i < startOffset; i++) cells.push(<div key={"e" + i} />);
+  for (let i = 0; i < startOffset; i++) {
+    cells.push(<div key={"e" + i} />);
+  }
 
   for (let d = 1; d <= daysIn; d++) {
     const iso = y + "-" + String(mo + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0");
@@ -314,8 +323,6 @@ export function Calendar({
               }
 
               onCalendarDay?.(iso, ws);
-
-              return undefined;
             })
             .catch(console.error);
         }}

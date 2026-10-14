@@ -4,7 +4,10 @@ import type { AppState, DaySession, Id, IsoDate, Routine, Weekday } from "@/shar
 type ScheduleState = Pick<AppState, "dayPlan" | "routines" | "week">;
 
 function validSessions(appState: ScheduleState, sessions: DaySession[] | undefined): DaySession[] {
-  if (!sessions?.length) return [];
+  if (!sessions?.length) {
+    return [];
+  }
+
   const validIds = new Set(appState.routines.map((routine) => routine.id));
 
   return sessions.filter((session) => validIds.has(session.routineId));
@@ -19,10 +22,15 @@ export function effectiveSessions(appState: ScheduleState, iso: IsoDate): DaySes
   const override = appState.dayPlan[iso];
 
   if (override !== undefined) {
-    if (override.rest) return [];
+    if (override.rest) {
+      return [];
+    }
+
     const sessions = validSessions(appState, override.sessions);
 
-    if (sessions.length || !override.sessions?.length) return sessions;
+    if (sessions.length || !override.sessions?.length) {
+      return sessions;
+    }
     // Use the weekly schedule when all override routines have been deleted.
   }
 
@@ -72,12 +80,17 @@ export function sessionProgress(
   return effectiveSessions(appState, iso).flatMap((session) => {
     const routine = routines.get(session.routineId);
 
-    if (!routine) return [];
+    if (!routine) {
+      return [];
+    }
+
     const occurrence = (occurrences.get(session.routineId) ?? 0) + 1;
     occurrences.set(session.routineId, occurrence);
     const count = remaining.get(session.routineId) ?? 0;
 
-    if (count > 0) remaining.set(session.routineId, count - 1);
+    if (count > 0) {
+      remaining.set(session.routineId, count - 1);
+    }
 
     return [
       Object.assign({}, session, {

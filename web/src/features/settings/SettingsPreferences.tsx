@@ -78,7 +78,9 @@ export function SettingsPreferences({ onEffortHelp }: SettingsPreferencesProps) 
 
                 // A kg inventory means nothing once the profile reads lb: re-seed the
                 // plate calculator with the new unit's defaults.
-                if (state.plates) state.plates = defaultPlateSetup(value);
+                if (state.plates) {
+                  state.plates = defaultPlateSetup(value);
+                }
               })
             }
           />
@@ -177,7 +179,10 @@ export function SettingsPreferences({ onEffortHelp }: SettingsPreferencesProps) 
             checked={appState.plates?.on ?? true}
             onCheckedChange={(on) =>
               update((state) => {
-                if (!state.plates) state.plates = defaultPlateSetup(state.unit);
+                if (!state.plates) {
+                  state.plates = defaultPlateSetup(state.unit);
+                }
+
                 state.plates.on = on;
               })
             }
@@ -200,7 +205,10 @@ export function SettingsPreferences({ onEffortHelp }: SettingsPreferencesProps) 
                   step={appState.unit === "lb" ? 5 : 2.5}
                   onChange={(bar) =>
                     update((state) => {
-                      if (!state.plates) state.plates = defaultPlateSetup(state.unit);
+                      if (!state.plates) {
+                        state.plates = defaultPlateSetup(state.unit);
+                      }
+
                       state.plates.bar = bar ?? 0;
                     })
                   }
@@ -225,7 +233,10 @@ export function SettingsPreferences({ onEffortHelp }: SettingsPreferencesProps) 
                       className="min-w-11"
                       onClick={() =>
                         update((state) => {
-                          if (!state.plates) state.plates = defaultPlateSetup(state.unit);
+                          if (!state.plates) {
+                            state.plates = defaultPlateSetup(state.unit);
+                          }
+
                           state.plates.avail = active
                             ? state.plates.avail.filter((candidate) => candidate !== plate)
                             : [...state.plates.avail, plate];

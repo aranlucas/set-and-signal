@@ -142,7 +142,9 @@ export const curatedRoutines = (p: CuratedPlan): Routine[] =>
       ),
     };
 
-    if (p.prog) routine.prog = p.prog;
+    if (p.prog) {
+      routine.prog = p.prog;
+    }
 
     return routine;
   });

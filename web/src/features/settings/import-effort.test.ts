@@ -12,8 +12,9 @@ const FITNOTES = "Date,Exercise,Category,Weight,Reps,Distance,Distance Unit,Time
 type WorkoutsOk = Extract<WorkoutsImport, { kind: "workouts" }>;
 
 const requireWorkouts = (parsedImport: WorkoutsImport): WorkoutsOk => {
-  if (!("kind" in parsedImport) || parsedImport.kind !== "workouts")
+  if (!("kind" in parsedImport) || parsedImport.kind !== "workouts") {
     throw new Error("Expected a workouts import");
+  }
 
   return parsedImport;
 };

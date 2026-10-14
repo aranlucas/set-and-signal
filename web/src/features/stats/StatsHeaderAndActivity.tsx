@@ -107,8 +107,11 @@ export function StatsHeaderAndActivity({ appState, onSheet }: StatsHeaderAndActi
           onDay={(iso) => {
             const workouts = appState.workouts.filter((workout) => workout.d === iso);
 
-            if (workouts.length === 1) onSheet({ kind: "workout", workout: workouts[0] });
-            else if (workouts.length > 0) onSheet({ kind: "calendar", start: iso });
+            if (workouts.length === 1) {
+              onSheet({ kind: "workout", workout: workouts[0] });
+            } else if (workouts.length > 0) {
+              onSheet({ kind: "calendar", start: iso });
+            }
           }}
         />
       </div>

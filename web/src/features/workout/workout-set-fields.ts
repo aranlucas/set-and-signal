@@ -26,36 +26,52 @@ export const fieldOf = (set: LoggedSet, field: SetField): number | undefined => 
 export const setFieldValue = (set: LoggedSet, field: SetField, value: number | null) => {
   switch (field) {
     case "w":
-      if ("w" in set) set.w = value ?? 0;
+      if ("w" in set) {
+        set.w = value ?? 0;
+      }
 
       return;
     case "r":
-      if ("r" in set) set.r = value ?? 0;
+      if ("r" in set) {
+        set.r = value ?? 0;
+      }
 
       return;
     case "sec":
-      if ("sec" in set) set.sec = value ?? 0;
+      if ("sec" in set) {
+        set.sec = value ?? 0;
+      }
 
       return;
     case "min":
-      if ("min" in set) set.min = value ?? 0;
+      if ("min" in set) {
+        set.min = value ?? 0;
+      }
 
       return;
     case "speed":
-      if ("speed" in set) set.speed = value ?? 0;
+      if ("speed" in set) {
+        set.speed = value ?? 0;
+      }
 
       return;
     case "rir":
       if ("r" in set || "sec" in set) {
-        if (value == null) delete set.rir;
-        else set.rir = value;
+        if (value == null) {
+          delete set.rir;
+        } else {
+          set.rir = value;
+        }
       }
 
       return;
     case "rpe":
       if ("r" in set || "sec" in set) {
-        if (value == null) delete set.rpe;
-        else set.rpe = value;
+        if (value == null) {
+          delete set.rpe;
+        } else {
+          set.rpe = value;
+        }
       }
   }
 };

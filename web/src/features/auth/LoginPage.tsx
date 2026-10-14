@@ -29,7 +29,10 @@ export default function Login() {
   const [oidcProviders, setOidcProviders] = useState<string[]>([]);
 
   useEffect(() => {
-    if (DEMO) return;
+    if (DEMO) {
+      return;
+    }
+
     void getConfig()
       .then((c) => setOidcProviders(c.oidc_providers ?? []))
       .catch(() => setOidcProviders([]));
@@ -42,7 +45,10 @@ export default function Login() {
       await pullState();
       toast(t("account.welcomeBack", "Welcome back, {{name}}", { name: u.name }));
     } catch (e) {
-      if (e instanceof Error && (e.name === "NotAllowedError" || e.name === "AbortError")) return;
+      if (e instanceof Error && (e.name === "NotAllowedError" || e.name === "AbortError")) {
+        return;
+      }
+
       toast(
         e instanceof Error && e.message ? e.message : t("account.signFailed", "Sign-in failed"),
       );
@@ -50,7 +56,7 @@ export default function Login() {
   };
 
   // Demo build: no backend to sign in against — the only way in is the local guest profile.
-  if (DEMO)
+  if (DEMO) {
     return (
       <div className="mx-auto flex min-h-screen w-full max-w-160 flex-col justify-center text-center">
         <BrandMark className="mx-auto size-18 text-primary" />
@@ -77,6 +83,7 @@ export default function Login() {
         </div>
       </div>
     );
+  }
 
   const hasOidc = oidcProviders.length > 0;
 

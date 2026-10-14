@@ -91,7 +91,10 @@ function SessionPlanner({ account }: SessionPlannerProps) {
   const selectSource = (id: string) => {
     const source = state.routines.find((routine) => routine.id === id);
 
-    if (!source) return;
+    if (!source) {
+      return;
+    }
+
     changeDraft({
       source: structuredClone(source),
       copyId: uid(),
@@ -114,17 +117,25 @@ function SessionPlanner({ account }: SessionPlannerProps) {
   const undoable = draft?.savedCopy && canUndoSessionCopy(state, draft.savedCopy);
 
   const changeChoice = (index: number, change: Partial<SessionChoice>) => {
-    if (!draft) return;
+    if (!draft) {
+      return;
+    }
+
     const choices = [...draft.choices];
 
     // Fill missing positions: sparse arrays serialize to null and cannot resume.
-    while (choices.length <= index) choices.push({});
+    while (choices.length <= index) {
+      choices.push({});
+    }
+
     choices[index] = { ...choices[index], ...change };
     changeDraft({ ...draft, choices });
   };
 
   const save = () => {
-    if (!draft || saved) return;
+    if (!draft || saved) {
+      return;
+    }
 
     try {
       const copy = createSessionRoutine(
@@ -136,8 +147,10 @@ function SessionPlanner({ account }: SessionPlannerProps) {
       );
 
       update((next) => {
-        if (next.routines.some((routine) => routine.id === copy.id))
+        if (next.routines.some((routine) => routine.id === copy.id)) {
           throw new Error("Copy already saved");
+        }
+
         next.routines.push(copy);
       });
       changeDraft({ ...draft, savedCopy: copy });
@@ -158,12 +171,16 @@ function SessionPlanner({ account }: SessionPlannerProps) {
   };
 
   const undo = () => {
-    if (!draft?.savedCopy) return;
+    if (!draft?.savedCopy) {
+      return;
+    }
 
     try {
       update((next) => {
-        if (!draft.savedCopy || !canUndoSessionCopy(next, draft.savedCopy))
+        if (!draft.savedCopy || !canUndoSessionCopy(next, draft.savedCopy)) {
           throw new Error("Copy is in use");
+        }
+
         next.routines = next.routines.filter((routine) => routine.id !== draft.copyId);
       });
       changeDraft({ ...draft, savedCopy: undefined });

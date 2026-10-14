@@ -7,7 +7,9 @@ export function beep(
   duration?: number,
   delaySeconds?: number,
 ) {
-  if (!enabled) return;
+  if (!enabled) {
+    return;
+  }
 
   try {
     audioCtx ??= new AudioContext();

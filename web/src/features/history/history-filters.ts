@@ -47,7 +47,10 @@ function isoAtLocalDate(date: Date): IsoDate {
 
 /** The lower inclusive date for a range that includes today. */
 export function historyRangeStart(today: IsoDate, range: HistoryRange): IsoDate | null {
-  if (range === "all") return null;
+  if (range === "all") {
+    return null;
+  }
+
   const start = dateAtNoon(today);
   start.setTime(start.getTime() - (Number(range) - 1) * DAY_MS);
 
@@ -81,16 +84,21 @@ export function filterHistoryWorkouts(
 
   return workouts
     .filter((workout) => {
-      if (rangeStart !== null && (workout.d < rangeStart || workout.d > today)) return false;
+      if (rangeStart !== null && (workout.d < rangeStart || workout.d > today)) {
+        return false;
+      }
 
-      if (filters.routineId === "freestyle" && workout.routineId !== null) return false;
+      if (filters.routineId === "freestyle" && workout.routineId !== null) {
+        return false;
+      }
 
       if (
         filters.routineId !== "all" &&
         filters.routineId !== "freestyle" &&
         workout.routineId !== filters.routineId
-      )
+      ) {
         return false;
+      }
 
       return !query || workoutSearchText(workout, exerciseName).includes(query);
     })
@@ -115,8 +123,11 @@ export function groupHistoryWorkoutsByMonth(workouts: readonly Workout[]): Histo
     const month = workout.d.slice(0, 7);
     const current = groups.get(month);
 
-    if (current) current.push(workout);
-    else groups.set(month, [workout]);
+    if (current) {
+      current.push(workout);
+    } else {
+      groups.set(month, [workout]);
+    }
   }
 
   return [...groups.entries()].map(([month, groupedWorkouts]) => ({
