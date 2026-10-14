@@ -10,6 +10,8 @@ const media = process.env.MEDIA_TARGET;
 
 const srcDir = fileURLToPath(new URL("./src", import.meta.url));
 
+const testDir = fileURLToPath(new URL("./test", import.meta.url));
+
 const proxy: Record<string, ProxyOptions> = {};
 
 proxy["/api"] = { target: backend, changeOrigin: true };
@@ -30,7 +32,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   base: "./",
   resolve: {
-    alias: { "@": srcDir },
+    alias: { "@": srcDir, "@test": testDir },
   },
   server: {
     proxy,
@@ -38,6 +40,6 @@ export default defineConfig({
   build: { chunkSizeWarningLimit: 1500 },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    include: ["test/**/*.test.ts", "test/**/*.test.tsx"],
   },
 });

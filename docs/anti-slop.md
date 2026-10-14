@@ -52,6 +52,6 @@ real translation and router providers; the start chooser separates its store
 container from a state-driven view. Browser globals use Vitest's scoped global
 stubs and are restored. Existing persistence/concurrency/isolation tests remain.
 
-The application Vitest config explicitly selects `src/**/*.test.*`; upstream
+The application Vitest config explicitly selects `test/**/*.test.*`; upstream
 RuleTester fixtures are retained under the vendor directory and can be run
 separately. The formatter excludes vendored assets so their bytes remain auditable.
