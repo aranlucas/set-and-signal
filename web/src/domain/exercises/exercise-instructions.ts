@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { LANGUAGES, normalizeLanguage, type Language } from "@/i18n/languages";
 import { instructionShard } from "@/domain/exercises/instruction-shard";
 
+type LoadedValue = { requestKey: string; result: LoadedExerciseInstructions };
+
 type InstructionPack = Readonly<Record<string, readonly string[]>>;
 
 export type LoadedExerciseInstructions = {
@@ -112,9 +114,7 @@ export function useExerciseInstructions(
   const normalizedLanguage = normalizeLanguage(language);
   const requestKey = `${normalizedLanguage}/${exerciseId}`;
 
-  const [loaded, setLoaded] = useState<
-    { requestKey: string; result: LoadedExerciseInstructions } | undefined
-  >();
+  const [loaded, setLoaded] = useState<LoadedValue | undefined>();
 
   useEffect(() => {
     if (!enabled) return;
@@ -122,6 +122,8 @@ export function useExerciseInstructions(
     void loadExerciseInstructions(normalizedLanguage, exerciseId)
       .then((result) => {
         if (active) setLoaded({ requestKey, result });
+
+        return undefined;
       })
       .catch(() => {
         if (active) setLoaded({ requestKey, result: EMPTY_INSTRUCTIONS });

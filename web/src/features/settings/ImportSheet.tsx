@@ -12,9 +12,11 @@ import { MetricCard } from "@/shared/components/MetricCard";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { updateAppState } from "@/features/exercises/sheet-shared";
 
+type ImportSummaryProps = { parsed: ParsedOk; close: SheetClose };
+
 type ParsedOk = Exclude<ParseResult, { error: string }>;
 
-export function ImportSummary({ parsed, close }: { parsed: ParsedOk; close: SheetClose }) {
+export function ImportSummary({ parsed, close }: ImportSummaryProps) {
   const { t } = useTranslation();
   const st = useStore((store) => store.appState);
   const isBW = parsed.kind === "bodyweight";
@@ -31,7 +33,7 @@ export function ImportSummary({ parsed, close }: { parsed: ParsedOk; close: Shee
     updateAppState((appState) => {
       added = mergeImport(appState, parsed).added;
     });
-    void close();
+    void close().catch(console.error);
     toast(
       isBW
         ? t("import.weighInsImported", "{{count}} weigh-ins imported", { count: added })

@@ -8,11 +8,18 @@ import { type VariantProps } from "class-variance-authority";
 import { cn } from "@/shared/lib/utils";
 import { toggleVariants } from "@/shared/ui/toggle-variants";
 
+type ToggleGroupContextValue = {
+  spacing?: number;
+  orientation?: "horizontal" | "vertical";
+};
+
+type ToggleGroupProps = {
+  spacing?: number;
+  orientation?: "horizontal" | "vertical";
+};
+
 const ToggleGroupContext = React.createContext<
-  VariantProps<typeof toggleVariants> & {
-    spacing?: number;
-    orientation?: "horizontal" | "vertical";
-  }
+  VariantProps<typeof toggleVariants> & ToggleGroupContextValue
 >({
   size: "default",
   variant: "default",
@@ -28,11 +35,7 @@ function ToggleGroup({
   orientation = "horizontal",
   children,
   ...props
-}: ToggleGroupPrimitive.Props &
-  VariantProps<typeof toggleVariants> & {
-    spacing?: number;
-    orientation?: "horizontal" | "vertical";
-  }) {
+}: ToggleGroupPrimitive.Props & VariantProps<typeof toggleVariants> & ToggleGroupProps) {
   const contextValue = React.useMemo(
     () => ({ variant, size, spacing, orientation }),
     [variant, size, spacing, orientation],

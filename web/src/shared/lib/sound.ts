@@ -31,7 +31,7 @@ export function beep(
 
 export function vibrate(pattern: VibratePattern) {
   try {
-    navigator.vibrate && navigator.vibrate(pattern);
+    navigator.vibrate?.(pattern);
   } catch {
     /* */
   }

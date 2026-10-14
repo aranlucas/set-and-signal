@@ -19,6 +19,8 @@ import type {
   Weekday,
 } from "@/shared/lib/types.js";
 
+type MergePlanProps = { schedule?: boolean };
+
 const PLAN_FMT = 2;
 
 const WEEK_ORDER: Weekday[] = [1, 2, 3, 4, 5, 6, 0]; // Mon-first, matching the Plan screen
@@ -119,11 +121,12 @@ export function buildPlanBundle(
   );
 
   const week: Partial<Record<string, DaySession[]>> = {};
-  WEEK_ORDER.forEach((d) => {
+
+  for (const d of WEEK_ORDER) {
     const sessions = appState.week?.[d];
 
     if (sessions?.length) week[d] = sessions.map((session) => Object.assign({}, session));
-  });
+  }
 
   return {
     opengym_plan: PLAN_FMT,
@@ -193,11 +196,12 @@ export function parsePlan(raw: string | PlanBundle): ParsedPlan {
 export function mergePlan(
   appStateDraft: Pick<AppState, "customEx" | "routines" | "week">,
   bundle: Pick<PlanBundle, "customEx" | "routines" | "week">,
-  { schedule }: { schedule?: boolean } = {},
+  { schedule }: MergePlanProps = {},
 ) {
   appStateDraft.customEx = appStateDraft.customEx || [];
   const exerciseIdMap: Record<string, Id> = {};
-  bundle.customEx.forEach((c) => {
+
+  for (const c of bundle.customEx) {
     const existingExercise = appStateDraft.customEx.find(
       (x) => (x.n || "").toLowerCase() === (c.n || "").toLowerCase() && x.bp === c.bp,
     );
@@ -205,7 +209,7 @@ export function mergePlan(
     if (existingExercise) {
       exerciseIdMap[c.id] = existingExercise.id;
 
-      return;
+      continue;
     }
 
     const newExerciseId = uid();
@@ -214,9 +218,11 @@ export function mergePlan(
 
     if (c.desc) custom.desc = c.desc;
     appStateDraft.customEx.push(custom);
-  });
+  }
+
   const routineIdMap: Record<Id, Id> = {};
-  bundle.routines.forEach((routine) => {
+
+  for (const routine of bundle.routines) {
     const newRoutineId = uid();
     routineIdMap[routine.id] = newRoutineId;
 
@@ -235,13 +241,14 @@ export function mergePlan(
 
     if (routine.prog) imported.prog = routine.prog;
     appStateDraft.routines.push(imported);
-  });
+  }
 
   if (schedule) {
-    WEEK_ORDER.forEach((d) => {
+    for (const d of WEEK_ORDER) {
       delete appStateDraft.week[d];
-    });
-    Object.entries(bundle.week || {}).forEach(([d, sessions]) => {
+    }
+
+    for (const [d, sessions] of Object.entries(bundle.week || {})) {
       // bundle weeks are plain JSON keyed by weekday digits
       const weekday = WEEKDAY_BY_KEY.get(d);
 
@@ -254,7 +261,7 @@ export function mergePlan(
 
         if (remapped.length) appStateDraft.week[weekday] = remapped;
       }
-    });
+    }
   }
 
   return { routines: bundle.routines.length };

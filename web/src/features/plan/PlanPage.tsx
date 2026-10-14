@@ -46,7 +46,7 @@ export default function Plan() {
     update((s) => {
       s.routines.push(newRoutine);
     });
-    void nav({ to: "/plan/r/$id", params: { id: newRoutine.id } });
+    void nav({ to: "/plan/r/$id", params: { id: newRoutine.id } }).catch(console.error);
   };
 
   return (

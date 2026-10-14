@@ -28,13 +28,24 @@ import type { SessionDraft } from "./session-draft";
 import { useSessionPlannerLabels } from "./use-session-planner-labels";
 import { SessionPlanSummary } from "./SessionPlanSummary";
 
+type SessionPlannerProps = { account: string | null };
+
+type SessionPlannerRowProps = {
+  row: SessionRow;
+  index: number;
+  choice?: SessionChoice;
+  unit: "kg" | "lb";
+  disabled: boolean;
+  onChange: (choice: Partial<SessionChoice>) => void;
+};
+
 export default function SessionPlannerPage() {
   const account = useStore((store) => store.user?.id ?? null);
 
   return <SessionPlanner key={account ?? "guest"} account={account} />;
 }
 
-function SessionPlanner({ account }: { account: string | null }) {
+function SessionPlanner({ account }: SessionPlannerProps) {
   const { t } = useTranslation();
   const labels = useSessionPlannerLabels();
   const nav = useNavigate();
@@ -588,14 +599,7 @@ function SessionPlannerRow({
   unit,
   disabled,
   onChange,
-}: {
-  row: SessionRow;
-  index: number;
-  choice?: SessionChoice;
-  unit: "kg" | "lb";
-  disabled: boolean;
-  onChange: (choice: Partial<SessionChoice>) => void;
-}) {
+}: SessionPlannerRowProps) {
   const { t } = useTranslation();
   const labels = useSessionPlannerLabels();
   const mode = modeOf(row.original);

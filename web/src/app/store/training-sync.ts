@@ -6,6 +6,8 @@ import { parseStoredState, type ParsedAppStatePatch } from "@/shared/lib/schemas
 import type { AppState } from "@/shared/lib/types";
 import { joinState, splitState } from "../../../convex/model";
 
+type CommitValue = { changes: Change[] };
+
 export type SyncPhase = "loading" | "saving" | "saved" | "offline" | "error" | "conflict";
 
 export type SyncStatus = { phase: SyncPhase; pending: number };
@@ -18,7 +20,7 @@ const snapshot = makeFunctionReference<"query", Record<string, never>, unknown>(
   "training:snapshot",
 );
 
-const commit = makeFunctionReference<"mutation", { changes: Change[] }, null>("training:commit");
+const commit = makeFunctionReference<"mutation", CommitValue, null>("training:commit");
 
 export function changesBetween(before: Partial<AppState>, after: Partial<AppState>): Change[] {
   const old = new Map(splitState(before).map((row) => [row.key, row.value]));
@@ -126,7 +128,7 @@ export class TrainingSync {
   }
   private publish() {
     if (this.closed) return;
-    const online = typeof navigator === "undefined" || navigator.onLine !== false;
+    const online = navigator?.onLine !== false;
     const phase = !online ? "offline" : (this.problem ?? (this.queue.length ? "saving" : "saved"));
     this.status({ phase, pending: this.queue.length });
   }
@@ -237,6 +239,8 @@ export class TrainingSync {
         this.flushing = undefined;
 
         if (this.queue.length && this.client && !this.closed) return this.flush();
+
+        return undefined;
       },
       (cause: unknown) => {
         this.flushing = undefined;

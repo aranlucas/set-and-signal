@@ -4,15 +4,17 @@ import { PreWorkoutBodyweightSheet } from "@/features/account/AccountSheet";
 import { beginWorkout } from "@/features/workout/workout-actions";
 import { RouteBottomSheet } from "@/shared/components/RouteBottomSheet";
 
+type StartWorkoutSheetProps = {
+  open: boolean;
+  routineId: string | null;
+  onOpenChange: (open: boolean) => void;
+};
+
 export default function StartWorkoutSheet({
   open,
   routineId,
   onOpenChange,
-}: {
-  open: boolean;
-  routineId: string | null;
-  onOpenChange: (open: boolean) => void;
-}) {
+}: StartWorkoutSheetProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -29,11 +31,11 @@ export default function StartWorkoutSheet({
         onDone={(bodyweight) => {
           onOpenChange(false);
           beginWorkout(routineId, bodyweight, t("workout.type.freestyle", "Freestyle"));
-          void navigate({ to: "/workout" });
+          void navigate({ to: "/workout" }).catch(console.error);
         }}
         onChooseDifferentWorkout={() => {
           onOpenChange(false);
-          void navigate({ to: "/workout" });
+          void navigate({ to: "/workout" }).catch(console.error);
         }}
       />
     </RouteBottomSheet>

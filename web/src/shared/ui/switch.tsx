@@ -2,13 +2,15 @@ import { Switch as SwitchPrimitive } from "@base-ui/react/switch";
 
 import { cn } from "@/shared/lib/utils";
 
+type SwitchProps = {
+  size?: "sm" | "default";
+};
+
 function Switch({
   className,
   size = "default",
   ...props
-}: SwitchPrimitive.Root.Props & {
-  size?: "sm" | "default";
-}) {
+}: SwitchPrimitive.Root.Props & SwitchProps) {
   return (
     <SwitchPrimitive.Root
       data-slot="switch"

@@ -5,6 +5,16 @@ import { Row } from "@/shared/components/layout";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 import { Button } from "@/shared/ui/button";
 
+type SelectRowProps<V extends string> = {
+  icon?: IconName;
+  iconTint?: string;
+  title: ReactNode;
+  value: V;
+  options: readonly PickOption<V>[];
+  onChange: (value: V) => void;
+  sheetTitle?: ReactNode;
+};
+
 export interface PickOption<V extends string = string> {
   value: V;
   label: string;
@@ -19,15 +29,7 @@ export function SelectRow<V extends string>({
   options,
   onChange,
   sheetTitle,
-}: {
-  icon?: IconName;
-  iconTint?: string;
-  title: ReactNode;
-  value: V;
-  options: readonly PickOption<V>[];
-  onChange: (value: V) => void;
-  sheetTitle?: ReactNode;
-}) {
+}: SelectRowProps<V>) {
   const [isOpen, setIsOpen] = useState(false);
   const current = options.find((option) => option.value === value);
 

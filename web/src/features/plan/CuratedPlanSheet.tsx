@@ -10,14 +10,18 @@ import { updateAppState } from "@/features/exercises/sheet-shared";
 import { weekdayFromNumber } from "@/shared/lib/format";
 import type { SheetClose } from "@/shared/lib/types";
 
-export function CuratedPlans({ close }: { close: SheetClose }) {
+type CuratedPlansProps = { close: SheetClose };
+
+export function CuratedPlans({ close }: CuratedPlansProps) {
   const { t } = useTranslation();
   const metadata = useExerciseMetadataLabels();
 
   const load = (p: (typeof CURATED)[number]) => {
     const rs = curatedRoutines(p);
     updateAppState((appState) => {
-      rs.forEach((routine) => appState.routines.push(routine));
+      for (const routine of rs) {
+        appState.routines.push(routine);
+      }
 
       for (const [day, routineIndex] of Object.entries(p.week)) {
         const weekday = weekdayFromNumber(Number(day));
@@ -26,7 +30,7 @@ export function CuratedPlans({ close }: { close: SheetClose }) {
         if (weekday != null && routine) appState.week[weekday] = [{ routineId: routine.id }];
       }
     });
-    void close();
+    void close().catch(console.error);
     toast(
       t("plans.curated.addedToast", "{{plan}} added — week set to Mon · Wed · Fri", {
         plan: p.name,

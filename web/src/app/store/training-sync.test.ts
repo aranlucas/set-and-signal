@@ -172,7 +172,7 @@ describe("durable Convex edits", () => {
     );
 
     await sync.start();
-    let acknowledge = vi.fn<(value: null) => void>();
+    const acknowledge = vi.fn<(value: null) => void>();
 
     const first = new Promise<null>((resolve) => {
       acknowledge.mockImplementation(resolve);

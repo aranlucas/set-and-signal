@@ -21,6 +21,16 @@ import { Label } from "@/shared/ui/label";
 import { Segmented } from "@/shared/ui/segmented";
 import Icon from "@/shared/components/Icon";
 
+type SummaryMetricProps = {
+  icon: "chart" | "dumbbell" | "timer";
+  label: string;
+  value: string;
+};
+
+type EmptyHistoryProps = { onStart: () => void };
+
+type EmptyFilteredHistoryProps = { onReset: () => void };
+
 const DEFAULT_FILTERS: HistoryFilters = { query: "", routineId: "all", range: "all" };
 
 function hasActiveFilters(filters: HistoryFilters): boolean {
@@ -244,15 +254,7 @@ export default function History() {
   );
 }
 
-function SummaryMetric({
-  icon,
-  label,
-  value,
-}: {
-  icon: "chart" | "dumbbell" | "timer";
-  label: string;
-  value: string;
-}) {
+function SummaryMetric({ icon, label, value }: SummaryMetricProps) {
   return (
     <div className="history-metric min-w-0">
       <Icon name={icon} className="mb-2 size-4 text-muted-foreground" />
@@ -264,7 +266,7 @@ function SummaryMetric({
   );
 }
 
-function EmptyHistory({ onStart }: { onStart: () => void }) {
+function EmptyHistory({ onStart }: EmptyHistoryProps) {
   const { t } = useTranslation();
 
   return (
@@ -289,7 +291,7 @@ function EmptyHistory({ onStart }: { onStart: () => void }) {
   );
 }
 
-function EmptyFilteredHistory({ onReset }: { onReset: () => void }) {
+function EmptyFilteredHistory({ onReset }: EmptyFilteredHistoryProps) {
   const { t } = useTranslation();
 
   return (

@@ -18,6 +18,14 @@ import {
   updateAppState,
 } from "@/features/exercises/sheet-shared";
 
+type EstimatedRecordsValue = {
+  id: Id;
+  est: number;
+  w: number;
+  r: number;
+  prev?: number;
+};
+
 export function beginWorkout(
   routineId: Id | null,
   bodyweight: number | null,
@@ -84,15 +92,9 @@ export function completeWorkout(): FinishSummaryPayload | null {
   const personalRecords: Id[] = [];
   const personalRecordSet = new Set<Id>();
 
-  const estimatedRecords: Array<{
-    id: Id;
-    est: number;
-    w: number;
-    r: number;
-    prev?: number;
-  }> = [];
+  const estimatedRecords: Array<EstimatedRecordsValue> = [];
 
-  activeWorkout.entries.forEach((entry) => {
+  for (const entry of activeWorkout.entries) {
     // Warm-up ramp sets never set records or become next session's default weight.
     const maxSetWeight = entry.sets.reduce(
       (max, set) => (set.done && !isWarmup(set) ? Math.max(max, getSetWeight(set)) : max),
@@ -109,7 +111,7 @@ export function completeWorkout(): FinishSummaryPayload | null {
     if (estimatedRecord && !personalRecordSet.has(entry.id)) {
       estimatedRecords.push({ id: entry.id, ...estimatedRecord });
     }
-  });
+  }
 
   const workout: Workout = {
     id: activeWorkout.id,
@@ -150,7 +152,7 @@ export function completeWorkout(): FinishSummaryPayload | null {
 
   workout.vol = workoutVolume(workout);
   updateAppState((draft) => {
-    workout.entries.forEach((entry) => {
+    for (const entry of workout.entries) {
       const maxWeight = entry.sets.reduce(
         (max, set) => (set.done && !isWarmup(set) ? Math.max(max, getSetWeight(set)) : max),
         Math.max(0, entry.topW || 0),
@@ -163,7 +165,8 @@ export function completeWorkout(): FinishSummaryPayload | null {
           draft.exWeights[entry.id] = { w: maxWeight, d: workout.d };
         }
       }
-    });
+    }
+
     draft.workouts.push(workout);
 
     if (workout.routineId && !workout.sessionPlan) {

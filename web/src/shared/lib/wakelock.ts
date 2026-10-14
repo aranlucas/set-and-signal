@@ -45,14 +45,14 @@ async function acquireWakeLock() {
 }
 
 const handleVisibilityChange = () => {
-  if (document.visibilityState === "visible") void acquireWakeLock();
+  if (document.visibilityState === "visible") void acquireWakeLock().catch(console.error);
 };
 
 export function requestWakeLock() {
   if (isRequested) return;
   isRequested = true;
   document.addEventListener("visibilitychange", handleVisibilityChange);
-  void acquireWakeLock();
+  void acquireWakeLock().catch(console.error);
 }
 
 export function releaseWakeLock() {

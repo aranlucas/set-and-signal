@@ -31,7 +31,54 @@ import { WorkoutSheetHost } from "@/features/workout/WorkoutSheets";
 import type { SetField } from "@/features/workout/workout-set-fields";
 import { SessionPlanSummary } from "@/features/plan/SessionPlanSummary";
 
-function Elapsed({ start }: { start: number }) {
+type ElapsedProps = { start: number };
+
+type WorkoutSessionHeaderProps = {
+  name: string;
+  start: number;
+  done: number;
+  total: number;
+  onDiscard: () => void;
+  onFinish: () => void;
+};
+
+type WorkoutProgressSummaryProps = {
+  activeWorkout: ActiveWorkout;
+  units: number[][];
+  currentUnit: number;
+  done: number;
+  total: number;
+};
+
+type WorkoutExerciseNavigatorProps = {
+  activeWorkout: ActiveWorkout;
+  units: number[][];
+  currentUnit: number;
+  onSelect: (entryIndex: number) => void;
+};
+
+type WorkoutExerciseListProps = {
+  activeWorkout: ActiveWorkout;
+  currentEntry: number;
+  unit: number[];
+  unitIndex: number;
+  unitCount: number;
+  isSuperset: boolean;
+  setField: (entryIdx: number, setIdx: number, field: SetField, value: number | null) => void;
+  addSet: (entryIdx: number) => void;
+  removeSet: (entryIdx: number) => void;
+  toggleWarmup: (entryIdx: number) => void;
+  startTimed: (entryIdx: number, setIdx: number) => void;
+  toggle: (entryIdx: number, setIdx: number) => void;
+  setWorkoutSheet: SetWorkoutSheet;
+};
+
+type WorkoutSessionViewProps = {
+  activeWorkout: ActiveWorkout;
+  onComplete: (summary: FinishSummaryPayload) => void;
+};
+
+function Elapsed({ start }: ElapsedProps) {
   const { t } = useTranslation();
   const [elapsedText, setElapsedText] = useState("0:00");
   useEffect(() => {
@@ -65,14 +112,7 @@ function WorkoutSessionHeader({
   total,
   onDiscard,
   onFinish,
-}: {
-  name: string;
-  start: number;
-  done: number;
-  total: number;
-  onDiscard: () => void;
-  onFinish: () => void;
-}) {
+}: WorkoutSessionHeaderProps) {
   const { t } = useTranslation();
   const hosted = useStore((state) => !!state.user);
 
@@ -115,13 +155,7 @@ function WorkoutProgressSummary({
   currentUnit,
   done,
   total,
-}: {
-  activeWorkout: ActiveWorkout;
-  units: number[][];
-  currentUnit: number;
-  done: number;
-  total: number;
-}) {
+}: WorkoutProgressSummaryProps) {
   const { t } = useTranslation();
   const appState = useStore((state) => state.appState);
 
@@ -196,12 +230,7 @@ function WorkoutExerciseNavigator({
   units,
   currentUnit,
   onSelect,
-}: {
-  activeWorkout: ActiveWorkout;
-  units: number[][];
-  currentUnit: number;
-  onSelect: (entryIndex: number) => void;
-}) {
+}: WorkoutExerciseNavigatorProps) {
   const { t } = useTranslation();
 
   if (units.length < 2) return null;
@@ -305,21 +334,7 @@ function WorkoutExerciseList({
   startTimed,
   toggle,
   setWorkoutSheet,
-}: {
-  activeWorkout: ActiveWorkout;
-  currentEntry: number;
-  unit: number[];
-  unitIndex: number;
-  unitCount: number;
-  isSuperset: boolean;
-  setField: (entryIdx: number, setIdx: number, field: SetField, value: number | null) => void;
-  addSet: (entryIdx: number) => void;
-  removeSet: (entryIdx: number) => void;
-  toggleWarmup: (entryIdx: number) => void;
-  startTimed: (entryIdx: number, setIdx: number) => void;
-  toggle: (entryIdx: number, setIdx: number) => void;
-  setWorkoutSheet: SetWorkoutSheet;
-}) {
+}: WorkoutExerciseListProps) {
   const { t } = useTranslation();
 
   if (!activeWorkout.entries.length) {
@@ -395,13 +410,7 @@ function WorkoutExerciseList({
   );
 }
 
-export function WorkoutSessionView({
-  activeWorkout,
-  onComplete,
-}: {
-  activeWorkout: ActiveWorkout;
-  onComplete: (summary: FinishSummaryPayload) => void;
-}) {
+export function WorkoutSessionView({ activeWorkout, onComplete }: WorkoutSessionViewProps) {
   const { t } = useTranslation();
   const nav = useNavigate();
   const appState = useStore((state) => state.appState);
@@ -525,7 +534,7 @@ export function WorkoutSessionView({
         });
         stopRest();
         stopWork();
-        void nav({ to: "/home" });
+        void nav({ to: "/home" }).catch(console.error);
       },
     });
 

@@ -2,6 +2,8 @@ import type { TFunction } from "i18next";
 import { fmtDate } from "@/shared/lib/format";
 import type { IsoDate, LoggedSet, Workout } from "@/shared/lib/types";
 
+type RatingOfValue = { rir?: number | null; rpe?: number | null };
+
 export type StatsSheet =
   | { kind: "bodyweight" }
   | { kind: "goal" }
@@ -43,7 +45,7 @@ export const weightDeltaColor = (
 };
 
 // Cardio sets carry neither rating field; the raters only ever read these two keys.
-export const ratingOf = (set: LoggedSet): { rir?: number | null; rpe?: number | null } =>
+export const ratingOf = (set: LoggedSet): RatingOfValue =>
   "rir" in set || "rpe" in set ? set : {};
 
 // Cardio sets carry speed, timed sets sec, reps sets weight. Read the shape so

@@ -8,6 +8,18 @@ import type { IconName } from "@/shared/components/Icon";
 import { cn } from "@/shared/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 
+type NavigationTabProps = {
+  value: NavigationTabValue;
+  icon: IconName;
+  to: TabDestination;
+  label: string;
+};
+
+type TabBarProps = {
+  onStart: (routineId: string) => void;
+  onStartIntent?: () => void;
+};
+
 type TabValue = "home" | "plan" | "workout" | "stats" | "library";
 
 type NavigationTabValue = Exclude<TabValue, "workout">;
@@ -26,23 +38,13 @@ const SECTION_TABS = new Map<string, TabValue>(
   } satisfies Record<string, TabValue>),
 );
 
-function NavigationTab({
-  value,
-  icon,
-  to,
-  label,
-}: {
-  value: NavigationTabValue;
-  icon: IconName;
-  to: TabDestination;
-  label: string;
-}) {
+function NavigationTab({ value, icon, to, label }: NavigationTabProps) {
   return (
     <TabsTrigger
       value={value}
       nativeButton={false}
       render={<Link to={to} activeOptions={{ exact: true }} />}
-      className="h-auto min-h-11 flex-col justify-end gap-1 rounded-sm px-1 py-0.5 text-xs leading-none font-medium text-muted-foreground data-active:text-system-blue"
+      variant="navigation"
     >
       <Icon name={icon} />
       <span>{label}</span>
@@ -50,13 +52,7 @@ function NavigationTab({
   );
 }
 
-export default function TabBar({
-  onStart,
-  onStartIntent,
-}: {
-  onStart: (routineId: string) => void;
-  onStartIntent?: () => void;
-}) {
+export default function TabBar({ onStart, onStartIntent }: TabBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const loc = useLocation();
@@ -79,7 +75,7 @@ export default function TabBar({
       }
     }
 
-    void navigate({ to: "/workout" });
+    void navigate({ to: "/workout" }).catch(console.error);
   };
 
   return (

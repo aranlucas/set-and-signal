@@ -26,6 +26,18 @@ import {
 } from "@/features/exercises/sheet-shared";
 import { exerciseUsage } from "@/features/exercises/custom-delete";
 
+type AddToRoutineProps = {
+  exercise: SheetEx;
+  close: SheetClose;
+  openConfig: OpenConfig;
+};
+
+type ExercisePickerProps = {
+  onPick: (exercise: SheetEx) => void;
+  close: SheetClose;
+  openCustom: OpenCustom;
+};
+
 function useAppState() {
   return useStore((state) => state.appState);
 }
@@ -44,15 +56,7 @@ type OpenCustom = (
   prefillName?: string,
 ) => void;
 
-export function AddToRoutine({
-  exercise,
-  close,
-  openConfig,
-}: {
-  exercise: SheetEx;
-  close: SheetClose;
-  openConfig: OpenConfig;
-}) {
+export function AddToRoutine({ exercise, close, openConfig }: AddToRoutineProps) {
   const { t } = useTranslation();
   const nav = useNavigate();
   const appState = useAppState();
@@ -94,7 +98,7 @@ export function AddToRoutine({
         );
 
         if (createNewRoutine && selectedRoutine)
-          void nav({ to: "/plan/r/$id", params: { id: selectedRoutine.id } });
+          void nav({ to: "/plan/r/$id", params: { id: selectedRoutine.id } }).catch(console.error);
       },
       null,
       createNewRoutine
@@ -161,15 +165,7 @@ export function AddToRoutine({
   );
 }
 
-export function ExercisePicker({
-  onPick,
-  close,
-  openCustom,
-}: {
-  onPick: (exercise: SheetEx) => void;
-  close: SheetClose;
-  openCustom: OpenCustom;
-}) {
+export function ExercisePicker({ onPick, close, openCustom }: ExercisePickerProps) {
   const { t } = useTranslation();
   const metadata = useExerciseMetadataLabels();
   const appState = useAppState();
@@ -333,7 +329,7 @@ export function ExercisePicker({
                 openCustom(
                   null,
                   (customExercise) => {
-                    if (customExercise) void pickExercise(customExercise);
+                    if (customExercise) void pickExercise(customExercise).catch(console.error);
                   },
                   query.trim(),
                 )

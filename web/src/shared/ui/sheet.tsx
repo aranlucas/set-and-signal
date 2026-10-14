@@ -5,6 +5,13 @@ import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { XIcon } from "lucide-react";
 
+type SheetContentProps = {
+  side?: "top" | "right" | "bottom" | "left";
+  // `panel`: the app's rounded, scrollable bottom sheet, centred on wide screens.
+  variant?: "default" | "panel";
+  showCloseButton?: boolean;
+};
+
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
 }
@@ -41,12 +48,7 @@ function SheetContent({
   variant = "default",
   showCloseButton = true,
   ...props
-}: SheetPrimitive.Popup.Props & {
-  side?: "top" | "right" | "bottom" | "left";
-  // `panel`: the app's rounded, scrollable bottom sheet, centred on wide screens.
-  variant?: "default" | "panel";
-  showCloseButton?: boolean;
-}) {
+}: SheetPrimitive.Popup.Props & SheetContentProps) {
   return (
     <SheetPortal>
       <SheetOverlay />

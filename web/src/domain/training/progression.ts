@@ -32,6 +32,27 @@ import type {
   Unit,
 } from "@/shared/lib/types.js";
 
+type PolicyForProps = { prog?: PolicyId };
+
+type ReadSessionProps = {
+  id?: Id;
+  target?: AnyConfig | null;
+  sets?: SetFields[];
+  topW?: number | null;
+};
+
+type SessionsForProps = { unit?: Unit; workouts: WorkoutLike[] };
+
+type StallCountProps = { ok: boolean };
+
+type NextPrescriptionProps = { unit?: Unit; workouts: WorkoutLike[] };
+
+type NextPrescriptionProps2 = { prog?: PolicyId };
+
+type SyncSourceRoutineWeightsResult = { ex: ExConfig[]; prog?: PolicyId };
+
+type SyncSourceRoutineWeightsProps = { unit?: Unit; workouts: WorkoutLike[] };
+
 const reason = (
   key: TranslationMessage["key"],
   defaultValue: string,
@@ -96,14 +117,13 @@ export interface SessionRow extends SessionRead {
 // the mode's default. Reps keeps behaving the way the app always did (all reps → add a step).
 export function policyFor(
   cfg: AnyConfig | null | undefined,
-  routine: { prog?: PolicyId } | null | undefined,
+  routine: PolicyForProps | null | undefined,
   mode?: Mode,
 ): PolicyId {
   const resolvedMode = mode || modeOf(cfg || {});
   const allowedPolicies = POLICIES_FOR[resolvedMode] || ["off"];
 
-  const selectedPolicy =
-    (cfg && cfg.prog) || (routine && routine.prog) || (resolvedMode === "reps" ? "linear" : "off");
+  const selectedPolicy = cfg?.prog || routine?.prog || (resolvedMode === "reps" ? "linear" : "off");
 
   return allowedPolicies.includes(selectedPolicy) ? selectedPolicy : "off";
 }
@@ -137,14 +157,14 @@ function deloadTo(currentWeight: number, step: number): number {
  * `fallback`, the exercise's current plan.
  */
 export function readSession(
-  entry?: { id?: Id; target?: AnyConfig | null; sets?: SetFields[]; topW?: number | null } | null,
+  entry?: ReadSessionProps | null,
   fallback?: AnyConfig | null,
 ): SessionRead {
-  const target = (entry && entry.target) || fallback || {};
+  const target = entry?.target || fallback || {};
   const mode = modeOf({ ...target, id: entry ? entry.id : undefined });
   // Warm-up sets are preparation, not performance: a policy judges the working sets alone,
   // or three ramp sets would satisfy "every set hit" on their own.
-  const loggedSets = ((entry && entry.sets) || []).filter((set) => !isWarmup(set));
+  const loggedSets = (entry?.sets || []).filter((set) => !isWarmup(set));
   const plannedSets = target.sets || loggedSets.length;
   const hasEnoughSets = loggedSets.length >= plannedSets;
   const weight = sessionLoad(entry, fallback);
@@ -185,23 +205,24 @@ export function readSession(
 
 /** Every past session for one exercise, oldest first. `fallback` — see readSession. */
 export function sessionsFor(
-  state: { unit?: Unit; workouts: WorkoutLike[] },
+  state: SessionsForProps,
   exId: Id,
   fallback?: AnyConfig | null,
 ): SessionRow[] {
   const sessions: SessionRow[] = [];
-  (state.workouts || []).forEach((workout) => {
+
+  for (const workout of state.workouts || []) {
     const entry = workout.entries.find((candidate) => candidate.id === exId);
 
-    if (entry && entry.sets.some((set) => set.done))
+    if (entry?.sets?.some((set) => set.done))
       sessions.push({ d: workout.d, ...readSession(entry, fallback) });
-  });
+  }
 
   return sessions;
 }
 
 // How many sessions in a row ended in a miss, counting back from the most recent.
-export function stallCount(sessions: ReadonlyArray<{ ok: boolean }>): number {
+export function stallCount(sessions: ReadonlyArray<StallCountProps>): number {
   let missedSessions = 0;
 
   for (let i = sessions.length - 1; i >= 0; i--) {
@@ -221,9 +242,9 @@ export function stallCount(sessions: ReadonlyArray<{ ok: boolean }>): number {
  * undefined and the caller keeps whatever the plan said.
  */
 export function nextPrescription(
-  state: { unit?: Unit; workouts: WorkoutLike[] },
+  state: NextPrescriptionProps,
   cfg: AnyConfig & Pick<ExConfig, "id" | "sets">,
-  routine?: { prog?: PolicyId } | null,
+  routine?: NextPrescriptionProps2 | null,
 ): Prescription {
   const mode = modeOf(cfg);
   const policy = policyFor(cfg, routine, mode);
@@ -504,11 +525,12 @@ export function applyPrescription<T extends LoggedSet>(
 ): T[] {
   if (!prescription || prescription.kind === "off" || prescription.kind === "first") return sets;
   const updatedSets: T[] = [];
-  sets.forEach((set) => {
+
+  for (const set of sets) {
     if (set.done) {
       updatedSets.push(set);
 
-      return;
+      continue;
     }
 
     const nextSet = { ...set };
@@ -519,7 +541,7 @@ export function applyPrescription<T extends LoggedSet>(
 
     if (prescription.sec != null && "sec" in nextSet) nextSet.sec = prescription.sec;
     updatedSets.push(nextSet);
-  });
+  }
 
   // A policy that decided on a set count gets to grow the list — bodyweight progression adds
   // a set where a barbell would have added a plate. Only ever upwards, and only by copying a
@@ -560,8 +582,8 @@ export function applyPrescriptionToConfig(
  * weight so today's session is not planned at 0. Only listed exercise ids are
  * touched; the rest of the routine is left as-is.
  */
-export function syncSourceRoutineWeights<T extends { ex: ExConfig[]; prog?: PolicyId }>(
-  state: { unit?: Unit; workouts: WorkoutLike[] },
+export function syncSourceRoutineWeights<T extends SyncSourceRoutineWeightsResult>(
+  state: SyncSourceRoutineWeightsProps,
   routine: T,
   exerciseIds: readonly Id[],
 ): T {

@@ -31,6 +31,8 @@ import { Grid } from "@/shared/components/Grid";
 import { Button } from "@/shared/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 
+type ExOptsValue = { value: StatsMetric; label: string };
+
 // Stats = the analytics hub: all charts, progress and history live here.
 export default function Stats() {
   const { t } = useTranslation();
@@ -77,13 +79,15 @@ export default function Stats() {
   // Deleted custom exercises still have a useful history name in their snapshot. Keep them in
   // the picker instead of reducing a real progression curve to an opaque id after deletion.
   const historicalNames = new Map<string, string>();
-  appState.workouts.forEach((workout) =>
-    workout.entries.forEach((entry) => {
+
+  for (const workout of appState.workouts) {
+    for (const entry of workout.entries) {
       const name = entry.muscleSnapshot?.n;
 
       if (name && !historicalNames.has(entry.id)) historicalNames.set(entry.id, name);
-    }),
-  );
+    }
+  }
+
   const exerciseName = (id: string) => EXIDX[id]?.n || historicalNames.get(id) || id;
 
   const exHist = [...new Set(appState.workouts.flatMap((w) => w.entries.map((e) => e.id)))]
@@ -115,31 +119,24 @@ export default function Stats() {
   let exBest = 0;
 
   if (curEx) {
-    appState.workouts.forEach((w) => {
+    for (const w of appState.workouts) {
       const en = w.entries.find((e) => e.id === curEx);
 
-      if (en) {
-        const doneSets = en.sets.filter((s) => s.done && !isWarmup(s));
+      if (!en) continue;
+      const doneSets = en.sets.filter((s) => s.done && !isWarmup(s));
 
-        const mx = Math.max(
-          0,
-          ...doneSets.map(loggedMetric),
-          curCardio || curTimed ? 0 : en.topW || 0,
-        );
+      const mx = Math.max(
+        0,
+        ...doneSets.map(loggedMetric),
+        curCardio || curTimed ? 0 : en.topW || 0,
+      );
 
-        if (mx > 0) {
-          exPts.push({
-            t: w.start,
-            y: mx,
-            d: w.d,
-            sets: doneSets,
-            target: en.target ?? null,
-          });
+      if (mx <= 0) continue;
+      exPts.push({ t: w.start, y: mx, d: w.d, sets: doneSets, target: en.target ?? null });
 
-          if (mx > exBest) exBest = mx;
-        }
-      }
-    });
+      if (mx > exBest) exBest = mx;
+    }
+
     exList = exPts.slice(-5).reverse();
   }
 
@@ -176,9 +173,7 @@ export default function Stats() {
     };
   });
 
-  const exOpts: { value: StatsMetric; label: string }[] = [
-    { value: "top", label: t("progression.topSet", "Top set") },
-  ];
+  const exOpts: ExOptsValue[] = [{ value: "top", label: t("progression.topSet", "Top set") }];
 
   if (showE1) exOpts.push({ value: "e1rm", label: t("progression.est1rm", "Est. 1RM") });
 

@@ -1,17 +1,19 @@
 import type { ReactNode } from "react";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 
+type RouteBottomSheetProps = {
+  open?: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: ReactNode;
+  children: ReactNode;
+};
+
 export function RouteBottomSheet({
   open = true,
   onOpenChange,
   title,
   children,
-}: {
-  open?: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: ReactNode;
-  children: ReactNode;
-}) {
+}: RouteBottomSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" showCloseButton={false} variant="panel">

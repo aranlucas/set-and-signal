@@ -51,7 +51,7 @@ describe("translation source calls", () => {
 
     for (const [filename, source] of sourceFiles) {
       for (const base of pluralBases) {
-        const escaped = base.replaceAll(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+        const escaped = base.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);
 
         const call = new RegExp(
           String.raw`\b(?:t|translate|reason)\(\s*"${escaped}"\s*,\s*["'\x60][\s\S]{0,500}?\bcount\s*:`,

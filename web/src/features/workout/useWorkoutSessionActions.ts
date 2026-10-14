@@ -16,6 +16,21 @@ import {
   type SetField,
 } from "@/features/workout/workout-set-fields";
 
+type UseWorkoutSessionActionsProps = {
+  activeWorkout: ActiveWorkout;
+  appState: AppState;
+  unit: number[];
+  units: number[][];
+  unitIndex: number;
+  update: (mutate: (draft: AppState) => void, push?: boolean) => void;
+  startRest: (seconds: number) => void;
+  stopRest: () => void;
+  setWorkoutSheet: SetWorkoutSheet;
+  setConfirmation: (confirmation: ConfirmDialogOptions | null) => void;
+  completeSession: () => void;
+  t: TFunction;
+};
+
 export function useWorkoutSessionActions({
   activeWorkout,
   appState,
@@ -29,20 +44,7 @@ export function useWorkoutSessionActions({
   setConfirmation,
   completeSession,
   t,
-}: {
-  activeWorkout: ActiveWorkout;
-  appState: AppState;
-  unit: number[];
-  units: number[][];
-  unitIndex: number;
-  update: (mutate: (draft: AppState) => void, push?: boolean) => void;
-  startRest: (seconds: number) => void;
-  stopRest: () => void;
-  setWorkoutSheet: SetWorkoutSheet;
-  setConfirmation: (confirmation: ConfirmDialogOptions | null) => void;
-  completeSession: () => void;
-  t: TFunction;
-}) {
+}: UseWorkoutSessionActionsProps) {
   const mutEntry = (idx: number, fn: (entry: ActiveWorkout["entries"][number]) => void) =>
     update((state) => {
       if (!state.active) return;

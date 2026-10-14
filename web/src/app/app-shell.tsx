@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { Outlet, useRouterState } from "@tanstack/react-router";
+import { Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useStore } from "@/app/store/useStore";
 import { useWorkoutTimer } from "@/features/workout/useWorkoutTimer";
@@ -15,7 +15,6 @@ import { cn } from "@/shared/lib/utils";
 import SyncStatus from "@/shared/components/SyncStatus";
 import BrandMark from "@/shared/components/BrandMark";
 import AppNavigation from "@/shared/components/AppNavigation";
-import { useNavigate } from "@tanstack/react-router";
 import { nextPlannedRoutine } from "@/domain/training/schedule";
 import { todayISO } from "@/shared/lib/format";
 
@@ -58,7 +57,7 @@ export default function AppShell() {
     applyPrefs(theme, accent);
   }, [theme, accent]);
   useEffect(() => {
-    void setLang(language || "en");
+    void setLang(language || "en").catch(console.error);
   }, [language]);
   useEffect(() => {
     document.documentElement.lang = resolvedLanguage || language || "en";
@@ -88,7 +87,7 @@ export default function AppShell() {
             if (user && !profileLoaded) return;
 
             if (activeWorkout) {
-              void navigate({ to: "/workout" });
+              void navigate({ to: "/workout" }).catch(console.error);
 
               return;
             }
@@ -96,7 +95,7 @@ export default function AppShell() {
             const routine = nextPlannedRoutine(useStore.getState().appState, todayISO());
 
             if (routine?.ex.length) setStartRoutineId(routine.id);
-            else void navigate({ to: "/workout" });
+            else void navigate({ to: "/workout" }).catch(console.error);
           }}
         />
       )}

@@ -2,6 +2,8 @@
 import { ICON_NAMES } from "@/shared/components/icon-names";
 import type { IconName } from "@/shared/components/Icon";
 
+type GLYPHGROUPSValue = { id: GlyphGroupId; items: IconName[] };
+
 export type GlyphGroupId = "strength" | "equipment" | "cardio" | "recovery";
 
 export const DEFAULT_GLYPH = "figureStrength";
@@ -27,7 +29,7 @@ export const GLYPH_GROUPS = [
     id: "recovery",
     items: ["stretch", "moon", "heart", "flame", "bolt"],
   },
-] satisfies { id: GlyphGroupId; items: IconName[] }[];
+] satisfies GLYPHGROUPSValue[];
 
 const isIconName = (value: string): value is IconName =>
   ICON_NAMES.some((iconName) => iconName === value);

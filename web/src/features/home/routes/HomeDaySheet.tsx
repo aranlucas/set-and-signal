@@ -16,7 +16,7 @@ export default function HomeDaySheet() {
     <Sheet
       open
       onOpenChange={(open) => {
-        if (!open) void close();
+        if (!open) void close().catch(console.error);
       }}
     >
       <SheetContent side="bottom" variant="panel" showCloseButton={false}>

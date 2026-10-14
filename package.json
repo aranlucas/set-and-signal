@@ -12,7 +12,7 @@
     "format:write": "pnpm --dir web format:write",
     "typecheck": "pnpm --dir web typecheck",
     "lint:fix": "oxlint --fix",
-    "format:check": "oxfmt --check",
+    "format:check": "oxfmt --config oxfmt.config.ts --check",
     "lint:oxforge": "oxlint"
   },
   "devDependencies": {

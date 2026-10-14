@@ -4,6 +4,14 @@ import type { IconName } from "@/shared/components/Icon";
 import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
 import { cn } from "@/shared/lib/utils";
 
+type SegmentedProps<V extends string> = {
+  options: readonly SegOption<V>[];
+  value: V;
+  onChange: (value: V) => void;
+  size?: "default" | "sm";
+  className?: string;
+};
+
 export interface SegOption<V extends string = string> {
   value: V;
   label?: string;
@@ -16,13 +24,7 @@ export function Segmented<V extends string>({
   onChange,
   size = "default",
   className = "",
-}: {
-  options: readonly SegOption<V>[];
-  value: V;
-  onChange: (value: V) => void;
-  size?: "default" | "sm";
-  className?: string;
-}) {
+}: SegmentedProps<V>) {
   const selectedIndex = Math.max(
     0,
     options.findIndex((option) => option.value === value),

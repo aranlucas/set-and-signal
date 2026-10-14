@@ -9,8 +9,8 @@
     "preview": "vite preview",
     "lint": "pnpm lint:strict",
     "lint:strict": "oxlint src --type-aware --type-check --deny-warnings --report-unused-disable-directives-severity error && pnpm lint:anti-slop",
-    "format": "oxfmt --check .",
-    "format:write": "oxfmt --write .",
+    "format": "oxfmt --config oxfmt.config.ts --check .",
+    "format:write": "oxfmt --config oxfmt.config.ts --write .",
     "catalog:validate": "pnpm instructions:generate && node --experimental-strip-types scripts/validate-exercise-catalog.mjs",
     "instructions:generate": "node --experimental-strip-types scripts/build-instructions.mjs",
     "test": "pnpm catalog:validate && vitest run",
@@ -24,7 +24,7 @@
     "typecheck": "pnpm instructions:generate && tsc -b && pnpm convex:check",
     "lint:anti-slop": "oxlint --config .oxlintrc.anti-slop.json .",
     "lint:fix": "oxlint --fix",
-    "format:check": "oxfmt --check"
+    "format:check": "oxfmt --config oxfmt.config.ts --check"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",

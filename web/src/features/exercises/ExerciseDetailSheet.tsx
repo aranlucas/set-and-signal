@@ -16,13 +16,23 @@ import type { CustomEx, SheetClose } from "@/shared/lib/types";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { toCatalogExercise, type SheetEx } from "@/features/exercises/sheet-shared";
 
+type OneRepMaxProps = { exercise: SheetEx };
+
+type ExerciseDetailProps = {
+  exercise: SheetEx;
+  close: SheetClose;
+  openAddToRoutine: (exercise: SheetEx) => void;
+  openCustom: (exercise: CustomEx) => void;
+  onDelete?: () => void;
+};
+
 function useAppState() {
   return useStore((state) => state.appState);
 }
 
 const isCustomExercise = (exercise: SheetEx): exercise is CustomEx => exercise.custom === true;
 
-function OneRepMax({ exercise }: { exercise: SheetEx }) {
+function OneRepMax({ exercise }: OneRepMaxProps) {
   const { t } = useTranslation();
   const appState = useAppState();
   const bestResult = best1RM(appState, exercise.id);
@@ -132,13 +142,7 @@ export function ExerciseDetail({
   openAddToRoutine,
   openCustom,
   onDelete,
-}: {
-  exercise: SheetEx;
-  close: SheetClose;
-  openAddToRoutine: (exercise: SheetEx) => void;
-  openCustom: (exercise: CustomEx) => void;
-  onDelete?: () => void;
-}) {
+}: ExerciseDetailProps) {
   const { t, i18n } = useTranslation();
   const metadata = useExerciseMetadataLabels();
   const appState = useAppState();
@@ -207,6 +211,8 @@ export function ExerciseDetail({
         onClick={() =>
           void close().then(() => {
             openAddToRoutine(exercise);
+
+            return undefined;
           })
         }
       >
@@ -220,6 +226,8 @@ export function ExerciseDetail({
             onClick={() =>
               void close().then(() => {
                 openCustom(customExercise);
+
+                return undefined;
               })
             }
           >
@@ -232,6 +240,8 @@ export function ExerciseDetail({
             onClick={() =>
               void close().then(() => {
                 onDelete?.();
+
+                return undefined;
               })
             }
           >

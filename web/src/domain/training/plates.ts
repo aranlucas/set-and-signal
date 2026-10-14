@@ -6,7 +6,11 @@
 // weight and whether it matched exactly, and the UI says "≈" when it did not.
 import type { PlateSetup, Unit } from "@/shared/lib/types";
 
-export const DEFAULT_PLATES: Record<Unit, { bar: number; avail: number[] }> = {
+type DEFAULTPLATESValue = { bar: number; avail: number[] };
+
+type PerSideValue = { w: number; count: number };
+
+export const DEFAULT_PLATES: Record<Unit, DEFAULTPLATESValue> = {
   kg: { bar: 20, avail: [25, 20, 15, 10, 5, 2.5, 1.25] },
   lb: { bar: 45, avail: [45, 35, 25, 10, 5, 2.5] },
 };
@@ -53,7 +57,7 @@ export function platesFor(
   if (sorted.length === 0) return null;
 
   let remaining = perSideTarget;
-  const perSide: Array<{ w: number; count: number }> = [];
+  const perSide: Array<PerSideValue> = [];
 
   for (const plate of sorted) {
     const count = Math.floor(remaining / plate + 1e-9);

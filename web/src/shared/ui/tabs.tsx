@@ -3,6 +3,11 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/shared/lib/utils";
 
+type TabsTriggerProps = {
+  // `action`: the raised primary button in the tab bar; `data-running` switches it to the active colour.
+  variant?: "default" | "action" | "navigation";
+};
+
 function Tabs({ className, orientation = "horizontal", ...props }: TabsPrimitive.Root.Props) {
   return (
     <TabsPrimitive.Root
@@ -48,10 +53,7 @@ function TabsTrigger({
   className,
   variant = "default",
   ...props
-}: TabsPrimitive.Tab.Props & {
-  // `action`: the raised primary button in the tab bar; `data-running` switches it to the active colour.
-  variant?: "default" | "action";
-}) {
+}: TabsPrimitive.Tab.Props & TabsTriggerProps) {
   return (
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
@@ -62,6 +64,8 @@ function TabsTrigger({
         "after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:-bottom-1 group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-right-1 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100",
         variant === "action" &&
           "h-auto gap-1 rounded-sm px-1 py-0.5 text-xs leading-none font-medium text-primary after:hidden data-running:text-active data-active:bg-transparent dark:data-active:bg-transparent",
+        variant === "navigation" &&
+          "h-auto min-h-11 flex-col justify-end gap-1 rounded-sm px-1 py-0.5 text-xs leading-none font-medium text-muted-foreground data-active:text-system-blue",
         className,
       )}
       {...props}

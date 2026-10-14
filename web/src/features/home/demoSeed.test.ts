@@ -18,10 +18,19 @@ import {
 import { effortOf, modeOf, type SetFields } from "@/domain/training/history.js";
 import type { Workout, WorkoutEntry } from "@/shared/lib/types.js";
 
+type FlatProps = { workouts: Array<{ entries: Array<{ sets: SetFields[] }> }> };
+
 const demoState = buildDemoState();
 
-const eachSet = (fn: (s: SetFields, w: Workout, e: WorkoutEntry) => void) =>
-  demoState.workouts.forEach((w) => w.entries.forEach((e) => e.sets.forEach((s) => fn(s, w, e))));
+const eachSet = (fn: (s: SetFields, w: Workout, e: WorkoutEntry) => void) => {
+  for (const w of demoState.workouts) {
+    for (const e of w.entries) {
+      for (const s of e.sets) {
+        fn(s, w, e);
+      }
+    }
+  }
+};
 
 const sum = effortSummary(demoState, 0); // 0 = the whole history
 
@@ -109,10 +118,12 @@ describe("demo seed — effort", () => {
   it("draws a weekly trend with a point for every week of the history", () => {
     const wks = effortWeeks(demoState, 0);
     expect(wks.length).toBeGreaterThanOrEqual(10);
-    wks.forEach((w) => {
+
+    for (const w of wks) {
       expect(w.n).toBeGreaterThanOrEqual(2);
       expect(w.sets).toBeGreaterThanOrEqual(w.n);
-    });
+    }
+
     // Sorted oldest first, one point per calendar week.
     expect(wks.map((w) => w.t)).toEqual(wks.map((w) => w.t).sort((a, b) => a - b));
     expect(new Set(wks.map((w) => w.t)).size).toBe(wks.length);
@@ -157,11 +168,15 @@ describe("demo seed — effort", () => {
   it("is deterministic — two builds produce the same ratings", () => {
     const b: DemoState = buildDemoState();
 
-    const flat = (st: { workouts: Array<{ entries: Array<{ sets: SetFields[] }> }> }) =>
+    const flat = (st: FlatProps) =>
       st.workouts
         .map((w) =>
           w.entries
-            .map((e) => e.sets.map((s) => `${s.w}x${s.r}/${s.rir ?? ""}/${s.rpe ?? ""}`).join(","))
+            .map((e) =>
+              e.sets
+                .map((s) => `${String(s.w)}x${String(s.r)}/${s.rir ?? ""}/${s.rpe ?? ""}`)
+                .join(","),
+            )
             .join("|"),
         )
         .join(";");

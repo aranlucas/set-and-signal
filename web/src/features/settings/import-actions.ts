@@ -46,6 +46,8 @@ export function importFromApp(file: File, onParsed: (parsed: ParsedImport) => vo
       }
 
       onParsed(parsed);
+
+      return undefined;
     })
     .catch(() => toast(translate("import.couldNotReadFile", "Could not read that file")));
 }

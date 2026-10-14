@@ -7,7 +7,9 @@
 // and a 2.5 kg warm-up for a 5 kg lift is theatre, not preparation.
 import type { RepsSet, Unit } from "@/shared/lib/types";
 
-export const WARMUP_RAMP: Array<{ pct: number; reps: number }> = [
+type WARMUPRAMPValue = { pct: number; reps: number };
+
+export const WARMUP_RAMP: Array<WARMUPRAMPValue> = [
   { pct: 0.4, reps: 8 },
   { pct: 0.6, reps: 5 },
   { pct: 0.8, reps: 3 },

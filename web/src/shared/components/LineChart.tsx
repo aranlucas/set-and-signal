@@ -3,6 +3,30 @@ import { useTranslation } from "react-i18next";
 import { useDateLabels } from "@/shared/hooks/use-date-labels";
 import { fmtNum, fmtDate, isoOf } from "@/shared/lib/format";
 
+type LineChartProps = {
+  points: ChartPoint[];
+  height?: number;
+  unit?: string;
+  color?: string;
+  axes?: boolean;
+  goal?: number | null;
+  invert?: boolean;
+};
+
+type HoverValue = {
+  x: number;
+  y: number;
+  iso: string;
+  v: number;
+  note?: string;
+};
+
+type TicksValue = {
+  t: number;
+  txt: string;
+  anchor?: "start" | "middle" | "end";
+};
+
 const VIEWBOX_WIDTH = 340; // viewBox width; the svg stretches to its container, height comes from `height`
 
 // points: [{ t: ms, y: num, d?: iso, m?: 0..1, note?: str }] sorted by t.
@@ -29,15 +53,7 @@ export default function LineChart({
   axes = true,
   goal = null,
   invert = false,
-}: {
-  points: ChartPoint[];
-  height?: number;
-  unit?: string;
-  color?: string;
-  axes?: boolean;
-  goal?: number | null;
-  invert?: boolean;
-}) {
+}: LineChartProps) {
   const { t } = useTranslation();
   const { monthsShort } = useDateLabels();
   const svgRef = useRef<SVGSVGElement>(null);
@@ -45,13 +61,7 @@ export default function LineChart({
   const tipRef = useRef<HTMLDivElement>(null);
   const gradientId = `line-chart-gradient-${useId()}`;
 
-  const [hover, setHover] = useState<{
-    x: number;
-    y: number;
-    iso: string;
-    v: number;
-    note?: string;
-  } | null>(null); // { x, y, iso, v }
+  const [hover, setHover] = useState<HoverValue | null>(null); // { x, y, iso, v }
 
   // The tooltip is placed after layout, from its measured size, because the chart
   // lives in an overflow-clipped box: a fixed half-width offset (what this used to
@@ -175,11 +185,7 @@ export default function LineChart({
     const firstDate = new Date(firstTimestamp);
     const lastDate = new Date(lastTimestamp);
 
-    const ticks: {
-      t: number;
-      txt: string;
-      anchor?: "start" | "middle" | "end";
-    }[] = [];
+    const ticks: TicksValue[] = [];
 
     let monthStart = new Date(firstDate.getFullYear(), firstDate.getMonth() + 1, 1);
 
@@ -204,8 +210,9 @@ export default function LineChart({
     }
 
     const every = Math.max(1, Math.ceil(ticks.length / 7));
-    ticks.forEach((tk, i) => {
-      if (i % every) return;
+
+    for (const [i, tk] of ticks.entries()) {
+      if (i % every) continue;
       const x = xPosition(tk.t);
       gridlines.push(
         <g key={"x" + tk.t}>
@@ -229,7 +236,7 @@ export default function LineChart({
           </text>
         </g>,
       );
-    });
+    }
   }
 
   const polylinePoints = plottedPoints
@@ -260,15 +267,16 @@ export default function LineChart({
 
     if (!firstHoverPoint) return;
     let closestPoint = firstHoverPoint;
-    hoverPoints.forEach((point) => {
+
+    for (const point of hoverPoints) {
       if (Math.abs(point.x - vx) < Math.abs(closestPoint.x - vx)) closestPoint = point;
-    });
+    }
+
     setHover(closestPoint);
   };
 
   return (
     // The chart surface needs pointer and touch events to update its hover tooltip.
-    // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <div
       className="relative touch-pan-y"
       role="application"

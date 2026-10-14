@@ -8,19 +8,22 @@ import { getAppState, updateAppState, type SheetEx } from "@/features/exercises/
 function removeCustomExerciseFromState(exercise: CustomEx | SheetEx): void {
   updateAppState((state) => {
     state.customEx = state.customEx.filter((candidate) => candidate.id !== exercise.id);
-    state.routines.forEach((routine) => {
+
+    for (const routine of state.routines) {
       routine.ex = routine.ex.filter((routineExercise) => routineExercise.id !== exercise.id);
       cleanupSg(routine.ex);
-    });
-    state.workouts.forEach((workout) =>
-      workout.entries.forEach((entry) => {
-        if (entry.id !== exercise.id) return;
+    }
+
+    for (const workout of state.workouts) {
+      for (const entry of workout.entries) {
+        if (entry.id !== exercise.id) continue;
 
         // Preserve the exercise metadata used by history and recovery maps.
         if (!entry.muscleSnapshot || Object.keys(entry.muscleSnapshot).length === 0)
           entry.muscleSnapshot = exerciseMuscleSnapshot(exercise);
-      }),
-    );
+      }
+    }
+
     delete state.exWeights[exercise.id];
   });
 }
@@ -41,16 +44,18 @@ export function removeCustomExercise(exercise: CustomEx, afterDelete?: () => voi
 
 export function exerciseUsage(appState: AppState) {
   const usageByExercise: Record<string, number> = {};
-  appState.routines.forEach((routine) =>
-    routine.ex.forEach((exercise) => {
+
+  for (const routine of appState.routines) {
+    for (const exercise of routine.ex) {
       usageByExercise[exercise.id] = (usageByExercise[exercise.id] || 0) + 1;
-    }),
-  );
-  appState.workouts.forEach((workout) =>
-    workout.entries.forEach((entry) => {
+    }
+  }
+
+  for (const workout of appState.workouts) {
+    for (const entry of workout.entries) {
       usageByExercise[entry.id] = (usageByExercise[entry.id] || 0) + 1;
-    }),
-  );
+    }
+  }
 
   return usageByExercise;
 }

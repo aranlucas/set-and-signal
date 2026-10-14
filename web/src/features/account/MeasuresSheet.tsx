@@ -16,7 +16,9 @@ import { updateAppState } from "@/features/exercises/sheet-shared";
 import { useMeasurementFields, type MeasurementKey } from "@/shared/hooks/use-measurement-fields";
 import { createMeasurementsFormSchema } from "@/shared/lib/form-schemas";
 
-export function MeasuresSheet({ close }: { close: SheetClose }) {
+type MeasuresSheetProps = { close: SheetClose };
+
+export function MeasuresSheet({ close }: MeasuresSheetProps) {
   const { t } = useTranslation();
   const fields = useMeasurementFields();
   const measures = useStore((state) => state.appState.measures);

@@ -1,9 +1,11 @@
 import { useTranslation } from "react-i18next";
 import type { MeasuresEntry } from "@/shared/lib/types";
 
+type UseMeasurementFieldsResult = { key: MeasurementKey; label: string };
+
 export type MeasurementKey = keyof Omit<MeasuresEntry, "d">;
 
-export function useMeasurementFields(): ReadonlyArray<{ key: MeasurementKey; label: string }> {
+export function useMeasurementFields(): ReadonlyArray<UseMeasurementFieldsResult> {
   const { t } = useTranslation();
 
   return [

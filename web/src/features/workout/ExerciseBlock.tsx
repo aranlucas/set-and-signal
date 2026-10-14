@@ -29,14 +29,24 @@ import { Checkbox } from "@/shared/ui/checkbox";
 import { NumberField } from "@/shared/components/NumField";
 import { PlateRow } from "@/shared/components/PlateRow";
 import { barWeightFor } from "@/domain/training/plates";
-import type { LoggedSet, ActiveWorkout, EffortKind } from "@/shared/lib/types";
+import type { LoggedSet, ActiveWorkout, EffortKind, Prescription } from "@/shared/lib/types";
 import type { SetWorkoutSheet } from "@/features/workout/workout-state";
 import { fieldOf, repsOf, weightOf, type SetField } from "@/features/workout/workout-set-fields";
 
-const translatedReason = (
-  t: TFunction,
-  why: NonNullable<import("@/shared/lib/types").Prescription["why"]>,
-): string => t(why.key, why.defaultValue, why.values);
+type ExerciseBlockProps = {
+  entryIdx: number;
+  compact?: boolean;
+  onToggle: (i: number) => void;
+  onField: (i: number, f: SetField, v: number | null) => void;
+  onAddSet: () => void;
+  onRemoveSet: () => void;
+  onToggleWarmup: () => void;
+  onStartTimed: (i: number) => void;
+  setWorkoutSheet: SetWorkoutSheet;
+};
+
+const translatedReason = (t: TFunction, why: NonNullable<Prescription["why"]>): string =>
+  t(why.key, why.defaultValue, why.values);
 
 /* One stepper column over a logged set. `f` names the field on the set; `eff`/`opt` only
    appear on the effort column. */
@@ -61,17 +71,7 @@ export function ExerciseBlock({
   onToggleWarmup,
   onStartTimed,
   setWorkoutSheet,
-}: {
-  entryIdx: number;
-  compact?: boolean;
-  onToggle: (i: number) => void;
-  onField: (i: number, f: SetField, v: number | null) => void;
-  onAddSet: () => void;
-  onRemoveSet: () => void;
-  onToggleWarmup: () => void;
-  onStartTimed: (i: number) => void;
-  setWorkoutSheet: SetWorkoutSheet;
-}) {
+}: ExerciseBlockProps) {
   const { t } = useTranslation();
   const effortLabels = useEffortLabels();
   const metadata = useExerciseMetadataLabels();
@@ -104,7 +104,7 @@ export function ExerciseBlock({
   // never disagree inside one session: heaviest logged set, or the working weight you kept.
   const best = cardio
     ? 0
-    : Math.max(bestWeightFor(appState, entry.id), (appState.exWeights[entry.id] || {}).w || 0);
+    : Math.max(bestWeightFor(appState, entry.id), appState.exWeights[entry.id]?.w || 0);
 
   // What the progression policy decided for this session, and why (issue #17). Computed when
   // the session was built so the reason matches the numbers already in the rows.

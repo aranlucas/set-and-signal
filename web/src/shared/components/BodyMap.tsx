@@ -7,6 +7,21 @@ import type { MuscleSlug } from "@/domain/exercises/muscles";
 import type { Body } from "@/shared/lib/types";
 import type { BodyPaths } from "@/domain/exercises/body-paths";
 
+type MuscleMapViewProps = {
+  view: BodyViewPaths;
+  muscleLevels: Record<string, number>;
+  onMuscle?: (slug: MuscleSlug) => void;
+  selectedMuscle?: MuscleSlug | null;
+};
+
+type BodyMapProps = {
+  load?: Partial<Record<MuscleSlug, number>>;
+  body?: Body;
+  onMuscle?: (slug: MuscleSlug) => void;
+  selected?: MuscleSlug | null;
+  className?: string;
+};
+
 const muscleLevelClasses = [
   "fill-muted",
   "fill-primary/30",
@@ -46,6 +61,8 @@ function useBodyPaths(): BodyPaths | null {
     bodyPathsPromise
       .then((loadedPaths) => {
         if (isMounted) setBodyPaths(loadedPaths);
+
+        return undefined;
       })
       .catch(() => {});
 
@@ -59,17 +76,7 @@ function useBodyPaths(): BodyPaths | null {
 
 type BodyViewPaths = BodyPaths["male"]["front"];
 
-function MuscleMapView({
-  view,
-  muscleLevels,
-  onMuscle,
-  selectedMuscle,
-}: {
-  view: BodyViewPaths;
-  muscleLevels: Record<string, number>;
-  onMuscle?: (slug: MuscleSlug) => void;
-  selectedMuscle?: MuscleSlug | null;
-}) {
+function MuscleMapView({ view, muscleLevels, onMuscle, selectedMuscle }: MuscleMapViewProps) {
   const { t } = useTranslation();
   const muscleLabels = useMuscleLabels();
   const activateMuscle = (slug: MuscleSlug) => onMuscle?.(slug);
@@ -129,13 +136,7 @@ export default function BodyMap({
   onMuscle,
   selected,
   className = "",
-}: {
-  load?: Partial<Record<MuscleSlug, number>>;
-  body?: Body;
-  onMuscle?: (slug: MuscleSlug) => void;
-  selected?: MuscleSlug | null;
-  className?: string;
-}) {
+}: BodyMapProps) {
   const paths = useBodyPaths();
   const muscleLevels = levelsOf(load);
   const bodyPaths = paths && (paths[body] || paths.male);

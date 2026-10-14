@@ -5,13 +5,13 @@ import { Row } from "@/shared/components/layout";
 import type { ConfirmDialogOptions } from "@/shared/components/ConfirmDialog";
 import { toast } from "@/shared/lib/toast";
 
+type UserRowsProps = {
+  requestConfirmation: (options: ConfirmDialogOptions) => void;
+};
+
 // The signed-in rows live apart only because the user object is a server passthrough;
 // its fields are narrowed once at this boundary instead of at every row.
-export function UserRows({
-  requestConfirmation,
-}: {
-  requestConfirmation: (options: ConfirmDialogOptions) => void;
-}) {
+export function UserRows({ requestConfirmation }: UserRowsProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const user = useStore((state) => state.user);
@@ -64,7 +64,7 @@ export function UserRows({
             danger: true,
             onConfirm: async () => {
               await signOut();
-              void navigate({ to: "/home" });
+              void navigate({ to: "/home" }).catch(console.error);
             },
           })
         }
@@ -97,7 +97,7 @@ export function UserRows({
             danger: true,
             onConfirm: async () => {
               await useStore.getState().signOutAll();
-              void navigate({ to: "/home" });
+              void navigate({ to: "/home" }).catch(console.error);
               toast(t("settings.signedOutAllDevices", "Signed out on all devices"));
             },
           });

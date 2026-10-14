@@ -14,19 +14,29 @@ import type { CustomEx, SheetClose } from "@/shared/lib/types";
 import { getAppState, updateAppState, type SheetEx } from "@/features/exercises/sheet-shared";
 import { createCustomExerciseFormSchema } from "@/shared/lib/form-schemas";
 
+type CustomExerciseFormProps = {
+  existingExercise: CustomEx | null;
+  prefillName?: string;
+  onDone?: (exercise: SheetEx | null) => void;
+  onDelete?: () => void;
+  close: SheetClose;
+};
+
+type HandleSubmitValue = {
+  name: string;
+  bodyPart: string;
+  description: string;
+};
+
+type SaveExerciseProps = { name: string; bodyPart: string; description: string };
+
 export function CustomExerciseForm({
   existingExercise,
   prefillName,
   onDone,
   onDelete,
   close,
-}: {
-  existingExercise: CustomEx | null;
-  prefillName?: string;
-  onDone?: (exercise: SheetEx | null) => void;
-  onDelete?: () => void;
-  close: SheetClose;
-}) {
+}: CustomExerciseFormProps) {
   const { t } = useTranslation();
   const metadata = useExerciseMetadataLabels();
 
@@ -36,11 +46,7 @@ export function CustomExerciseForm({
     register,
     setValue,
     formState: { errors },
-  } = useForm<{
-    name: string;
-    bodyPart: string;
-    description: string;
-  }>({
+  } = useForm<HandleSubmitValue>({
     defaultValues: {
       name: existingExercise ? existingExercise.n : prefillName || "",
       bodyPart: existingExercise ? existingExercise.bp : "",
@@ -51,7 +57,7 @@ export function CustomExerciseForm({
 
   const bodyPart = useWatch({ control, name: "bodyPart" });
 
-  const saveExercise = (values: { name: string; bodyPart: string; description: string }) => {
+  const saveExercise = (values: SaveExerciseProps) => {
     const trimmedName = values.name.trim();
 
     const duplicateExercise = allExercises(getAppState()).find(
@@ -97,7 +103,7 @@ export function CustomExerciseForm({
       });
     }
 
-    void close();
+    void close().catch(console.error);
     toast(
       existingExercise
         ? t("customExercise.saved", "Saved")
@@ -193,7 +199,7 @@ export function CustomExerciseForm({
               type="button"
               variant="destructive"
               onClick={() => {
-                void close();
+                void close().catch(console.error);
                 onDelete?.();
               }}
             >
