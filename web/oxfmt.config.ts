@@ -28,7 +28,6 @@ const config = {
       ".pi/**",
       ".roo/**",
       ".windsurf/**",
-      "tools/oxlint/effect/**",
     ],
   ],
 };

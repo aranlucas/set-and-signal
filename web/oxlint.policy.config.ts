@@ -4,8 +4,11 @@ const config = {
   categories: { correctness: "off" },
   plugins: ["oxc"],
   jsPlugins: oxforge({ typeAware: false, namedTypes: false }).jsPlugins,
-  rules: { ...rules.antiSlop, "oxc/no-accumulating-spread": "error" },
-  ignorePatterns: [...ignorePatterns, "tools/oxlint/effect/**"],
+  rules: {
+    ...rules.antiSlop,
+    "oxc/no-accumulating-spread": rules.base["oxc/no-accumulating-spread"],
+  },
+  ignorePatterns,
 };
 
 export default config;

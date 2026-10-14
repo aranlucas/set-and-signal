@@ -1,19 +1,14 @@
-# Anti-slop policy
+# Lint policy
 
-Oxforge supplies all 18 generic rules through its published anti-slop dependency.
-Native `oxc/no-accumulating-spread` remains an error. The existing standalone
-lint pass imports the shared rule map rather than keeping a local copy.
+Oxforge owns the shared rules and their tests. This repository does not maintain
+local lint-rule implementations or a separate vendor copy.
 
-Only the opt-in Effect rules and their tests remain in `web/tools/oxlint/effect/`,
-with their original license and provenance. There is no direct Effect dependency,
-so that policy remains disabled.
-
-The existing strict, type-aware frontend checks retain their scope and settings.
-`lint:strict` additionally runs `lint:anti-slop` across all owned web/backend/build
-JavaScript and TypeScript. That second config adds generic policy to previously
-unlinted files without imposing the frontend-only ESLint restrictions on Convex
-transactions or sequential filesystem build scripts. Agent assets and vendored
-rules are excluded; no application source or tests were blanket-excluded.
+The strict, type-aware frontend check retains its scope and settings.
+`lint:strict` also runs `lint:policy` across all owned web, backend, and build
+JavaScript and TypeScript. This thin config imports the shared Oxforge rule maps
+so Convex transactions and sequential build scripts keep their existing policy
+without inheriting frontend-only restrictions. Agent assets remain excluded;
+application source and tests are not blanket-excluded.
 
 ## Documented boundary exceptions
 
@@ -50,6 +45,4 @@ real translation and router providers; the start chooser separates its store
 container from a state-driven view. Browser globals use Vitest's scoped global
 stubs and are restored. Existing persistence/concurrency/isolation tests remain.
 
-The application Vitest config explicitly selects `test/**/*.test.*`; upstream
-Effect RuleTester fixtures remain in `tools/oxlint/effect/test/` and run separately.
-The formatter excludes those retained upstream assets.
+The application Vitest config explicitly selects `test/**/*.test.*`.

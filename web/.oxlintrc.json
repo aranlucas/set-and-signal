@@ -234,7 +234,6 @@
     ".pi/**",
     ".roo/**",
     ".windsurf/**",
-    "tools/oxlint/effect/**",
     "**/node_modules/**",
     "**/dist/**",
     "**/build/**",
