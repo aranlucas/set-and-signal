@@ -6,6 +6,17 @@ import { fmtVol, isoOf } from "@/shared/lib/format";
 import type { AppState, IsoDate } from "@/shared/lib/types";
 import { Button } from "@/shared/ui/button";
 
+type HeatmapProps = {
+  appState: AppState;
+  onDay: (date: IsoDate) => void;
+};
+
+type ActivityByDateValue = { workoutCount: number; volume: number; minutes: number };
+
+type LevelForActivityProps = { minutes: number };
+
+type MonthLabelsValue = { key: string; label: string };
+
 const activityCellClasses = [
   "bg-muted",
   "bg-primary/30",
@@ -29,13 +40,7 @@ const legendCellClass = (level: number) =>
   `${activityCellClasses[level]} size-2.5 shrink-0 rounded-none`;
 
 // GitHub-style activity heatmap, shaded by time trained per day.
-export default function Heatmap({
-  appState,
-  onDay,
-}: {
-  appState: AppState;
-  onDay: (date: IsoDate) => void;
-}) {
+export default function Heatmap({ appState, onDay }: HeatmapProps) {
   const { t } = useTranslation();
   const { monthsShort } = useDateLabels();
   const todayKey = useToday();
@@ -44,10 +49,9 @@ export default function Heatmap({
     if (wrapRef.current) wrapRef.current.scrollLeft = wrapRef.current.scrollWidth;
   }, []);
 
-  const activityByDate: Record<string, { workoutCount: number; volume: number; minutes: number }> =
-    {};
+  const activityByDate: Record<string, ActivityByDateValue> = {};
 
-  appState.workouts.forEach((workout) => {
+  for (const workout of appState.workouts) {
     const activity = (activityByDate[workout.d] = activityByDate[workout.d] || {
       workoutCount: 0,
       volume: 0,
@@ -60,7 +64,8 @@ export default function Heatmap({
       0,
       Math.round(((workout.end || workout.start) - workout.start) / 60000),
     );
-  });
+  }
+
   const minutes: number[] = [];
 
   for (const activity of Object.values(activityByDate)) {
@@ -80,7 +85,7 @@ export default function Heatmap({
   const mediumThreshold = percentile(0.5);
   const highThreshold = percentile(0.75);
 
-  const levelForActivity = (activity?: { minutes: number }) => {
+  const levelForActivity = (activity?: LevelForActivityProps) => {
     if (activity === undefined) return 0;
 
     if (activity.minutes === 0) return 1;
@@ -100,7 +105,7 @@ export default function Heatmap({
   const start = new Date(end);
   start.setDate(end.getDate() - 52 * 7);
 
-  const monthLabels: { key: string; label: string }[] = [];
+  const monthLabels: MonthLabelsValue[] = [];
   const weekColumns = [];
   let lastMonth = -1;
 

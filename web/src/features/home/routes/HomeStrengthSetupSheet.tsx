@@ -24,6 +24,13 @@ import { cn } from "@/shared/lib/utils";
 import { updateAppState } from "@/features/exercises/sheet-shared";
 import { useStore } from "@/app/store/useStore";
 
+type EXPERIENCEOPTIONSValue = {
+  value: StrengthExperience;
+  icon: IconName;
+};
+
+type StepProgressProps = { step: SetupStep };
+
 type SetupStep = 0 | 1 | 2;
 
 type StartingStrengthFormValues = {
@@ -32,10 +39,7 @@ type StartingStrengthFormValues = {
   weights: StartingStrengthWeights;
 };
 
-const EXPERIENCE_OPTIONS: Array<{
-  value: StrengthExperience;
-  icon: IconName;
-}> = [
+const EXPERIENCE_OPTIONS: Array<EXPERIENCEOPTIONSValue> = [
   {
     value: "new",
     icon: "sparkles",
@@ -50,7 +54,7 @@ const EXPERIENCE_OPTIONS: Array<{
   },
 ];
 
-function StepProgress({ step }: { step: SetupStep }) {
+function StepProgress({ step }: StepProgressProps) {
   return (
     <div className="flex gap-1.5" aria-hidden="true">
       {[0, 1, 2].map((index) => (
@@ -159,7 +163,8 @@ export default function HomeStrengthSetupSheet() {
   ];
 
   useEffect(() => {
-    if (hasRoutines) void navigate({ to: "/home", replace: true, resetScroll: false });
+    if (hasRoutines)
+      void navigate({ to: "/home", replace: true, resetScroll: false }).catch(console.error);
   }, [hasRoutines, navigate]);
 
   const chooseExperience = (nextExperience: StrengthExperience) => {
@@ -188,7 +193,7 @@ export default function HomeStrengthSetupSheet() {
         appState.exWeights[exerciseId] = { w: weight, d: todayISO() };
       }
     });
-    void close();
+    void close().catch(console.error);
     toast(t("startingSetup.created", "Your first week is ready"));
   };
 
@@ -196,7 +201,7 @@ export default function HomeStrengthSetupSheet() {
     <Sheet
       open
       onOpenChange={(open) => {
-        if (!open) void close();
+        if (!open) void close().catch(console.error);
       }}
     >
       <SheetContent
@@ -222,7 +227,7 @@ export default function HomeStrengthSetupSheet() {
               type="button"
               className="flex size-9 items-center justify-center"
               onClick={() => {
-                if (step === 0) void close();
+                if (step === 0) void close().catch(console.error);
                 else setStep(previousStep(step));
               }}
               aria-label={step === 0 ? t("common.close", "Close") : t("common.previous", "Prev")}
@@ -427,7 +432,7 @@ export default function HomeStrengthSetupSheet() {
                 variant="default"
                 onClick={() => {
                   if (step === 0) setStep(1);
-                  else void reviewFirstWeek();
+                  else void reviewFirstWeek().catch(console.error);
                 }}
               >
                 {step === 0

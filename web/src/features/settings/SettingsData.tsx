@@ -16,15 +16,13 @@ import type { ConfirmDialogOptions } from "@/shared/components/ConfirmDialog";
 import { toast } from "@/shared/lib/toast";
 import type { SettingsSheet } from "@/features/settings/settings-types";
 
-export function SettingsData({
-  user,
-  requestConfirmation,
-  onOpenSheet,
-}: {
+type SettingsDataProps = {
   user: { name: string } | null;
   requestConfirmation: (options: ConfirmDialogOptions) => void;
   onOpenSheet: (sheet: SettingsSheet) => void;
-}) {
+};
+
+export function SettingsData({ user, requestConfirmation, onOpenSheet }: SettingsDataProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const appState = useStore((state) => state.appState);
@@ -110,6 +108,8 @@ export function SettingsData({
             }),
           );
         }
+
+        return undefined;
       })
       .catch((cause: unknown) =>
         toast(
@@ -183,7 +183,7 @@ export function SettingsData({
               danger: true,
               onConfirm: () => {
                 replaceState(structuredClone(DEFAULT_STATE), true);
-                void navigate({ to: "/home" });
+                void navigate({ to: "/home" }).catch(console.error);
                 toast(t("settings.allDataReset", "All data reset"));
               },
             })

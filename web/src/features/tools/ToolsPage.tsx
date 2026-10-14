@@ -42,6 +42,24 @@ import {
   trainingLoads,
 } from "@/features/tools/tools";
 
+type ToolNumberFieldProps = {
+  value: number;
+  onChange: (value: number) => void;
+  min?: number;
+  max?: number;
+  integer?: boolean;
+};
+
+type ToolIconProps = { children: React.ReactNode };
+
+type ToolCardProps = { children: React.ReactNode; className?: string };
+
+type ToolHeadingProps = {
+  icon: React.ReactNode;
+  title: React.ReactNode;
+  description: React.ReactNode;
+};
+
 function ToolNumberField({
   value,
   onChange,
@@ -50,13 +68,7 @@ function ToolNumberField({
   integer = false,
   className,
   ...props
-}: Omit<React.ComponentProps<typeof Input>, "type" | "value" | "onChange"> & {
-  value: number;
-  onChange: (value: number) => void;
-  min?: number;
-  max?: number;
-  integer?: boolean;
-}) {
+}: Omit<React.ComponentProps<typeof Input>, "type" | "value" | "onChange"> & ToolNumberFieldProps) {
   const [draft, setDraft] = useState<string | null>(null);
   const displayValue = draft ?? String(value);
 
@@ -100,7 +112,7 @@ function formulaLabel(
 
 const FORMULA_IDS: FormulaId[] = ["epley", "brzycki", "lombardi"];
 
-function ToolIcon({ children }: { children: React.ReactNode }) {
+function ToolIcon({ children }: ToolIconProps) {
   return (
     <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
       {children}
@@ -108,7 +120,7 @@ function ToolIcon({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ToolCard({ children, className }: { children: React.ReactNode; className?: string }) {
+function ToolCard({ children, className }: ToolCardProps) {
   return (
     <section className={cn("rounded-xl border border-border bg-card p-4 shadow-sm", className)}>
       {children}
@@ -116,15 +128,7 @@ function ToolCard({ children, className }: { children: React.ReactNode; classNam
   );
 }
 
-function ToolHeading({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: React.ReactNode;
-  description: React.ReactNode;
-}) {
+function ToolHeading({ icon, title, description }: ToolHeadingProps) {
   return (
     <div className="mb-5 flex items-start gap-3">
       <ToolIcon>{icon}</ToolIcon>

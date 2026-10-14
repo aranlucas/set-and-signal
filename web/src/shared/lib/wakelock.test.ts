@@ -63,7 +63,10 @@ function fakeBrowser() {
 
             if (live === s) live = null;
             released++;
-            subs.forEach((fn) => fn());
+
+            for (const fn of subs) {
+              fn();
+            }
           },
         };
 
@@ -75,7 +78,11 @@ function fakeBrowser() {
   });
 }
 
-const fire = () => listeners.forEach((fn) => fn());
+const fire = () => {
+  for (const fn of listeners) {
+    fn();
+  }
+};
 
 const settle = () =>
   new Promise<void>((resolve) => {

@@ -15,9 +15,13 @@ import type {
   Workout,
 } from "@/shared/lib/types.js";
 
+type ProgressionRange = readonly [number, number];
+
+type DayPlanValue = { sessions?: { routineId: Id }[] };
+
 // Starting weight and weekly increment per exercise of the starter plan (kg).
 // Chest dips are body-weight only here, so they log reps at 0 added weight.
-const PROGRESSION = new Map<string, readonly [number, number]>(
+const PROGRESSION = new Map<string, ProgressionRange>(
   Object.entries({
     "0025": [60, 1.25],
     "0047": [45, 1],
@@ -36,7 +40,7 @@ const PROGRESSION = new Map<string, readonly [number, number]>(
     "0585": [45, 1],
     "0586": [40, 1],
     "0605": [60, 1.5],
-  } satisfies Record<string, readonly [number, number]>),
+  } satisfies Record<string, ProgressionRange>),
 );
 
 const HISTORY_WEEKS = 12; // how much history to fabricate
@@ -279,7 +283,7 @@ export function buildDemoState(): DemoState {
 
   // A visitor should always have something to press "Start" on, so if they land on a rest day
   // the next routine in the rotation is moved onto today — which also shows off rescheduling.
-  const dayPlan: Record<IsoDate, { sessions?: { routineId: Id }[] }> = {};
+  const dayPlan: Record<IsoDate, DayPlanValue> = {};
   const todayIso = isoOf(today);
 
   if (!byWeekday.get(today.getDay()) && !workouts.some((workout) => workout.d === todayIso)) {

@@ -5,6 +5,16 @@ import { cn } from "@/shared/lib/utils";
 import { Label } from "@/shared/ui/label";
 import { Separator } from "@/shared/ui/separator";
 
+type FieldLegendProps = { variant?: "legend" | "label" };
+
+type FieldSeparatorProps = {
+  children?: React.ReactNode;
+};
+
+type FieldErrorProps = {
+  errors?: Array<{ message?: string } | undefined>;
+};
+
 function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (
     <fieldset
@@ -22,7 +32,7 @@ function FieldLegend({
   className,
   variant = "legend",
   ...props
-}: React.ComponentProps<"legend"> & { variant?: "legend" | "label" }) {
+}: React.ComponentProps<"legend"> & FieldLegendProps) {
   return (
     <legend
       data-slot="field-legend"
@@ -136,9 +146,7 @@ function FieldSeparator({
   children,
   className,
   ...props
-}: React.ComponentProps<"div"> & {
-  children?: React.ReactNode;
-}) {
+}: React.ComponentProps<"div"> & FieldSeparatorProps) {
   return (
     <div
       data-slot="field-separator"
@@ -167,9 +175,7 @@ function FieldError({
   children,
   errors,
   ...props
-}: React.ComponentProps<"div"> & {
-  errors?: Array<{ message?: string } | undefined>;
-}) {
+}: React.ComponentProps<"div"> & FieldErrorProps) {
   const content = useMemo(() => {
     if (children) {
       return children;

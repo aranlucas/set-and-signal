@@ -128,7 +128,7 @@ function PushCard({ appState, update, notify }: CardProps) {
           ? t("settings.notificationsOn", "Notifications on")
           : t("settings.notificationsOff", "Notifications off"),
       );
-      void qc.invalidateQueries({ queryKey: ["push", "subscription"] });
+      void qc.invalidateQueries({ queryKey: ["push", "subscription"] }).catch(console.error);
     },
     onError: (e) =>
       notify(

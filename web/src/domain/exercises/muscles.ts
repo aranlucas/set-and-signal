@@ -11,6 +11,28 @@ import { exerciseMetadata } from "@/domain/exercises/exercise-metadata";
 import { isWarmup } from "@/domain/training/history";
 import type { LoggedSet, MuscleSnapshot, WorkoutEntry } from "@/shared/lib/types";
 
+type MusclesOfProps = {
+  tg?: string;
+  sm?: readonly string[];
+  bp?: string;
+  muscleWeights?: Partial<Record<string, number>>;
+};
+
+type ExerciseMuscleSnapshotProps = { n?: string; bp?: string; tg?: string; sm?: readonly string[] };
+
+type LoadOfProps = {
+  id: string;
+  sets: number;
+  exercise?: Parameters<typeof musclesOf>[0] | null;
+  muscleSnapshot?: MuscleSnapshot | null;
+};
+
+type LoadOfWorkoutsProps = {
+  entries?: ReadonlyArray<Pick<WorkoutEntry, "id" | "sets" | "muscleSnapshot">>;
+};
+
+type LoadOfRoutineProps = { ex?: ReadonlyArray<{ id: string; sets: number }> };
+
 // The muscles a map can shade, in head-to-toe order — also the order of any list
 // built from them, so "what am I neglecting" reads top-down like a body.
 export const MUSCLES = [
@@ -118,15 +140,7 @@ const SECONDARY = 0.4; // a supporting muscle counts this much against a primary
 
 /** Muscles one exercise trains: { slug: 0…1 }. */
 export function musclesOf(
-  ex:
-    | {
-        tg?: string;
-        sm?: readonly string[];
-        bp?: string;
-        muscleWeights?: Partial<Record<string, number>>;
-      }
-    | null
-    | undefined,
+  ex: MusclesOfProps | null | undefined,
 ): Partial<Record<MuscleSlug, number>> {
   if (!ex) return {};
 
@@ -154,7 +168,10 @@ export function musclesOf(
   };
 
   addMuscle(ex.tg, 1);
-  (ex.sm || []).forEach((muscle) => addMuscle(muscle, SECONDARY));
+
+  for (const muscle of ex.sm || []) {
+    addMuscle(muscle, SECONDARY);
+  }
 
   // Nothing recognised (custom exercises, or a target we don't draw) — use the body part.
   if (Object.keys(muscleLoad).length === 0)
@@ -165,7 +182,7 @@ export function musclesOf(
 
 /** Persist the small, canonical part of a custom exercise that history needs after deletion. */
 export function exerciseMuscleSnapshot(
-  ex: { n?: string; bp?: string; tg?: string; sm?: readonly string[] } | null | undefined,
+  ex: ExerciseMuscleSnapshotProps | null | undefined,
 ): MuscleSnapshot {
   if (!ex) return {};
   const snapshot: MuscleSnapshot = {};
@@ -186,19 +203,13 @@ export function exerciseMuscleSnapshot(
  * times a single set. Volume in kg is deliberately not used: 100 kg of leg press
  * against 12 kg of lateral raise says nothing about which muscle worked harder.
  */
-export function loadOf(
-  items: ReadonlyArray<{
-    id: string;
-    sets: number;
-    exercise?: Parameters<typeof musclesOf>[0] | null;
-    muscleSnapshot?: MuscleSnapshot | null;
-  }>,
-): Partial<Record<MuscleSlug, number>> {
+export function loadOf(items: ReadonlyArray<LoadOfProps>): Partial<Record<MuscleSlug, number>> {
   const load: Partial<Record<MuscleSlug, number>> = {};
-  items.forEach((item) => {
+
+  for (const item of items) {
     const { id, sets } = item;
 
-    if (!sets) return;
+    if (!sets) continue;
     const snapshot = item.muscleSnapshot;
 
     const snapshotHasWeights =
@@ -215,7 +226,7 @@ export function loadOf(
 
       if (contribution > 0) load[slug] = (load[slug] || 0) + contribution * sets;
     }
-  });
+  }
 
   return load;
 }
@@ -227,12 +238,7 @@ export function loadOf(
  * near failure.
  */
 export const loadOfWorkouts = (
-  workouts:
-    | ReadonlyArray<{
-        entries?: ReadonlyArray<Pick<WorkoutEntry, "id" | "sets" | "muscleSnapshot">>;
-      }>
-    | null
-    | undefined,
+  workouts: ReadonlyArray<LoadOfWorkoutsProps> | null | undefined,
   pick?: (s: LoggedSet) => boolean,
 ) =>
   loadOf(
@@ -247,9 +253,8 @@ export const loadOfWorkouts = (
   );
 
 /** Load a routine *would* produce, from its planned set counts. */
-export const loadOfRoutine = (
-  routine: { ex?: ReadonlyArray<{ id: string; sets: number }> } | null | undefined,
-) => loadOf((routine?.ex || []).map((c) => ({ id: c.id, sets: c.sets || 1 })));
+export const loadOfRoutine = (routine: LoadOfRoutineProps | null | undefined) =>
+  loadOf((routine?.ex || []).map((c) => ({ id: c.id, sets: c.sets || 1 })));
 
 /**
  * Shade buckets 0–4 per muscle, relative to the hardest-worked muscle in the same
@@ -280,10 +285,10 @@ export function levelsOf(load: Partial<Record<MuscleSlug, number>>): Record<Musc
     "upper-back": 0,
   };
 
-  MUSCLES.forEach((m) => {
+  for (const m of MUSCLES) {
     const v = load[m] || 0;
     lv[m] = v ? (max <= 0 ? 0 : Math.max(1, Math.min(4, Math.ceil((v / max) * 4)))) : 0;
-  });
+  }
 
   return lv;
 }

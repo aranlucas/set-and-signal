@@ -14,6 +14,35 @@ import type { SetWorkoutSheet, WorkoutSheetState } from "@/features/workout/work
 import type { CustomEx, SheetClose } from "@/shared/lib/types";
 import type { SheetEx } from "@/features/exercises/sheet-shared";
 
+type TopWeightSheetProps = { state: Extract<WorkoutSheetState, { type: "top-weight" }> };
+
+type WorkoutCompleteSheetProps = {
+  onComplete: () => void;
+  state: Extract<WorkoutSheetState, { type: "workout-complete" }>;
+};
+
+type DetailSheetProps = { state: Extract<WorkoutSheetState, { type: "detail" }> };
+
+type PickerSheetProps = { state: Extract<WorkoutSheetState, { type: "picker" }> };
+
+type AddToRoutineSheetProps = { state: Extract<WorkoutSheetState, { type: "add-to-routine" }> };
+
+type ConfigSheetProps = { state: Extract<WorkoutSheetState, { type: "config" }> };
+
+type CustomSheetProps = { state: Extract<WorkoutSheetState, { type: "custom" }> };
+
+type FinishSummarySheetProps = {
+  summary: FinishSummaryPayload;
+  close: SheetClose;
+};
+
+type WorkoutSheetHostProps = {
+  workoutSheet: WorkoutSheetState | null;
+  close: SheetClose;
+  setWorkoutSheet: SetWorkoutSheet;
+  onComplete: () => void;
+};
+
 type WorkoutSheetProps = {
   close: SheetClose;
   setWorkoutSheet: SetWorkoutSheet;
@@ -27,14 +56,14 @@ function TopWeightSheet({
   state,
   close,
   setWorkoutSheet,
-}: WorkoutSheetProps & { state: Extract<WorkoutSheetState, { type: "top-weight" }> }) {
+}: WorkoutSheetProps & TopWeightSheetProps) {
   const { t } = useTranslation();
 
   return (
     <RouteBottomSheet
       title={t("workout.adjustTopWeight", "Adjust top weight")}
       onOpenChange={(open) => {
-        if (!open) void close();
+        if (!open) void close().catch(console.error);
       }}
     >
       <TopWeight entryIdx={state.entryIdx} close={close} setWorkoutSheet={setWorkoutSheet} />
@@ -45,17 +74,14 @@ function TopWeightSheet({
 function WorkoutCompleteSheet({
   close,
   onComplete,
-}: WorkoutSheetProps & {
-  onComplete: () => void;
-  state: Extract<WorkoutSheetState, { type: "workout-complete" }>;
-}) {
+}: WorkoutSheetProps & WorkoutCompleteSheetProps) {
   const { t } = useTranslation();
 
   return (
     <RouteBottomSheet
       title={t("workout.completion.sWholeWorkout", "That's the whole workout!")}
       onOpenChange={(open) => {
-        if (!open) void close();
+        if (!open) void close().catch(console.error);
       }}
     >
       <WorkoutComplete close={close} onFinish={onComplete} />
@@ -63,11 +89,7 @@ function WorkoutCompleteSheet({
   );
 }
 
-function DetailSheet({
-  state,
-  close,
-  setWorkoutSheet,
-}: WorkoutSheetProps & { state: Extract<WorkoutSheetState, { type: "detail" }> }) {
+function DetailSheet({ state, close, setWorkoutSheet }: WorkoutSheetProps & DetailSheetProps) {
   const { t } = useTranslation();
   const [confirmation, setConfirmation] = useState<ConfirmDialogOptions | null>(null);
   const customExercise = isCustomExercise(state.exercise) ? state.exercise : null;
@@ -83,7 +105,7 @@ function DetailSheet({
       <RouteBottomSheet
         title={state.exercise.n}
         onOpenChange={(open) => {
-          if (!open) void close();
+          if (!open) void close().catch(console.error);
         }}
       >
         <ExerciseDetail
@@ -106,7 +128,7 @@ function DetailSheet({
                     danger: true,
                     onConfirm: () => {
                       removeCustomExercise(customExercise);
-                      void close();
+                      void close().catch(console.error);
                     },
                   })
               : undefined
@@ -126,11 +148,7 @@ function DetailSheet({
   );
 }
 
-function PickerSheet({
-  state,
-  close,
-  setWorkoutSheet,
-}: WorkoutSheetProps & { state: Extract<WorkoutSheetState, { type: "picker" }> }) {
+function PickerSheet({ state, close, setWorkoutSheet }: WorkoutSheetProps & PickerSheetProps) {
   const { t } = useTranslation();
 
   const openCustom = (
@@ -143,7 +161,7 @@ function PickerSheet({
     <RouteBottomSheet
       title={t("exercise.addExercise", "Add exercise")}
       onOpenChange={(open) => {
-        if (!open) void close();
+        if (!open) void close().catch(console.error);
       }}
     >
       <ExercisePicker onPick={state.onPick} close={close} openCustom={openCustom} />
@@ -155,14 +173,14 @@ function AddToRoutineSheet({
   state,
   close,
   setWorkoutSheet,
-}: WorkoutSheetProps & { state: Extract<WorkoutSheetState, { type: "add-to-routine" }> }) {
+}: WorkoutSheetProps & AddToRoutineSheetProps) {
   const { t } = useTranslation();
 
   return (
     <RouteBottomSheet
       title={t("exercise.add", "Add “{{exercise}}”", { exercise: state.exercise.n })}
       onOpenChange={(open) => {
-        if (!open) void close();
+        if (!open) void close().catch(console.error);
       }}
     >
       <AddToRoutine
@@ -183,16 +201,12 @@ function AddToRoutineSheet({
   );
 }
 
-function ConfigSheet({
-  state,
-  close,
-  setWorkoutSheet,
-}: WorkoutSheetProps & { state: Extract<WorkoutSheetState, { type: "config" }> }) {
+function ConfigSheet({ state, close, setWorkoutSheet }: WorkoutSheetProps & ConfigSheetProps) {
   return (
     <RouteBottomSheet
       title={state.exercise.n}
       onOpenChange={(open) => {
-        if (!open) void close();
+        if (!open) void close().catch(console.error);
       }}
     >
       <ExConfigSheet
@@ -208,10 +222,7 @@ function ConfigSheet({
   );
 }
 
-function CustomSheet({
-  state,
-  close,
-}: WorkoutSheetProps & { state: Extract<WorkoutSheetState, { type: "custom" }> }) {
+function CustomSheet({ state, close }: WorkoutSheetProps & CustomSheetProps) {
   const { t } = useTranslation();
 
   return (
@@ -222,7 +233,7 @@ function CustomSheet({
           : t("customExercise.createOwnExercise", "Create your own exercise")
       }
       onOpenChange={(open) => {
-        if (!open) void close();
+        if (!open) void close().catch(console.error);
       }}
     >
       <CustomExerciseForm
@@ -236,20 +247,14 @@ function CustomSheet({
   );
 }
 
-export function FinishSummarySheet({
-  summary,
-  close,
-}: {
-  summary: FinishSummaryPayload;
-  close: SheetClose;
-}) {
+export function FinishSummarySheet({ summary, close }: FinishSummarySheetProps) {
   const { t } = useTranslation();
 
   return (
     <RouteBottomSheet
       title={t("workout.completion.workoutComplete", "Workout complete!")}
       onOpenChange={(open) => {
-        if (!open) void close();
+        if (!open) void close().catch(console.error);
       }}
     >
       <FinishSummary {...summary} close={close} />
@@ -262,12 +267,7 @@ export function WorkoutSheetHost({
   close,
   setWorkoutSheet,
   onComplete,
-}: {
-  workoutSheet: WorkoutSheetState | null;
-  close: SheetClose;
-  setWorkoutSheet: SetWorkoutSheet;
-  onComplete: () => void;
-}) {
+}: WorkoutSheetHostProps) {
   if (!workoutSheet) return null;
 
   switch (workoutSheet.type) {

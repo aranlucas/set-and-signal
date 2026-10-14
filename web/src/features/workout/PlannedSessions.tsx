@@ -5,15 +5,13 @@ import type { Id } from "@/shared/lib/types";
 import { exCount } from "@/shared/lib/format";
 import { Button } from "@/shared/ui/button";
 
-export function PlannedSessions({
-  sessions,
-  onStart,
-  disabled = false,
-}: {
+type PlannedSessionsProps = {
   sessions: readonly PlannedSession[];
   onStart: (routineId: Id) => void;
   disabled?: boolean;
-}) {
+};
+
+export function PlannedSessions({ sessions, onStart, disabled = false }: PlannedSessionsProps) {
   const { t } = useTranslation();
 
   return (

@@ -1,5 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 
+type ConstraintsValue = ["stationary bike"];
+
 const saved = vi.hoisted(() => {
   const storage = new Map<string, string>();
   vi.stubGlobal("localStorage", {
@@ -31,7 +33,7 @@ const source = {
 };
 
 const constraints = {
-  equipment: ["stationary bike"] satisfies ["stationary bike"],
+  equipment: ["stationary bike"] satisfies ConstraintsValue,
   budgetMin: 20,
   restSec: 45,
 };

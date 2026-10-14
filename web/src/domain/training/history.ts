@@ -21,6 +21,27 @@ import type {
   Unit,
 } from "@/shared/lib/types.js";
 
+type EffortOfProps = { effort?: EffortScale | null };
+
+type CleanupSgResult = { sg?: string };
+
+type SessionLoadProps = { sets?: SetFields[]; target?: AnyConfig | null; topW?: number | null };
+
+type LastEntryForProps = { workouts: WorkoutLike[] };
+
+type BestWeightForProps = { workouts: WorkoutLike[] };
+
+type BuildSetsProps = {
+  workouts: WorkoutLike[];
+  exWeights?: Record<string, { w?: number; d?: IsoDate }>;
+  unit?: Unit;
+  plates?: PlateSetup | null;
+};
+
+type SupersetUnitsProps = { sg?: string };
+
+type StreakWeeksProps = { workouts: WorkoutLike[] };
+
 // Configs arrive from plans, workouts, backups and tests where `mode` may be any string;
 // the valid values are picked off and everything else falls back to the body part.
 export type AnyConfig = Partial<Omit<ExConfig, "mode">> & { mode?: string };
@@ -54,11 +75,11 @@ export interface WorkoutLike {
 // An entry without `mode` behaves exactly as before, so every existing plan, workout and
 // plan file is read unchanged and nothing needs migrating.
 export function modeOf(cfg?: AnyConfig | null): Mode {
-  const modeValue = cfg && cfg.mode;
+  const modeValue = cfg?.mode;
 
   if (modeValue === "reps" || modeValue === "time" || modeValue === "cardio") return modeValue;
 
-  return isCardio(cfg && cfg.id) ? "cardio" : "reps";
+  return isCardio(cfg?.id) ? "cardio" : "reps";
 }
 
 export const isTimed = (cfg: AnyConfig | null | undefined) => modeOf(cfg) === "time";
@@ -77,9 +98,9 @@ export const isTimed = (cfg: AnyConfig | null | undefined) => modeOf(cfg) === "t
 // Both are absent on every plan, workout and backup written before they existed, and absent
 // reads as false, so nothing needs migrating.
 export const isBw = (cfg: AnyConfig | null | undefined) =>
-  cfg && cfg.bodyweight != null ? cfg.bodyweight : isBodyweightEq(cfg && cfg.id);
+  cfg?.bodyweight != null ? cfg.bodyweight : isBodyweightEq(cfg?.id);
 
-export const isPerSide = (cfg: AnyConfig | null | undefined) => !!(cfg && cfg.side);
+export const isPerSide = (cfg: AnyConfig | null | undefined) => !!cfg?.side;
 
 // What one side did, for display only. Half of an odd total is shown as it falls (8.5) rather
 // than rounded away: it means the sides were not even, which is worth seeing.
@@ -146,8 +167,7 @@ export const capEffort = (kind: EffortScale | undefined, v?: number | null) =>
   v == null || !kind || kind === "none" ? v : Math.min(EFFORT[kind].max, v);
 
 /** The configured scale, or no effort column until a scale is chosen. */
-export const effortOf = (profile?: { effort?: EffortScale | null } | null): EffortScale =>
-  profile?.effort ?? "none";
+export const effortOf = (profile?: EffortOfProps | null): EffortScale => profile?.effort ?? "none";
 
 // The "(RIR 2)" / "(RPE 8)" tail on a set summary, empty when nothing was logged.
 const effortTail = (s: SetFields): string => {
@@ -221,15 +241,15 @@ export function exLine(cfg: AnyConfig, unit: string): string {
       })
     : "";
 
-  return `${n} × ${cfg.reps}${load}${split}`;
+  return `${n} × ${String(cfg.reps)}${load}${split}`;
 }
 
 // Drop superset ids that no longer have an adjacent partner (after unlink/reorder/remove).
-export function cleanupSg<T extends { sg?: string }>(ex: T[]) {
-  ex.forEach((exercise, index) => {
+export function cleanupSg<T extends CleanupSgResult>(ex: T[]) {
+  for (const [index, exercise] of ex.entries()) {
     if (exercise.sg && !(ex[index - 1]?.sg === exercise.sg || ex[index + 1]?.sg === exercise.sg))
       delete exercise.sg;
-  });
+  }
 }
 
 // What lastEntryFor hands back: the confirmed sets of the most recent session that has one,
@@ -251,24 +271,21 @@ const working = <T extends SetFields>(sets: T[]): T[] => sets.filter((s) => !isW
 // Working load for one logged entry. Done working sets win; otherwise the confirmed
 // top set or the prescription this session started from. A 0 on the bar is missing
 // data, not a bodyweight session, so callers can still progress from target.weight.
-export function sessionLoad(
-  entry?: { sets?: SetFields[]; target?: AnyConfig | null; topW?: number | null } | null,
-  fallback?: AnyConfig | null,
-): number {
-  const loggedSets = ((entry && entry.sets) || []).filter((set) => !isWarmup(set));
+export function sessionLoad(entry?: SessionLoadProps | null, fallback?: AnyConfig | null): number {
+  const loggedSets = (entry?.sets || []).filter((set) => !isWarmup(set));
   const logged = Math.max(0, ...loggedSets.flatMap((set) => (set.done ? [set.w || 0] : [])));
 
   if (logged > 0) return logged;
 
-  if (entry && entry.topW && entry.topW > 0) return entry.topW;
-  const target = (entry && entry.target) || fallback || {};
+  if (entry?.topW && entry.topW > 0) return entry.topW;
+  const target = entry?.target || fallback || {};
 
   if ((target.weight ?? 0) > 0) return target.weight!;
 
   return 0;
 }
 
-export function lastEntryFor(state: { workouts: WorkoutLike[] }, exId: Id): LastEntry | null {
+export function lastEntryFor(state: LastEntryForProps, exId: Id): LastEntry | null {
   for (let i = state.workouts.length - 1; i >= 0; i--) {
     // Warm-ups are left out of the recap: "last time" is what you actually worked at.
     const entry = state.workouts[i].entries.find(
@@ -279,7 +296,7 @@ export function lastEntryFor(state: { workouts: WorkoutLike[] }, exId: Id): Last
     // `target` is what the session prescribed; finished workouts carry it so labels and the
     // progression engine can read a session back the way it was logged. Older workouts have
     // none — modeOf() falls back to the body part for them, which is what they were.
-    if (entry && entry.sets.some((set) => set.done))
+    if (entry?.sets?.some((set) => set.done))
       return {
         d: state.workouts[i].d,
         sets: working(entry.sets).filter((set) => set.done),
@@ -290,13 +307,14 @@ export function lastEntryFor(state: { workouts: WorkoutLike[] }, exId: Id): Last
   return null;
 }
 
-export function bestWeightFor(state: { workouts: WorkoutLike[] }, exId: Id): number {
+export function bestWeightFor(state: BestWeightForProps, exId: Id): number {
   let bestWeight = 0;
-  state.workouts.forEach((workout) =>
-    workout.entries.forEach((entry) => {
+
+  for (const workout of state.workouts) {
+    for (const entry of workout.entries) {
       if (entry.id === exId) bestWeight = entryBestWeight(entry, bestWeight);
-    }),
-  );
+    }
+  }
 
   return bestWeight;
 }
@@ -329,15 +347,7 @@ export {
   effectiveSessions,
 } from "@/domain/training/schedule.js";
 
-export function buildSets(
-  state: {
-    workouts: WorkoutLike[];
-    exWeights?: Record<string, { w?: number; d?: IsoDate }>;
-    unit?: Unit;
-    plates?: PlateSetup | null;
-  },
-  cfg: ExConfig,
-): LoggedSet[] {
+export function buildSets(state: BuildSetsProps, cfg: ExConfig): LoggedSet[] {
   const last = lastEntryFor(state, cfg.id);
   const n = Math.max(1, cfg.sets || 1);
   const mode = modeOf(cfg);
@@ -385,7 +395,7 @@ export function buildSets(
   }
 
   const sets: RepsSet[] = [];
-  const conf = state.exWeights && state.exWeights[cfg.id];
+  const conf = state.exWeights?.[cfg.id];
 
   for (let i = 0; i < n; i++) {
     const prev = prevAt(i);
@@ -393,7 +403,7 @@ export function buildSets(
     const previousWeight = usable?.w ?? 0;
 
     const w =
-      conf && conf.w != null && conf.w > 0
+      conf?.w != null && conf.w > 0
         ? conf.w
         : previousWeight > 0
           ? previousWeight
@@ -407,24 +417,26 @@ export function buildSets(
 
 export function workoutVolume(w: Pick<WorkoutLike, "entries">): number {
   let v = 0;
+
   // No special case for unilateral work: a per-side set logs its total, so both sides are
   // already in the rep count that arrives here. Warm-up sets are preparation, not volume.
-  w.entries.forEach((e) =>
-    working(e.sets).forEach((s) => {
+  for (const e of w.entries) {
+    for (const s of working(e.sets)) {
       if (s.done) v += (s.w || 0) * (s.r || 0);
-    }),
-  );
+    }
+  }
 
   return v;
 }
 
 export function setsDone(w: Pick<WorkoutLike, "entries">): number {
   let n = 0;
-  w.entries.forEach((e) =>
-    working(e.sets).forEach((s) => {
+
+  for (const e of w.entries) {
+    for (const s of working(e.sets)) {
       if (s.done) n++;
-    }),
-  );
+    }
+  }
 
   return n;
 }
@@ -435,11 +447,11 @@ export function setsDoneActive(
   let n = 0;
 
   if (activeWorkout)
-    activeWorkout.entries.forEach((entry) =>
-      working(entry.sets).forEach((set) => {
+    for (const entry of activeWorkout.entries) {
+      for (const set of working(entry.sets)) {
         if (set.done) n++;
-      }),
-    );
+      }
+    }
 
   return n;
 }
@@ -449,15 +461,16 @@ export const lastBW = (appState: Pick<AppState, "bodyweight">): BodyweightEntry 
 
 // Group consecutive items sharing a superset id (sg) into "units" of indices.
 // items may be routine exercises ({sg}) or active-workout entries ({sg}).
-export function supersetUnits(items: ReadonlyArray<{ sg?: string }>): number[][] {
+export function supersetUnits(items: ReadonlyArray<SupersetUnitsProps>): number[][] {
   const units: number[][] = [];
-  items.forEach((item, index) => {
+
+  for (const [index, item] of items.entries()) {
     const previousItem = items[index - 1];
 
-    if (index > 0 && item.sg && previousItem && previousItem.sg && item.sg === previousItem.sg)
+    if (index > 0 && item.sg && previousItem?.sg && item.sg === previousItem.sg)
       units.at(-1)?.push(index);
     else units.push([index]);
-  });
+  }
 
   return units;
 }
@@ -466,7 +479,7 @@ export function unitOf(units: number[][], idx: number): number[] {
   return units.find((u) => u.includes(idx)) || [idx];
 }
 
-export function streakWeeks(state: { workouts: WorkoutLike[] }): number {
+export function streakWeeks(state: StreakWeeksProps): number {
   if (state.workouts.length === 0) return 0;
   const weeks = new Set(state.workouts.map((workout) => weekKey(workout.d)));
   let streak = 0;

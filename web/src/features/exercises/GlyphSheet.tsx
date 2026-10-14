@@ -6,15 +6,13 @@ import { glyphOf } from "@/domain/exercises/glyphs";
 import type { SheetClose } from "@/shared/lib/types";
 import { Button } from "@/shared/ui/button";
 
-export function GlyphPicker({
-  current,
-  onPick,
-  close,
-}: {
+type GlyphPickerProps = {
   current: string;
   onPick: (iconName: IconName) => void;
   close: SheetClose;
-}) {
+};
+
+export function GlyphPicker({ current, onPick, close }: GlyphPickerProps) {
   const { t } = useTranslation();
   const groups = useGlyphGroups();
   const currentGlyph = glyphOf(current);
@@ -36,7 +34,7 @@ export function GlyphPicker({
                 aria-pressed={iconName === currentGlyph}
                 className="flex aspect-square items-center justify-center active:scale-95"
                 onClick={() => {
-                  void close();
+                  void close().catch(console.error);
                   onPick(iconName);
                 }}
                 aria-label={iconName}

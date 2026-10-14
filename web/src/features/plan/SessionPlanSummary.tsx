@@ -5,7 +5,9 @@ import { estimateSessionMinutes } from "@/domain/training/session-planner";
 import { useSessionPlannerLabels } from "./use-session-planner-labels";
 import type { SessionPlan, Unit } from "@/shared/lib/types";
 
-export function SessionPlanSummary({ plan, unit }: { plan: SessionPlan; unit: Unit }) {
+type SessionPlanSummaryProps = { plan: SessionPlan; unit: Unit };
+
+export function SessionPlanSummary({ plan, unit }: SessionPlanSummaryProps) {
   const { t } = useTranslation();
   const labels = useSessionPlannerLabels();
   const occurrences = new Map<string, number>();

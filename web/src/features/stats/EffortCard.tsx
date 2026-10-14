@@ -15,12 +15,14 @@ import {
 import { Segmented } from "@/shared/ui/segmented";
 import type { AppState } from "@/shared/lib/types";
 
+type EffortCardProps = { appState: AppState };
+
 // How hard the training was — the half of the picture a volume chart cannot show. Everything
 // is computed in RIR (lib/effort.js) and converted to whichever scale this profile reads.
 // Every number carries how much of the training it speaks for: rating is optional and off by
 // default, so a partly rated history is the normal case, and an average without its
 // denominator would quietly speak for sets that were never rated.
-export function EffortCard({ appState }: { appState: AppState }) {
+export function EffortCard({ appState }: EffortCardProps) {
   const { t } = useTranslation();
   const [windowDays, setWindowDays] = useState<"30" | "90" | "365" | "0">("90");
   const windowDayCount = Number(windowDays);

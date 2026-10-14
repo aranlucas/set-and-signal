@@ -17,13 +17,15 @@ import { beginWorkout } from "@/features/workout/workout-actions";
 import { RouteBottomSheet } from "@/shared/components/RouteBottomSheet";
 import type { AppState, Id } from "@/shared/lib/types";
 
+type StartChooserViewProps = { appState: AppState };
+
 export function StartChooser() {
   const appState = useStore((state) => state.appState);
 
   return <StartChooserView appState={appState} />;
 }
 
-export function StartChooserView({ appState }: { appState: AppState }) {
+export function StartChooserView({ appState }: StartChooserViewProps) {
   const { t } = useTranslation();
   const { weekdays } = useDateLabels();
   const nav = useNavigate();
@@ -139,7 +141,7 @@ export function StartChooserView({ appState }: { appState: AppState }) {
               bodyweight,
               t("workout.type.freestyle", "Freestyle"),
             );
-            void nav({ to: "/workout" });
+            void nav({ to: "/workout" }).catch(console.error);
           }}
           onChooseDifferentWorkout={() => setSheetOpen(false)}
         />

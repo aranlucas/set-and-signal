@@ -3,17 +3,14 @@ import { fmtDate } from "@/shared/lib/format";
 import { WorkoutRow } from "@/features/history/HistorySheet";
 import type { IsoDate, Workout } from "@/shared/lib/types";
 
-export function CalendarDaySheet({
-  iso,
-  workouts,
-  close,
-  onWorkoutDetail,
-}: {
+type CalendarDaySheetProps = {
   iso: IsoDate;
   workouts: Workout[];
   close: () => Promise<void>;
   onWorkoutDetail?: (workout: Workout) => void;
-}) {
+};
+
+export function CalendarDaySheet({ iso, workouts, close, onWorkoutDetail }: CalendarDaySheetProps) {
   const { t } = useTranslation();
 
   return (
@@ -25,7 +22,9 @@ export function CalendarDaySheet({
             key={workout.id}
             workout={workout}
             onClick={() => {
-              void close().then(() => onWorkoutDetail?.(workout));
+              void close()
+                .then(() => onWorkoutDetail?.(workout))
+                .catch(console.error);
             }}
           />
         ))}

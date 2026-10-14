@@ -130,7 +130,7 @@ function SettingsContent() {
                   confirmLabel: t("common.reset", "Reset"),
                   onConfirm: async () => {
                     await resetDemo();
-                    void navigate({ to: "/home" });
+                    void navigate({ to: "/home" }).catch(console.error);
                     toast(t("account.demo.resetSuccess", "Demo data reset"));
                   },
                 })

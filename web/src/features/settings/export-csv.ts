@@ -3,7 +3,7 @@
 // on every row so any importer can reconstruct the log. Weight is exported in the
 // profile's unit and labelled in the header (`weight_kg` / `weight_lb`) — importing
 // apps convert on their side, so no silent unit rewriting happens here.
-import type { AppState, Workout } from "@/shared/lib/types";
+import type { AppState } from "@/shared/lib/types";
 
 type CsvCell = string | number | null | undefined;
 
@@ -44,13 +44,16 @@ export function workoutsToCsv(
   ];
 
   const lines = [header.join(",")];
-  state.workouts.forEach((workout: Workout) => {
+
+  for (const workout of state.workouts) {
     const workoutNotes = workout.note || "";
-    workout.entries.forEach((entry) => {
+
+    for (const entry of workout.entries) {
       const name = nameOf(entry.id);
       let order = 0;
-      entry.sets.forEach((set) => {
-        if (!set.done) return;
+
+      for (const set of entry.sets) {
+        if (!set.done) continue;
         order++;
         const isWarmup = "wu" in set && set.wu;
 
@@ -77,7 +80,7 @@ export function workoutsToCsv(
               .join(","),
           );
 
-          return;
+          continue;
         }
 
         const seconds = "sec" in set ? set.sec : "";
@@ -103,9 +106,9 @@ export function workoutsToCsv(
             .map(cell)
             .join(","),
         );
-      });
-    });
-  });
+      }
+    }
+  }
 
   return lines.join("\n") + "\n";
 }

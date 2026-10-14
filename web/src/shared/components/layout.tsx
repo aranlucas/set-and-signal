@@ -4,6 +4,13 @@ import type { IconName } from "@/shared/components/Icon";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 
+type SectionProps = {
+  title?: ReactNode;
+  footer?: ReactNode;
+  children: ReactNode;
+  className?: string;
+};
+
 export function PageHeader({ className, ...props }: ComponentPropsWithoutRef<"header">) {
   return (
     <header
@@ -27,17 +34,7 @@ export function PageTitle({ className, children, ...props }: ComponentPropsWitho
   );
 }
 
-export function Section({
-  title,
-  footer,
-  children,
-  className = "",
-}: {
-  title?: ReactNode;
-  footer?: ReactNode;
-  children: ReactNode;
-  className?: string;
-}) {
+export function Section({ title, footer, children, className = "" }: SectionProps) {
   return (
     <section className={cn("mb-5.5", className)}>
       {title && (

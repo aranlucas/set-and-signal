@@ -10,6 +10,14 @@ import { EFFORT, effortOf } from "@/domain/training/history";
 import { weekKey } from "@/shared/lib/format";
 import type { EffortKind, EffortScale, LoggedSet, Workout } from "@/shared/lib/types";
 
+type RirOfProps = { rir?: number | null; rpe?: number | null };
+
+type AvgRirProps = { rir?: number | null; rpe?: number | null };
+
+type WeeksValue = { k: string; t: number; sum: number; n: number; sets: number };
+
+type IsHardSetProps = { rir?: number | null; rpe?: number | null };
+
 // At or below this a set is close enough to failure to be the kind that drives adaptation.
 // 3 rather than 2: the line is a convention, and drawn one rep too generously it still
 // separates working sets from the ones left in the warm-up range.
@@ -20,9 +28,8 @@ export const HARD_RIR = 3;
 export const MIN_RATED = 5;
 
 /** A set's effort in RIR, or null when it was never rated. 0 is a rating, not "empty". */
-export const rirOf = (
-  s: { rir?: number | null; rpe?: number | null } | null | undefined,
-): number | null => (s ? (s.rir != null ? s.rir : s.rpe != null ? 10 - s.rpe : null) : null);
+export const rirOf = (s: RirOfProps | null | undefined): number | null =>
+  s ? (s.rir != null ? s.rir : s.rpe != null ? 10 - s.rpe : null) : null;
 
 /** RIR → the scale being displayed. The reverse of rirOf, for one number. */
 export const toScale = (kind: EffortKind, rir: number | null): number | null =>
@@ -61,13 +68,13 @@ export const scaleName = (kind: EffortKind): string => EFFORT[kind].hd;
 // Every finished set in the profile, oldest first. `fn` gets the set plus the workout it
 // belongs to, which is what the windowed and per-week views need.
 function eachDoneSet(profile: Profile, visit: (set: RatedSet, workout: Workout) => void): void {
-  (profile.workouts || []).forEach((workout) =>
-    (workout.entries || []).forEach((entry) =>
-      (entry.sets || []).forEach((set) => {
+  for (const workout of profile.workouts || []) {
+    for (const entry of workout.entries || []) {
+      for (const set of entry.sets || []) {
         if (set.done) visit(set, workout);
-      }),
-    ),
-  );
+      }
+    }
+  }
 }
 
 // A window in days, counted back from now. 0 = everything, which is also what an empty
@@ -75,9 +82,7 @@ function eachDoneSet(profile: Profile, visit: (set: RatedSet, workout: Workout) 
 const inWindow = (workout: Workout, days: number): boolean =>
   !days || (workout.start || new Date(workout.d).getTime()) > Date.now() - days * 86400000;
 
-export const avgRir = (
-  sets: ReadonlyArray<{ rir?: number | null; rpe?: number | null }> | null,
-): number | null => {
+export const avgRir = (sets: ReadonlyArray<AvgRirProps> | null): number | null => {
   const ratings = (sets || []).map(rirOf).filter((rating) => rating != null);
 
   return ratings.length > 0
@@ -149,7 +154,7 @@ export interface EffortWeekPoint {
 }
 
 export function effortWeeks(profile: Profile, days: number): EffortWeekPoint[] {
-  const weeks = new Map<string, { k: string; t: number; sum: number; n: number; sets: number }>();
+  const weeks = new Map<string, WeeksValue>();
   eachDoneSet(profile, (set, workout) => {
     if (!inWindow(workout, days)) return;
     const weekKeyValue = weekKey(workout.d);
@@ -231,9 +236,7 @@ export function effortHistogram(profile: Profile, days: number): EffortBin[] {
 }
 
 /** A set that counts as hard — the filter behind the muscle map's "hard sets" mode. */
-export const isHardSet = (
-  s: { rir?: number | null; rpe?: number | null } | null | undefined,
-): boolean => {
+export const isHardSet = (s: IsHardSetProps | null | undefined): boolean => {
   const rating = rirOf(s);
 
   return rating != null && rating <= HARD_RIR;

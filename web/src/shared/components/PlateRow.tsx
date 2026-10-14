@@ -4,10 +4,14 @@ import { effectivePlateSetup, platesFor } from "@/domain/training/plates";
 import { fmtNum, fmtPlate } from "@/shared/lib/format";
 import Icon from "@/shared/components/Icon";
 
+type PlateGroupProps = { w: number; count: number; max: number };
+
+type PlateRowProps = { weight: number };
+
 // One plate chip: mini bars sized like the discs they stand for, plus the plate value.
 // Bar heights are genuinely runtime-derived (scaled to the heaviest plate shown), so an
 // inline style is the honest tool here.
-function PlateGroup({ w, count, max }: { w: number; count: number; max: number }) {
+function PlateGroup({ w, count, max }: PlateGroupProps) {
   const height = 12 + Math.round((w / max) * 12);
 
   return (
@@ -31,7 +35,7 @@ function PlateGroup({ w, count, max }: { w: number; count: number; max: number }
 
 // The load-the-bar line under a weighted exercise: plates per side for the target
 // weight, or the closest achievable total marked with ≈ when the gym's rack can't hit it.
-export function PlateRow({ weight }: { weight: number }) {
+export function PlateRow({ weight }: PlateRowProps) {
   const { t } = useTranslation();
   const unit = useStore((state) => state.appState.unit);
   const savedSetup = useStore((state) => state.appState.plates);

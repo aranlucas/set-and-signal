@@ -12,9 +12,11 @@ import { Segmented } from "@/shared/ui/segmented";
 import type { AppState, LoggedSet } from "@/shared/lib/types";
 import { ratingOf } from "@/features/stats/stats-types";
 
+type MuscleBalanceProps = { appState: AppState };
+
 // Which muscles the training in a window actually hit — and, the point of the card,
 // which ones it keeps missing. Shading is relative within the window (lib/muscles.js).
-export function MuscleBalance({ appState }: { appState: AppState }) {
+export function MuscleBalance({ appState }: MuscleBalanceProps) {
   const { t } = useTranslation();
   const muscleLabels = useMuscleLabels();
   const [windowDays, setWindowDays] = useState<"7" | "30" | "90" | "0">("7");

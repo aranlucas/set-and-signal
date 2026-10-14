@@ -5,14 +5,16 @@ import { I18nextProvider } from "react-i18next";
 
 const translations = createInstance();
 
-void translations.init({
-  lng: "en",
-  fallbackLng: "en",
-  resources: { en: { translation: {} } },
-  initAsync: false,
-  interpolation: { escapeValue: false },
-  react: { useSuspense: false },
-});
+void translations
+  .init({
+    lng: "en",
+    fallbackLng: "en",
+    resources: { en: { translation: {} } },
+    initAsync: false,
+    interpolation: { escapeValue: false },
+    react: { useSuspense: false },
+  })
+  .catch(console.error);
 
 /** Exercise the real translation provider while testing documented English fallbacks. */
 export function renderWithTranslations(element: ReactNode): string {

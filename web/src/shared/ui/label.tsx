@@ -2,11 +2,13 @@ import * as React from "react";
 
 import { cn } from "@/shared/lib/utils";
 
+type LabelProps = { tone?: "default" | "muted" };
+
 function Label({
   className,
   tone = "default",
   ...props
-}: React.ComponentProps<"label"> & { tone?: "default" | "muted" }) {
+}: React.ComponentProps<"label"> & LabelProps) {
   return (
     <label
       data-slot="label"

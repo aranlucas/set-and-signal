@@ -3,6 +3,16 @@ import { NumberField } from "@/shared/components/NumField";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 
+type StepperProps = {
+  value: number | null | undefined;
+  step?: number;
+  onChange: (n: number | null) => void;
+  decimal?: boolean;
+  className?: string;
+  label?: string;
+  unit?: string;
+};
+
 export function Stepper({
   value,
   step = 1,
@@ -11,15 +21,7 @@ export function Stepper({
   className = "",
   label,
   unit,
-}: {
-  value: number | null | undefined;
-  step?: number;
-  onChange: (n: number | null) => void;
-  decimal?: boolean;
-  className?: string;
-  label?: string;
-  unit?: string;
-}) {
+}: StepperProps) {
   const set = (v: number | null) => onChange(Math.max(0, Math.round((v || 0) * 100) / 100));
   const cur = value || 0;
 

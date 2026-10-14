@@ -23,21 +23,30 @@ import type { Id, IsoDate, SheetClose, Weekday } from "@/shared/lib/types";
 import { getErrorMessage, updateAppState } from "@/features/exercises/sheet-shared";
 import { planImportFormSchema } from "@/shared/lib/form-schemas";
 
-export type ParsedBundle = ReturnType<typeof parsePlan>;
-
-export function PlanTools({
-  close,
-  openImport,
-}: {
+type PlanToolsProps = {
   close: SheetClose;
   openImport: (bundle: ParsedBundle) => void;
-}) {
+};
+
+type PlanImportProps = { bundle: ParsedBundle; close: SheetClose };
+
+type ControlValue = { schedule: boolean };
+
+type ApplyProps = { schedule: boolean };
+
+type DayOverrideProps = { iso: IsoDate; close: SheetClose };
+
+type DayAssignProps = { day: Weekday; close: SheetClose };
+
+export type ParsedBundle = ReturnType<typeof parsePlan>;
+
+export function PlanTools({ close, openImport }: PlanToolsProps) {
   const { t } = useTranslation();
   const st = useStore((store) => store.appState);
   const user = useStore((state) => state.user);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const printRef = useRef<HTMLDivElement | null>(null);
-  const hasRoutines = (st.routines || []).some((r) => r.ex && r.ex.length);
+  const hasRoutines = (st.routines || []).some((r) => r.ex?.length);
   const uname = user?.name || "";
 
   const printPlan = useReactToPrint({
@@ -63,7 +72,7 @@ export function PlanTools({
         /* dismissed */
       }
 
-      void close();
+      void close().catch(console.error);
 
       return;
     }
@@ -75,7 +84,7 @@ export function PlanTools({
     a.download = name;
     a.click();
     URL.revokeObjectURL(url);
-    void close();
+    void close().catch(console.error);
     toast(t("sharing.planFileSavedSendFriend", "Plan file saved — send it to a friend"));
   };
 
@@ -84,17 +93,24 @@ export function PlanTools({
     event.target.value = "";
 
     if (!file) return;
-    void file.text().then(async (contents) => {
-      try {
-        const bundle = parsePlan(contents);
-        await close();
-        openImport(bundle);
-      } catch (error) {
-        toast(
-          t("settings.importFailed", "Import failed: {{error}}", { error: getErrorMessage(error) }),
-        );
-      }
-    });
+    void file
+      .text()
+      .then(async (contents) => {
+        try {
+          const bundle = parsePlan(contents);
+          await close();
+          openImport(bundle);
+        } catch (error) {
+          toast(
+            t("settings.importFailed", "Import failed: {{error}}", {
+              error: getErrorMessage(error),
+            }),
+          );
+        }
+
+        return undefined;
+      })
+      .catch(console.error);
   };
 
   return (
@@ -169,16 +185,16 @@ export function PlanTools({
   );
 }
 
-export function PlanImport({ bundle, close }: { bundle: ParsedBundle; close: SheetClose }) {
+export function PlanImport({ bundle, close }: PlanImportProps) {
   const { t } = useTranslation();
   const nav = useNavigate();
 
-  const { control, handleSubmit } = useForm<{ schedule: boolean }>({
+  const { control, handleSubmit } = useForm<ControlValue>({
     defaultValues: { schedule: false },
     resolver: valibotResolver(planImportFormSchema),
   });
 
-  const apply = async ({ schedule }: { schedule: boolean }) => {
+  const apply = async ({ schedule }: ApplyProps) => {
     updateAppState((state) => mergePlan(state, bundle, { schedule }));
     await close();
     toast(
@@ -186,7 +202,7 @@ export function PlanImport({ bundle, close }: { bundle: ParsedBundle; close: She
         count: bundle.routineCount,
       }),
     );
-    void nav({ to: "/plan" });
+    void nav({ to: "/plan" }).catch(console.error);
   };
 
   return (
@@ -266,7 +282,7 @@ export function PlanImport({ bundle, close }: { bundle: ParsedBundle; close: She
   );
 }
 
-export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose }) {
+export function DayOverride({ iso, close }: DayOverrideProps) {
   const { t } = useTranslation();
   const st = useStore((store) => store.appState);
   const wd = weekdayOf(new Date(iso + "T12:00:00"));
@@ -291,7 +307,7 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
       else sessions.push({ routineId });
       appState.dayPlan[iso] = { sessions };
     });
-    void close();
+    void close().catch(console.error);
     toast(
       t("calendar.plannedFor", "{{routine}} planned for {{date}}", {
         routine: st.routines.find((routine) => routine.id === routineId)?.name,
@@ -304,7 +320,7 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
     updateAppState((appState) => {
       appState.dayPlan[iso] = { rest: true };
     });
-    void close();
+    void close().catch(console.error);
     toast(t("calendar.setRest", "{{date}} set to rest", { date: fmtDate(t, iso) }));
   };
 
@@ -312,7 +328,7 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
     updateAppState((appState) => {
       delete appState.dayPlan[iso];
     });
-    void close();
+    void close().catch(console.error);
     toast(t("calendar.backWeeklyPlan", "Back to weekly plan"));
   };
 
@@ -390,7 +406,7 @@ export function DayOverride({ iso, close }: { iso: IsoDate; close: SheetClose })
   );
 }
 
-export function DayAssign({ day, close }: { day: Weekday; close: SheetClose }) {
+export function DayAssign({ day, close }: DayAssignProps) {
   const { t } = useTranslation();
   const { weekdays } = useDateLabels();
   const appState = useStore((state) => state.appState);
@@ -401,7 +417,7 @@ export function DayAssign({ day, close }: { day: Weekday; close: SheetClose }) {
     updateAppState((state) => {
       delete state.week[day];
     });
-    void close();
+    void close().catch(console.error);
   };
 
   const toggleRoutine = (routineId: Id) => {
@@ -418,7 +434,7 @@ export function DayAssign({ day, close }: { day: Weekday; close: SheetClose }) {
         state.week[day] = [...current, { routineId }];
       }
     });
-    void close();
+    void close().catch(console.error);
   };
 
   return (

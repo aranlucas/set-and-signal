@@ -8,6 +8,11 @@ import {
   DialogTitle,
 } from "@/shared/ui/dialog";
 
+type EffortHelpDialogProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};
+
 // The whole point is that the two scales are one judgement counted from opposite ends, and a
 // paragraph is a bad way to say that — the conversion table shows it in one look. Reading down
 // a column is the answer to "what do I put here", so the numbers get their own aligned columns.
@@ -83,13 +88,7 @@ function EffortHelpContent() {
   );
 }
 
-export function EffortHelpDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
+export function EffortHelpDialog({ open, onOpenChange }: EffortHelpDialogProps) {
   const { t } = useTranslation();
 
   return (

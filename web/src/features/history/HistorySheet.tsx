@@ -30,19 +30,33 @@ import {
 } from "@/shared/ui/alert-dialog";
 import { noteFormSchema } from "@/shared/lib/form-schemas";
 
+type WorkoutDetailProps = {
+  workoutId: Workout["id"];
+  close: SheetClose;
+};
+
+type HandleSubmitValue = { note: string };
+
+type SaveNoteProps = { note: string };
+
+type CalendarProps = {
+  start?: IsoDate;
+  close: SheetClose;
+};
+
+type WorkoutRowProps = {
+  workout: Workout;
+  onClick?: () => void;
+  ledger?: boolean;
+};
+
 export interface HistorySheetActions {
   onDayOverride?: (iso: IsoDate) => void;
   onWorkoutDetail?: (workout: Workout) => void;
   onCalendarDay?: (iso: IsoDate, workouts: Workout[]) => void;
 }
 
-export function WorkoutDetail({
-  workoutId,
-  close,
-}: {
-  workoutId: Workout["id"];
-  close: SheetClose;
-}) {
+export function WorkoutDetail({ workoutId, close }: WorkoutDetailProps) {
   const { t } = useTranslation();
 
   const workout = useStore((store) =>
@@ -56,7 +70,7 @@ export function WorkoutDetail({
   const [editingNoteFor, setEditingNoteFor] = useState<Workout["id"] | null>(null);
   const editingNote = editingNoteFor === workoutId;
 
-  const { handleSubmit, register, reset } = useForm<{ note: string }>({
+  const { handleSubmit, register, reset } = useForm<HandleSubmitValue>({
     defaultValues: { note: workout?.note ?? "" },
     values: { note: workout?.note ?? "" },
     resolver: valibotResolver(noteFormSchema),
@@ -64,7 +78,7 @@ export function WorkoutDetail({
 
   if (!workout) return null;
 
-  const saveNote = ({ note }: { note: string }) => {
+  const saveNote = ({ note }: SaveNoteProps) => {
     updateAppState((draft) => {
       const saved = draft.workouts.find((candidate) => candidate.id === workout.id);
 
@@ -80,7 +94,7 @@ export function WorkoutDetail({
     updateAppState((draft) => {
       draft.workouts = draft.workouts.filter((savedWorkout) => savedWorkout.id !== workout.id);
     });
-    void close();
+    void close().catch(console.error);
     toast(t("workout.completion.workoutDeleted", "Workout deleted"));
   };
 
@@ -231,10 +245,7 @@ export function Calendar({
   onDayOverride,
   onWorkoutDetail,
   onCalendarDay,
-}: {
-  start?: IsoDate;
-  close: SheetClose;
-} & HistorySheetActions) {
+}: CalendarProps & HistorySheetActions) {
   const { t } = useTranslation();
   const { monthsLong, weekdaysShort } = useDateLabels();
   const st = useStore((store) => store.appState);
@@ -249,9 +260,11 @@ export function Calendar({
   const y = cur.getFullYear();
   const mo = cur.getMonth();
   const byDay: Record<string, Workout[]> = {};
-  st.workouts.forEach((w) => {
+
+  for (const w of st.workouts) {
     (byDay[w.d] = byDay[w.d] || []).push(w);
-  });
+  }
+
   const startOffset = (new Date(y, mo, 1).getDay() + 6) % 7;
   const daysIn = new Date(y, mo + 1, 0).getDate();
 
@@ -286,21 +299,25 @@ export function Calendar({
         aria-current={iso === todayISO() ? "date" : undefined}
         className="flex aspect-square flex-col items-center justify-center"
         onClick={() => {
-          void close().then(() => {
-            if (!ws) {
-              onDayOverride?.(iso);
+          void close()
+            .then(() => {
+              if (!ws) {
+                onDayOverride?.(iso);
 
-              return;
-            }
+                return;
+              }
 
-            if (ws.length === 1) {
-              onWorkoutDetail?.(ws[0]);
+              if (ws.length === 1) {
+                onWorkoutDetail?.(ws[0]);
 
-              return;
-            }
+                return;
+              }
 
-            onCalendarDay?.(iso, ws);
-          });
+              onCalendarDay?.(iso, ws);
+
+              return undefined;
+            })
+            .catch(console.error);
         }}
       >
         <span>{d}</span>
@@ -382,15 +399,7 @@ export function Calendar({
   );
 }
 
-export function WorkoutRow({
-  workout,
-  onClick,
-  ledger = false,
-}: {
-  workout: Workout;
-  onClick?: () => void;
-  ledger?: boolean;
-}): ReactElement {
+export function WorkoutRow({ workout, onClick, ledger = false }: WorkoutRowProps): ReactElement {
   const { t } = useTranslation();
   const appState = useStore((state) => state.appState);
 

@@ -96,24 +96,25 @@ export default function Home() {
   });
 
   const start = () => {
-    if (state.active) void navigate({ to: "/workout" });
+    if (state.active) void navigate({ to: "/workout" }).catch(console.error);
     else if (routine)
       void navigate({
         to: "/home/pre-workout/$routineId",
         params: { routineId: routine.id },
         resetScroll: false,
-      });
-    else void navigate({ to: "/workout" });
+      }).catch(console.error);
+    else void navigate({ to: "/workout" }).catch(console.error);
   };
 
   const viewRoutine = () => {
     if (state.active) {
-      void navigate({ to: "/workout" });
+      void navigate({ to: "/workout" }).catch(console.error);
 
       return;
     }
 
-    if (activeRoutine) void navigate({ to: "/plan/r/$id", params: { id: activeRoutine.id } });
+    if (activeRoutine)
+      void navigate({ to: "/plan/r/$id", params: { id: activeRoutine.id } }).catch(console.error);
   };
 
   return (

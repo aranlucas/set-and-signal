@@ -20,6 +20,8 @@ import { DEFAULT_GLYPH, glyphOf } from "@/domain/exercises/glyphs";
 import type { ExConfig, Id, SheetClose } from "@/shared/lib/types";
 import { getAppState, getErrorMessage, updateAppState } from "@/features/exercises/sheet-shared";
 
+type AiPlanProps = { close: SheetClose };
+
 const nameOf = (id: Id) => EXIDX[id]?.n || getAppState().customEx.find((x) => x.id === id)?.n || id;
 
 const targetStr = (cur: ExConfig | undefined, g: AiPlanEntry): string => {
@@ -41,7 +43,7 @@ const targetStr = (cur: ExConfig | undefined, g: AiPlanEntry): string => {
   return parts.join(" ");
 };
 
-export function AiPlan({ close }: { close: SheetClose }) {
+export function AiPlan({ close }: AiPlanProps) {
   const { t } = useTranslation();
   const [applied, setApplied] = useState(false);
 
@@ -111,7 +113,7 @@ export function AiPlan({ close }: { close: SheetClose }) {
     });
     setApplied(true);
     toast(t("ai.adjustmentsApplied", "AI adjustments applied to today's routine"));
-    void close();
+    void close().catch(console.error);
   };
 
   return (

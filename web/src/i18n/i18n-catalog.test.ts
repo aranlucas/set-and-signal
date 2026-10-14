@@ -96,7 +96,7 @@ describe("translation catalogs", () => {
         expect(actualCategories).toEqual(expectedCategories);
 
         for (const category of actualCategories) {
-          expect(catalogRecord.get(`${base}_${category}`)).toContain("{{count}}");
+          expect(catalogRecord.get(`${base}_${String(category)}`)).toContain("{{count}}");
         }
       }
     }

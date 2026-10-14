@@ -16,6 +16,8 @@ import {
 import { isoOf } from "@/shared/lib/format";
 import type { RepsSet, Workout } from "@/shared/lib/types";
 
+type WProps = { rir?: number | null; rpe?: number | null; done?: boolean };
+
 const daysAgo = (n: number) => {
   const d = new Date();
   d.setDate(d.getDate() - n);
@@ -25,10 +27,7 @@ const daysAgo = (n: number) => {
 
 // One workout on a day, with the sets given. Everything here is a finished set unless a set
 // says otherwise, because that is what the stats read.
-const W = (
-  n: number,
-  sets: Array<{ rir?: number | null; rpe?: number | null; done?: boolean }>,
-): Workout => {
+const W = (n: number, sets: Array<WProps>): Workout => {
   const d = daysAgo(n);
 
   return {

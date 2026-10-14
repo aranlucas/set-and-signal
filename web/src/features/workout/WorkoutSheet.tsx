@@ -30,15 +30,26 @@ import { WeightInput } from "@/features/account/AccountSheet";
 import type { SetWorkoutSheet } from "@/features/workout/workout-state";
 import { createTopWeightFormSchema } from "@/shared/lib/form-schemas";
 
-export function TopWeight({
-  entryIdx,
-  close,
-  setWorkoutSheet,
-}: {
+type TopWeightProps = {
   entryIdx: number;
   close: SheetClose;
   setWorkoutSheet: SetWorkoutSheet;
-}) {
+};
+
+type ControlValue = { weight: number };
+
+type CommitProps = { weight: number };
+
+type WorkoutCompleteProps = { close: SheetClose; onFinish: () => void };
+
+type FinishSummaryProps = {
+  workout: Workout;
+  prs: Id[];
+  e1prs?: E1Pr[];
+  close: SheetClose;
+};
+
+export function TopWeight({ entryIdx, close, setWorkoutSheet }: TopWeightProps) {
   const { t } = useTranslation();
   const st = useStore((store) => store.appState);
   const A = st.active;
@@ -59,7 +70,7 @@ export function TopWeight({
 
   const invalidWeightMessage = t("weight.enterValidWeight", "Enter a valid weight");
 
-  const { control, handleSubmit } = useForm<{ weight: number }>({
+  const { control, handleSubmit } = useForm<ControlValue>({
     defaultValues: {
       weight: entry ? Math.max(maxSet, prevBest) || entry.target.weight || 0 : 0,
     },
@@ -68,7 +79,7 @@ export function TopWeight({
 
   const weightValue = useWatch({ control, name: "weight" });
   useEffect(() => {
-    if (!entry) void close();
+    if (!entry) void close().catch(console.error);
   }, [entry, close]);
   const units = supersetUnits(A ? A.entries : []);
   const unit: number[] = entry ? unitOf(units, entryIdx) : [];
@@ -78,7 +89,7 @@ export function TopWeight({
 
   if (!entry || !ex) return null;
 
-  const commit = async ({ weight: rawWeight }: { weight: number }, advance: boolean) => {
+  const commit = async ({ weight: rawWeight }: CommitProps, advance: boolean) => {
     const weight = Math.round((rawWeight || 0) * 10) / 10;
     updateAppState((state) => {
       const activeWorkout = state.active;
@@ -188,7 +199,7 @@ export function TopWeight({
   );
 }
 
-export function WorkoutComplete({ close, onFinish }: { close: SheetClose; onFinish: () => void }) {
+export function WorkoutComplete({ close, onFinish }: WorkoutCompleteProps) {
   const { t } = useTranslation();
 
   return (
@@ -210,7 +221,7 @@ export function WorkoutComplete({ close, onFinish }: { close: SheetClose; onFini
           className="w-full"
           variant="default"
           onClick={() => {
-            void close().then(onFinish);
+            void close().then(onFinish).catch(console.error);
           }}
         >
           <Icon name="flag" />
@@ -219,14 +230,16 @@ export function WorkoutComplete({ close, onFinish }: { close: SheetClose; onFini
         <Button
           className="w-full"
           onClick={() => {
-            void close().then(() =>
-              toast(
-                t(
-                  "workout.completion.keepGoingTapAddExercise",
-                  "Keep going — tap “+ Add exercise” below",
+            void close()
+              .then(() =>
+                toast(
+                  t(
+                    "workout.completion.keepGoingTapAddExercise",
+                    "Keep going — tap “+ Add exercise” below",
+                  ),
                 ),
-              ),
-            );
+              )
+              .catch(console.error);
           }}
         >
           {t("workout.completion.continueWorkout", "Continue workout")}
@@ -247,17 +260,7 @@ type E1Pr = E1PrRec & { id: Id };
 
 const EMPTY_E1PRS: E1Pr[] = [];
 
-export function FinishSummary({
-  workout,
-  prs,
-  e1prs = EMPTY_E1PRS,
-  close,
-}: {
-  workout: Workout;
-  prs: Id[];
-  e1prs?: E1Pr[];
-  close: SheetClose;
-}) {
+export function FinishSummary({ workout, prs, e1prs = EMPTY_E1PRS, close }: FinishSummaryProps) {
   const { t } = useTranslation();
   const nav = useNavigate();
   const appState = useStore((store) => store.appState);
@@ -363,7 +366,9 @@ export function FinishSummary({
         className="mt-4 w-full"
         variant="default"
         onClick={() => {
-          void close().then(() => void nav({ to: "/home" }));
+          void close()
+            .then(() => void nav({ to: "/home" }))
+            .catch(console.error);
         }}
       >
         {t("workout.completion.nice", "Nice!")}

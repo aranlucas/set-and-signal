@@ -10,10 +10,17 @@
     "lint:strict": "pnpm --dir web lint:strict",
     "format": "pnpm --dir web format",
     "format:write": "pnpm --dir web format:write",
-    "typecheck": "pnpm --dir web typecheck"
+    "typecheck": "pnpm --dir web typecheck",
+    "lint:fix": "oxlint --fix",
+    "format:check": "oxfmt --config oxfmt.config.ts --check",
+    "lint:oxforge": "oxlint"
   },
-  "packageManager": "pnpm@12.11.2",
   "devDependencies": {
+    "@aranlucas/oxforge": "^0.1.3",
+    "oxfmt": "^0.73.0",
+    "oxlint": "^1.88.0",
+    "oxlint-tsgolint": "^7.0.2004",
     "portless": "0.15.7"
-  }
+  },
+  "packageManager": "pnpm@12.11.2"
 }

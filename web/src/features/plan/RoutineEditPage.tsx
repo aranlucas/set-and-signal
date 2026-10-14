@@ -7,8 +7,7 @@ import { useProgressionLabels } from "@/shared/hooks/use-progression-labels";
 import { Navigate, useNavigate, useParams } from "@tanstack/react-router";
 import { useStore } from "@/app/store/useStore";
 import { exOr } from "@/domain/exercises/exercises";
-import { uid } from "@/shared/lib/format";
-import { weekdayFromNumber } from "@/shared/lib/format";
+import { uid, weekdayFromNumber } from "@/shared/lib/format";
 import { supersetUnits, cleanupSg, exLine } from "@/domain/training/history";
 import { Thumb } from "@/shared/components/Media";
 import { GlyphPicker } from "@/features/exercises/GlyphSheet";
@@ -42,6 +41,12 @@ import { removeCustomExercise } from "@/features/exercises/custom-delete";
 import { cn } from "@/shared/lib/utils";
 import { routineNameFormSchema } from "@/shared/lib/form-schemas";
 import { SessionPlanSummary } from "./SessionPlanSummary";
+
+type HandleSubmitValue = { name: string };
+
+type SaveNameProps = { name: string };
+
+type RoutineCoverageProps = { routine: Routine; body: AppState["body"] };
 
 type EditSheet =
   | { kind: "glyph"; current: string; onPick: (name: IconName) => void }
@@ -81,7 +86,7 @@ export default function RoutineEdit() {
 
   const routine = state.routines.find((candidate) => candidate.id === id);
 
-  const { handleSubmit, register, reset } = useForm<{ name: string }>({
+  const { handleSubmit, register, reset } = useForm<HandleSubmitValue>({
     defaultValues: { name: routine?.name ?? "" },
     values: { name: routine?.name ?? "" },
     resolver: valibotResolver(routineNameFormSchema),
@@ -129,7 +134,7 @@ export default function RoutineEdit() {
   const unitFirst = new Set(multiUnits.map((u) => u[0]));
   const inSS = new Set(multiUnits.flat());
 
-  const saveName = ({ name: draftName }: { name: string }) => {
+  const saveName = ({ name: draftName }: SaveNameProps) => {
     const name = draftName.trim() || t("workout.type.routine", "Routine");
     reset({ name });
 
@@ -275,22 +280,24 @@ export default function RoutineEdit() {
               onConfirm: () => {
                 update((s) => {
                   s.routines = s.routines.filter((x) => x.id !== id);
-                  Object.keys(s.week).forEach((weekdayKey) => {
+
+                  for (const weekdayKey of Object.keys(s.week)) {
                     const weekday = weekdayFromNumber(Number(weekdayKey));
 
-                    if (weekday == null) return;
+                    if (weekday == null) continue;
                     const sessions = s.week[weekday];
 
-                    if (!sessions?.length) return;
+                    if (!sessions?.length) continue;
                     const next = sessions.filter((session) => session.routineId !== id);
 
                     if (next.length) s.week[weekday] = next;
                     else delete s.week[weekday];
-                  });
-                  Object.keys(s.dayPlan).forEach((k) => {
+                  }
+
+                  for (const k of Object.keys(s.dayPlan)) {
                     const entry = s.dayPlan[k];
 
-                    if (!entry || entry.rest || !entry.sessions?.length) return;
+                    if (!entry || entry.rest || !entry.sessions?.length) continue;
 
                     const next = (entry.sessions ?? []).filter(
                       (session) => session.routineId !== id,
@@ -298,9 +305,9 @@ export default function RoutineEdit() {
 
                     if (!next.length) delete s.dayPlan[k];
                     else s.dayPlan[k] = { sessions: next };
-                  });
+                  }
                 });
-                void nav({ to: "/plan" });
+                void nav({ to: "/plan" }).catch(console.error);
               },
             })
           }
@@ -486,7 +493,7 @@ function RoutineExerciseList({
   );
 }
 
-function RoutineCoverage({ routine, body }: { routine: Routine; body: AppState["body"] }) {
+function RoutineCoverage({ routine, body }: RoutineCoverageProps) {
   const { t } = useTranslation();
   const muscleLabels = useMuscleLabels();
 
@@ -535,7 +542,9 @@ function RoutineSheet({ sheet, setSheet, closeSheet, setConfirmation }: RoutineS
         {sheet?.kind === "picker" && (
           <ExercisePicker
             onPick={(exercise) => {
-              void closeSheet().then(() => sheet.onPick(exercise));
+              void closeSheet()
+                .then(() => sheet.onPick(exercise))
+                .catch(console.error);
             }}
             openCustom={(existingExercise, onDone, prefillName) =>
               setSheet({ kind: "custom", existingExercise, onDone, prefillName })

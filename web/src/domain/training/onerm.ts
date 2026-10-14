@@ -10,6 +10,22 @@
 // which is exactly why REP_CAP exists.
 import type { Workout } from "@/shared/lib/types";
 
+type BestSetOfResult = { est: number; w: number; r: number };
+
+type BestValue = { est: number; w: number; r: number };
+
+type E1rmSeriesProps = { workouts?: WorkoutStub[] };
+
+type Best1RMProps = { workouts?: WorkoutStub[] };
+
+type Best1RMResult = { est: number; w: number; r: number; d: string; t: number };
+
+type BestValue2 = { est: number; w: number; r: number; d: string; t: number };
+
+type Is1RMRecordProps = { workouts?: WorkoutStub[] };
+
+type Is1RMRecordResult = { est: number; w: number; r: number; prev: number };
+
 // Above this many reps an estimate says more about work capacity than about maximal strength,
 // and the formulas disagree by double digits. Refusing to guess beats printing a fantasy.
 export const REP_CAP = 12;
@@ -73,17 +89,18 @@ type ScorableEntry = { sets?: readonly ScorableSet[] } | null | undefined;
 export function bestSetOf(
   entry: ScorableEntry,
   formula: string = DEFAULT_FORMULA,
-): { est: number; w: number; r: number } | null {
-  let best: { est: number; w: number; r: number } | null = null;
-  (entry?.sets || []).forEach((s) => {
-    if (!s.done) return;
+): BestSetOfResult | null {
+  let best: BestValue | null = null;
 
-    if (s.wu) return;
+  for (const s of entry?.sets || []) {
+    if (!s.done) continue;
+
+    if (s.wu) continue;
     const est = estimate1RM(s.w, s.r, formula);
 
     if (est !== null && (!best || est > best.est))
       best = { est, w: Number(s.w), r: Math.round(Number(s.r)) };
-  });
+  }
 
   return best;
 }
@@ -101,19 +118,20 @@ export interface E1rmPoint {
 type WorkoutStub = Pick<Workout, "d" | "start" | "entries">;
 
 export function e1rmSeries(
-  state: { workouts?: WorkoutStub[] },
+  state: E1rmSeriesProps,
   exId: string,
   formula: string = DEFAULT_FORMULA,
 ): E1rmPoint[] {
   const pts: E1rmPoint[] = [];
-  (state.workouts || []).forEach((w) => {
+
+  for (const w of state.workouts || []) {
     const entry = w.entries.find((e) => e.id === exId);
 
-    if (!entry) return;
+    if (!entry) continue;
     const best = bestSetOf(entry, formula);
 
     if (best) pts.push({ t: w.start, d: w.d, y: best.est, w: best.w, r: best.r });
-  });
+  }
 
   return pts;
 }
@@ -121,14 +139,15 @@ export function e1rmSeries(
 // All-time best estimate for an exercise, with the set and date it came from — the source
 // matters, because "142.5 kg est. from 100×10" is a very different claim from "from 140×1".
 export function best1RM(
-  state: { workouts?: WorkoutStub[] },
+  state: Best1RMProps,
   exId: string,
   formula: string = DEFAULT_FORMULA,
-): { est: number; w: number; r: number; d: string; t: number } | null {
-  let best: { est: number; w: number; r: number; d: string; t: number } | null = null;
-  e1rmSeries(state, exId, formula).forEach((p) => {
+): Best1RMResult | null {
+  let best: BestValue2 | null = null;
+
+  for (const p of e1rmSeries(state, exId, formula)) {
     if (!best || p.y > best.est) best = { est: p.y, w: p.w, r: p.r, d: p.d, t: p.t };
-  });
+  }
 
   return best;
 }
@@ -136,11 +155,11 @@ export function best1RM(
 // Did this workout beat every estimate that came before it? Used for the finish summary,
 // so it compares against history that does not yet contain `w`.
 export function is1RMRecord(
-  state: { workouts?: WorkoutStub[] },
+  state: Is1RMRecordProps,
   exId: string,
   entry: ScorableEntry,
   formula: string = DEFAULT_FORMULA,
-): { est: number; w: number; r: number; prev: number } | null {
+): Is1RMRecordResult | null {
   const now = bestSetOf(entry, formula);
 
   if (!now) return null;

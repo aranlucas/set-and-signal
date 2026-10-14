@@ -24,7 +24,7 @@ export default function HomePreWorkoutBodyweightSheet() {
     <Sheet
       open
       onOpenChange={(open) => {
-        if (!open) void close();
+        if (!open) void close().catch(console.error);
       }}
     >
       <SheetContent side="bottom" variant="panel" showCloseButton={false}>
@@ -33,7 +33,7 @@ export default function HomePreWorkoutBodyweightSheet() {
         <PreWorkoutBodyweightSheet
           onDone={(bodyweight) => {
             beginWorkout(routineId, bodyweight, t("workout.type.freestyle", "Freestyle"));
-            void navigate({ to: "/workout" });
+            void navigate({ to: "/workout" }).catch(console.error);
           }}
           onChooseDifferentWorkout={() => navigate({ to: "/workout" })}
         />

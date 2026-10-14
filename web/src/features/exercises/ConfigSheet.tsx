@@ -36,6 +36,50 @@ import type {
 import { toCatalogExercise, type SheetEx } from "@/features/exercises/sheet-shared";
 import { createExerciseConfigFormSchema } from "@/shared/lib/form-schemas";
 
+type ProgressionFieldsProps = {
+  exercise: SheetEx;
+  mode: Mode;
+  config: ExConfig;
+  setConfig: (updateConfig: (previous: ExConfig) => ExConfig) => void;
+  routine: Routine | null;
+  unit: Unit;
+};
+
+type ConfigExerciseIntroProps = { exercise: SheetEx; cardio: boolean };
+
+type ConfigModeFieldsProps = {
+  mode: Mode;
+  cardio: boolean;
+  config: ExConfig;
+  setConfig: (updateConfig: (previous: ExConfig) => ExConfig) => void;
+  bodyweight: boolean;
+  barbell: boolean;
+  unit: Unit;
+};
+
+type ConfigOptionsProps = {
+  mode: Mode;
+  bodyweight: boolean;
+  perSide: boolean;
+  barbell: boolean;
+  barWeight: number;
+  config: ExConfig;
+  setConfig: (updateConfig: (previous: ExConfig) => ExConfig) => void;
+  unit: Unit;
+};
+
+type ConfigRangeHelpProps = { config: ExConfig };
+
+type ExConfigSheetProps = {
+  exercise: SheetEx;
+  existing: ExConfig | null;
+  onSave: (config: ExConfig) => void;
+  onDelete?: (() => void) | null;
+  close: SheetClose;
+  routine: Routine | null;
+  openCustom: (exercise: CustomEx) => void;
+};
+
 function useAppState() {
   return useStore((state) => state.appState);
 }
@@ -51,14 +95,7 @@ function ProgressionFields({
   setConfig,
   routine,
   unit,
-}: {
-  exercise: SheetEx;
-  mode: Mode;
-  config: ExConfig;
-  setConfig: (updateConfig: (previous: ExConfig) => ExConfig) => void;
-  routine: Routine | null;
-  unit: Unit;
-}) {
+}: ProgressionFieldsProps) {
   const { t } = useTranslation();
   const progressionLabels = useProgressionLabels();
   const policyOptions: PolicyId[] = POLICIES_FOR[mode] || ["off"];
@@ -146,7 +183,7 @@ function ProgressionFields({
   );
 }
 
-function ConfigExerciseIntro({ exercise, cardio }: { exercise: SheetEx; cardio: boolean }) {
+function ConfigExerciseIntro({ exercise, cardio }: ConfigExerciseIntroProps) {
   const { t } = useTranslation();
   const metadata = useExerciseMetadataLabels();
   const catalogExercise = toCatalogExercise(exercise);
@@ -186,15 +223,7 @@ function ConfigModeFields({
   bodyweight,
   barbell,
   unit,
-}: {
-  mode: Mode;
-  cardio: boolean;
-  config: ExConfig;
-  setConfig: (updateConfig: (previous: ExConfig) => ExConfig) => void;
-  bodyweight: boolean;
-  barbell: boolean;
-  unit: Unit;
-}) {
+}: ConfigModeFieldsProps) {
   const { t } = useTranslation();
 
   const weightLabel = barbell
@@ -308,16 +337,7 @@ function ConfigOptions({
   config,
   setConfig,
   unit,
-}: {
-  mode: Mode;
-  bodyweight: boolean;
-  perSide: boolean;
-  barbell: boolean;
-  barWeight: number;
-  config: ExConfig;
-  setConfig: (updateConfig: (previous: ExConfig) => ExConfig) => void;
-  unit: Unit;
-}) {
+}: ConfigOptionsProps) {
   const { t } = useTranslation();
 
   return (
@@ -422,7 +442,7 @@ function ConfigOptions({
   );
 }
 
-function ConfigRangeHelp({ config }: { config: ExConfig }) {
+function ConfigRangeHelp({ config }: ConfigRangeHelpProps) {
   const { t } = useTranslation();
 
   if (!(config.repsMax && config.repsMax > 0)) return null;
@@ -446,15 +466,7 @@ export function ExConfigSheet({
   close,
   routine,
   openCustom,
-}: {
-  exercise: SheetEx;
-  existing: ExConfig | null;
-  onSave: (config: ExConfig) => void;
-  onDelete?: (() => void) | null;
-  close: SheetClose;
-  routine: Routine | null;
-  openCustom: (exercise: CustomEx) => void;
-}) {
+}: ExConfigSheetProps) {
   const { t } = useTranslation();
   const appState = useAppState();
   const cardio = isCardio(exercise.id);
@@ -635,6 +647,8 @@ export function ExConfigSheet({
             onClick={() =>
               void close().then(() => {
                 openCustom(customExercise);
+
+                return undefined;
               })
             }
           >
@@ -649,6 +663,8 @@ export function ExConfigSheet({
             onClick={() =>
               void close().then(() => {
                 onDelete();
+
+                return undefined;
               })
             }
           >

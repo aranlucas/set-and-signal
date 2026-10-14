@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import App from "@/app/App";
 import { MOBILE } from "@/shared/lib/mobile";
 // CSS is loaded for its global side effects.
-// oxlint-disable-next-line import/no-unassigned-import
 import "@/app/index.css";
 
 const rootElement = document.querySelector("#root");

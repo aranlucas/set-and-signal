@@ -15,6 +15,36 @@ import { getAppState, updateAppState } from "@/features/exercises/sheet-shared";
 import { useStore } from "@/app/store/useStore";
 import { createWeightFormSchema } from "@/shared/lib/form-schemas";
 
+type WeightInputProps = {
+  value: number;
+  setValue: (v: number) => void;
+  unit: Unit;
+};
+
+type BodyweightEntryFormProps = {
+  defaultValue: number;
+  unit: Unit;
+  submitLabel: string;
+  onSubmit: (weight: number) => void | Promise<void>;
+};
+
+type ControlValue = { weight: number };
+
+type SubmitProps = { weight: number };
+
+type PreWorkoutBodyweightSheetProps = {
+  onDone: (bodyweight: number | null) => void | Promise<void>;
+  onChooseDifferentWorkout: () => void | Promise<void>;
+};
+
+type BodyweightLogSheetProps = { close: SheetClose };
+
+type GoalSheetProps = { close: SheetClose };
+
+type ControlValue2 = { weight: number };
+
+type SaveProps = { weight: number };
+
 const W_LO = 1;
 
 const wHi = (unit: Unit) => (unit === "lb" ? 660 : 300);
@@ -35,15 +65,7 @@ function sliderBounds(value: number, unit: Unit) {
   return { min, max };
 }
 
-export function WeightInput({
-  value,
-  setValue,
-  unit,
-}: {
-  value: number;
-  setValue: (v: number) => void;
-  unit: Unit;
-}) {
+export function WeightInput({ value, setValue, unit }: WeightInputProps) {
   const W_HI = wHi(unit);
   const step = weightStep(unit);
   const clamp = (x: number) => Math.max(W_LO, Math.min(W_HI, Math.round((x || 0) * 10) / 10));
@@ -145,21 +167,16 @@ function BodyweightEntryForm({
   unit,
   submitLabel,
   onSubmit,
-}: {
-  defaultValue: number;
-  unit: Unit;
-  submitLabel: string;
-  onSubmit: (weight: number) => void | Promise<void>;
-}) {
+}: BodyweightEntryFormProps) {
   const { t } = useTranslation();
   const invalidWeightMessage = t("weight.enterValidWeight", "Enter a valid weight");
 
-  const { control, handleSubmit } = useForm<{ weight: number }>({
+  const { control, handleSubmit } = useForm<ControlValue>({
     defaultValues: { weight: defaultValue },
     resolver: valibotResolver(createWeightFormSchema(t)),
   });
 
-  const submit = async ({ weight: rawWeight }: { weight: number }) => {
+  const submit = async ({ weight: rawWeight }: SubmitProps) => {
     const weight = Math.round((rawWeight || 0) * 10) / 10;
     await onSubmit(weight);
   };
@@ -185,10 +202,7 @@ function BodyweightEntryForm({
 export function PreWorkoutBodyweightSheet({
   onDone,
   onChooseDifferentWorkout,
-}: {
-  onDone: (bodyweight: number | null) => void | Promise<void>;
-  onChooseDifferentWorkout: () => void | Promise<void>;
-}) {
+}: PreWorkoutBodyweightSheetProps) {
   const { t } = useTranslation();
   const state = useStore((store) => store.appState);
   const previousBodyweight = lastBW(state);
@@ -229,7 +243,7 @@ export function PreWorkoutBodyweightSheet({
   );
 }
 
-export function BodyweightLogSheet({ close }: { close: SheetClose }) {
+export function BodyweightLogSheet({ close }: BodyweightLogSheetProps) {
   const { t } = useTranslation();
   const state = useStore((store) => store.appState);
   const previousBodyweight = lastBW(state);
@@ -288,23 +302,23 @@ export function BodyweightLogSheet({ close }: { close: SheetClose }) {
   );
 }
 
-export function GoalSheet({ close }: { close: SheetClose }) {
+export function GoalSheet({ close }: GoalSheetProps) {
   const { t } = useTranslation();
   const st = getAppState();
   const bw = lastBW(st);
   const invalidWeightMessage = t("weight.enterValidWeight", "Enter a valid weight");
 
-  const { control, handleSubmit } = useForm<{ weight: number }>({
+  const { control, handleSubmit } = useForm<ControlValue2>({
     defaultValues: { weight: st.targetW ?? bw?.w ?? defaultBodyweight(st.unit) },
     resolver: valibotResolver(createWeightFormSchema(t)),
   });
 
-  const save = ({ weight: rawWeight }: { weight: number }) => {
+  const save = ({ weight: rawWeight }: SaveProps) => {
     const weight = Math.round((rawWeight || 0) * 10) / 10;
     updateAppState((appState) => {
       appState.targetW = weight;
     });
-    void close();
+    void close().catch(console.error);
     const latestBodyweight = lastBW(getAppState());
     toast(
       t("weight.goalSet", "Goal set: {{weight}}", {
@@ -351,7 +365,7 @@ export function GoalSheet({ close }: { close: SheetClose }) {
               updateAppState((appState) => {
                 appState.targetW = null;
               });
-              void close();
+              void close().catch(console.error);
               toast(t("weight.goalRemoved", "Goal removed"));
             }}
           >

@@ -24,7 +24,9 @@ import { formatDate } from "@/shared/lib/format";
 import { useToday } from "@/shared/hooks/use-today";
 import { Button } from "@/shared/ui/button";
 
-export default function AppNavigation({ onStart }: { onStart: () => void }) {
+type AppNavigationProps = { onStart: () => void };
+
+export default function AppNavigation({ onStart }: AppNavigationProps) {
   const { t } = useTranslation();
   const today = useToday();
   const navigate = useNavigate();

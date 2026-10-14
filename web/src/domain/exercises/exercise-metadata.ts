@@ -4,6 +4,12 @@ import * as validation from "valibot";
 import type { CustomEx } from "@/shared/lib/types.js";
 import { registeredCustomExercise } from "@/domain/exercises/exercise-registry.js";
 
+type IsCardioProps = { bp?: string };
+
+type IsBodyweightEqProps = { eq?: string };
+
+type IsBarbellEqProps = { eq?: string };
+
 export interface ExerciseMetadata {
   id: string;
   n: string;
@@ -6556,17 +6562,17 @@ export function exerciseMetadata(id: string): ExerciseMetadata | CustomEx | unde
   return registeredCustomExercise(id) || metadataIndex[id];
 }
 
-export const isCardio = (idOrExercise: string | { bp?: string } | null | undefined) =>
+export const isCardio = (idOrExercise: string | IsCardioProps | null | undefined) =>
   (validation.is(validation.string(), idOrExercise) ? exerciseMetadata(idOrExercise) : idOrExercise)
     ?.bp === "cardio";
 
-export const isBodyweightEq = (idOrExercise: string | { eq?: string } | null | undefined) =>
+export const isBodyweightEq = (idOrExercise: string | IsBodyweightEqProps | null | undefined) =>
   (validation.is(validation.string(), idOrExercise) ? exerciseMetadata(idOrExercise) : idOrExercise)
     ?.eq === "body weight";
 
 const BARBELL_EQUIPMENT = new Set(["barbell", "olympic barbell", "ez barbell", "trap bar"]);
 
-export const isBarbellEq = (idOrExercise: string | { eq?: string } | null | undefined) => {
+export const isBarbellEq = (idOrExercise: string | IsBarbellEqProps | null | undefined) => {
   const equipment = (
     validation.is(validation.string(), idOrExercise) ? exerciseMetadata(idOrExercise) : idOrExercise
   )?.eq;

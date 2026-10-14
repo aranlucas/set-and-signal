@@ -80,8 +80,8 @@ export const useStore = create<Store>()((set, get) => {
     clearTimeout(saveTimerId);
     saveTimerId = setTimeout(() => {
       saveTimerId = undefined;
-      void nativeSave(get().appState);
-      void syncReminder(get().appState);
+      void nativeSave(get().appState).catch(console.error);
+      void syncReminder(get().appState).catch(console.error);
     }, 800);
   };
 
@@ -99,7 +99,10 @@ export const useStore = create<Store>()((set, get) => {
         trainingSync.enqueue(previous, nextState);
       }
 
-      localStorage.setItem(`gym_active:${get().user?.id}`, JSON.stringify(nextState.active));
+      localStorage.setItem(
+        `gym_active:${String(get().user?.id)}`,
+        JSON.stringify(nextState.active),
+      );
     }
 
     set({ appState: nextState });
@@ -118,7 +121,7 @@ export const useStore = create<Store>()((set, get) => {
       if (MOBILE && saveTimerId) {
         clearTimeout(saveTimerId);
         saveTimerId = undefined;
-        void nativeSave(get().appState);
+        void nativeSave(get().appState).catch(console.error);
       }
     });
   }
@@ -216,7 +219,7 @@ export const useStore = create<Store>()((set, get) => {
       }
 
       if (syncUser !== user?.id) {
-        void trainingSync?.close();
+        void trainingSync?.close().catch(console.error);
         trainingSync = undefined;
         syncUser = undefined;
         syncStart = undefined;
@@ -347,11 +350,11 @@ export const useStore = create<Store>()((set, get) => {
           if (saved && (!hasData(localState) || (saved._ts || 0) >= (localState._ts || 0))) {
             persist(Object.assign(cloneValue(DEFAULT_STATE), saved), false);
           } else if (hasData(localState)) {
-            void nativeSave(localState); // first run after an update from a file-less version: seed the mirror
+            void nativeSave(localState).catch(console.error); // first run after an update from a file-less version: seed the mirror
           }
 
           get().setGuest(true);
-          void syncReminder(get().appState);
+          void syncReminder(get().appState).catch(console.error);
           set({ isReady: true });
 
           return;

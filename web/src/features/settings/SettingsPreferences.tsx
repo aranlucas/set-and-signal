@@ -24,7 +24,9 @@ import { Button } from "@/shared/ui/button";
 import type { Unit, Theme, Body, EffortScale } from "@/shared/lib/types";
 import { toast } from "@/shared/lib/toast";
 
-export function SettingsPreferences({ onEffortHelp }: { onEffortHelp: () => void }) {
+type SettingsPreferencesProps = { onEffortHelp: () => void };
+
+export function SettingsPreferences({ onEffortHelp }: SettingsPreferencesProps) {
   const { t } = useTranslation();
   const appState = useStore((state) => state.appState);
   const update = useStore((state) => state.update);

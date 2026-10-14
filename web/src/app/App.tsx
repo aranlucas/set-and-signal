@@ -16,7 +16,7 @@ const queryClient = new QueryClient({
 export default function App() {
   const boot = useStore((state) => state.boot);
   useEffect(() => {
-    void boot();
+    void boot().catch(console.error);
   }, [boot]);
 
   return (

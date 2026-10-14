@@ -12,13 +12,19 @@ import { MetricCard } from "@/shared/components/MetricCard";
 import type { AppState } from "@/shared/lib/types";
 import { weightDeltaColor, type StatsSheet } from "@/features/stats/stats-types";
 
-export function StatsHeaderAndActivity({
-  appState,
-  onSheet,
-}: {
+type StatsHeaderAndActivityProps = {
   appState: AppState;
   onSheet: (sheet: StatsSheet) => void;
-}) {
+};
+
+type StatsTileProps = {
+  icon: "dumbbell" | "calendar" | "flame" | "scale";
+  label: string;
+  value: string | number;
+  valueColor?: string;
+};
+
+export function StatsHeaderAndActivity({ appState, onSheet }: StatsHeaderAndActivityProps) {
   const { t } = useTranslation();
   const nav = useNavigate();
   const [now] = useState(() => Date.now());
@@ -110,17 +116,7 @@ export function StatsHeaderAndActivity({
   );
 }
 
-function StatsTile({
-  icon,
-  label,
-  value,
-  valueColor,
-}: {
-  icon: "dumbbell" | "calendar" | "flame" | "scale";
-  label: string;
-  value: string | number;
-  valueColor?: string;
-}) {
+function StatsTile({ icon, label, value, valueColor }: StatsTileProps) {
   return (
     <MetricCard>
       <div className="flex items-center gap-1.5 text-sm text-foreground/60">

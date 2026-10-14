@@ -9,6 +9,18 @@ import { fmtSec, isBw, isPerSide, modeOf, sideReps } from "@/domain/training/his
 import type { AppState, CustomEx, ExConfig, Exercise, Routine, Weekday } from "@/shared/lib/types";
 import styles from "@/shared/components/PlanPrintDocument.module.css";
 
+type ExerciseRowProps = {
+  config: ExConfig;
+  details?: ExerciseDetails;
+  unit: string;
+};
+
+type RoutineSectionProps = {
+  exerciseIndex: ReadonlyMap<string, ExerciseDetails>;
+  routine: Routine;
+  unit: string;
+};
+
 const WEEK_ORDER: Weekday[] = [1, 2, 3, 4, 5, 6, 0];
 
 type PrintableState = Pick<AppState, "customEx" | "routines" | "unit" | "week">;
@@ -53,7 +65,8 @@ function scheme(t: TFunction, config: ExConfig, unit: string): string {
 function groupedExercises(exercises: ExConfig[]): ExerciseGroup[] {
   const groups: ExerciseGroup[] = [];
   const occurrences = new Map<string, number>();
-  exercises.forEach((exercise, index) => {
+
+  for (const [index, exercise] of exercises.entries()) {
     const occurrence = (occurrences.get(exercise.id) || 0) + 1;
     occurrences.set(exercise.id, occurrence);
     const keyedExercise = { config: exercise, key: `${exercise.id}-${occurrence}` };
@@ -66,20 +79,12 @@ function groupedExercises(exercises: ExConfig[]): ExerciseGroup[] {
         exercises: [keyedExercise],
         key: exercise.sg ? `${exercise.sg}-${keyedExercise.key}` : keyedExercise.key,
       });
-  });
+  }
 
   return groups;
 }
 
-function ExerciseRow({
-  config,
-  details,
-  unit,
-}: {
-  config: ExConfig;
-  details?: ExerciseDetails;
-  unit: string;
-}) {
+function ExerciseRow({ config, details, unit }: ExerciseRowProps) {
   const { t } = useTranslation();
   const metadata = useExerciseMetadataLabels();
 
@@ -96,15 +101,7 @@ function ExerciseRow({
   );
 }
 
-function RoutineSection({
-  exerciseIndex,
-  routine,
-  unit,
-}: {
-  exerciseIndex: ReadonlyMap<string, ExerciseDetails>;
-  routine: Routine;
-  unit: string;
-}) {
+function RoutineSection({ exerciseIndex, routine, unit }: RoutineSectionProps) {
   const { t } = useTranslation();
 
   return (
@@ -142,7 +139,11 @@ export function PlanPrintDocument({ appState, contentRef, owner }: PlanPrintDocu
   const { t } = useTranslation();
   const { weekdays } = useDateLabels();
   const exerciseIndex = new Map<string, ExerciseDetails>(Object.entries(EXIDX));
-  appState.customEx.forEach((exercise) => exerciseIndex.set(exercise.id, exercise));
+
+  for (const exercise of appState.customEx) {
+    exerciseIndex.set(exercise.id, exercise);
+  }
+
   const routines = appState.routines.filter((routine) => routine.ex.length > 0);
   const subtitle = [owner, fmtDate(t, todayISO())].filter(Boolean).join(" · ");
 

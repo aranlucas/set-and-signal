@@ -8,6 +8,16 @@ import {
 import { translate } from "@/i18n/translate.js";
 import type { CatalogExercise, CustomEx, Exercise } from "@/shared/lib/types.js";
 
+type EquipmentOfProps = { eq?: string };
+
+type AllExercisesProps = { customEx?: CustomEx[] };
+
+type IsCardioProps = { bp?: string };
+
+type IsBodyweightEqProps = { eq?: string };
+
+type IsBarbellEqProps = { eq?: string };
+
 const SEARCH_MARKS_RE = /\p{Mark}+/gu;
 
 const SEARCH_SEPARATORS_RE = /[^\p{Letter}\p{Number}]+/gu;
@@ -38,11 +48,12 @@ export const BODYPARTS: string[] = [...new Set(EXDB.map((e) => e.bp))].sort();
 // Equipment options present in a given list of exercises, most common first (issue #6).
 // Deriving them from the *already filtered* list keeps the chip row short and means
 // every body-part × equipment combination on screen has results behind it.
-export function equipmentOf(list: ReadonlyArray<{ eq?: string }>): string[] {
+export function equipmentOf(list: ReadonlyArray<EquipmentOfProps>): string[] {
   const equipmentCounts: Record<string, number> = {};
-  list.forEach((exercise) => {
+
+  for (const exercise of list) {
     if (exercise.eq) equipmentCounts[exercise.eq] = (equipmentCounts[exercise.eq] || 0) + 1;
-  });
+  }
 
   return Object.keys(equipmentCounts).sort(
     (left, right) => equipmentCounts[right] - equipmentCounts[left] || (left < right ? -1 : 1),
@@ -50,7 +61,7 @@ export function equipmentOf(list: ReadonlyArray<{ eq?: string }>): string[] {
 }
 
 // Full searchable catalogue — customs first so your own exercises are easy to find.
-export const allExercises = (appState: { customEx?: CustomEx[] }): Array<CustomEx | Exercise> => [
+export const allExercises = (appState: AllExercisesProps): Array<CustomEx | Exercise> => [
   ...(appState.customEx || []),
   ...EXDB,
 ];
@@ -138,19 +149,19 @@ export const imgSrc = (ex: Exercise) => IMG_BASE + ex.img;
 export const gifSrc = (ex: Exercise) => GIF_BASE + ex.gif;
 
 // Cardio exercises log time + speed instead of weight × reps.
-export const isCardio = (idOrEx: string | { bp?: string } | null | undefined) =>
+export const isCardio = (idOrEx: string | IsCardioProps | null | undefined) =>
   (validation.is(validation.string(), idOrEx) ? EXIDX[idOrEx] : idOrEx)?.bp === "cardio";
 
 // Exercises the dataset already knows carry no external load (issue #32) — a quarter of the
 // catalogue. This seeds the `bw` flag on a fresh config so a push-up never asks for a weight
 // nobody was going to enter. It is only the default: the flag lives on the config, so a dip
 // done with a belt can turn it off and a custom exercise can turn it on.
-export const isBodyweightEq = (idOrEx: string | { eq?: string } | null | undefined) =>
+export const isBodyweightEq = (idOrEx: string | IsBodyweightEqProps | null | undefined) =>
   (validation.is(validation.string(), idOrEx) ? EXIDX[idOrEx] : idOrEx)?.eq === "body weight";
 
 const BARBELL_EQUIPMENT = new Set(["barbell", "olympic barbell", "ez barbell", "trap bar"]);
 
-export const isBarbellEq = (idOrEx: string | { eq?: string } | null | undefined) => {
+export const isBarbellEq = (idOrEx: string | IsBarbellEqProps | null | undefined) => {
   const equipment = (validation.is(validation.string(), idOrEx) ? EXIDX[idOrEx] : idOrEx)?.eq;
 
   return !!equipment && BARBELL_EQUIPMENT.has(equipment);

@@ -89,14 +89,14 @@ the web scripts.
 `.env.example` documents the complete runtime surface. The settings most
 people need are:
 
-| Variable | Why it matters |
-| --- | --- |
-| `CONVEX_URL` | Required hosted training deployment. |
-| `DATA_DIR` / `DB_PATH` | Persistent SQLite, session, push, and signing-key storage. |
-| `PUBLIC_URL` / `ORIGIN` | Browser origin and OAuth/MCP issuer; use a reachable HTTPS URL in production. |
-| `RP_ID` / `RP_NAME` | WebAuthn relying-party identity. |
-| `GOOGLE_*`, `GITHUB_*`, `APPLE_*` | Optional OIDC providers for sign-in and MCP OAuth. |
-| `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` | Optional AI workout planning. |
+| Variable                                  | Why it matters                                                                |
+| ----------------------------------------- | ----------------------------------------------------------------------------- |
+| `CONVEX_URL`                              | Required hosted training deployment.                                          |
+| `DATA_DIR` / `DB_PATH`                    | Persistent SQLite, session, push, and signing-key storage.                    |
+| `PUBLIC_URL` / `ORIGIN`                   | Browser origin and OAuth/MCP issuer; use a reachable HTTPS URL in production. |
+| `RP_ID` / `RP_NAME`                       | WebAuthn relying-party identity.                                              |
+| `GOOGLE_*`, `GITHUB_*`, `APPLE_*`         | Optional OIDC providers for sign-in and MCP OAuth.                            |
+| `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` | Optional AI workout planning.                                                 |
 
 ## Further documentation
 
@@ -115,3 +115,7 @@ Convex training storage. Training records are account-scoped, but a deployment's
 operator controls the API, Convex project, and persistent volume. Review
 `SECURITY.md` and configure access controls before exposing an instance to
 other users.
+
+### Shared lint policy
+
+The web client uses the Oxforge presets while keeping its established PascalCase React component filenames and camelCase helpers. Inline object and tuple types are named at module scope; intentionally backgrounded promises attach rejection handlers. Formatting commands explicitly load oxfmt.config.ts, including the generated-file exclusions.

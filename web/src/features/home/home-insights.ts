@@ -64,13 +64,14 @@ export function recoveryForRoutine(
 
   return targets.map((muscle) => {
     let fatigue = 0;
-    workouts.forEach((workout) => {
+
+    for (const workout of workouts) {
       const age = Math.max(0, Math.floor((utcDay(todayIso) - utcDay(workout.d)) / MS_PER_DAY));
 
-      if (age >= 6) return;
+      if (age >= 6) continue;
       const effectiveSets = loadOfWorkouts([workout])[muscle] || 0;
       fatigue += effectiveSets * 9 * ((6 - age) / 6);
-    });
+    }
 
     return { muscle, recovery: Math.max(5, Math.round(100 - Math.min(95, fatigue))) };
   });

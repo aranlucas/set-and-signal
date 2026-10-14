@@ -23,6 +23,7 @@ import { EXDB, EXIDX } from "@/domain/exercises/exercises.js";
 import { uid } from "@/shared/lib/format.js";
 import type { SetFields } from "@/domain/training/history.js";
 import type {
+  AppState,
   BodyweightEntry,
   CustomEx,
   Id,
@@ -33,6 +34,27 @@ import type {
   Workout,
   WorkoutEntry,
 } from "@/shared/lib/types.js";
+
+type ColumnDefinition = readonly [string, string[]];
+
+type SynonymRule = readonly [RegExp, string];
+
+type INDEXValue = { exact: Map<string, Id>; all: IndexEntry[] };
+
+type ParseWorkoutCSVProps = { unit?: Unit };
+
+type ByDateValue = {
+  ex: Map<Id, RowSet[]>;
+  name: string;
+  start: number | null;
+  end: number | null;
+};
+
+type ParseBodyweightProps = { unit?: Unit };
+
+type OutValue = { w: number; t: number | null };
+
+type ParseImportProps = { unit?: Unit };
 
 /* ----------------------------------------------------------------- results ---- */
 
@@ -134,7 +156,7 @@ const norm = (h: string) =>
     .trim();
 
 // header text -> the field we care about. Specific names first; first match wins.
-const COLUMNS: ReadonlyArray<readonly [string, string[]]> = [
+const COLUMNS: ReadonlyArray<ColumnDefinition> = [
   ["exercise", ["exercise", "exercise name", "exercise title"]],
   ["date", ["date", "workout date"]],
   ["startTime", ["start time"]],
@@ -161,17 +183,18 @@ const COLUMNS: ReadonlyArray<readonly [string, string[]]> = [
 
 function mapHeader(header: string[]) {
   const map: Record<string, number | undefined> = {};
-  header.forEach((h, i) => {
+
+  for (const [i, h] of header.entries()) {
     const n = norm(h);
 
     for (const [field, names] of COLUMNS) {
       if (map[field] === undefined && names.includes(n)) {
         map[field] = i;
 
-        return;
+        continue;
       }
     }
-  });
+  }
 
   return map;
 }
@@ -199,7 +222,7 @@ export function detectSource(header: string[]): string | null {
 // "Snatch (Barbell)", FitNotes "Lat Pulldown (Pulley)" — while the dataset writes
 // "barbell snatch". Strip the parentheses, expand the shorthand, then compare as a
 // sorted bag of words so word order stops mattering.
-const SYN: ReadonlyArray<readonly [RegExp, string]> = [
+const SYN: ReadonlyArray<SynonymRule> = [
   [/\bbb\b/g, "barbell"],
   [/\bdb\b/g, "dumbbell"],
   [/\bkb\b/g, "kettlebell"],
@@ -245,9 +268,9 @@ function wordsOf(name: string | null | undefined): string[] {
     .replaceAll(/[^a-z0-9]+/g, " ")
     .trim();
 
-  SYN.forEach(([re, to]) => {
+  for (const [re, to] of SYN) {
     k = k.replace(re, to);
-  });
+  }
 
   return k.split(" ").filter((w) => w && !FILLER.has(w));
 }
@@ -260,19 +283,21 @@ interface IndexEntry {
   n: number;
 }
 
-let INDEX: { exact: Map<string, Id>; all: IndexEntry[] } | null = null;
+let INDEX: INDEXValue | null = null;
 
 function buildIndex() {
   if (INDEX) return INDEX;
   const all: IndexEntry[] = [];
   const index = { exact: new Map<string, Id>(), all };
-  EXDB.forEach((e) => {
+
+  for (const e of EXDB) {
     const w = wordsOf(e.n);
     const k = w.slice().sort().join(" ");
 
     if (!index.exact.has(k)) index.exact.set(k, e.id);
     index.all.push({ id: e.id, set: new Set(w), n: w.length });
-  });
+  }
+
   INDEX = index;
 
   return index;
@@ -594,7 +619,7 @@ const fields = (s: LoggedSet): SetFields => s;
 export function parseWorkoutCSV(
   // eslint-disable-next-line anti-slop/no-unknown-parameters -- File-import boundary retains arbitrary input, then normalizes and validates CSV/XML grammar and numeric fields before producing domain entries.
   text: unknown,
-  { unit = "lb" }: { unit?: Unit } = {},
+  { unit = "lb" }: ParseWorkoutCSVProps = {},
 ): WorkoutsImport {
   const rows = parseCSV(text);
 
@@ -616,15 +641,7 @@ export function parseWorkoutCSV(
 
   const resolved = new Map<string, Id | null>(); // exercise name -> dataset id | null, resolved once
 
-  const byDate = new Map<
-    IsoDate,
-    {
-      ex: Map<Id, RowSet[]>;
-      name: string;
-      start: number | null;
-      end: number | null;
-    }
-  >();
+  const byDate = new Map<IsoDate, ByDateValue>();
 
   const created = new Map<string, CustomEx>();
   const unmatched = new Set<string>();
@@ -758,7 +775,7 @@ export function parseWorkoutCSV(
     if (map.endTime !== undefined) {
       const e = parseWhen(cell(r, "endTime"));
 
-      if (e && e.t != null) day.end = e.t;
+      if (e?.t != null) day.end = e.t;
     } else if (map.time !== undefined && !map.seconds && reps) {
       /* FitNotes' Time is per-set */
     }
@@ -885,10 +902,10 @@ export function parseWorkoutCSV(
 export function parseBodyweight(
   // eslint-disable-next-line anti-slop/no-unknown-parameters -- File-import boundary retains arbitrary input, then normalizes and validates CSV/XML grammar and numeric fields before producing domain entries.
   text: unknown,
-  { unit = "lb" }: { unit?: Unit } = {},
+  { unit = "lb" }: ParseBodyweightProps = {},
 ): WeightsImport {
   const s = String(text);
-  const out = new Map<IsoDate, { w: number; t: number | null }>(); // iso date -> weigh-in (one per day, the last)
+  const out = new Map<IsoDate, OutValue>(); // iso date -> weigh-in (one per day, the last)
   let fileUnit: "" | Unit = "";
 
   if (s.includes("HKQuantityTypeIdentifierBodyMass")) {
@@ -970,7 +987,7 @@ export function parseBodyweight(
 
 /** Sniff the file and parse it as whatever it is. */
 // eslint-disable-next-line anti-slop/no-unknown-parameters -- Import dispatcher normalizes untrusted input and immediately delegates to the CSV/XML domain parsers.
-export function parseImport(text: unknown, opts?: { unit?: Unit }): ParseResult {
+export function parseImport(text: unknown, opts?: ParseImportProps): ParseResult {
   const s = String(text);
 
   if (s.includes("HKQuantityTypeIdentifier") || /^\s*</.test(s)) return parseBodyweight(s, opts);
@@ -986,10 +1003,7 @@ export function parseImport(text: unknown, opts?: { unit?: Unit }): ParseResult 
 
 /** Merge into state. Existing days win — importing twice never duplicates a workout. */
 export function mergeImport(
-  state: Pick<
-    import("@/shared/lib/types.js").AppState,
-    "bodyweight" | "customEx" | "exWeights" | "workouts"
-  >,
+  state: Pick<AppState, "bodyweight" | "customEx" | "exWeights" | "workouts">,
   parsed: ParseResult,
 ) {
   // callers pass a confirmed parse; an error result simply merges nothing
@@ -1011,18 +1025,19 @@ export function mergeImport(
     const customs = parsed.customEx.filter((c) => used.has(c.id) && !EXIDX[c.id]);
     state.customEx = [...(state.customEx || []), ...customs];
     state.workouts = [...state.workouts, ...fresh].sort((a, b) => (a.d < b.d ? -1 : 1));
+
     // seed the weight suggestions from the newest imported set of each lift
-    fresh.forEach((w) =>
-      w.entries.forEach((e) => {
+    for (const w of fresh) {
+      for (const e of w.entries) {
         const mx = Math.max(0, ...e.sets.map((s) => fields(s).w || 0), e.topW || 0);
 
-        if (mx > 0) {
-          const cur = state.exWeights[e.id];
+        if (mx <= 0) continue;
 
-          if (!cur || w.d >= cur.d) state.exWeights[e.id] = { w: mx, d: w.d };
-        }
-      }),
-    );
+        const cur = state.exWeights[e.id];
+
+        if (!cur || w.d >= cur.d) state.exWeights[e.id] = { w: mx, d: w.d };
+      }
+    }
 
     return {
       added: fresh.length,

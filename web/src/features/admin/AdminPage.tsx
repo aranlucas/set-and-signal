@@ -32,6 +32,16 @@ import {
 } from "@/shared/ui/alert-dialog";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
 
+type UserDetailProps = {
+  id: string;
+  onChanged: () => void;
+  close: SheetClose;
+};
+
+type DisableMutationProps = { uid: string; disabled: boolean };
+
+type InvitesCardProps = { invites: AdminInvite[] | undefined };
+
 type LiveUser = AdminUser & { live: AdminLiveInfo };
 
 // Admin-only operator dashboard (owner passkey + admin flag; guarded again server-side).
@@ -57,15 +67,7 @@ const formatDuration = (milliseconds: number) => {
   return minutes < 60 ? minutes + "m" : Math.floor(minutes / 60) + "h" + (minutes % 60) + "m";
 };
 
-function UserDetail({
-  id,
-  onChanged,
-  close,
-}: {
-  id: string;
-  onChanged: () => void;
-  close: SheetClose;
-}) {
+function UserDetail({ id, onChanged, close }: UserDetailProps) {
   const { t } = useTranslation();
   const [confirmDisable, setConfirmDisable] = useState(false);
   const queryClient = useQueryClient();
@@ -78,16 +80,16 @@ function UserDetail({
   const details = userQuery.data;
 
   const disableMutation = useMutation({
-    mutationFn: (payload: { uid: string; disabled: boolean }) =>
+    mutationFn: (payload: DisableMutationProps) =>
       api("/api/admin/user/disable", {
         method: "POST",
         body: JSON.stringify({ id: payload.uid, disabled: payload.disabled }),
       }),
     onSuccess: (_response, payload) => {
       toast(payload.disabled ? "User disabled" : "User enabled");
-      void queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin", "users"] }).catch(console.error);
       onChanged();
-      void close();
+      void close().catch(console.error);
     },
     onError: (e) => toast(e.message),
   });
@@ -214,7 +216,7 @@ function UserDetail({
   );
 }
 
-function InvitesCard({ invites }: { invites: AdminInvite[] | undefined }) {
+function InvitesCard({ invites }: InvitesCardProps) {
   const queryClient = useQueryClient();
 
   const generateInviteMutation = useMutation({
@@ -226,7 +228,7 @@ function InvitesCard({ invites }: { invites: AdminInvite[] | undefined }) {
     onSuccess: ({ invite }) => {
       navigator.clipboard?.writeText(invite.code).catch(() => {});
       toast("Code " + invite.code + " created & copied");
-      void queryClient.invalidateQueries({ queryKey: ["admin", "invites"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin", "invites"] }).catch(console.error);
     },
     onError: (e) => toast(e.message),
   });
@@ -239,7 +241,7 @@ function InvitesCard({ invites }: { invites: AdminInvite[] | undefined }) {
       }),
     onSuccess: () => {
       toast("Code revoked");
-      void queryClient.invalidateQueries({ queryKey: ["admin", "invites"] });
+      void queryClient.invalidateQueries({ queryKey: ["admin", "invites"] }).catch(console.error);
     },
     onError: (e) => toast(e.message),
   });
@@ -365,8 +367,8 @@ function AdminContent() {
           variant="circle"
           className="flex size-9 flex-none items-center justify-center active:scale-95"
           onClick={() => {
-            void usersQuery.refetch();
-            void invitesQuery.refetch();
+            void usersQuery.refetch().catch(console.error);
+            void invitesQuery.refetch().catch(console.error);
           }}
           aria-label="refresh"
         >
