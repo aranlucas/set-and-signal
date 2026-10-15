@@ -48,8 +48,13 @@ jobs:
           - name: Formatting and web lint
             run: pnpm format:check && pnpm --dir web lint:strict
 
-          - name: Web test, typecheck, and build
-            run: pnpm --dir web test && pnpm --dir web build
+          - name: Web test
+            run: pnpm --dir web test
+
+      # Vite clears web/dist, which the Go checks read through go:embed.
+      # Wait for those checks to finish before replacing the embedded tree.
+      - name: Web typecheck and build
+        run: pnpm --dir web build
 
       - name: Check whitespace
         run: git diff --check
