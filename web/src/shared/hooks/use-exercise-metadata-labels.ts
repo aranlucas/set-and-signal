@@ -113,6 +113,6 @@ export function useExerciseMetadataLabels() {
   return {
     bodyPart: (value: string) => bodyParts.get(value) ?? value,
     equipment: (value: string) => equipment.get(value) ?? value,
-    muscle: (value: string) => muscles.get(value) ?? value,
+    muscle: (value: string) => muscles.get(value) ?? bodyParts.get(value) ?? value,
   };
 }
