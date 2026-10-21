@@ -9,7 +9,7 @@ describe("exercise instruction shards", () => {
   beforeAll(() => {
     vi.stubGlobal("fetch", (input: URL | RequestInfo) => {
       if (!(input instanceof URL)) {
-        throw new Error("Expected the instruction loader to fetch a URL");
+        throw new TypeError("Expected the instruction loader to fetch a URL");
       }
 
       if (input.pathname.includes("/fr/")) {

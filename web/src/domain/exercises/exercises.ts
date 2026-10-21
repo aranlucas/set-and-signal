@@ -72,11 +72,11 @@ export function normalizeSearchText(value: string): string {
   return value
     .toLocaleLowerCase()
     .normalize("NFD")
-    .replace(SEARCH_MARKS_RE, "")
+    .replaceAll(SEARCH_MARKS_RE, "")
     .replaceAll("&", " and ")
-    .replace(SEARCH_SEPARATORS_RE, " ")
+    .replaceAll(SEARCH_SEPARATORS_RE, " ")
     .trim()
-    .replace(SEARCH_WHITESPACE_RE, " ");
+    .replaceAll(SEARCH_WHITESPACE_RE, " ");
 }
 
 export function searchExercises<T extends SearchableExercise>(
