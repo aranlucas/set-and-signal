@@ -285,8 +285,8 @@ importers:
         specifier: ^6.1.2
         version: 6.1.2(vite@8.3.5(@types/node@26.6.5)(esbuild@0.27.0)(jiti@2.7.0)(yaml@2.9.1))
       convex-test:
-        specifier: ^0.0.63
-        version: 0.0.63(convex@1.47.0(react@19.3.1))
+        specifier: ^0.0.64
+        version: 0.0.64(convex@1.47.0(react@19.3.1))
       i18next-cli:
         specifier: ^1.79.1
         version: 1.79.1(@types/node@26.6.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@7.0.2)
@@ -2094,8 +2094,8 @@ packages:
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
 
-  convex-test@0.0.63:
-    resolution: {integrity: sha512-iIinwgbmJmjAQFBo9DxikBDf0hfps8qAtVF34/t/pNExWQWhtWuQwNTZlfXl+6+DgEJJgoe0/vpdgSu0UEnCsA==}
+  convex-test@0.0.64:
+    resolution: {integrity: sha512-HvaFwCA7CO3i9sBWkP/+HUpCad49zXitDLheLpt+TUOHVWhsWQ7hbPAyPTOFhHZJrodzngkCP/tW9/8uDSOJqQ==}
     peerDependencies:
       convex: ^1.43.0
 
@@ -4902,7 +4902,7 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  convex-test@0.0.63(convex@1.47.0(react@19.3.1)):
+  convex-test@0.0.64(convex@1.47.0(react@19.3.1)):
     dependencies:
       convex: 1.47.0(react@19.3.1)
 

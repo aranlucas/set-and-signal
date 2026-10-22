@@ -60,7 +60,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
-    "convex-test": "^0.0.63",
+    "convex-test": "^0.0.64",
     "i18next-cli": "^1.79.1",
     "oxfmt": "^0.74.0",
     "oxlint": "^1.89.0",
