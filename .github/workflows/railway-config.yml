@@ -2,7 +2,12 @@ name: Railway config
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - closed
     paths:
       - ".railway/**"
       - ".github/workflows/railway-config.yml"
@@ -10,10 +15,15 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: railway-config-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   check:
     name: Check Railway declaration
-    if: github.event.action != 'closed'
+    if: ${{ github.event.action != 'closed' && github.event.pull_request.draft !=
+      true }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -30,7 +40,9 @@ jobs:
 
   plan:
     needs: check
-    if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    if: ${{ github.event.action != 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.draft != true }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -43,13 +55,17 @@ jobs:
         with:
           go-version-file: .railway/go.mod
           cache-dependency-path: .railway/go.sum
-      - uses: railwayapp/config@9e17d413dbe219f19d62538d9c06b5dbb5e9abf8 # v1.2.0
+      - uses: railwayapp/config@f1f0c715716fe035319b0a716b95c6e83e0f6595 # post-v1.2.0 package-manager support
         with:
           command: plan
           railway-token: ${{ secrets.RAILWAY_TOKEN }}
+          # The declaration uses the Go SDK in .railway/go.mod.
+          package-manager: none
 
   apply:
-    if: github.event.action == 'closed' && github.event.pull_request.merged && github.event.pull_request.head.repo.full_name == github.repository
+    if: ${{ github.event.action == 'closed' && github.event.pull_request.merged &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.draft != true }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -59,7 +75,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.merge_commit_sha }}
-      - uses: railwayapp/config@9e17d413dbe219f19d62538d9c06b5dbb5e9abf8 # v1.2.0
+      - uses: railwayapp/config@f1f0c715716fe035319b0a716b95c6e83e0f6595 # post-v1.2.0 package-manager support
         with:
           command: apply
           railway-token: ${{ secrets.RAILWAY_TOKEN }}

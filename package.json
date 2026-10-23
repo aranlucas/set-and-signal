@@ -14,7 +14,10 @@
     "lint:fix": "oxlint --fix",
     "format:check": "oxfmt --config oxfmt.config.ts --check",
     "lint:oxforge": "oxlint",
-    "prepare": "husky"
+    "prepare": "husky",
+    "build": "pnpm --dir web build && go build -o build/ ./cmd/...",
+    "test": "vitest run --root web",
+    "pretest": "go test ./... && pnpm --dir web catalog:validate"
   },
   "devDependencies": {
     "@aranlucas/oxforge": "^0.2.2",
@@ -23,7 +26,8 @@
     "oxfmt": "^0.74.0",
     "oxlint": "^1.89.0",
     "oxlint-tsgolint": "^7.0.2004",
-    "portless": "0.15.8"
+    "portless": "0.15.8",
+    "vitest": "^5.0.5"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}": [
