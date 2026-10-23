@@ -13,7 +13,7 @@
     "format:write": "oxfmt --config oxfmt.config.ts --write .",
     "catalog:validate": "pnpm instructions:generate && node --experimental-strip-types scripts/validate-exercise-catalog.mjs",
     "instructions:generate": "node --experimental-strip-types scripts/build-instructions.mjs",
-    "test": "pnpm catalog:validate && vitest run",
+    "test": "vitest run",
     "test:watch": "vitest",
     "i18n:check": "pnpm instructions:generate && i18next-cli extract --config ./i18next.config.mjs --sync-primary --ci --dry-run && vitest run test/domain/exercises/exercise-instructions.test.ts test/i18n/i18n-catalog.test.ts test/i18n/i18n-source.test.ts test/i18n/i18n.test.ts",
     "i18n:extract": "i18next-cli extract --config ./i18next.config.mjs --sync-primary",
@@ -24,7 +24,8 @@
     "typecheck": "pnpm instructions:generate && tsc -b && pnpm convex:check",
     "lint:fix": "oxlint --fix",
     "format:check": "oxfmt --config oxfmt.config.ts --check",
-    "lint:policy": "oxlint --config oxlint.policy.config.ts ."
+    "lint:policy": "oxlint --config oxlint.policy.config.ts .",
+    "pretest": "pnpm catalog:validate"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",

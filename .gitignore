@@ -26,3 +26,5 @@ web/skills-lock.json
 .data/
 .convex/
 web/.env.local
+
+/build/
