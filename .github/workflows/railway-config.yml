@@ -2,7 +2,7 @@ name: Railway config
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft, closed]
     paths:
       - ".railway/**"
       - ".github/workflows/railway-config.yml"
@@ -10,10 +10,14 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: railway-config-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   check:
     name: Check Railway declaration
-    if: github.event.action != 'closed'
+    if: ${{ github.event.action != 'closed' && github.event.pull_request.draft != true }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -30,7 +34,7 @@ jobs:
 
   plan:
     needs: check
-    if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    if: ${{ github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.draft != true }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -49,7 +53,7 @@ jobs:
           railway-token: ${{ secrets.RAILWAY_TOKEN }}
 
   apply:
-    if: github.event.action == 'closed' && github.event.pull_request.merged && github.event.pull_request.head.repo.full_name == github.repository
+    if: ${{ github.event.action == 'closed' && github.event.pull_request.merged && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.draft != true }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

@@ -14,7 +14,10 @@
     "lint:fix": "oxlint --fix",
     "format:check": "oxfmt --config oxfmt.config.ts --check",
     "lint:oxforge": "oxlint",
-    "prepare": "husky"
+    "prepare": "husky",
+    "build": "pnpm --dir web build && go build -o build/ ./cmd/...",
+    "test": "vitest run --root web",
+    "pretest": "go test ./... && pnpm --dir web catalog:validate"
   },
   "devDependencies": {
     "@aranlucas/oxforge": "^0.2.2",
