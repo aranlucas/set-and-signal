@@ -4,8 +4,7 @@
 
 # Set & Signal 🏋️ · Make the next set obvious
 
-[![TypeScript checks](https://github.com/aranlucas/set-and-signal/actions/workflows/typecheck.yml/badge.svg)](https://github.com/aranlucas/set-and-signal/actions/workflows/typecheck.yml)
-[![Go checks](https://github.com/aranlucas/set-and-signal/actions/workflows/go.yml/badge.svg)](https://github.com/aranlucas/set-and-signal/actions/workflows/go.yml)
+[![CI](https://github.com/aranlucas/set-and-signal/actions/workflows/ci.yml/badge.svg)](https://github.com/aranlucas/set-and-signal/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/aranlucas/set-and-signal)](LICENSE)
 
 Set & Signal is a self-hostable workout planner and training log for planning
@@ -58,8 +57,12 @@ Git.
 ```bash
 go test -race ./...
 go vet ./...
+pnpm --dir web test
+pnpm --dir web typecheck
 (cd .railway && go test ./... && go vet ./...)
 ```
+
+The web test command first regenerates and validates the exercise catalogue, then runs Vitest. Run the Go checks before `pnpm --dir web build`: Vite replaces `web/dist`, which the Go server reads through `go:embed`. Local unit tests do not need a live Convex deployment.
 
 The service is licensed under the [GNU AGPL v3 or later](LICENSE). See [`SECURITY.md`](SECURITY.md) for vulnerability reports.
 
