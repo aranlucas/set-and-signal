@@ -4,18 +4,13 @@
 Railpack-built Go service and the persistent SQLite volume mounted at `/data`.
 Railway-generated domains remain attached but are not managed by the IaC API.
 
-The root [`railpack.json`](../railpack.json) installs Node 24 and pnpm 12.6.0,
-uses the Go version from `go.mod`, builds the `web` workspace, and embeds its
-output in `./cmd/opengym-api`. The runtime starts `./out` and retains the
-`/data` storage path. There is no root Dockerfile, so Railway can use Railpack.
-
 The service and volume retain their original Railway resource addresses so the
 declaration can adopt the existing deployment without recreating or detaching
 its data. Those names are infrastructure identifiers, not product branding.
 
 ## Prerequisites
 
-- Go 1.27.1+ (aligned with the application toolchain)
+- The Go version in `.railway/go.mod`
 - A current Railway CLI with Go IaC support (verified with 5.62.1)
 - Access to the linked Railway project and its `production` environment
 
@@ -52,9 +47,9 @@ together.
 ## GitHub Actions
 
 [The Railway workflow](../.github/workflows/railway-config.yml) checks the Go
-module and saves a plan for pull requests that change `.railway/`. When the pull
-request merges, it applies that reviewed plan artifact. A changed environment
-or a different `.railway/` tree causes the apply to fail and requires a new plan.
+module and runs `railwayapp/config` with `command: plan` for pull requests that
+change `.railway/`. After merge, it checks out the merge commit and runs the
+action with `command: apply`.
 Fork pull requests run the Go checks but skip authenticated plan and apply jobs.
 
 Set the repository secret `RAILWAY_TOKEN` to a Railway project token scoped to

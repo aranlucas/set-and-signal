@@ -1,100 +1,34 @@
-# Architecture
+# Architecture boundaries
 
-Set & Signal ships as one Go server with an embedded React application. The
-repository separates deployable entry points, backend domains, frontend
-features, generated assets, and infrastructure so a change has one obvious
-home.
+The Go server embeds the web build so a deployment ships one application binary.
+Identity and operations stay in SQLite; hosted training records live in Convex.
+See [storage contracts](data-model.md) and [Convex setup](convex.md).
 
-## Repository map
+## Backend
 
-```text
-.
-├── cmd/
-│   ├── opengym-api/       # production server entry point
-│   └── opengym-convex-key/ # signing-key initialization
-├── internal/
-│   ├── httpapi/           # HTTP routes, auth guards, static SPA and MCP transport
-│   ├── training/          # training model, repository, analytics and prescriptions
-│   ├── exercises/         # embedded exercise catalogue
-│   ├── store/             # SQLite access and migrations
-│   └── ...                # auth, OAuth, push, presence, AI and configuration
-├── web/
-│   ├── catalog/           # authored exercise catalogue and instruction shards
-│   ├── scripts/           # catalogue generation and validation
-│   └── src/
-│       ├── app/           # bootstrap, router, global styles and client store
-│       ├── domain/        # framework-light exercise and training rules
-│       ├── features/      # pages and sheets grouped by user flow
-│       ├── generated/     # generated source consumed by the app
-│       ├── i18n/          # translation runtime, types and locale catalogues
-│       └── shared/        # reusable components, hooks, utilities and UI primitives
-├── docs/                  # product, design, architecture and i18n references
-└── .railway/              # Railway infrastructure as code
-```
+`cmd/opengym-api` composes the services. `internal/httpapi` owns HTTP and MCP
+transport, identity checks, and responses; `internal/training` owns training
+mutations and calculations. Training may depend on `store` and `exercises`, but
+must not depend on `httpapi`. MCP shares the HTTP transport to avoid a second
+authentication stack.
 
-## Backend boundaries
-
-`cmd/opengym-api` is the composition root. It opens the store, constructs auth,
-OAuth, WebAuthn, push, presence, and AI services, then passes those dependencies
-to `internal/httpapi`.
-
-`internal/httpapi` owns protocol concerns: request identity, authorization
-guards, JSON responses, route registration, static delivery, and the MCP
-Streamable HTTP endpoint. It delegates durable training state and calculations
-to `internal/training`. Keeping MCP in this transport package avoids a second
-HTTP/auth stack while keeping its data model and computations independent of
-the router.
-
-`internal/training` owns the typed training state, its repository, digest and
-history projections, progression analytics, session prescriptions, and
-exercise-set logging. It may depend on `internal/store` and
-`internal/exercises`; it must not depend on `internal/httpapi`.
-
-The intended dependency direction is:
-
-```text
-cmd/opengym-api -> internal/httpapi -> internal/training -> internal/store
-                                   \-> auth/oauth/push/presence/ai
-```
-
-## Frontend boundaries
+## Frontend
 
 - `app` composes the application and may import any frontend layer.
-- `features` own user flows such as Home, Plan, Workout, and Settings. A feature
-  may use `domain`, `i18n`, and `shared` modules.
-- `domain` contains reusable exercise and training rules without route or sheet
+- `features` own user flows and may use `domain`, `i18n`, and `shared`.
+- `domain` owns reusable training and exercise rules without route or sheet
   ownership. It may use `shared` utilities and generated catalogue data.
-- `shared` contains UI primitives and genuinely cross-feature helpers. Do not
-  move a module here only because two nearby files use it.
-- `generated` is rebuilt from `web/catalog` by the catalogue scripts. Edit the
-  catalogue source, not generated output.
+- `shared` holds cross-feature primitives. Keep helpers used only by nearby
+  feature files with that feature.
 
-Use direct imports rather than new barrel files. Route pages remain lazy-loaded
-from `web/src/app/router.ts` so feature chunks retain their existing loading
-behavior.
+Use direct imports rather than new barrel files. Keep route pages lazy-loaded
+from `web/src/app/router.ts` to preserve feature chunking.
 
-## Workspace and build
+Edit exercise content in `web/catalog`, then run
+`pnpm --dir web instructions:generate`. `web/src/generated` and
+`web/public/instructions` are outputs. The compact runtime catalogue excludes
+instructions; the exercise-detail flow loads instruction shards on demand.
 
-The repository has one pnpm workspace and one lockfile at the root. The `web`
-workspace owns frontend commands. Railway infrastructure uses a separate Go
-module in `.railway` and the Railway CLI.
-Examples:
-
-```bash
-pnpm install --frozen-lockfile
-pnpm --dir web test
-pnpm --dir web build
-(cd .railway && go test ./... && go vet ./...)
-```
-
-The Railpack configuration installs frontend dependencies from that lockfile,
-builds the SPA, then embeds `web/dist` into the Go binary. Runtime state belongs
-under `/data`; it is not part of the image or repository.
-
-## Compatibility rules
-
-Folder and public product names may evolve without changing persisted
-identifiers. The compatibility-sensitive names listed in
-[the design guide](design.md) require an explicit migration. Preserve API
-payloads, route paths, local-state keys, database filenames, and OAuth scopes
-unless a change includes backwards compatibility and release notes.
+Railway uses a separate Go module in `.railway`; its persistent volume is not
+part of the application image. Build and test ordering is documented in
+[CONTRIBUTING.md](../CONTRIBUTING.md#checks).

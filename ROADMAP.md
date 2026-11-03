@@ -6,12 +6,6 @@ Updated 2026-10-26. Proposed release order, not delivery dates or evidence of cu
 
 A lifter who wants to finish a session quickly, keep a reliable log and understand the next workout.
 
-## Current baseline
-
-The product already includes planning, set logging, progression/prescription helpers, history, reminders and read/write MCP tools. The next value is a complete in-gym and between-session workflow.
-
-Planning evidence: [README](README.md) and [MCP API](internal/httpapi/mcp.go) at `684f1a189ace`. This focused product pass does not claim a complete new code audit or live-provider validation.
-
 ## Prioritized releases
 
 | Order | Feature                             | User value and scope                                                                                                                         | Release acceptance                                                                                                           |
@@ -27,12 +21,8 @@ Baseline five gym sessions: taps/time per logged set, lost/duplicate entries, co
 
 Collect the baseline before building the first slice. Use voluntary pilot feedback and minimal aggregate events; do not log private content or credentials to measure adoption. If the first workflow is not used again, revisit the problem before adding the later features. Revenue impact is unvalidated.
 
-## Next shippable slice
-
-Ship active-session recovery and a clear next-set surface before adding new analytics.
-
 ## Dependencies and deliberate limits
 
 Keep recommendations editable and avoid medical or guaranteed-outcome claims. Garmin can provide activity context later through explicit account linking; it must not overwrite manually logged strength work.
 
-Engineering work belongs in the milestone only when it enables that acceptance criterion. Prefer existing native libraries and test runners. Update this roadmap when a user-visible increment ships, recording the outcome and remaining limits rather than checking off implementation activity alone.
+Update this roadmap when a user-visible increment ships, recording the outcome and remaining limits.
