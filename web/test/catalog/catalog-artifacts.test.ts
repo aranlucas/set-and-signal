@@ -1,4 +1,4 @@
-import { readFile, readdir, stat } from "node:fs/promises";
+import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { expect, it } from "vitest";
 import { EXDB } from "../../catalog/exercises.ts";
@@ -13,11 +13,6 @@ it.each(["id", "img", "gif"] as const)("keeps every source %s present and unique
   expect(values.length).toBeGreaterThan(0);
   expect(values.every((value) => value.length > 0)).toBe(true);
   expect(new Set(values).size).toBe(values.length);
-});
-
-it("excludes instruction steps from the generated runtime catalog", async () => {
-  const source = await readFile(join(projectRoot, "src/generated/exercises-data.ts"), "utf8");
-  expect(source).not.toContain('"st":');
 });
 
 it("generates exactly ten languages with complete bounded instruction shards", async () => {

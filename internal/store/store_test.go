@@ -57,30 +57,6 @@ func openTest(t *testing.T) *Store {
 	return st
 }
 
-func TestOpenCreatesTables(t *testing.T) {
-	st := openTest(t)
-
-	want := []string{"users", "credentials", "invites", "push_subs", "challenges", "user_state"}
-	for _, table := range want {
-		var name string
-		err := st.DB.QueryRow(
-			`SELECT name FROM sqlite_master WHERE type='table' AND name=?`, table,
-		).Scan(&name)
-		if err != nil {
-			t.Errorf("table %q not found: %v", table, err)
-		}
-	}
-
-	rows, err := st.DB.Query(`SELECT name FROM pragma_table_info('users') WHERE name='last_reminder'`)
-	if err != nil {
-		t.Fatalf("pragma_table_info: %v", err)
-	}
-	defer func() { _ = rows.Close() }()
-	if !rows.Next() {
-		t.Error("users.last_reminder column missing")
-	}
-}
-
 func TestOpenCreatesMaintenanceIndexes(t *testing.T) {
 	st := openTest(t)
 

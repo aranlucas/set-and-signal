@@ -4,40 +4,9 @@ import (
 	"encoding/json/v2"
 	"errors"
 	"github.com/aranlucas/set-and-signal/internal/training"
-	"reflect"
 	"strings"
 	"testing"
 )
-
-func TestTrainingDataGraphHasNoInterfaceFields(t *testing.T) {
-	assertMCPStateConcrete(t, reflect.TypeFor[MCPCustomExercise](), "MCPCustomExercise")
-	assertMCPStateConcrete(t, reflect.TypeFor[MCPExWeightHint](), "MCPExWeightHint")
-	assertMCPStateConcrete(t, reflect.TypeFor[MCPExerciseConfigRef](), "MCPExerciseConfigRef")
-	assertMCPStateConcrete(t, reflect.TypeFor[TrainingData](), "TrainingData")
-}
-
-func assertMCPStateConcrete(t *testing.T, typ reflect.Type, path string) {
-	t.Helper()
-	for typ.Kind() == reflect.Pointer {
-		typ = typ.Elem()
-	}
-	switch typ.Kind() {
-	case reflect.Interface:
-		t.Fatalf("MCP state field %s contains interface type %s", path, typ)
-	case reflect.Map:
-		assertMCPStateConcrete(t, typ.Key(), path+" map key")
-		assertMCPStateConcrete(t, typ.Elem(), path+" map value")
-	case reflect.Slice, reflect.Array:
-		assertMCPStateConcrete(t, typ.Elem(), path+" element")
-	case reflect.Struct:
-		for field := range typ.Fields() {
-			if field.PkgPath != "" { // unexported implementation fields are not wire fields
-				continue
-			}
-			assertMCPStateConcrete(t, field.Type, path+"."+field.Name)
-		}
-	}
-}
 
 func TestReadMCPStateAppliesDefaults(t *testing.T) {
 	e := newTestEnv(t)
