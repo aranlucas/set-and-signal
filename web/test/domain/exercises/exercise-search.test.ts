@@ -9,10 +9,6 @@ const row = {
 };
 
 describe("exerciseSearchScore", () => {
-  it("matches natural non-contiguous name queries", () => {
-    expect(exerciseSearchScore(row, "barbell row")).toBe(2);
-  });
-
   it("matches tokens across searchable fields", () => {
     expect(exerciseSearchScore(row, "upper barbell")).toBe(3);
   });

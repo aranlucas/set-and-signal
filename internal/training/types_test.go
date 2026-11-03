@@ -35,6 +35,7 @@ func TestOptionalLoggedSetScalarsPreserveZeroValues(t *testing.T) {
 func TestMCPDTOGraphsHaveNoInterfaceFields(t *testing.T) {
 	types := []reflect.Type{
 		reflect.TypeFor[TrainingData](), reflect.TypeFor[MCPCustomExercise](), reflect.TypeFor[MCPExWeightHint](),
+		reflect.TypeFor[MCPExerciseConfigRef](),
 		reflect.TypeFor[MCPExerciseSearchResult](),
 		reflect.TypeFor[MCPExConfig](), reflect.TypeFor[MCPRoutine](), reflect.TypeFor[MCPRoutineInput](),
 		reflect.TypeFor[MCPLoggedSet](), reflect.TypeFor[MCPWorkoutEntry](), reflect.TypeFor[MCPWorkout](),

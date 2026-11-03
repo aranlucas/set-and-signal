@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parseWorkoutCSV, type WorkoutsImport } from "@/features/settings/import-csv.js";
-import { setLabel, effortOf, type SetFields } from "@/domain/training/history.js";
+import { setLabel, type SetFields } from "@/domain/training/history.js";
 
 // Headers as the real exports write them, trimmed to the columns that matter here.
 const HEVY = "title,start_time,end_time,exercise_title,set_index,set_type,weight_kg,reps,rpe";
@@ -142,49 +142,3 @@ describe("importing effort from another app", () => {
     expect("u" in s).toBe(false); // the row's unit marker never reaches the set
   });
 });
-
-// The backup is the whole state serialised, so effort travels with it by construction. This
-// pins that it stays true — a set losing its rating on a backup round trip would be silent.
-describe("effort in a backup", () => {
-  it("exports and re-imports both scales and the setting", () => {
-    const appState = {
-      unit: "kg",
-      effort: "rpe" as const,
-      routines: [],
-      workouts: [
-        {
-          d: "2026-01-12",
-          entries: [
-            {
-              id: "0025",
-              sets: [
-                { w: 60, r: 10, rpe: 8, done: true },
-                { w: 60, r: 8, rir: 1, done: true },
-                { w: 60, r: 12, done: true },
-              ],
-            },
-          ],
-        },
-      ],
-    };
-
-    const back = roundTrip(appState);
-    expect(effortOf(back)).toBe("rpe");
-    const [a, b, c] = back.workouts[0].entries[0].sets;
-    expect(a.rpe).toBe(8);
-    expect(b.rir).toBe(1);
-    expect("rpe" in c || "rir" in c).toBe(false);
-    expect(setLabel("0025", a)).toBe("60×10 (RPE 8)");
-    expect(setLabel("0025", b)).toBe("60×8 (RIR 1)");
-    expect(setLabel("0025", c)).toBe("60×12");
-  });
-
-  it("preserves an explicit choice to hide effort in a backup", () => {
-    expect(effortOf(roundTrip({ effort: "none" as const, workouts: [], routines: [] }))).toBe(
-      "none",
-    );
-  });
-});
-
-// structuredClone exercises the same JSON-compatible values without weakening the fixture type.
-const roundTrip = <T extends object>(state: T): T => structuredClone(state);

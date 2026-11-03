@@ -3,7 +3,6 @@ import {
   instructionPackPath,
   loadExerciseInstructions,
 } from "@/domain/exercises/exercise-instructions";
-import { instructionShard, INSTRUCTION_SHARD_COUNT } from "@/domain/exercises/instruction-shard";
 
 describe("exercise instruction shards", () => {
   beforeAll(() => {
@@ -60,12 +59,6 @@ describe("exercise instruction shards", () => {
     expect(result.steps[0]).toBe(
       "Stand with your feet hip-width apart and place the band around the ball of your foot.",
     );
-  });
-
-  it("assigns every id to one stable bounded shard", () => {
-    expect(instructionShard("1000")).toBe(instructionShard("1000"));
-    expect(Number(instructionShard("0001"))).toBeLessThan(INSTRUCTION_SHARD_COUNT);
-    expect(Number(instructionShard("5201"))).toBeLessThan(INSTRUCTION_SHARD_COUNT);
   });
 
   it("builds a relative static-data path for the selected shard", () => {

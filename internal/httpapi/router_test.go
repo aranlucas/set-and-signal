@@ -791,12 +791,6 @@ func TestAdminDisable(t *testing.T) {
 	}
 	e.srv.Cfg.AdminUIDs = []string{"u1"}
 
-	// A non-admin caller gets the guard's 403 before anything else.
-	if resp, b := e.do("POST", "/api/admin/user/disable", `{"id":"u1"}`, "raw:"); false {
-		_ = resp
-		_ = b
-	}
-
 	// Admin cannot disable an admin.
 	if resp, b := e.do("POST", "/api/admin/user/disable", `{"id":"boss"}`, "admin"); resp.StatusCode != 400 || errOf(b) != "cannot disable an admin" {
 		t.Fatalf("disable admin = %d %v", resp.StatusCode, b)
