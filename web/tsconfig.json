@@ -12,6 +12,9 @@
     },
     {
       "path": "./tsconfig.node.json"
+    },
+    {
+      "path": "./test/catalog/tsconfig.json"
     }
   ]
 }

@@ -17,7 +17,7 @@
     "prepare": "husky",
     "build": "pnpm --dir web build && go build -o build/ ./cmd/...",
     "test": "vitest run --root web",
-    "pretest": "go test ./... && pnpm --dir web catalog:validate"
+    "pretest": "go test ./... && pnpm --dir web instructions:generate"
   },
   "devDependencies": {
     "@aranlucas/oxforge": "^0.3.0",
