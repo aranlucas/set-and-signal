@@ -7,118 +7,56 @@
 [![CI](https://github.com/aranlucas/set-and-signal/actions/workflows/ci.yml/badge.svg)](https://github.com/aranlucas/set-and-signal/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/aranlucas/set-and-signal)](LICENSE)
 
-Set & Signal is a self-hostable workout planner and training log for planning
-sessions, recording sets, reviewing history, and asking an AI assistant about
-training data. The product ships as a React/Vite web app embedded in a Go
-server, with passkeys/OIDC sign-in, Convex-backed training records, SQLite for
-identity and operational state, and an MCP endpoint for assistant clients.
-
-> **A session in the real world:** plan a push day, log the working sets as you
-> go, then ask the assistant what to train next. Your history, prescription,
-> and account boundary stay in the same self-hosted system.
-
-The project is designed for a single deployment you control. It includes an
-exercise catalogue, progression and prescription helpers, workout history,
-bodyweight tracking, reminders, push notifications, localization, and a
-read/write MCP surface protected by the same account boundary as the web app.
+Set & Signal is a self-hostable workout planner and training log, built as a
+React/Vite app embedded in a Go server. Hosted accounts use Convex for training
+records and SQLite for identity and operations; guest and standalone mobile
+training data stays on-device. An optional AI assistant and an OAuth-protected
+MCP endpoint let assistant clients work with training data.
 
 ## Run locally
 
-Requires Go 1.27+, Node.js 24+, pnpm 12+, PostgreSQL-compatible Convex
-deployment, and an OAuth or passkey configuration. The API refuses to start
-without `CONVEX_URL`; the full training setup and storage rules are in
-[docs/convex.md](docs/convex.md).
-
-Start the API and web app together, then open `https://set-and-signal.localhost`:
+Use the Go version in `go.mod`, Node.js from `.node-version`, and pnpm from the
+root `package.json`. A Convex deployment is required to start the API.
 
 ```bash
 pnpm install --frozen-lockfile
+```
+
+Complete [Convex setup](docs/convex.md#configure-a-deployment) before starting
+the app. It creates `web/.env.local` and the local signing key:
+
+```bash
 pnpm dev
 ```
 
-`pnpm dev` runs `dev:api` and `dev:web` in parallel. The API reads `CONVEX_URL` from
-`web/.env.local` and stores data in `./data`.
+Open `https://set-and-signal.localhost`. The development command sources
+`web/.env.local`, stores API data in `./data`, and runs both services through
+[Portless](https://github.com/vercel-labs/portless). The first run may ask for
+`sudo` to bind port 443 and trust a local certificate. Vite proxies API, OAuth,
+discovery, and MCP requests to `https://api.set-and-signal.localhost`, keeping
+cookies and callbacks on the web origin. Passkeys registered for `localhost`
+do not carry over to this hostname.
 
-Both run through [Portless](https://github.com/vercel-labs/portless) (a dev
-dependency): the API at `https://api.set-and-signal.localhost`, the web app at
-`https://set-and-signal.localhost`. The first run may ask for `sudo` to bind port 443
-and trust a local certificate. Vite proxies `/api`, `/oauth`, `/.well-known`, and
-`/mcp` to the API, so OAuth callbacks, session cookies, and the local MCP endpoint
-all use the web origin. Passkeys registered for `localhost` do not carry over to the
-new hostname.
+For self-hosting, use `.env.example` for common runtime settings and
+`internal/config/config.go` for defaults. Set `CONVEX_URL` to the training
+deployment and keep `PUBLIC_URL`, `ORIGIN`, and the passkey `RP_ID` consistent
+with the public origin. See the [Railway guide](.railway/README.md) for the
+existing infrastructure and data-volume precautions.
 
-For a fresh development deployment, run `pnpm exec convex dev` from `web` and
-follow the setup guide to configure `AUTH_ISSUER` and `AUTH_JWKS`. Keep the
-generated `web/.env.local`, signing keys, and any provider credentials out of
-Git.
+A deployment operator controls the API, Convex project, and persistent volume.
+The optional OpenRouter feature sends selected prompts to that provider; review
+[SECURITY.md](SECURITY.md) before exposing an instance to other users.
 
-## Verify
+## Contributing and reference
 
-```bash
-go test -race ./...
-go vet ./...
-pnpm --dir web test
-pnpm --dir web typecheck
-(cd .railway && go test ./... && go vet ./...)
-```
+- [Contributor checks](CONTRIBUTING.md)
+- [Architecture boundaries](docs/architecture.md)
+- [Storage and compatibility contracts](docs/data-model.md)
+- [Convex setup and recovery](docs/convex.md)
+- [Interface constraints](docs/design.md)
+- [Translation authoring](docs/i18n.md)
+- [Equipment and time planning](docs/session-planning.md)
+- [Product roadmap](ROADMAP.md)
 
-The web test command first regenerates and validates the exercise catalogue, then runs Vitest. Run the Go checks before `pnpm --dir web build`: Vite replaces `web/dist`, which the Go server reads through `go:embed`. Local unit tests do not need a live Convex deployment.
-
-The service is licensed under the [GNU AGPL v3 or later](LICENSE). See [`SECURITY.md`](SECURITY.md) for vulnerability reports.
-
-## Architecture
-
-```mermaid
-flowchart LR
-  Browser[React/Vite web app] --> API[Go HTTP API]
-  Browser --> Convex[Convex training functions]
-  API --> SQLite[(SQLite identity + operations)]
-  API --> Convex
-  API --> MCP[MCP Streamable HTTP]
-  API --> Auth[Passkeys / OIDC]
-  API --> Push[Web Push + reminders]
-```
-
-The Go composition root is `cmd/opengym-api`. HTTP and MCP protocol concerns
-live in `internal/httpapi`; training state, analytics, scheduling, and
-progression live in `internal/training`; SQLite access and migrations live in
-`internal/store`. The frontend follows the `app → features → domain → shared`
-direction described in [docs/architecture.md](docs/architecture.md). Edit
-exercise content in `web/catalog`; generated instruction files are rebuilt by
-the web scripts.
-
-## Configuration essentials
-
-`.env.example` documents the complete runtime surface. The settings most
-people need are:
-
-| Variable                                  | Why it matters                                                                |
-| ----------------------------------------- | ----------------------------------------------------------------------------- |
-| `CONVEX_URL`                              | Required hosted training deployment.                                          |
-| `DATA_DIR` / `DB_PATH`                    | Persistent SQLite, session, push, and signing-key storage.                    |
-| `PUBLIC_URL` / `ORIGIN`                   | Browser origin and OAuth/MCP issuer; use a reachable HTTPS URL in production. |
-| `RP_ID` / `RP_NAME`                       | WebAuthn relying-party identity.                                              |
-| `GOOGLE_*`, `GITHUB_*`, `APPLE_*`         | Optional OIDC providers for sign-in and MCP OAuth.                            |
-| `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` | Optional AI workout planning.                                                 |
-
-## Further documentation
-
-- [Architecture](docs/architecture.md) — dependency direction and build layout.
-- [Convex setup and storage](docs/convex.md) — hosted training ownership,
-  offline queues, keys, and current format requirements.
-- [Data model](docs/data-model.md) — storage ownership and current contracts.
-- [Product](docs/product.md) and [design](docs/design.md) — user flows and UI
-  constraints.
-- [Railway deployment](.railway/README.md) — infrastructure configuration.
-
-## Status and privacy
-
-The repository is an active, self-hosted application with hosted
-Convex training storage. Training records are account-scoped, but a deployment's
-operator controls the API, Convex project, and persistent volume. Review
-`SECURITY.md` and configure access controls before exposing an instance to
-other users.
-
-### Shared lint policy
-
-The web client uses the Oxforge presets while keeping its established PascalCase React component filenames and camelCase helpers. Inline object and tuple types are named at module scope; intentionally backgrounded promises attach rejection handlers. Formatting commands explicitly load oxfmt.config.ts, including the generated-file exclusions.
+Licensed under [GNU AGPL v3 or later](LICENSE). Preserve the third-party
+attributions and exercise-media restrictions in [NOTICE.md](NOTICE.md).
