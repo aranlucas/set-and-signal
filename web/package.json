@@ -11,7 +11,7 @@
     "lint:strict": "oxlint src test --type-aware --type-check --deny-warnings --report-unused-disable-directives-severity error && pnpm lint:policy",
     "format": "oxfmt --config oxfmt.config.ts --check .",
     "format:write": "oxfmt --config oxfmt.config.ts --write .",
-    "catalog:validate": "pnpm instructions:generate && node --experimental-strip-types scripts/validate-exercise-catalog.mjs",
+    "catalog:validate": "pnpm instructions:generate && vitest run test/catalog/catalog-artifacts.test.ts",
     "instructions:generate": "node --experimental-strip-types scripts/build-instructions.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -25,7 +25,7 @@
     "lint:fix": "oxlint --fix",
     "format:check": "oxfmt --config oxfmt.config.ts --check",
     "lint:policy": "oxlint --config oxlint.policy.config.ts .",
-    "pretest": "pnpm catalog:validate"
+    "pretest": "pnpm instructions:generate"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",

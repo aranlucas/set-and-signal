@@ -2,7 +2,9 @@
 // generated compact catalogue from src/generated/exercises-data.ts instead.
 import type { Exercise } from "../src/shared/lib/types.js";
 
-export const EXDB: Exercise[] = [
+type SourceExercise = Exercise & { st: string[] };
+
+export const EXDB: SourceExercise[] = [
   {
     id: "0001",
     n: "3/4 sit-up",
