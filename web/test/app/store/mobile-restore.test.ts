@@ -19,7 +19,7 @@ it.each([
 
   const { FilesystemWeb } = await import("@capacitor/filesystem/dist/esm/web");
 
-  vi.spyOn(FilesystemWeb.prototype, "readFile").mockResolvedValue({
+  const read = vi.spyOn(FilesystemWeb.prototype, "readFile").mockResolvedValue({
     data: JSON.stringify({ ...DEFAULT_APP_STATE, unit: "lb", _ts: fileTS }),
   });
 
@@ -38,6 +38,10 @@ it.each([
     setItem: (key: string, value: string) => saved.set(key, value),
     removeItem: (key: string) => saved.delete(key),
   });
+  const { MOBILE } = await import("@/shared/lib/mobile");
+
+  expect(MOBILE).toBe(true);
+
   const { useStore } = await import("@/app/store/useStore");
   useStore.setState({
     isReady: false,
@@ -45,6 +49,7 @@ it.each([
     appState: { ...structuredClone(DEFAULT_APP_STATE), unit: "kg", _ts: localTS },
   });
   await useStore.getState().boot();
+  expect(read).toHaveBeenCalled();
   expect(useStore.getState().appState.unit).toBe(expected);
   await vi.runAllTimersAsync();
   expect(write).toHaveBeenCalled();
