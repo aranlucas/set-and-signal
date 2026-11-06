@@ -28,3 +28,5 @@ web/skills-lock.json
 web/.env.local
 
 /build/
+
+.e2e/

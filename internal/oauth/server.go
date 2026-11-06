@@ -44,6 +44,8 @@ type Server struct {
 }
 
 type loginPending struct {
+	BrowserNonce        string
+	ProviderID          string
 	BrowserLogin        bool
 	ClientID            string
 	RedirectURI         string
@@ -107,6 +109,7 @@ func (s *Server) Mount(r chi.Router) {
 	r.Get("/oauth/login", s.loginPage)
 	r.Get("/oauth/web/{provider}", s.webLoginStart)
 	r.Get("/oauth/callback/{provider}", s.oidcCallback)
+	r.Post("/oauth/callback/{provider}", s.oidcCallback)
 	r.Post("/oauth/token", s.token)
 }
 

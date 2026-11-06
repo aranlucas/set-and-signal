@@ -47,8 +47,8 @@ func (p *appleProvider) AuthCodeURL(state, redirectURI string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// Apple prefers form_post for name/email; query keeps MCP browser flows simple.
-	return cfg.AuthCodeURL(state, oauth2.SetAuthURLParam("response_mode", "query")), nil
+	// Apple requires form_post when requesting name or email scopes.
+	return cfg.AuthCodeURL(state, oauth2.SetAuthURLParam("response_mode", "form_post")), nil
 }
 
 func (p *appleProvider) Exchange(ctx context.Context, code, redirectURI string) (*UserInfo, error) {

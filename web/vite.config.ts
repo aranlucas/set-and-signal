@@ -1,4 +1,5 @@
 /// <reference types="vitest/config" />
+import { fileURLToPath } from "node:url";
 import { defineConfig, type ProxyOptions } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -33,6 +34,17 @@ export default defineConfig({
   build: { chunkSizeWarningLimit: 1500 },
   test: {
     environment: "node",
+    // Share the plugin's ESM web implementation with platform adapter spies.
+    // Externalizing it loads a separate bundled CommonJS class instead.
+    server: { deps: { inline: ["@capacitor/filesystem"] } },
+    alias: [
+      {
+        find: /^@capacitor\/filesystem$/,
+        replacement: fileURLToPath(
+          new URL("./node_modules/@capacitor/filesystem/dist/esm/index.js", import.meta.url),
+        ),
+      },
+    ],
     include: ["test/**/*.test.ts", "test/**/*.test.tsx"],
   },
 });

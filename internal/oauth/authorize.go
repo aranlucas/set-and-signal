@@ -1,8 +1,10 @@
 package oauth
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
 	"html"
@@ -69,8 +71,15 @@ func (s *Server) authorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	loginState := base64.RawURLEncoding.EncodeToString(raw)
+	nonce, err := s.loginBrowser(w, loginState, false)
+	if err != nil {
+		http.Error(w, "server_error", 500)
+		return
+	}
 	s.mu.Lock()
+	s.pruneLogins()
 	s.logins[loginState] = loginPending{
+		BrowserNonce:        nonce,
 		ClientID:            clientID,
 		RedirectURI:         redirectURI,
 		State:               state,
@@ -168,17 +177,36 @@ func (s *Server) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "unknown provider", http.StatusNotFound)
 		return
 	}
-	state := r.URL.Query().Get("state")
+	params := r.URL.Query()
+	if r.Method == http.MethodPost {
+		r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "invalid callback", 400)
+			return
+		}
+		params = r.PostForm
+	}
+	state := params.Get("state")
 
-	if r.URL.Query().Get("start") == "1" {
+	if r.Method == http.MethodGet && params.Get("start") == "1" {
 		s.mu.Lock()
 		pending, ok := s.logins[state]
+		if ok && s.loginMatches(r, state, pending) {
+			pending.ProviderID = providerID
+			s.logins[state] = pending
+		} else {
+			ok = false
+		}
 		s.mu.Unlock()
 		if !ok || time.Now().After(pending.Exp) {
 			http.Error(w, "login session expired", http.StatusBadRequest)
 			return
 		}
-		_ = pending
+		// Apple's cross-site POST needs a SameSite=None binding cookie.
+		if providerID == "apple" {
+			cookie, _ := r.Cookie(loginCookieName(state))
+			s.setLoginCookie(w, state, cookie.Value, true, int(loginTTL.Seconds()))
+		}
 		authURL, err := p.AuthCodeURL(state, s.callbackURL(providerID))
 		if err != nil {
 			http.Error(w, "provider misconfigured", http.StatusInternalServerError)
@@ -190,25 +218,30 @@ func (s *Server) oidcCallback(w http.ResponseWriter, r *http.Request) {
 
 	s.mu.Lock()
 	pending, ok := s.logins[state]
-	if ok {
+	if ok && pending.ProviderID == providerID && s.loginMatches(r, state, pending) {
 		delete(s.logins, state)
+	} else {
+		ok = false
 	}
 	s.mu.Unlock()
 	if !ok || time.Now().After(pending.Exp) {
 		http.Error(w, "login session expired", http.StatusBadRequest)
 		return
 	}
-	if errParam := r.URL.Query().Get("error"); errParam != "" {
+	s.setLoginCookie(w, state, "", providerID == "apple", -1)
+	if errParam := params.Get("error"); errParam != "" {
 		http.Error(w, "IdP error: "+errParam, http.StatusBadRequest)
 		return
 	}
-	code := r.URL.Query().Get("code")
+	code := params.Get("code")
 	if code == "" {
 		http.Error(w, "missing code", http.StatusBadRequest)
 		return
 	}
 
-	info, err := p.Exchange(r.Context(), code, s.callbackURL(providerID))
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+	info, err := p.Exchange(ctx, code, s.callbackURL(providerID))
 	if err != nil {
 		http.Error(w, "token exchange failed: "+err.Error(), http.StatusBadRequest)
 		return
@@ -249,8 +282,16 @@ func (s *Server) webLoginStart(w http.ResponseWriter, r *http.Request) {
 	if next == "" || !strings.HasPrefix(next, "/") {
 		next = "/"
 	}
+	nonce, err := s.loginBrowser(w, state, providerID == "apple")
+	if err != nil {
+		http.Error(w, "server_error", 500)
+		return
+	}
 	s.mu.Lock()
+	s.pruneLogins()
 	s.logins[state] = loginPending{
+		BrowserNonce: nonce,
+		ProviderID:   providerID,
 		BrowserLogin: true,
 		RedirectURI:  strings.TrimRight(s.Cfg.Origin, "/") + next,
 		Exp:          time.Now().Add(loginTTL),
@@ -271,4 +312,35 @@ func (s *Server) callbackURL(provider string) string {
 func pkceS256(verifier string) string {
 	sum := sha256.Sum256([]byte(verifier))
 	return base64.RawURLEncoding.EncodeToString(sum[:])
+}
+
+// Called under mu on each insertion so abandoned states cannot accumulate forever.
+func (s *Server) pruneLogins() {
+	for state, pending := range s.logins {
+		if time.Now().After(pending.Exp) {
+			delete(s.logins, state)
+		}
+	}
+}
+func loginCookieName(state string) string { return "oauth_login_" + hashSecret(state) }
+func (s *Server) setLoginCookie(w http.ResponseWriter, state, nonce string, apple bool, age int) {
+	cookie := &http.Cookie{Name: loginCookieName(state), Value: nonce, Path: "/oauth", HttpOnly: true, Secure: strings.HasPrefix(s.Issuer(), "https:"), SameSite: http.SameSiteLaxMode, MaxAge: age}
+	if apple {
+		cookie.SameSite = http.SameSiteNoneMode
+		cookie.Secure = true
+	}
+	http.SetCookie(w, cookie)
+}
+func (s *Server) loginBrowser(w http.ResponseWriter, state string, apple bool) (string, error) {
+	raw := make([]byte, 24)
+	if _, err := rand.Read(raw); err != nil {
+		return "", err
+	}
+	nonce := base64.RawURLEncoding.EncodeToString(raw)
+	s.setLoginCookie(w, state, nonce, apple, int(loginTTL.Seconds()))
+	return hashSecret(nonce), nil
+}
+func (s *Server) loginMatches(r *http.Request, state string, pending loginPending) bool {
+	cookie, err := r.Cookie(loginCookieName(state))
+	return err == nil && pending.BrowserNonce != "" && subtle.ConstantTimeCompare([]byte(hashSecret(cookie.Value)), []byte(pending.BrowserNonce)) == 1
 }
