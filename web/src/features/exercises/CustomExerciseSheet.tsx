@@ -11,7 +11,8 @@ import { Input } from "@/shared/ui/input";
 import { Textarea } from "@/shared/ui/textarea";
 import Icon from "@/shared/components/Icon";
 import type { CustomEx, SheetClose } from "@/shared/lib/types";
-import { getAppState, updateAppState, type SheetEx } from "@/features/exercises/sheet-shared";
+import { useStore } from "@/app/store/useStore";
+import { type SheetEx } from "@/domain/exercises/exercise-view";
 import { createCustomExerciseFormSchema } from "@/shared/lib/form-schemas";
 
 type CustomExerciseFormProps = {
@@ -60,7 +61,7 @@ export function CustomExerciseForm({
   const saveExercise = (values: SaveExerciseProps) => {
     const trimmedName = values.name.trim();
 
-    const duplicateExercise = allExercises(getAppState()).find(
+    const duplicateExercise = allExercises(useStore.getState().appState).find(
       (exercise) =>
         exercise.n.toLowerCase() === trimmedName.toLowerCase() &&
         exercise.id !== existingExercise?.id,
@@ -80,7 +81,7 @@ export function CustomExerciseForm({
     const exerciseId = existingExercise ? existingExercise.id : "c" + uid();
 
     if (existingExercise) {
-      updateAppState((state) => {
+      useStore.getState().update((state) => {
         const customExercise = state.customEx.find((exercise) => exercise.id === exerciseId);
 
         if (customExercise) {
@@ -90,7 +91,7 @@ export function CustomExerciseForm({
         }
       });
     } else {
-      updateAppState((state) => {
+      useStore.getState().update((state) => {
         state.customEx.push({
           id: exerciseId,
           n: trimmedName,

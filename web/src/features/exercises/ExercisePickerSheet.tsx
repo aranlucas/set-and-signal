@@ -13,17 +13,12 @@ import { exCount, uid } from "@/shared/lib/format";
 import { toast } from "@/shared/lib/toast";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
-import { Thumb } from "@/shared/components/Media";
+import { Thumb } from "@/features/exercises/Media";
 import Icon from "@/shared/components/Icon";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { glyphOf } from "@/domain/exercises/glyphs";
 import type { CustomEx, ExConfig, Routine, SheetClose } from "@/shared/lib/types";
-import {
-  getAppState,
-  toCatalogExercise,
-  updateAppState,
-  type SheetEx,
-} from "@/features/exercises/sheet-shared";
+import { toCatalogExercise, type SheetEx } from "@/domain/exercises/exercise-view";
 import { exerciseUsage } from "@/features/exercises/custom-delete";
 
 type AddToRoutineProps = {
@@ -68,7 +63,7 @@ export function AddToRoutine({ exercise, close, openConfig }: AddToRoutineProps)
       exercise,
       null,
       (exerciseConfig) => {
-        updateAppState((state) => {
+        useStore.getState().update((state) => {
           const routine = createNewRoutine
             ? {
                 id: uid(),
@@ -90,7 +85,7 @@ export function AddToRoutine({ exercise, close, openConfig }: AddToRoutineProps)
         });
 
         const selectedRoutine = createNewRoutine
-          ? getAppState().routines.at(-1)
+          ? useStore.getState().appState.routines.at(-1)
           : appState.routines.find((candidate) => candidate.id === routineId);
 
         toast(

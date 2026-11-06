@@ -9,12 +9,12 @@ import { normalizeLanguage } from "@/i18n/languages";
 import { useExerciseInstructions } from "@/domain/exercises/exercise-instructions";
 import { Button } from "@/shared/ui/button";
 import { Stepper } from "@/shared/components/Stepper";
-import Media from "@/shared/components/Media";
+import Media from "@/features/exercises/Media";
 import Icon from "@/shared/components/Icon";
 import { estimate1RM, best1RM, REP_CAP } from "@/domain/training/onerm";
 import type { CustomEx, SheetClose } from "@/shared/lib/types";
 import { Skeleton } from "@/shared/ui/skeleton";
-import { toCatalogExercise, type SheetEx } from "@/features/exercises/sheet-shared";
+import { toCatalogExercise, type SheetEx } from "@/domain/exercises/exercise-view";
 
 type OneRepMaxProps = { exercise: SheetEx };
 

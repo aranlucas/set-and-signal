@@ -7,8 +7,8 @@ import (
 
 func TestTodayISOLocal(t *testing.T) {
 	now := time.Date(2026, 8, 24, 1, 30, 0, 0, time.UTC)
-	if got := todayISOLocal("America/Los_Angeles", now); got != "2026-08-23" {
-		t.Fatalf("todayISOLocal = %q, want 2026-08-23", got)
+	if got := TodayISO("America/Los_Angeles", now); got != "2026-08-23" {
+		t.Fatalf("TodayISO = %q, want 2026-08-23", got)
 	}
 }
 

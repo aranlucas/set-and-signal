@@ -219,7 +219,7 @@ func (s *Server) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.setSessionCookie(w, u)
-	if pending.ClientID == "__web__" {
+	if pending.BrowserLogin {
 		next := pending.RedirectURI
 		if next == "" {
 			next = s.Cfg.Origin + "/"
@@ -251,9 +251,9 @@ func (s *Server) webLoginStart(w http.ResponseWriter, r *http.Request) {
 	}
 	s.mu.Lock()
 	s.logins[state] = loginPending{
-		ClientID:    "__web__",
-		RedirectURI: strings.TrimRight(s.Cfg.Origin, "/") + next,
-		Exp:         time.Now().Add(loginTTL),
+		BrowserLogin: true,
+		RedirectURI:  strings.TrimRight(s.Cfg.Origin, "/") + next,
+		Exp:          time.Now().Add(loginTTL),
 	}
 	s.mu.Unlock()
 	authURL, err := p.AuthCodeURL(state, s.callbackURL(providerID))

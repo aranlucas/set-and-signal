@@ -10,7 +10,6 @@ import (
 	"maps"
 	"net/http"
 	"slices"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -45,6 +44,7 @@ type Server struct {
 }
 
 type loginPending struct {
+	BrowserLogin        bool
 	ClientID            string
 	RedirectURI         string
 	State               string // client's state (returned to client)
@@ -116,13 +116,7 @@ func hashSecret(s string) string {
 }
 
 func (s *Server) setSessionCookie(w http.ResponseWriter, u *store.User) {
-	val, maxAge := s.Sess.Make(u.ID, u.SV)
-	secure := ""
-	if strings.HasPrefix(s.Cfg.PublicURL, "https:") {
-		secure = " Secure;"
-	}
-	w.Header().Add("Set-Cookie",
-		"gymsid="+val+"; Path=/; Max-Age="+strconv.Itoa(maxAge)+"; HttpOnly;"+secure+" SameSite=Lax")
+	http.SetCookie(w, s.Sess.Cookie(u.ID, u.SV, s.Cfg.PublicURL))
 }
 
 // sessionUser reads the gymsid cookie if present and valid.

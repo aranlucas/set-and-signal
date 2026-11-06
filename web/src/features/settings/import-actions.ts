@@ -2,7 +2,7 @@ import { translate } from "@/i18n/translate";
 import { toast } from "@/shared/lib/toast";
 import { parseImport } from "@/features/settings/import-csv";
 import type { ParseResult } from "@/features/settings/import-csv";
-import { getAppState } from "@/features/exercises/sheet-shared";
+import { useStore } from "@/app/store/useStore";
 
 export type ParsedImport = Exclude<ParseResult, { error: string }>;
 
@@ -13,7 +13,7 @@ export function importFromApp(file: File, onParsed: (parsed: ParsedImport) => vo
       let parsed: ParseResult;
 
       try {
-        parsed = parseImport(contents, { unit: getAppState().unit });
+        parsed = parseImport(contents, { unit: useStore.getState().appState.unit });
       } catch {
         toast(translate("import.couldNotReadFile", "Could not read that file"));
 

@@ -1,6 +1,6 @@
 import { requireFixture } from "@test/require-fixture";
 import { describe, expect, it } from "vitest";
-import { CURATED, curatedRoutines } from "@/features/plan/curated";
+import { CURATED, curatedRoutines } from "@/domain/training/curated";
 import { EXIDX } from "@/domain/exercises/exercises";
 
 describe("curated plans", () => {

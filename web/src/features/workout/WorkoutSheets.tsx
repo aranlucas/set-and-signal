@@ -12,7 +12,7 @@ import { FinishSummary, TopWeight, WorkoutComplete } from "@/features/workout/Wo
 import type { FinishSummaryPayload } from "@/features/workout/workout-actions";
 import type { SetWorkoutSheet, WorkoutSheetState } from "@/features/workout/workout-state";
 import type { CustomEx, SheetClose } from "@/shared/lib/types";
-import type { SheetEx } from "@/features/exercises/sheet-shared";
+import type { SheetEx } from "@/domain/exercises/exercise-view";
 
 type TopWeightSheetProps = { state: Extract<WorkoutSheetState, { type: "top-weight" }> };
 

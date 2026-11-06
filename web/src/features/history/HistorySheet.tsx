@@ -14,9 +14,9 @@ import { Button } from "@/shared/ui/button";
 import { Textarea } from "@/shared/ui/textarea";
 import Icon from "@/shared/components/Icon";
 import { glyphOf } from "@/domain/exercises/glyphs";
-import { Thumb } from "@/shared/components/Media";
+import { Thumb } from "@/features/exercises/Media";
 import type { IsoDate, SheetClose, Workout } from "@/shared/lib/types";
-import { toCatalogExercise, updateAppState } from "@/features/exercises/sheet-shared";
+import { toCatalogExercise } from "@/domain/exercises/exercise-view";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -81,7 +81,7 @@ export function WorkoutDetail({ workoutId, close }: WorkoutDetailProps) {
   }
 
   const saveNote = ({ note }: SaveNoteProps) => {
-    updateAppState((draft) => {
+    useStore.getState().update((draft) => {
       const saved = draft.workouts.find((candidate) => candidate.id === workout.id);
 
       if (!saved) {
@@ -98,7 +98,7 @@ export function WorkoutDetail({ workoutId, close }: WorkoutDetailProps) {
   };
 
   const deleteWorkout = () => {
-    updateAppState((draft) => {
+    useStore.getState().update((draft) => {
       draft.workouts = draft.workouts.filter((savedWorkout) => savedWorkout.id !== workout.id);
     });
     void close().catch(console.error);

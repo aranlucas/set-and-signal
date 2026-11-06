@@ -11,7 +11,6 @@ import { Field } from "@/shared/ui/field";
 import { Slider } from "@/shared/ui/slider";
 import Icon from "@/shared/components/Icon";
 import type { SheetClose, Unit } from "@/shared/lib/types";
-import { getAppState, updateAppState } from "@/features/exercises/sheet-shared";
 import { useStore } from "@/app/store/useStore";
 import { createWeightFormSchema } from "@/shared/lib/form-schemas";
 
@@ -148,12 +147,12 @@ export function WeightInput({ value, setValue, unit }: WeightInputProps) {
 }
 
 const delEntry = (d: string) =>
-  updateAppState((appState) => {
+  useStore.getState().update((appState) => {
     appState.bodyweight = appState.bodyweight.filter((bodyweight) => bodyweight.d !== d);
   });
 
 const saveBodyweight = (weight: number) =>
-  updateAppState((state) => {
+  useStore.getState().update((state) => {
     const date = todayISO();
     const existingEntry = state.bodyweight.find((entry) => entry.d === date);
 
@@ -309,7 +308,7 @@ export function BodyweightLogSheet({ close }: BodyweightLogSheetProps) {
 
 export function GoalSheet({ close }: GoalSheetProps) {
   const { t } = useTranslation();
-  const st = getAppState();
+  const st = useStore.getState().appState;
   const bw = lastBW(st);
   const invalidWeightMessage = t("weight.enterValidWeight", "Enter a valid weight");
 
@@ -320,11 +319,11 @@ export function GoalSheet({ close }: GoalSheetProps) {
 
   const save = ({ weight: rawWeight }: SaveProps) => {
     const weight = Math.round((rawWeight || 0) * 10) / 10;
-    updateAppState((appState) => {
+    useStore.getState().update((appState) => {
       appState.targetW = weight;
     });
     void close().catch(console.error);
-    const latestBodyweight = lastBW(getAppState());
+    const latestBodyweight = lastBW(useStore.getState().appState);
     toast(
       t("weight.goalSet", "Goal set: {{weight}}", {
         weight: fmtNum(weight) + " " + st.unit,
@@ -367,7 +366,7 @@ export function GoalSheet({ close }: GoalSheetProps) {
           <Button
             variant="destructive"
             onClick={() => {
-              updateAppState((appState) => {
+              useStore.getState().update((appState) => {
                 appState.targetW = null;
               });
               void close().catch(console.error);

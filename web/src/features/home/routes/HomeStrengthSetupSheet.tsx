@@ -21,7 +21,6 @@ import { toast } from "@/shared/lib/toast";
 import type { IconName } from "@/shared/components/icon-names";
 import type { Unit } from "@/shared/lib/types";
 import { cn } from "@/shared/lib/utils";
-import { updateAppState } from "@/features/exercises/sheet-shared";
 import { useStore } from "@/app/store/useStore";
 
 type EXPERIENCEOPTIONSValue = {
@@ -188,7 +187,7 @@ export default function HomeStrengthSetupSheet() {
 
   const finish = ({ unit: selectedUnit, weights }: StartingStrengthFormValues) => {
     const plan = createStartingStrengthPlan(weights);
-    updateAppState((appState) => {
+    useStore.getState().update((appState) => {
       appState.unit = selectedUnit;
       appState.routines.push(...plan.routines);
       appState.week = { ...appState.week, ...plan.week };

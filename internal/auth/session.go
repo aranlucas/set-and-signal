@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -121,4 +122,18 @@ func (s *Sessions) Read(cookieVal string, lookup func(uid string) (sv int, disab
 		return "", false
 	}
 	return parts[0], true
+}
+
+func sessionCookie(value string, maxAge int, origin string) *http.Cookie {
+	return &http.Cookie{Name: "gymsid", Value: value, Path: "/", MaxAge: maxAge,
+		HttpOnly: true, Secure: strings.HasPrefix(origin, "https:"), SameSite: http.SameSiteLaxMode}
+}
+
+func (s *Sessions) Cookie(uid string, version int, origin string) *http.Cookie {
+	value, maxAge := s.Make(uid, version)
+	return sessionCookie(value, maxAge, origin)
+}
+
+func (s *Sessions) ClearCookie(origin string) *http.Cookie {
+	return sessionCookie("", -1, origin)
 }

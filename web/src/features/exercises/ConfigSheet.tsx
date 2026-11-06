@@ -15,9 +15,9 @@ import { Segmented } from "@/shared/ui/segmented";
 import { SelectRow } from "@/shared/components/SelectRow";
 import { Row } from "@/shared/components/layout";
 import { Stepper } from "@/shared/components/Stepper";
-import Media from "@/shared/components/Media";
+import Media from "@/features/exercises/Media";
 import Icon from "@/shared/components/Icon";
-import { PlateRow } from "@/shared/components/PlateRow";
+import { PlateRow } from "@/features/exercises/PlateRow";
 import {
   policyFor as progressionPolicyFor,
   defaultIncrement,
@@ -33,7 +33,7 @@ import type {
   SheetClose,
   Unit,
 } from "@/shared/lib/types";
-import { toCatalogExercise, type SheetEx } from "@/features/exercises/sheet-shared";
+import { toCatalogExercise, type SheetEx } from "@/domain/exercises/exercise-view";
 import { createExerciseConfigFormSchema } from "@/shared/lib/form-schemas";
 
 type ProgressionFieldsProps = {

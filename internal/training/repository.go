@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"reflect"
 	"slices"
 	"strings"
 	"time"
@@ -214,7 +215,14 @@ func mergeTrainingData(raw jsontext.Value, data TrainingData) (jsontext.Value, e
 	return json.Marshal(doc)
 }
 
-var trainingDataJSONKeys = []string{
-	"unit", "targetW", "bodyweight", "routines", "week", "dayPlan",
-	"exWeights", "workouts", "customEx", "_ts",
-}
+var trainingDataJSONKeys = func() []string {
+	fields := reflect.VisibleFields(reflect.TypeFor[TrainingData]())
+	keys := make([]string, 0, len(fields))
+	for _, field := range fields {
+		key, _, _ := strings.Cut(field.Tag.Get("json"), ",")
+		if field.IsExported() && key != "" && key != "-" {
+			keys = append(keys, key)
+		}
+	}
+	return keys
+}()

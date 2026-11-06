@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { useExerciseMetadataLabels } from "@/shared/hooks/use-exercise-metadata-labels";
-import { CURATED, curatedRoutines } from "@/features/plan/curated";
+import { CURATED, curatedRoutines } from "@/domain/training/curated";
 import { glyphOf } from "@/domain/exercises/glyphs";
 import { toast } from "@/shared/lib/toast";
 import { Button } from "@/shared/ui/button";
 import Icon from "@/shared/components/Icon";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
-import { updateAppState } from "@/features/exercises/sheet-shared";
+import { useStore } from "@/app/store/useStore";
 import { weekdayFromNumber } from "@/shared/lib/format";
 import type { SheetClose } from "@/shared/lib/types";
 
@@ -18,7 +18,7 @@ export function CuratedPlans({ close }: CuratedPlansProps) {
 
   const load = (p: (typeof CURATED)[number]) => {
     const rs = curatedRoutines(p);
-    updateAppState((appState) => {
+    useStore.getState().update((appState) => {
       for (const routine of rs) {
         appState.routines.push(routine);
       }
