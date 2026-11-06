@@ -626,7 +626,7 @@ func TestDispatchedRestTimerDoesNotDeleteReplacement(t *testing.T) {
 		old := h.push.timers["u1"]
 		// Both this sleep and the old timer expire at the same fake instant. The
 		// callback is dispatched but cannot claim delivery while we hold mu.
-		synctest.Sleep(time.Second)
+		time.Sleep(time.Second)
 		dispatched := !old.Stop()
 		replacement := time.AfterFunc(time.Hour, func() { t.Error("replacement was not cancelled") })
 		h.push.timers["u1"] = replacement

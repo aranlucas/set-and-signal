@@ -51,3 +51,9 @@ CI and merge outcome: [PR #94](https://github.com/aranlucas/set-and-signal/pull/
 ### R6 — stalled identity provider can leave sign-in pending indefinitely (review finding before fix)
 
 `oidcCallback` passes the bare request context into `Provider.Exchange`; oauth2 and user-info calls use the default HTTP client without a timeout. If a provider accepts but never responds, a connected browser's sign-in request has no deadline (the server only bounds header reads). The fix applies a 30-second context deadline spanning token exchange and user-info retrieval. A fake provider that waits for context cancellation checks the bounded error response in Go's virtual-time test runner without external traffic.
+
+## CI follow-up
+
+Run [42307191814](https://github.com/aranlucas/set-and-signal/actions/runs/42307191814) passed the real e2e journey, web tests, Go vet and modernization checks. Its uploaded native reports demonstrate the intended mobile stale-copy assertion, foreign-browser callback assertion (302 and one provider exchange on the old version), and Apple's invalid scoped query response. The timer test exposed a test deadlock: `synctest.Sleep` also waits for runnable callbacks, while that test deliberately held their mutex. It now uses virtual `time.Sleep` before releasing the mutex, and waits for callbacks only after release. The proof gate rejected the timeout rather than counting it as reproduction.
+
+CI also rejected a module mock and minor style issues in the mobile regression. The test now exercises the real Capacitor wrapper with spies on its exported web filesystem implementation and sets the mobile build environment through Vitest, preserving the same restoration and persistence assertions. No product fixes or existing checks were weakened. Replacement CI remains pending.
