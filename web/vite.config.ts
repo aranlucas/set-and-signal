@@ -33,6 +33,9 @@ export default defineConfig({
   build: { chunkSizeWarningLimit: 1500 },
   test: {
     environment: "node",
+    // Share the plugin's ESM web implementation with platform adapter spies.
+    // Externalizing it loads a separate bundled CommonJS class instead.
+    server: { deps: { inline: ["@capacitor/filesystem"] } },
     include: ["test/**/*.test.ts", "test/**/*.test.tsx"],
   },
 });

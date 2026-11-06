@@ -26,6 +26,7 @@ it.each([
   const write = vi
     .spyOn(FilesystemWeb.prototype, "writeFile")
     .mockResolvedValue({ uri: "file://test" });
+
   const saved = new Map<string, string>();
 
   if (localTS) {
@@ -46,9 +47,6 @@ it.each([
   await useStore.getState().boot();
   expect(useStore.getState().appState.unit).toBe(expected);
   await vi.runAllTimersAsync();
-  expect(write).toHaveBeenCalledWith(
-    expect.objectContaining({
-      data: expect.stringContaining(`"unit":"${expected}"`),
-    }),
-  );
+  expect(write).toHaveBeenCalled();
+  expect(write.mock.calls[0]?.[0].data).toContain(`"unit":"${expected}"`);
 });
