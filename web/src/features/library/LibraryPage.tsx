@@ -5,7 +5,7 @@ import { useStore } from "@/app/store/useStore";
 import { EXDB, BODYPARTS, allExercises, equipmentOf } from "@/domain/exercises/exercises";
 import { bestWeightsFor } from "@/domain/training/history";
 import { fmtNum } from "@/shared/lib/format";
-import { Thumb } from "@/shared/components/Media";
+import { Thumb } from "@/features/exercises/Media";
 import { ExerciseDetail } from "@/features/exercises/ExerciseDetailSheet";
 import { AddToRoutine } from "@/features/exercises/ExercisePickerSheet";
 import { CustomExerciseForm } from "@/features/exercises/CustomExerciseSheet";
@@ -27,7 +27,7 @@ import {
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";
-import { toCatalogExercise, type SheetEx } from "@/features/exercises/sheet-shared";
+import { toCatalogExercise, type SheetEx } from "@/domain/exercises/exercise-view";
 import { removeCustomExercise } from "@/features/exercises/custom-delete";
 import { cn } from "@/shared/lib/utils";
 import { exerciseSearchScore } from "@/domain/exercises/exercise-search";

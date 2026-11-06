@@ -7,6 +7,7 @@ import { useStore } from "@/app/store/useStore";
 import { EXIDX } from "@/domain/exercises/exercises";
 import { todayISO, fmtNum, fmtDur, fmtVol } from "@/shared/lib/format";
 import {
+  getSetWeight,
   bestWeightFor,
   setsDone,
   supersetUnits,
@@ -21,11 +22,10 @@ import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { Grid } from "@/shared/components/Grid";
 import { MetricCard } from "@/shared/components/MetricCard";
 import BodyMap from "@/shared/components/BodyMap";
-import { PlateRow } from "@/shared/components/PlateRow";
+import { PlateRow } from "@/features/exercises/PlateRow";
 import { Textarea } from "@/shared/ui/textarea";
 import { loadOfWorkouts } from "@/domain/exercises/muscles";
 import type { Id, SheetClose, Workout } from "@/shared/lib/types";
-import { getAppState, getSetWeight, updateAppState } from "@/features/exercises/sheet-shared";
 import { WeightInput } from "@/features/account/AccountSheet";
 import type { SetWorkoutSheet } from "@/features/workout/workout-state";
 import { createTopWeightFormSchema } from "@/shared/lib/form-schemas";
@@ -95,7 +95,7 @@ export function TopWeight({ entryIdx, close, setWorkoutSheet }: TopWeightProps) 
 
   const commit = async ({ weight: rawWeight }: CommitProps, advance: boolean) => {
     const weight = Math.round((rawWeight || 0) * 10) / 10;
-    updateAppState((state) => {
+    useStore.getState().update((state) => {
       const activeWorkout = state.active;
 
       if (!activeWorkout) {
@@ -115,7 +115,7 @@ export function TopWeight({ entryIdx, close, setWorkoutSheet }: TopWeightProps) 
       if (isLastUnit) {
         setWorkoutSheet({ type: "workout-complete" });
       } else {
-        updateAppState((state) => {
+        useStore.getState().update((state) => {
           const activeWorkout = state.active;
 
           if (activeWorkout) {
@@ -126,7 +126,7 @@ export function TopWeight({ entryIdx, close, setWorkoutSheet }: TopWeightProps) 
     } else {
       toast(
         t("workout.completion.trackedNextTimeStarts", "Tracked — next time starts at {{weight}}", {
-          weight: fmtNum(getAppState().exWeights[entry.id].w) + " " + st.unit,
+          weight: fmtNum(useStore.getState().appState.exWeights[entry.id].w) + " " + st.unit,
         }),
       );
     }
@@ -282,7 +282,7 @@ export function FinishSummary({ workout, prs, e1prs = EMPTY_E1PRS, close }: Fini
 
   const saveNote = (text: string) => {
     setNote(text);
-    updateAppState((draft) => {
+    useStore.getState().update((draft) => {
       const saved = draft.workouts.find((candidate) => candidate.id === workout.id);
 
       if (!saved) {

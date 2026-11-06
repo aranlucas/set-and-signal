@@ -1,4 +1,4 @@
-import { CURATED, curatedRoutines } from "@/features/plan/curated.js";
+import { CURATED, curatedRoutines } from "@/domain/training/curated.js";
 import { weekdayFromNumber } from "@/shared/lib/format.js";
 import type { DaySession, Unit, Weekday } from "@/shared/lib/types.js";
 

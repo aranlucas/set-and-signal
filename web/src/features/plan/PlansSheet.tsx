@@ -20,7 +20,7 @@ import { glyphOf } from "@/domain/exercises/glyphs";
 import { buildPlanBundle, parsePlan, mergePlan } from "@/features/plan/plan-share";
 import { MOBILE, shareExport } from "@/shared/lib/mobile";
 import type { Id, IsoDate, SheetClose, Weekday } from "@/shared/lib/types";
-import { getErrorMessage, updateAppState } from "@/features/exercises/sheet-shared";
+import { getErrorMessage } from "@/shared/lib/errors";
 import { planImportFormSchema } from "@/shared/lib/form-schemas";
 
 type PlanToolsProps = {
@@ -198,7 +198,7 @@ export function PlanImport({ bundle, close }: PlanImportProps) {
   });
 
   const apply = async ({ schedule }: ApplyProps) => {
-    updateAppState((state) => mergePlan(state, bundle, { schedule }));
+    useStore.getState().update((state) => mergePlan(state, bundle, { schedule }));
     await close();
     toast(
       t("sharing.addedRoutinesPlan", "Added {{count}} routines to your plan", {
@@ -299,7 +299,7 @@ export function DayOverride({ iso, close }: DayOverrideProps) {
   const isRest = hasOvr && st.dayPlan[iso].rest === true;
 
   const toggleRoutine = (routineId: Id) => {
-    updateAppState((appState) => {
+    useStore.getState().update((appState) => {
       const sessions = effectiveSessions(appState, iso).map((session) =>
         Object.assign({}, session),
       );
@@ -324,7 +324,7 @@ export function DayOverride({ iso, close }: DayOverrideProps) {
   };
 
   const setRest = () => {
-    updateAppState((appState) => {
+    useStore.getState().update((appState) => {
       appState.dayPlan[iso] = { rest: true };
     });
     void close().catch(console.error);
@@ -332,7 +332,7 @@ export function DayOverride({ iso, close }: DayOverrideProps) {
   };
 
   const clearOverride = () => {
-    updateAppState((appState) => {
+    useStore.getState().update((appState) => {
       delete appState.dayPlan[iso];
     });
     void close().catch(console.error);
@@ -421,14 +421,14 @@ export function DayAssign({ day, close }: DayAssignProps) {
   const selectedIds = new Set(selected.map((session) => session.routineId));
 
   const clearDay = () => {
-    updateAppState((state) => {
+    useStore.getState().update((state) => {
       delete state.week[day];
     });
     void close().catch(console.error);
   };
 
   const toggleRoutine = (routineId: Id) => {
-    updateAppState((state) => {
+    useStore.getState().update((state) => {
       const current = state.week[day] ?? [];
       const index = current.findIndex((session) => session.routineId === routineId);
 

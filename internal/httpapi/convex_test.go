@@ -1,9 +1,10 @@
 package httpapi
 
 import (
+	"testing"
+
 	"github.com/aranlucas/set-and-signal/internal/convex"
 	"github.com/golang-jwt/jwt/v5"
-	"testing"
 )
 
 func TestConvexTokenUsesCookieIdentity(t *testing.T) {

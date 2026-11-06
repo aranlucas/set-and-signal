@@ -3,10 +3,11 @@ import { exerciseMuscleSnapshot } from "@/domain/exercises/muscles";
 import { translate } from "@/i18n/translate";
 import { toast } from "@/shared/lib/toast";
 import type { AppState, CustomEx } from "@/shared/lib/types";
-import { getAppState, updateAppState, type SheetEx } from "@/features/exercises/sheet-shared";
+import { useStore } from "@/app/store/useStore";
+import { type SheetEx } from "@/domain/exercises/exercise-view";
 
 function removeCustomExerciseFromState(exercise: CustomEx | SheetEx): void {
-  updateAppState((state) => {
+  useStore.getState().update((state) => {
     state.customEx = state.customEx.filter((candidate) => candidate.id !== exercise.id);
 
     for (const routine of state.routines) {
@@ -32,7 +33,7 @@ function removeCustomExerciseFromState(exercise: CustomEx | SheetEx): void {
 }
 
 export function removeCustomExercise(exercise: CustomEx, afterDelete?: () => void): void {
-  if (getAppState().active?.entries.some((entry) => entry.id === exercise.id)) {
+  if (useStore.getState().appState.active?.entries.some((entry) => entry.id === exercise.id)) {
     toast(
       translate("customExercise.finishCurrentWorkoutFirst", "Finish your current workout first"),
     );

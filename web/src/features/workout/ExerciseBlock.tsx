@@ -22,12 +22,12 @@ import {
   capEffort,
 } from "@/domain/training/history";
 import { fmtNum, fmtDate } from "@/shared/lib/format";
-import Media from "@/shared/components/Media";
+import Media from "@/features/exercises/Media";
 import Icon from "@/shared/components/Icon";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { NumberField } from "@/shared/components/NumField";
-import { PlateRow } from "@/shared/components/PlateRow";
+import { PlateRow } from "@/features/exercises/PlateRow";
 import { barWeightFor } from "@/domain/training/plates";
 import type { LoggedSet, ActiveWorkout, EffortKind, Prescription } from "@/shared/lib/types";
 import type { SetWorkoutSheet } from "@/features/workout/workout-state";

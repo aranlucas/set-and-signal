@@ -2,6 +2,8 @@ package auth
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -167,5 +169,35 @@ func TestMalformedPayloadsRejected(t *testing.T) {
 		if uid, ok := s.Read(tok, lookup); ok {
 			t.Fatalf("Read(%q) accepted as %q, want rejection", tok, uid)
 		}
+	}
+}
+
+// Cookie attributes are a shared browser contract for passkey and OAuth login.
+func TestSessionCookiePolicy(t *testing.T) {
+	sessions := newTestSessions(t)
+	for _, tc := range []struct {
+		origin string
+		secure bool
+	}{
+		{"http://localhost:3000", false}, {"https://gym.example", true},
+	} {
+		t.Run(tc.origin, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			http.SetCookie(recorder, sessions.Cookie("user-1", 7, tc.origin))
+			cookie := recorder.Result().Cookies()[0]
+			if cookie.Name != "gymsid" || cookie.Path != "/" || !cookie.HttpOnly || cookie.Secure != tc.secure || cookie.SameSite != http.SameSiteLaxMode || cookie.MaxAge != 90*86400 {
+				t.Fatalf("unexpected session cookie policy: %+v", cookie)
+			}
+			uid, ok := sessions.Read(cookie.Value, func(string) (int, bool) { return 7, false })
+			if !ok || uid != "user-1" {
+				t.Fatalf("cookie cannot authenticate its user: uid=%q ok=%v", uid, ok)
+			}
+			recorder = httptest.NewRecorder()
+			http.SetCookie(recorder, sessions.ClearCookie(tc.origin))
+			cleared := recorder.Result().Cookies()[0]
+			if cleared.Value != "" || cleared.MaxAge != -1 || cleared.Path != "/" || !cleared.HttpOnly || cleared.Secure != tc.secure || cleared.SameSite != http.SameSiteLaxMode {
+				t.Fatalf("unexpected deletion cookie policy: %+v", cleared)
+			}
+		})
 	}
 }

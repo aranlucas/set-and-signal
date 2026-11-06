@@ -9,7 +9,7 @@ import { Button } from "@/shared/ui/button";
 import { toast } from "@/shared/lib/toast";
 import BrandMark from "@/shared/components/BrandMark";
 
-const loadRegistrationDialog = () => import("@/shared/components/RegistrationDialog");
+const loadRegistrationDialog = () => import("@/features/auth/RegistrationDialog");
 
 const RegistrationDialog = lazy(loadRegistrationDialog);
 

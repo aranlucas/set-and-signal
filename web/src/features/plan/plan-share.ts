@@ -37,7 +37,6 @@ const WEEKDAY_BY_KEY = new Map<string, Weekday>(
   } satisfies Record<string, Weekday>),
 );
 
-/** What parsePlan hands back: a validated bundle plus the counts the confirm screen shows. */
 export interface ParsedPlan {
   name: string;
   routines: PlanBundleRoutine[];
@@ -49,7 +48,6 @@ export interface ParsedPlan {
   scheduledDays: number;
 }
 
-// Keep only the meaningful config fields, so the file stays small and readable.
 function cleanEx(exercise: ExConfig): ExConfig {
   const cleanedConfig: ExConfig = { id: exercise.id, sets: exercise.sets };
   const mode = modeOf(exercise);
@@ -120,7 +118,6 @@ function cleanEx(exercise: ExConfig): ExConfig {
   return cleanedConfig;
 }
 
-/** Build the shareable bundle: every routine, the week schedule, referenced customs. */
 export function buildPlanBundle(
   appState: Pick<AppState, "routines" | "customEx" | "week">,
   name?: string | null,
@@ -264,11 +261,10 @@ export function mergePlan(
       // A bundle routine may carry no emoji; Routine types it required, but an absent glyph
       // is exactly what the original stored and every consumer renders nothing for it.
       emoji: routine.emoji || "",
-      ex: (routine.ex || []).map((exercise) =>
-        Object.assign(exercise, {
-          id: exerciseIdMap[exercise.id] || exercise.id,
-        }),
-      ),
+      ex: (routine.ex || []).map((exercise) => ({
+        ...exercise,
+        id: exerciseIdMap[exercise.id] || exercise.id,
+      })),
     };
 
     if (routine.prog) {
@@ -284,7 +280,6 @@ export function mergePlan(
     }
 
     for (const [d, sessions] of Object.entries(bundle.week || {})) {
-      // bundle weeks are plain JSON keyed by weekday digits
       const weekday = WEEKDAY_BY_KEY.get(d);
 
       if (weekday !== undefined) {

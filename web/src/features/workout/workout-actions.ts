@@ -1,5 +1,11 @@
 import { todayISO, uid } from "@/shared/lib/format";
-import { buildSets, bestWeightFor, workoutVolume, isWarmup } from "@/domain/training/history";
+import {
+  getSetWeight,
+  buildSets,
+  bestWeightFor,
+  workoutVolume,
+  isWarmup,
+} from "@/domain/training/history";
 import { beep } from "@/shared/lib/sound";
 import { useWorkoutTimer } from "@/features/workout/useWorkoutTimer";
 import { is1RMRecord } from "@/domain/training/onerm";
@@ -11,12 +17,7 @@ import {
 import { EXIDX } from "@/domain/exercises/exercises";
 import { exerciseMuscleSnapshot } from "@/domain/exercises/muscles";
 import type { ActiveEntry, Id, Workout, WorkoutEntry } from "@/shared/lib/types";
-import {
-  getAppState,
-  getSetWeight,
-  getSoundSettings,
-  updateAppState,
-} from "@/features/exercises/sheet-shared";
+import { useStore } from "@/app/store/useStore";
 
 type EstimatedRecordsValue = {
   id: Id;
@@ -31,7 +32,7 @@ export function beginWorkout(
   bodyweight: number | null,
   freestyleName: string,
 ): void {
-  const state = getAppState();
+  const state = useStore.getState().appState;
 
   if (state.active) {
     return;
@@ -58,7 +59,7 @@ export function beginWorkout(
     };
   });
 
-  updateAppState((draft) => {
+  useStore.getState().update((draft) => {
     draft.active = {
       id: uid(),
       d: todayISO(),
@@ -90,7 +91,7 @@ export interface FinishSummaryPayload {
 }
 
 export function completeWorkout(): FinishSummaryPayload | null {
-  const state = getAppState();
+  const state = useStore.getState().appState;
   const activeWorkout = state.active;
 
   if (!activeWorkout) {
@@ -163,7 +164,7 @@ export function completeWorkout(): FinishSummaryPayload | null {
   }
 
   workout.vol = workoutVolume(workout);
-  updateAppState((draft) => {
+  useStore.getState().update((draft) => {
     for (const entry of workout.entries) {
       const maxWeight = entry.sets.reduce(
         (max, set) => (set.done && !isWarmup(set) ? Math.max(max, getSetWeight(set)) : max),
@@ -198,9 +199,9 @@ export function completeWorkout(): FinishSummaryPayload | null {
     draft.active = null;
   });
   useWorkoutTimer.getState().stopRest();
-  beep(getSoundSettings(), 880, 0.15);
-  beep(getSoundSettings(), 1100, 0.15, 0.18);
-  beep(getSoundSettings(), 1320, 0.3, 0.36);
+  beep(useStore.getState().appState.sound, 880, 0.15);
+  beep(useStore.getState().appState.sound, 1100, 0.15, 0.18);
+  beep(useStore.getState().appState.sound, 1320, 0.3, 0.36);
 
   return {
     workout,

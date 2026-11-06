@@ -1,4 +1,3 @@
-// Pure helpers over the app state (ported 1:1 from the vanilla app).
 import { isoOf, weekKey, fmtNum } from "@/shared/lib/format.js";
 import { isBarbellEq, isCardio, isBodyweightEq } from "@/domain/exercises/exercise-metadata.js";
 import { barWeightFor } from "@/domain/training/plates.js";
@@ -551,3 +550,5 @@ export function streakWeeks(state: StreakWeeksProps): number {
 
   return streak;
 }
+
+export const getSetWeight = (set: LoggedSet): number => ("w" in set ? set.w : 0);

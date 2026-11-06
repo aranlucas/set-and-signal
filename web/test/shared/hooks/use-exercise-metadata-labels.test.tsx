@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { I18nextProvider } from "react-i18next";
 import { afterEach, describe, expect, it } from "vitest";
 import { BODYPARTS, EXDB } from "@/domain/exercises/exercises";
-import { CURATED } from "@/features/plan/curated";
+import { CURATED } from "@/domain/training/curated";
 import { i18n, setLang } from "@/i18n/i18n";
 import { LANGUAGES } from "@/i18n/languages";
 import english from "@/i18n/locales/en/translation";

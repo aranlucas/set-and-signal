@@ -1,5 +1,5 @@
 import type { CustomEx, ExConfig, Routine } from "@/shared/lib/types";
-import type { SheetEx } from "@/features/exercises/sheet-shared";
+import type { SheetEx } from "@/domain/exercises/exercise-view";
 
 /**
  * The workout view owns its overlays. Keeping the possible contents explicit

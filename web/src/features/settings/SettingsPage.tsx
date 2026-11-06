@@ -17,7 +17,7 @@ import { PageHeader, PageTitle, Row, Section } from "@/shared/components/layout"
 import { Button } from "@/shared/ui/button";
 import ConfirmDialog from "@/shared/components/ConfirmDialog";
 import type { ConfirmDialogOptions } from "@/shared/components/ConfirmDialog";
-import RegistrationDialog from "@/shared/components/RegistrationDialog";
+import RegistrationDialog from "@/features/auth/RegistrationDialog";
 import type { SheetClose } from "@/shared/lib/types";
 import { toast } from "@/shared/lib/toast";
 import { Sheet, SheetContent, SheetTitle } from "@/shared/ui/sheet";

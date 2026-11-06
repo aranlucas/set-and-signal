@@ -6,19 +6,19 @@ import { useWorkoutTimer } from "@/features/workout/useWorkoutTimer";
 import { DEFAULT_ACCENT, isAccent } from "@/shared/lib/accents";
 import { setLang } from "@/i18n/i18n";
 import { useWakeLock } from "@/shared/lib/wakelock";
-import TabBar from "@/shared/components/TabBar";
-import ErrorBoundary from "@/shared/components/ErrorBoundary";
-import Toast from "@/shared/components/Toast";
-import RestTimer from "@/shared/components/RestTimer";
+import TabBar from "@/app/components/TabBar";
+import ErrorBoundary from "@/app/components/ErrorBoundary";
+import Toast from "@/app/components/Toast";
+import RestTimer from "@/features/workout/RestTimer";
 import Login from "@/features/auth/LoginPage";
 import { cn } from "@/shared/lib/utils";
-import SyncStatus from "@/shared/components/SyncStatus";
+import SyncStatus from "@/app/components/SyncStatus";
 import BrandMark from "@/shared/components/BrandMark";
-import AppNavigation from "@/shared/components/AppNavigation";
+import AppNavigation from "@/app/components/AppNavigation";
 import { nextPlannedRoutine } from "@/domain/training/schedule";
 import { todayISO } from "@/shared/lib/format";
 
-const loadStartWorkoutSheet = () => import("@/shared/components/StartWorkoutSheet");
+const loadStartWorkoutSheet = () => import("@/features/workout/StartWorkoutSheet");
 
 const StartWorkoutSheet = lazy(loadStartWorkoutSheet);
 

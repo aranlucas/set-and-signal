@@ -12,7 +12,6 @@ import { Field } from "@/shared/ui/field";
 import Icon from "@/shared/components/Icon";
 import { Stepper } from "@/shared/components/Stepper";
 import type { MeasuresEntry, SheetClose } from "@/shared/lib/types";
-import { updateAppState } from "@/features/exercises/sheet-shared";
 import { useMeasurementFields, type MeasurementKey } from "@/shared/hooks/use-measurement-fields";
 import { createMeasurementsFormSchema } from "@/shared/lib/form-schemas";
 
@@ -35,7 +34,7 @@ export function MeasuresSheet({ close }: MeasuresSheetProps) {
 
   const save = async (values: Partial<Record<MeasurementKey, number>>) => {
     const filled = fields.filter((field) => values[field.key] != null);
-    updateAppState((draft) => {
+    useStore.getState().update((draft) => {
       draft.measures = draft.measures || [];
 
       const rounded: Omit<MeasuresEntry, "d"> = {};
@@ -149,6 +148,6 @@ export function MeasuresSheet({ close }: MeasuresSheetProps) {
 }
 
 const del = (date: string) =>
-  updateAppState((draft) => {
+  useStore.getState().update((draft) => {
     draft.measures = (draft.measures || []).filter((entry) => entry.d !== date);
   });

@@ -2,15 +2,10 @@ package httpapi
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"regexp"
 	"slices"
-	"strings"
 	"sync"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/aranlucas/set-and-signal/internal/ai"
 	"github.com/aranlucas/set-and-signal/internal/auth"
@@ -20,6 +15,8 @@ import (
 	"github.com/aranlucas/set-and-signal/internal/presence"
 	"github.com/aranlucas/set-and-signal/internal/push"
 	"github.com/aranlucas/set-and-signal/internal/store"
+	"github.com/go-chi/chi/v5"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 // Server carries every dependency the handlers need.
@@ -229,24 +226,10 @@ func (s *Server) userPayload(u store.User) userPayload {
 	return userPayload{ID: u.ID, Name: u.Name, Admin: s.isAdmin(&u)}
 }
 
-// ---------- cookies ----------
-
-// setCookie builds the gymsid Set-Cookie header verbatim from server.js
-// sessionCookie(): Path=/; Max-Age=days*86400; HttpOnly; Secure iff the
-// origin is https; SameSite=Lax.
 func (s *Server) setCookie(u *store.User) string {
-	val, maxAge := s.Sess.Make(u.ID, u.SV)
-	return fmt.Sprintf("gymsid=%s; Path=/; Max-Age=%d; HttpOnly;%s SameSite=Lax", val, maxAge, s.secureFlag())
+	return s.Sess.Cookie(u.ID, u.SV, s.Cfg.Origin).String()
 }
 
-// clearCookie expires the session cookie (server.js clearCookie).
 func (s *Server) clearCookie() string {
-	return fmt.Sprintf("gymsid=; Path=/; Max-Age=0; HttpOnly;%s SameSite=Lax", s.secureFlag())
-}
-
-func (s *Server) secureFlag() string {
-	if strings.HasPrefix(s.Cfg.Origin, "https:") {
-		return " Secure;"
-	}
-	return ""
+	return s.Sess.ClearCookie(s.Cfg.Origin).String()
 }

@@ -10,7 +10,6 @@ import { Button } from "@/shared/ui/button";
 import { Grid } from "@/shared/components/Grid";
 import { MetricCard } from "@/shared/components/MetricCard";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
-import { updateAppState } from "@/features/exercises/sheet-shared";
 
 type ImportSummaryProps = { parsed: ParsedOk; close: SheetClose };
 
@@ -30,7 +29,7 @@ export function ImportSummary({ parsed, close }: ImportSummaryProps) {
 
   const doImport = () => {
     let added = 0;
-    updateAppState((appState) => {
+    useStore.getState().update((appState) => {
       added = mergeImport(appState, parsed).added;
     });
     void close().catch(console.error);

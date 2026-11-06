@@ -1,6 +1,6 @@
 // The Push/Pull/Legs starter plan. Resolve it by its stable key so adding or reordering
 // curated plans cannot silently change the demo seed or first-run experience.
-import { CURATED, curatedRoutines } from "@/features/plan/curated.js";
+import { CURATED, curatedRoutines } from "@/domain/training/curated.js";
 import type { Routine } from "@/shared/lib/types.js";
 
 export const starterRoutines = (): Routine[] => {

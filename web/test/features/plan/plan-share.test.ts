@@ -44,3 +44,27 @@ describe("multi-session plan sharing", () => {
     ).toThrow(/Set & Signal plan file/u);
   });
 });
+
+describe("plan import isolation", () => {
+  it("can import a custom-exercise bundle into independent profiles without modifying it", () => {
+    const source = structuredClone(DEFAULT_APP_STATE);
+    source.customEx = [{ id: "custom-row", n: "My row", bp: "back", custom: true }];
+    source.routines = [
+      { id: "row-plan", name: "Rows", emoji: "", ex: [{ id: "custom-row", sets: 3, reps: 8 }] },
+    ];
+    const bundle = parsePlan(buildPlanBundle(source));
+    const original = structuredClone(bundle);
+    const first = structuredClone(DEFAULT_APP_STATE);
+    const second = structuredClone(DEFAULT_APP_STATE);
+
+    mergePlan(first, bundle);
+    mergePlan(second, bundle);
+
+    expect(bundle).toEqual(original);
+    expect(first.routines[0].ex[0].id).toBe(first.customEx[0].id);
+    expect(second.routines[0].ex[0].id).toBe(second.customEx[0].id);
+    first.routines[0].ex[0].reps = 12;
+    expect(second.routines[0].ex[0].reps).toBe(8);
+    expect(bundle.routines[0].ex[0].reps).toBe(8);
+  });
+});

@@ -18,11 +18,13 @@ import Icon from "@/shared/components/Icon";
 import { SpaceBetween } from "@/shared/components/SpaceBetween";
 import { DEFAULT_GLYPH, glyphOf } from "@/domain/exercises/glyphs";
 import type { ExConfig, Id, SheetClose } from "@/shared/lib/types";
-import { getAppState, getErrorMessage, updateAppState } from "@/features/exercises/sheet-shared";
+import { useStore } from "@/app/store/useStore";
+import { getErrorMessage } from "@/shared/lib/errors";
 
 type AiPlanProps = { close: SheetClose };
 
-const nameOf = (id: Id) => EXIDX[id]?.n || getAppState().customEx.find((x) => x.id === id)?.n || id;
+const nameOf = (id: Id) =>
+  EXIDX[id]?.n || useStore.getState().appState.customEx.find((x) => x.id === id)?.n || id;
 
 const targetStr = (cur: ExConfig | undefined, g: AiPlanEntry): string => {
   const parts: string[] = [];
@@ -41,7 +43,7 @@ const targetStr = (cur: ExConfig | undefined, g: AiPlanEntry): string => {
     const w = g.weight ?? cur?.weight;
 
     if (!cur?.bodyweight && w) {
-      parts.push("@ " + fmtNum(w) + " " + getAppState().unit);
+      parts.push("@ " + fmtNum(w) + " " + useStore.getState().appState.unit);
     }
   } else if (sets) {
     parts.push(sets + "×" + (g.reps ?? cur?.reps ?? 10));
@@ -66,7 +68,7 @@ export function AiPlan({ close }: AiPlanProps) {
         );
       }
 
-      const routine = effectiveRoutine(getAppState(), todayISO());
+      const routine = effectiveRoutine(useStore.getState().appState, todayISO());
 
       if (!routine) {
         throw new Error(
@@ -76,7 +78,7 @@ export function AiPlan({ close }: AiPlanProps) {
 
       return apiParsed("/api/ai/next-workout", aiPlanResponse, {
         method: "POST",
-        body: JSON.stringify({ digest: buildDigest(getAppState(), routine) }),
+        body: JSON.stringify({ digest: buildDigest(useStore.getState().appState, routine) }),
       });
     },
   });
@@ -88,7 +90,7 @@ export function AiPlan({ close }: AiPlanProps) {
       return;
     }
 
-    updateAppState((appState) => {
+    useStore.getState().update((appState) => {
       const routine = effectiveRoutine(appState, todayISO());
 
       if (!routine) {
@@ -178,7 +180,7 @@ export function AiPlan({ close }: AiPlanProps) {
           </SpaceBetween>
           <SpaceBetween size="xs">
             {res.suggestion.entries.map((g) => {
-              const cur = effectiveRoutine(getAppState(), todayISO())?.ex.find(
+              const cur = effectiveRoutine(useStore.getState().appState, todayISO())?.ex.find(
                 (x) => x.id === g.id,
               );
 
