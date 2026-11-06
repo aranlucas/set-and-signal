@@ -62,5 +62,66 @@ jobs:
       - name: Web typecheck and build
         run: pnpm --dir web build
 
+      - name: Go application build
+        run: go build -o build/ ./cmd/...
+
       - name: Check whitespace
         run: git diff --check
+
+  regression-before-fix:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version-file: go.mod
+      - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e
+        with:
+          require-lockfile: true
+      - name: Demonstrate regressions against original implementation
+        run: |
+          git show 5b0c24a:web/src/app/store/useStore.ts > web/src/app/store/useStore.ts
+          pnpm --dir web exec vitest run test/app/store/mobile-restore.test.ts --reporter=json --outputFile=../mobile-before.json && exit 1 || true
+          node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync("mobile-before.json")); if (!r.testResults.some(f=>f.assertionResults.some(t=>t.status==="failed" && t.fullName.includes("localTS") && t.failureMessages.some(m=>m.includes("expected") && m.includes("kg"))))) process.exit(1);'
+          git show 5b0c24a:internal/oauth/authorize.go > internal/oauth/authorize.go
+          go test -json ./internal/oauth -run '^TestLoginRejectsForeignBrowser$' -count=1 > oauth-before.jsonl || true
+          node --input-type=module -e 'import fs from "node:fs"; const r=fs.readFileSync("oauth-before.jsonl","utf8").trim().split("\n").map(JSON.parse); if (!r.some(e=>e.Action==="fail" && e.Test==="TestLoginRejectsForeignBrowser") || !r.some(e=>e.Output?.includes("foreign browser reached exchange"))) process.exit(1);'
+          git show 5b0c24a:internal/oauth/apple.go > internal/oauth/apple.go
+          go test -json ./internal/oauth -run '^TestAppleProfileScopesUseFormPost$' -count=1 > apple-before.jsonl || true
+          node --input-type=module -e 'import fs from "node:fs"; const r=fs.readFileSync("apple-before.jsonl","utf8").trim().split("\n").map(JSON.parse); if (!r.some(e=>e.Action==="fail" && e.Test==="TestAppleProfileScopesUseFormPost") || !r.some(e=>e.Output?.includes("invalid scoped Apple request"))) process.exit(1);'
+          git show 5b0c24a:internal/push/push.go > internal/push/push.go
+          go test -json ./internal/push -run '^TestDispatchedRestTimerDoesNotDeleteReplacement$' -count=1 > timer-before.jsonl || true
+          node --input-type=module -e 'import fs from "node:fs"; const r=fs.readFileSync("timer-before.jsonl","utf8").trim().split("\n").map(JSON.parse); if (!r.some(e=>e.Action==="fail" && e.Test==="TestDispatchedRestTimerDoesNotDeleteReplacement") || !r.some(e=>e.Output?.includes("superseded dispatched callback sent an alert"))) process.exit(1);'
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: ${{ !cancelled() }}
+        with:
+          name: pre-fix-regression-evidence
+          path: |
+            mobile-before.json
+            *-before.jsonl
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e
+        with:
+          require-lockfile: true
+      - run: pnpm --dir web instructions:generate
+      - run: pnpm exec e2e-web install chromium --with-deps
+      - run: pnpm exec e2e run
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: ${{ !cancelled() }}
+        with:
+          name: e2e-evidence
+          path: .e2e
+          include-hidden-files: true
+          retention-days: 7

@@ -615,3 +615,39 @@ func TestReminderKeepsRemainingSessionsAndHonorsEmptyOverride(t *testing.T) {
 		})
 	}
 }
+
+func TestDispatchedRestTimerDoesNotDeleteReplacement(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		h := newHarness(t)
+		h.addUser(t, "u1", "seam-u1")
+		h.fake.captureSeam(h.push)
+		h.push.ScheduleRestTimer("u1", 1)
+		h.push.mu.Lock()
+		old := h.push.timers["u1"]
+		// Both this sleep and the old timer expire at the same fake instant. The
+		// callback is dispatched but cannot claim delivery while we hold mu.
+		synctest.Sleep(time.Second)
+		dispatched := !old.Stop()
+		replacement := time.AfterFunc(time.Hour, func() { t.Error("replacement was not cancelled") })
+		h.push.timers["u1"] = replacement
+		h.push.mu.Unlock()
+		defer replacement.Stop()
+		if !dispatched {
+			t.Fatal("old timer was not dispatched")
+		}
+		synctest.Wait()
+		if h.fake.count() != 0 {
+			t.Fatal("superseded dispatched callback sent an alert")
+		}
+		h.push.mu.Lock()
+		tracked := h.push.timers["u1"] == replacement
+		h.push.mu.Unlock()
+		if !tracked {
+			t.Fatal("replacement lost after old callback")
+		}
+		h.push.CancelRestTimer("u1")
+		if replacement.Stop() {
+			t.Fatal("cancel did not stop the replacement")
+		}
+	})
+}

@@ -201,12 +201,28 @@ func (p *Service) ScheduleRestTimer(uid string, sec int) {
 	if t := p.timers[uid]; t != nil {
 		t.Stop()
 	}
-	p.timers[uid] = time.AfterFunc(time.Duration(sec)*time.Second, func() {
+	var timer *time.Timer
+	timer = time.AfterFunc(time.Duration(sec)*time.Second, func() {
+		// ScheduleRestTimer holds mu through the timer assignment. Read the
+		// captured pointer under the same lock even if this goroutine starts early.
 		p.mu.Lock()
-		delete(p.timers, uid)
+		fired := timer
 		p.mu.Unlock()
-		p.SendTo(uid, "Rest over 💪", "Time for your next set.", "rest-timer")
+		p.restTimerFired(uid, fired)
 	})
+	p.timers[uid] = timer
+}
+
+// restTimerFired claims delivery only if this is still the user's current timer.
+func (p *Service) restTimerFired(uid string, timer *time.Timer) {
+	p.mu.Lock()
+	if p.timers[uid] != timer {
+		p.mu.Unlock()
+		return
+	}
+	delete(p.timers, uid)
+	p.mu.Unlock()
+	p.SendTo(uid, "Rest over 💪", "Time for your next set.", "rest-timer")
 }
 
 // CancelRestTimer disarms the pending rest timer, if any.

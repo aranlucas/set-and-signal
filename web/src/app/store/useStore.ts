@@ -392,9 +392,9 @@ export const useStore = create<Store>()((set, get) => {
           const saved = await nativeLoad();
           const localState = get().appState;
 
-          if (saved && (!hasData(localState) || (saved._ts || 0) >= (localState._ts || 0))) {
+          if (saved && (saved._ts || 0) >= (localState._ts || 0)) {
             persist(Object.assign(cloneValue(DEFAULT_STATE), saved), false);
-          } else if (hasData(localState)) {
+          } else if (localState._ts || hasData(localState)) {
             void nativeSave(localState).catch(console.error); // first run after an update from a file-less version: seed the mirror
           }
 
