@@ -7,6 +7,7 @@ import { useStore } from "@/app/store/useStore";
 import { EXIDX } from "@/domain/exercises/exercises";
 import { todayISO, fmtNum, fmtDur, fmtVol } from "@/shared/lib/format";
 import {
+  getSetWeight,
   bestWeightFor,
   setsDone,
   supersetUnits,
@@ -25,7 +26,6 @@ import { PlateRow } from "@/features/exercises/PlateRow";
 import { Textarea } from "@/shared/ui/textarea";
 import { loadOfWorkouts } from "@/domain/exercises/muscles";
 import type { Id, SheetClose, Workout } from "@/shared/lib/types";
-import { getSetWeight } from "@/domain/training/history";
 import { WeightInput } from "@/features/account/AccountSheet";
 import type { SetWorkoutSheet } from "@/features/workout/workout-state";
 import { createTopWeightFormSchema } from "@/shared/lib/form-schemas";

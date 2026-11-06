@@ -30,10 +30,11 @@ No owned local test execution was started.
     timer belong to workout. Shared exercise media and plate UI also read store
     preferences and belong to exercises. These are application/feature UI, not
     independent shared primitives.
-- Remove an unused parallel search implementation, retaining the actual picker
-  search and its behavior tests.
-  - `domain/exercises/exercise-search.ts` is referenced only by its own tests;
-    `exercises.ts` implements the search used by the product.
+- Retain the library and picker search contracts and their tests.
+  - Initial inventory incorrectly classified `exercise-search.ts` as unused.
+    CI exposed its library consumer. The library searches name, target, equipment
+    and description; picker search also handles body parts, muscles and accent
+    normalization. Preserve these distinct existing contracts.
 - Keep imported plan bundles immutable when mapping IDs into a draft.
   - `mergePlan` uses `Object.assign(exercise, ...)`, mutating its input and sharing
     exercise objects across the bundle and destination. Re-importing a bundle
@@ -73,8 +74,8 @@ wrapper chain. Kept the server's load adapter because it binds server storage.
 Frontend UI moved to app/auth/workout/exercises owners, curated templates moved
 to training, and exercise conversion/set-weight helpers moved to their domains.
 Store callers access the store directly rather than importing sheet wrappers.
-Removed the unused search module and its implementation-only tests; picker search
-behavior tests remain. Imported plan configurations are copied before ID remapping.
+Retained both library and picker search modules and their meaningful tests
+after correcting the initial inventory from CI evidence. Imported plan configurations are copied before ID remapping.
 Shared cookie issuance/clearing now uses net/http, browser OAuth login has explicit
 purpose, and persisted training ownership derives from the model's JSON tags.
 
@@ -90,3 +91,16 @@ any, will be distinguished from failures introduced here.
 A local static lint invocation was stopped before producing a result; full lint
 remains delegated to CI to avoid expensive local validation. No test process was
 started or left running by this thread.
+
+## CI round one
+
+Go race tests, vet, modernization check, formatting and web behavioral tests
+passed on `1cc8156`. Web lint identified introduced duplicate imports, a
+render-time imperative store read, and an incorrectly deleted library search
+helper. Restored that helper and all its original behavioral tests, combined
+imports, and used a reactive selector in GoalSheet. Corrected the inventory
+above. These are introduced failures, not baseline failures. No local tests
+were used to reproduce them.
+
+The follow-up independent static review confirmed the CI fixes and restored
+search tests, with no further worthwhile issues. The revised head must pass CI.

@@ -1,5 +1,11 @@
 import { todayISO, uid } from "@/shared/lib/format";
-import { buildSets, bestWeightFor, workoutVolume, isWarmup } from "@/domain/training/history";
+import {
+  getSetWeight,
+  buildSets,
+  bestWeightFor,
+  workoutVolume,
+  isWarmup,
+} from "@/domain/training/history";
 import { beep } from "@/shared/lib/sound";
 import { useWorkoutTimer } from "@/features/workout/useWorkoutTimer";
 import { is1RMRecord } from "@/domain/training/onerm";
@@ -12,7 +18,6 @@ import { EXIDX } from "@/domain/exercises/exercises";
 import { exerciseMuscleSnapshot } from "@/domain/exercises/muscles";
 import type { ActiveEntry, Id, Workout, WorkoutEntry } from "@/shared/lib/types";
 import { useStore } from "@/app/store/useStore";
-import { getSetWeight } from "@/domain/training/history";
 
 type EstimatedRecordsValue = {
   id: Id;

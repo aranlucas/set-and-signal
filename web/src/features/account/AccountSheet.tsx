@@ -308,7 +308,7 @@ export function BodyweightLogSheet({ close }: BodyweightLogSheetProps) {
 
 export function GoalSheet({ close }: GoalSheetProps) {
   const { t } = useTranslation();
-  const st = useStore.getState().appState;
+  const st = useStore((state) => state.appState);
   const bw = lastBW(st);
   const invalidWeightMessage = t("weight.enterValidWeight", "Enter a valid weight");
 
