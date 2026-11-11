@@ -432,7 +432,7 @@ type settingsPatch struct {
 	Sound     *bool    `json:"sound,omitzero"`
 	KeepAwake *bool    `json:"keepAwake,omitzero"`
 	Lang      *string  `json:"lang,omitzero" validate:"omitempty,max=24"`
-	Theme     *string  `json:"theme,omitzero" validate:"omitempty,max=24,oneof=dark light"`
-	Accent    *string  `json:"accent,omitzero" validate:"omitempty,max=24,oneof=lime sky orange violet pink red teal gold"`
-	GIFSize   *string  `json:"gifSize,omitzero" validate:"omitempty,max=24,oneof=full mini"`
+	Theme     *string  `json:"theme,omitzero" validate:"omitempty,max=24,eq=|oneof=dark light"`
+	Accent    *string  `json:"accent,omitzero" validate:"omitempty,max=24,eq=|oneof=lime sky orange violet pink red teal gold"`
+	GIFSize   *string  `json:"gifSize,omitzero" validate:"omitempty,max=24,eq=|oneof=full mini"`
 }

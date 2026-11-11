@@ -104,10 +104,12 @@ func TestRoutineResponsePreservesSanitizedFields(t *testing.T) {
 	if entry["weight"] != float64(0) || entry["inc"] != float64(0) || entry["side"] != true || entry["prog"] != "off" || entry["bodyweight"] != false {
 		t.Fatalf("sanitized fields = %v", entry)
 	}
-	for _, key := range []string{"sets", "unknown"} {
-		if _, present := entry[key]; present {
-			t.Fatalf("unexpected %s in sanitized entry: %v", key, entry)
-		}
+	// An omitted set count gets the web default, because the web cannot load a planned exercise without one.
+	if entry["sets"] != float64(3) {
+		t.Fatalf("sets = %v, want the web default 3", entry["sets"])
+	}
+	if _, present := entry["unknown"]; present {
+		t.Fatalf("unexpected unknown in sanitized entry: %v", entry)
 	}
 	stored := e.getState("cookie")["routines"].([]any)[0].(map[string]any)
 	if storedEntry := stored["ex"].([]any)[0].(map[string]any); len(storedEntry) != len(entry) || storedEntry["weight"] != float64(0) {
