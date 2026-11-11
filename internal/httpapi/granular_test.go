@@ -4,6 +4,7 @@ import (
 	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -103,10 +104,12 @@ func TestRoutineResponsePreservesSanitizedFields(t *testing.T) {
 	if entry["weight"] != float64(0) || entry["inc"] != float64(0) || entry["side"] != true || entry["prog"] != "off" || entry["bodyweight"] != false {
 		t.Fatalf("sanitized fields = %v", entry)
 	}
-	for _, key := range []string{"sets", "unknown"} {
-		if _, present := entry[key]; present {
-			t.Fatalf("unexpected %s in sanitized entry: %v", key, entry)
-		}
+	// An omitted set count gets the web default, because the web cannot load a planned exercise without one.
+	if entry["sets"] != float64(3) {
+		t.Fatalf("sets = %v, want the web default 3", entry["sets"])
+	}
+	if _, present := entry["unknown"]; present {
+		t.Fatalf("unexpected unknown in sanitized entry: %v", entry)
 	}
 	stored := e.getState("cookie")["routines"].([]any)[0].(map[string]any)
 	if storedEntry := stored["ex"].([]any)[0].(map[string]any); len(storedEntry) != len(entry) || storedEntry["weight"] != float64(0) {
@@ -370,6 +373,45 @@ func TestBodyweightRejectsNumericDate(t *testing.T) {
 }
 
 // ---------- settings ----------
+
+// The web only loads listed presentation values, so clearing one removes it
+// and lets the app fall back to its default instead of storing "".
+func TestSettingsPatchClearsPresentationPreferences(t *testing.T) {
+	e := newTestEnv(t)
+	e.post("/api/settings", `{"settings":{"theme":"dark","accent":"teal","gifSize":"mini","lang":"de"}}`, "cookie")
+	response, _ := e.post("/api/settings", `{"settings":{"theme":"","accent":"","gifSize":"","lang":""}}`, "cookie")
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("clear status = %d", response.StatusCode)
+	}
+	st := e.getState("cookie")
+	for _, key := range []string{"theme", "accent", "gifSize"} {
+		if value, ok := st[key]; ok {
+			t.Errorf("%s = %#v, want it removed", key, value)
+		}
+	}
+	if st["lang"] != "" {
+		t.Errorf("lang = %#v, want the empty automatic choice kept", st["lang"])
+	}
+}
+
+func TestRoutineExercisesWithoutSetsGetTheWebDefault(t *testing.T) {
+	e := newTestEnv(t)
+	response, _ := e.post("/api/routine", `{"routine":{"name":"Mixed","ex":[{"id":"bench"},{"id":"3220"},{"id":"squat","sets":5}]}}`, "cookie")
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d", response.StatusCode)
+	}
+	routines, _ := e.getState("cookie")["routines"].([]any)
+	if len(routines) != 1 {
+		t.Fatalf("routines = %#v", routines)
+	}
+	var sets []any
+	for _, exercise := range routines[0].(map[string]any)["ex"].([]any) {
+		sets = append(sets, exercise.(map[string]any)["sets"])
+	}
+	if !reflect.DeepEqual(sets, []any{3.0, 1.0, 5.0}) {
+		t.Fatalf("stored set counts = %v, want strength 3, cardio 1, explicit 5", sets)
+	}
+}
 
 func TestSettingsPatchPreservesClearingValues(t *testing.T) {
 	e := newTestEnv(t)

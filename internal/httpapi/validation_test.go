@@ -31,6 +31,9 @@ func TestInvalidRequestsLeaveStateUnchanged(t *testing.T) {
 		{"settings range", "/api/settings", `{"settings":{"sound":false,"restSec":601}}`, "restSec"},
 		{"settings enum", "/api/settings", `{"settings":{"unit":"stone"}}`, "unit"},
 		{"settings length", "/api/settings", `{"settings":{"theme":"` + strings.Repeat("x", 25) + `"}}`, "theme"},
+		{"settings theme outside web values", "/api/settings", `{"settings":{"theme":"system"}}`, "theme"},
+		{"settings accent outside web values", "/api/settings", `{"settings":{"accent":"blue"}}`, "accent"},
+		{"settings media size outside web values", "/api/settings", `{"settings":{"gifSize":"large"}}`, "gifSize"},
 		{"settings numeric string", "/api/settings", `{"settings":{"targetW":"80"}}`, "bad json"},
 		{"unknown nested field", "/api/routine", `{"routine":{"name":"Push","ex":[{"id":"bench","unknown":true}]}}`, "bad json"},
 	} {

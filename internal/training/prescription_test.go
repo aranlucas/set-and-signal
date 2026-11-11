@@ -182,6 +182,22 @@ func TestLogExerciseSetsWritesNextWeight(t *testing.T) {
 	}
 }
 
+func TestLogExerciseSetsRecordsBodyweightRepsWithZeroWeight(t *testing.T) {
+	data := aptView()
+	workout, _, err := LogExerciseSets(&data, MCPLogExerciseSetsInput{
+		ExerciseID: "0662", D: new("2026-08-24"),
+		Sets: []MCPLogExerciseSet{{R: 10}, {R: 8}},
+	}, time.Date(2026, 8, 24, 18, 0, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, set := range workout.Entries[0].Sets {
+		if set.W == nil || *set.W != 0 {
+			t.Fatalf("push-up set stored without the weight the web requires: %+v", set)
+		}
+	}
+}
+
 func TestLogExerciseSetsRequiresWeightOnLoadedLifts(t *testing.T) {
 	data := aptView()
 	_, _, err := LogExerciseSets(&data, MCPLogExerciseSetsInput{

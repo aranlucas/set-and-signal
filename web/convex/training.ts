@@ -37,6 +37,40 @@ export const snapshot = query({
   },
 });
 
+// Browsers load the whole snapshot through appStatePatch, so a single record it
+// rejects hides the entire profile. Browser commits and server replacements
+// therefore admit only records that schema accepts.
+function checkRecord(key: string, encoded: string) {
+  const value: unknown = JSON.parse(encoded);
+
+  if (canonical(value) !== encoded) throw new ConvexError("Invalid record encoding");
+  const slash = key.indexOf("/");
+  const kind = key.slice(0, slash);
+  const id = key.slice(slash + 1);
+
+  if (kind === "order") {
+    if (
+      !["workouts", "routines", "customEx"].includes(id) ||
+      !Array.isArray(value) ||
+      value.some((item) => !validation.is(validation.string(), item)) ||
+      new Set(value).size !== value.length
+    )
+      throw new ConvexError("Invalid order");
+
+    return;
+  }
+
+  if (kind === "field" && ["workouts", "routines", "customEx"].includes(id))
+    throw new ConvexError("Use record changes");
+  const patch = kind === "field" ? { [id]: value } : { [kind]: [value] };
+
+  if (
+    !safeParse(appStatePatch, patch).success ||
+    (kind !== "field" && !validation.is(validation.object({ id: validation.literal(id) }), value))
+  )
+    throw new ConvexError(`Invalid training record: ${key}`);
+}
+
 const change = v.object({
   key: v.string(),
   expected: v.union(v.string(), v.null()),
@@ -74,31 +108,7 @@ export const commit = mutation({
 
       if (current !== change.expected) throw new ConvexError({ code: "CONFLICT", key: change.key });
 
-      if (change.value !== null) {
-        const value = JSON.parse(change.value);
-
-        if (canonical(value) !== change.value) throw new ConvexError("Invalid record encoding");
-        const slash = change.key.indexOf("/");
-        const kind = change.key.slice(0, slash);
-        const id = change.key.slice(slash + 1);
-
-        if (kind === "order") {
-          if (
-            !["workouts", "routines", "customEx"].includes(id) ||
-            !Array.isArray(value) ||
-            value.some((item) => !validation.is(validation.string(), item)) ||
-            new Set(value).size !== value.length
-          )
-            throw new ConvexError("Invalid order");
-        } else {
-          if (kind === "field" && ["workouts", "routines", "customEx"].includes(id))
-            throw new ConvexError("Use record changes");
-          const patch = kind === "field" ? { [id]: value } : { [kind]: [value] };
-
-          if (!safeParse(appStatePatch, patch).success || (kind !== "field" && value?.id !== id))
-            throw new ConvexError("Invalid training record");
-        }
-      }
+      if (change.value !== null) checkRecord(change.key, change.value);
 
       pending.push({ change, row });
     }
@@ -141,6 +151,10 @@ export const replace = mutation({
     if (!value || Array.isArray(value) || !validation.is(validation.object({}), value))
       throw new ConvexError("State must be an object");
     const next = new Map(splitState(value).map((row) => [row.key, row.value]));
+    const stored = new Map(records.map((row) => [row.key, row.value]));
+
+    // Unchanged legacy records stay as they are; every new or edited one must load in a browser.
+    for (const [key, value] of next) if (stored.get(key) !== value) checkRecord(key, value);
 
     for (const row of records) {
       const value = next.get(row.key);

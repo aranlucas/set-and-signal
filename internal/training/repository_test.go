@@ -193,6 +193,57 @@ func TestTrainingDataRepositoryPutWorkoutUpsertsTypedWorkout(t *testing.T) {
 	}
 }
 
+// The web state schema requires a weight on reps and timed sets and a set
+// count on targets; one stored record without them hides the whole profile.
+func TestPutWorkoutStoresSetsTheWebCanLoad(t *testing.T) {
+	st, repo := openTrainingRepositoryTest(t)
+	workout := MCPWorkout{ID: "w1", D: "2026-09-01", Name: "Push", Entries: []MCPWorkoutEntry{
+		{ID: "0662", Sets: []MCPLoggedSet{{Done: true, R: new(10.0)}}, Target: &MCPExConfig{ID: "0662"}},
+		{ID: "plank", Sets: []MCPLoggedSet{{Done: true, Sec: new(45.0)}, {Done: true, Sec: new(40.0)}}, Target: &MCPExConfig{ID: "plank", Mode: new("time"), Sets: new(2.0)}},
+	}}
+	if _, err := repo.PutWorkout("u1", workout); err != nil {
+		t.Fatal(err)
+	}
+	raw, err := st.ReadState("u1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var state struct {
+		Workouts []struct {
+			Entries []struct {
+				Sets   []map[string]any `json:"sets"`
+				Target map[string]any   `json:"target"`
+			} `json:"entries"`
+		} `json:"workouts"`
+	}
+	if err := json.Unmarshal(raw, &state); err != nil {
+		t.Fatal(err)
+	}
+	entries := state.Workouts[0].Entries
+	if entries[0].Sets[0]["w"] != 0.0 || entries[1].Sets[0]["w"] != 0.0 || entries[1].Sets[1]["w"] != 0.0 {
+		t.Fatalf("bodyweight sets stored without a weight: %s", raw)
+	}
+	if entries[0].Target["sets"] != 1.0 {
+		t.Fatalf("target stored without a set count: %s", raw)
+	}
+	if workout.Entries[0].Sets[0].W != nil || workout.Entries[0].Target.Sets != nil {
+		t.Fatal("PutWorkout changed the caller's workout")
+	}
+}
+
+func TestPutWorkoutRejectsSetsWithoutAWebShape(t *testing.T) {
+	st, repo := openTrainingRepositoryTest(t)
+	for _, set := range []MCPLoggedSet{{Done: true}, {Done: true, W: new(20.0)}, {Done: true, Min: new(20.0)}} {
+		workout := MCPWorkout{ID: "w1", D: "2026-09-01", Entries: []MCPWorkoutEntry{{ID: "3220", Sets: []MCPLoggedSet{set}}}}
+		if _, err := repo.PutWorkout("u1", workout); err == nil {
+			t.Errorf("accepted set %+v", set)
+		}
+	}
+	if raw, _ := st.ReadState("u1"); string(raw) != "null" {
+		t.Fatalf("rejected workouts were stored: %s", raw)
+	}
+}
+
 func TestTrainingMutationPreservesCustomExerciseSnapshot(t *testing.T) {
 	st, repo := openTrainingRepositoryTest(t)
 	if err := st.WriteState("u1", jsontext.Value(`{"workouts":[{"id":"w1","d":"2026-09-01","start":1,"end":2,"name":"Custom","entries":[{"id":"deleted","sets":[],"muscleSnapshot":{"n":"Cable Press","bp":"chest","muscleWeights":{"chest":1,"triceps":0.5}}}],"prs":[],"vol":0}]}`)); err != nil {
