@@ -68,6 +68,10 @@ func normalizeRoutine(input training.MCPRoutineInput) (training.MCPRoutine, erro
 	}
 	for i := range routine.Ex {
 		entry := &routine.Ex[i]
+		// The web app requires a set count on every planned exercise.
+		if entry.Sets == nil {
+			entry.Sets = new(training.DefaultExerciseSets(*entry))
+		}
 		for _, field := range []**float64{&entry.Sets, &entry.Reps, &entry.Weight, &entry.Sec, &entry.Min, &entry.Speed, &entry.Inc, &entry.RepsMin, &entry.RepsMax} {
 			if *field != nil {
 				*field = new(roundHundredths(**field))

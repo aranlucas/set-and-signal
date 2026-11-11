@@ -334,6 +334,56 @@ func validateLoadedWorkingSets(workout MCPWorkout) error {
 	return nil
 }
 
+// The web app rejects a whole hosted profile when one stored record misses a
+// field its state schema requires, so server writes complete or reject them.
+
+// DefaultExerciseSets matches the web's defaultConfig for a newly added exercise.
+func DefaultExerciseSets(cfg MCPExConfig) float64 {
+	if progressionMode(progressionConfigFromMCP(cfg)) == "cardio" {
+		return 1
+	}
+	return 3
+}
+
+// completeLoggedSet maps a set onto the web's reps, time, or cardio shape.
+// Reps and timed sets record bodyweight-only work as weight 0, as the web does.
+func completeLoggedSet(set MCPLoggedSet) (MCPLoggedSet, error) {
+	switch {
+	case set.Min != nil || set.Speed != nil:
+		if set.Min == nil || set.Speed == nil {
+			return set, errors.New("a cardio set needs both min and speed")
+		}
+	case set.R != nil || set.Sec != nil:
+		if set.W == nil {
+			set.W = new(0.0)
+		}
+	default:
+		return set, errors.New("a set needs r, sec, or min and speed")
+	}
+	return set, nil
+}
+
+func completeWorkoutRecords(workout *MCPWorkout) error {
+	workout.Entries = slices.Clone(workout.Entries)
+	for i := range workout.Entries {
+		entry := &workout.Entries[i]
+		entry.Sets = slices.Clone(entry.Sets)
+		for j := range entry.Sets {
+			set, err := completeLoggedSet(entry.Sets[j])
+			if err != nil {
+				return fmt.Errorf("set %d of %s: %w", j+1, entry.ID, err)
+			}
+			entry.Sets[j] = set
+		}
+		if entry.Target != nil && entry.Target.Sets == nil {
+			target := cloneExConfig(*entry.Target)
+			target.Sets = new(float64(max(1, len(entry.Sets))))
+			entry.Target = &target
+		}
+	}
+	return nil
+}
+
 func workoutVolumeOf(workout MCPWorkout) float64 {
 	vol := 0.0
 	for _, entry := range workout.Entries {
@@ -412,7 +462,11 @@ func LogExerciseSets(data *TrainingData, input MCPLogExerciseSetsInput, now time
 		if set.Done != nil {
 			done = *set.Done
 		}
-		loggedSet := MCPLoggedSet{Done: done, W: cloneFloat(set.W), R: new(set.R)}
+		weight := 0.0
+		if set.W != nil {
+			weight = *set.W
+		}
+		loggedSet := MCPLoggedSet{Done: done, W: new(weight), R: new(set.R)}
 		logged = append(logged, loggedSet)
 	}
 	if cfg.Sets == nil {

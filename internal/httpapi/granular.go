@@ -404,7 +404,17 @@ func (s *Server) applySettings(uid string, patch *settingsPatch) (settingsRespon
 		return settingsResponse{}, http.StatusBadRequest, "no recognized settings in patch"
 	}
 	applied := slices.Sorted(maps.Keys(document))
-	err = s.mutateDocument(uid, func(state stateDocument) error { maps.Copy(state, document); return nil })
+	err = s.mutateDocument(uid, func(state stateDocument) error {
+		for key, value := range document {
+			// The web accepts only listed values for these; removing an empty one restores its default.
+			if string(value) == `""` && slices.Contains([]string{"theme", "accent", "gifSize"}, key) {
+				delete(state, key)
+			} else {
+				state[key] = value
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return settingsResponse{}, http.StatusInternalServerError, "server error"
 	}
@@ -412,7 +422,8 @@ func (s *Server) applySettings(uid string, patch *settingsPatch) (settingsRespon
 }
 
 // Pointer fields distinguish an omitted setting from explicit false, zero or
-// an empty string. Empty strings clear presentation preferences.
+// an empty string. Empty strings clear presentation preferences. Enumerated
+// values mirror the web state schema (accents: web/src/shared/lib/accents.ts).
 type settingsPatch struct {
 	Unit      *string  `json:"unit,omitzero" validate:"omitempty,oneof=kg lb"`
 	Effort    *string  `json:"effort,omitzero" validate:"omitempty,oneof=none rir rpe"`
@@ -421,7 +432,7 @@ type settingsPatch struct {
 	Sound     *bool    `json:"sound,omitzero"`
 	KeepAwake *bool    `json:"keepAwake,omitzero"`
 	Lang      *string  `json:"lang,omitzero" validate:"omitempty,max=24"`
-	Theme     *string  `json:"theme,omitzero" validate:"omitempty,max=24"`
-	Accent    *string  `json:"accent,omitzero" validate:"omitempty,max=24"`
-	GIFSize   *string  `json:"gifSize,omitzero" validate:"omitempty,max=24"`
+	Theme     *string  `json:"theme,omitzero" validate:"omitempty,max=24,oneof=dark light"`
+	Accent    *string  `json:"accent,omitzero" validate:"omitempty,max=24,oneof=lime sky orange violet pink red teal gold"`
+	GIFSize   *string  `json:"gifSize,omitzero" validate:"omitempty,max=24,oneof=full mini"`
 }

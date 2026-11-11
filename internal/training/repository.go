@@ -134,6 +134,9 @@ func (r *TrainingDataRepository) PutWorkout(uid string, workout MCPWorkout) (MCP
 	if err := validation.Validator.Struct(workout); err != nil {
 		return MCPWorkout{}, err
 	}
+	if err := completeWorkoutRecords(&workout); err != nil {
+		return MCPWorkout{}, err
+	}
 
 	if err := validateLoadedWorkingSets(workout); err != nil {
 		return MCPWorkout{}, err
