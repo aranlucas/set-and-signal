@@ -97,7 +97,7 @@ jobs:
           git show 5b0c24a:internal/push/push.go > internal/push/push.go
           go test -json ./internal/push -run '^TestDispatchedRestTimerDoesNotDeleteReplacement$' -count=1 > timer-before.jsonl || true
           node --input-type=module -e 'import fs from "node:fs"; const r=fs.readFileSync("timer-before.jsonl","utf8").trim().split("\n").map(JSON.parse); if (!r.some(e=>e.Action==="fail" && e.Test==="TestDispatchedRestTimerDoesNotDeleteReplacement") || !r.some(e=>e.Output?.includes("superseded dispatched callback sent an alert"))) process.exit(1);'
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: ${{ !cancelled() }}
         with:
           name: pre-fix-regression-evidence
@@ -118,7 +118,7 @@ jobs:
       - run: pnpm --dir web instructions:generate
       - run: pnpm exec e2e-web install chromium --with-deps
       - run: pnpm exec e2e run
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: ${{ !cancelled() }}
         with:
           name: e2e-evidence
