@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- MCP bearer challenges now tell clients when an access token needs replacing
+  and when to request the existing `workset` scope. Clients with grants that
+  omit `workset` need to authorize again with that scope.
+- OAuth discovery now advertises only the scope used by `/mcp` in its protected
+  resource metadata and declares issuer binding on authorization redirects.
+
 ## Initial public release — 2026-08-30
 
 - Introduced the Set & Signal identity and the Working Proof visual system while
