@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/aranlucas/set-and-signal/internal/exercises"
+	"github.com/aranlucas/set-and-signal/internal/oauth"
 	"github.com/aranlucas/set-and-signal/internal/training"
 	mcpauth "github.com/modelcontextprotocol/go-sdk/auth"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -520,7 +521,41 @@ func (s *Server) mcpHandler() http.Handler {
 	if s.OAuth != nil {
 		metaURL = s.OAuth.ResourceMetadataURL()
 	}
-	return mcpauth.RequireBearerToken(s.verifyMCPToken, &mcpauth.RequireBearerTokenOptions{ResourceMetadataURL: metaURL})(handler)
+	authenticated := mcpauth.RequireBearerToken(s.verifyMCPToken, &mcpauth.RequireBearerTokenOptions{
+		ResourceMetadataURL: metaURL,
+		Scopes:              []string{oauth.ScopeRead},
+	})(handler)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authenticated.ServeHTTP(&mcpAuthResponse{ResponseWriter: w, authorization: r.Header.Get("Authorization")}, r)
+	})
+}
+
+// The SDK supplies discovery and scope in the challenge. Add the RFC 6750
+// error parameter to its rejection responses so clients can choose how to recover.
+type mcpAuthResponse struct {
+	http.ResponseWriter
+	authorization string
+}
+
+func (w *mcpAuthResponse) WriteHeader(status int) {
+	const header = "WWW-Authenticate"
+	if challenge := w.Header().Get(header); strings.HasPrefix(challenge, "Bearer ") {
+		switch status {
+		case http.StatusUnauthorized:
+			fields := strings.Fields(w.authorization)
+			if len(fields) == 2 && strings.EqualFold(fields[0], "Bearer") {
+				w.Header().Set(header, challenge+`, error="invalid_token"`)
+			}
+		case http.StatusForbidden:
+			w.Header().Set(header, challenge+`, error="insufficient_scope"`)
+		}
+	}
+	w.ResponseWriter.WriteHeader(status)
+}
+
+// Unwrap lets the SDK's HTTP response controller flush streaming responses.
+func (w *mcpAuthResponse) Unwrap() http.ResponseWriter {
+	return w.ResponseWriter
 }
 
 func (s *Server) mcpServer() *mcp.Server {

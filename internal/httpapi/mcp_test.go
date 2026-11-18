@@ -6,13 +6,17 @@ import (
 	"encoding/json/v2"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aranlucas/set-and-signal/internal/training"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/jsonschema-go/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/oauthex"
 )
 
 // ---------- task 13: MCP endpoint over streamable HTTP ----------
@@ -505,55 +509,112 @@ func TestMCPCookiesRejected(t *testing.T) {
 	if !strings.Contains(wa, "resource_metadata=") {
 		t.Fatalf("missing WWW-Authenticate resource_metadata: %q", wa)
 	}
+}
 
-	// Neither is no credential at all.
-	resp2, _ := e.rpc(t, "POST", "/mcp",
-		map[string]any{"jsonrpc": "2.0", "id": 1, "method": "ping"},
-		map[string]string{})
-	if resp2.StatusCode != 401 {
-		t.Fatalf("anonymous = %d", resp2.StatusCode)
+func TestMCPBearerChallenges(t *testing.T) {
+	e := newTestEnv(t)
+	sign := func(scope, audience string, expires time.Time) string {
+		t.Helper()
+		claims := jwt.MapClaims{"sub": "u1", "iss": testOrigin, "aud": audience, "scope": scope}
+		if !expires.IsZero() {
+			claims["exp"] = expires.Unix()
+		}
+		token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(e.sess.Secret)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return "Bearer " + token
 	}
+	future := time.Now().Add(time.Hour)
+	resource := testOrigin + "/mcp"
+	for _, tc := range []struct {
+		name, authorization, authError string
+		status                         int
+	}{
+		{name: "no credentials", status: http.StatusUnauthorized},
+		{name: "other auth scheme", authorization: "Basic dGVzdDp0ZXN0", status: http.StatusUnauthorized},
+		{name: "invalid", authorization: "bearer not-a-token", status: http.StatusUnauthorized, authError: "invalid_token"},
+		{name: "expired", authorization: sign("workset", resource, time.Now().Add(-time.Hour)), status: http.StatusUnauthorized, authError: "invalid_token"},
+		{name: "missing expiry", authorization: sign("workset", resource, time.Time{}), status: http.StatusUnauthorized, authError: "invalid_token"},
+		{name: "wrong audience", authorization: sign("workset", testOrigin+"/elsewhere", future), status: http.StatusUnauthorized, authError: "invalid_token"},
+		{name: "insufficient scope", authorization: sign("openid offline_access", resource, future), status: http.StatusForbidden, authError: "insufficient_scope"},
+		{name: "workset alone", authorization: sign("workset", resource, future), status: http.StatusOK},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			headers := map[string]string{"MCP-Protocol-Version": "2025-11-25"}
+			if tc.authorization != "" {
+				headers["Authorization"] = tc.authorization
+			}
+			resp, _ := e.rpc(t, http.MethodPost, "/mcp", map[string]any{"jsonrpc": "2.0", "id": 1, "method": "ping"}, headers)
+			if resp.StatusCode != tc.status {
+				t.Fatalf("status = %d, want %d", resp.StatusCode, tc.status)
+			}
+			if tc.status == http.StatusOK {
+				if challenge := resp.Header.Get("WWW-Authenticate"); challenge != "" {
+					t.Errorf("authenticated response carried a challenge %q", challenge)
+				}
+				return
+			}
+			challenges, err := oauthex.ParseWWWAuthenticate(resp.Header.Values("WWW-Authenticate"))
+			if err != nil || len(challenges) != 1 || challenges[0].Scheme != "bearer" {
+				t.Fatalf("expected one bearer challenge, got %v (%v)", challenges, err)
+			}
+			params := challenges[0].Params
+			if params["resource_metadata"] != testOrigin+"/.well-known/oauth-protected-resource" || params["scope"] != "workset" {
+				t.Errorf("challenge discovery parameters = %v", params)
+			}
+			if actual, present := params["error"]; actual != tc.authError || present != (tc.authError != "") {
+				t.Errorf("challenge parameters = %v, want error %q (empty means absent)", params, tc.authError)
+			}
+		})
+	}
+}
 
-	// And a garbage bearer token fails verification.
-	resp3, _ := e.rpc(t, "POST", "/mcp",
-		map[string]any{"jsonrpc": "2.0", "id": 1, "method": "ping"},
-		map[string]string{"Authorization": "Bearer not-a-token"})
-	if resp3.StatusCode != 401 {
-		t.Fatalf("bad token = %d", resp3.StatusCode)
+func TestMCPTokenLookupFailureDoesNotChallenge(t *testing.T) {
+	e := newTestEnv(t)
+	if err := e.st.DB.Close(); err != nil {
+		t.Fatal(err)
+	}
+	r := httptest.NewRequest(http.MethodGet, "/mcp", nil)
+	r.Header.Set("Authorization", "Bearer "+e.bearer)
+	w := httptest.NewRecorder()
+	Router(e.srv).ServeHTTP(w, r)
+	if got := w.Header().Get("WWW-Authenticate"); w.Code != http.StatusInternalServerError || got != "" {
+		t.Fatalf("token lookup failure = HTTP %d with challenge %q", w.Code, got)
 	}
 }
 
 func TestOAuthMetadata(t *testing.T) {
 	e := newTestEnv(t)
-	resp, err := e.client.Get(e.url + "/.well-known/oauth-protected-resource")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-	if resp.StatusCode != 200 {
-		t.Fatalf("PRM status %d", resp.StatusCode)
-	}
-	var prm map[string]any
-	if err := json.UnmarshalRead(resp.Body, &prm); err != nil {
-		t.Fatal(err)
-	}
-	if prm["resource"] != testOrigin+"/mcp" {
-		t.Fatalf("resource = %v", prm["resource"])
+	for _, path := range []string{"/.well-known/oauth-protected-resource", "/.well-known/oauth-protected-resource/mcp"} {
+		prm, err := oauthex.GetProtectedResourceMetadata(t.Context(), testOrigin+path, testOrigin+"/mcp", e.client)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !slices.Equal(prm.AuthorizationServers, []string{testOrigin}) || !slices.Equal(prm.ScopesSupported, []string{"workset"}) {
+			t.Errorf("%s: authorization servers = %v, scopes = %v", path, prm.AuthorizationServers, prm.ScopesSupported)
+		}
 	}
 
-	resp2, err := e.client.Get(e.url + "/.well-known/oauth-authorization-server")
+	resp2, err := e.client.Get(testOrigin + "/.well-known/oauth-authorization-server")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer func() { _ = resp2.Body.Close() }()
-	var as map[string]any
+	if resp2.StatusCode != http.StatusOK {
+		t.Fatalf("authorization-server metadata status = %d", resp2.StatusCode)
+	}
+	var as oauthex.AuthServerMeta
 	if err := json.UnmarshalRead(resp2.Body, &as); err != nil {
 		t.Fatal(err)
 	}
-	if as["authorization_endpoint"] != testOrigin+"/oauth/authorize" {
-		t.Fatalf("authorize = %v", as["authorization_endpoint"])
+	if as.Issuer != testOrigin || as.AuthorizationEndpoint != testOrigin+"/oauth/authorize" || as.TokenEndpoint != testOrigin+"/oauth/token" || as.RegistrationEndpoint != testOrigin+"/oauth/register" {
+		t.Fatalf("unexpected authorization-server metadata: %+v", as)
 	}
-	if as["registration_endpoint"] != testOrigin+"/oauth/register" {
-		t.Fatalf("register = %v", as["registration_endpoint"])
+	if !slices.Contains(as.GrantTypesSupported, "refresh_token") || !slices.Contains(as.CodeChallengeMethodsSupported, "S256") || !slices.Contains(as.ScopesSupported, "workset") {
+		t.Fatalf("unexpected authorization-server capabilities: %+v", as)
+	}
+	if !as.AuthorizationResponseIssParameterSupported {
+		t.Fatal("authorization server metadata did not advertise the issuer in authorization responses")
 	}
 }

@@ -14,7 +14,7 @@ func (s *Server) protectedResourceMetadata(w http.ResponseWriter, _ *http.Reques
 		ResourceName           string   `json:"resource_name"`
 	}{
 		Resource: s.ResourceURI(), AuthorizationServers: []string{s.Issuer()},
-		ScopesSupported:        []string{ScopeOpenID, ScopeRead, "offline_access"},
+		ScopesSupported:        []string{ScopeRead},
 		BearerMethodsSupported: []string{"header"}, ResourceName: s.Cfg.RPName,
 	})
 }
@@ -32,6 +32,7 @@ func (s *Server) authorizationServerMetadata(w http.ResponseWriter, _ *http.Requ
 		TokenEndpointAuthMethodsSupported []string `json:"token_endpoint_auth_methods_supported"`
 		ScopesSupported                   []string `json:"scopes_supported"`
 		SubjectTypesSupported             []string `json:"subject_types_supported"`
+		AuthorizationResponseIssSupported bool     `json:"authorization_response_iss_parameter_supported"`
 	}{
 		Issuer: iss, AuthorizationEndpoint: iss + "/oauth/authorize",
 		TokenEndpoint: iss + "/oauth/token", RegistrationEndpoint: iss + "/oauth/register",
@@ -41,6 +42,7 @@ func (s *Server) authorizationServerMetadata(w http.ResponseWriter, _ *http.Requ
 		TokenEndpointAuthMethodsSupported: []string{"none", "client_secret_post", "client_secret_basic"},
 		ScopesSupported:                   []string{ScopeOpenID, ScopeRead, "offline_access"},
 		SubjectTypesSupported:             []string{"public"},
+		AuthorizationResponseIssSupported: true,
 	})
 }
 
