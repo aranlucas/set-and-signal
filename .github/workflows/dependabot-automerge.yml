@@ -20,6 +20,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Merge Dependabot PR after CI passes
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
@@ -30,6 +31,19 @@ jobs:
             --jq ".[] | select(.author.login == \"app/dependabot\" and .headRefOid == \"$HEAD_SHA\") | .number")
           if [ -z "$pr" ]; then
             echo "No open Dependabot PR at $HEAD_SHA; nothing to merge."
+            exit 0
+          fi
+
+          # A merge using GITHUB_TOKEN does not trigger the Railway apply workflow.
+          hold_reason=$(gh api --paginate --slurp "repos/$GH_REPO/pulls/$pr/files?per_page=100" |
+            jq -r 'add |
+              if length >= 3000 then "GitHub changed-file limit reached."
+              elif any(.[]; any(.filename, (.previous_filename // "");
+                startswith(".railway/") or . == ".github/workflows/railway-config.yml"))
+              then "Railway changes require maintainer review and a plan."
+              else empty end')
+          if [ -n "$hold_reason" ]; then
+            echo "::notice::Leaving Dependabot PR #$pr open. $hold_reason"
             exit 0
           fi
           gh pr merge "$pr" --squash --delete-branch --match-head-commit "$HEAD_SHA"

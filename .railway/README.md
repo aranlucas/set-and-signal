@@ -52,6 +52,13 @@ change `.railway/`. After merge, it checks out the merge commit and runs the
 action with `command: apply`.
 Fork pull requests run the Go checks but skip authenticated plan and apply jobs.
 
+Dependabot-triggered runs check the Go declaration and report that the plan
+requires maintainer review. Auto-merge leaves Dependabot PRs that touch
+`.railway/` or the Railway workflow open. After reviewing those changes, a
+maintainer can open a same-repository PR from the reviewed commits to generate
+the plan. Review the plan before merging so the merge can trigger apply with
+the artifact for that PR's head commit.
+
 Set the repository secret `RAILWAY_TOKEN` to a Railway project token scoped to
 production. The workflow grants the permissions required by the
 [Railway Config Action](https://github.com/railwayapp/config), including OIDC
